@@ -10,12 +10,18 @@ class AppConfig {
   // Supabase
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://your-project.supabase.co', // Reemplaza en dev
+    defaultValue: 'https://ufchsvyhcqfppguqxfht.supabase.co', // Reemplaza en dev
   );
 
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'your-anon-key', // Reemplaza en dev
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY2hzdnloY3FmcHBndXF4Zmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNDQ1NTYsImV4cCI6MjA4NzYyMDU1Nn0.X-XCDXEngLC9IfkSBaCrD5sGqxUXTGVxsMiWamK96hc', // Reemplaza en dev
+  );
+
+  // Google OAuth — Web Client ID de Google Cloud Console
+  static const String googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '633018728869-1nmmrjl5bq00bhsbuvvah0q4co1nhn0r.apps.googleusercontent.com',
   );
 
   // Entorno

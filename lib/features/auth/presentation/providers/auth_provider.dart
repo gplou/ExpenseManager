@@ -73,6 +73,30 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
+  Future<bool> signInWithGoogle() async {
+    state = Loading();
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+      state = Success();
+      return true;
+    } on AppFailure catch (e) {
+      state = Failure(e);
+      return false;
+    }
+  }
+
+  Future<bool> signInWithApple() async {
+    state = Loading();
+    try {
+      await ref.read(authRepositoryProvider).signInWithApple();
+      state = Success();
+      return true;
+    } on AppFailure catch (e) {
+      state = Failure(e);
+      return false;
+    }
+  }
+
   Future<void> signOut() async {
     await ref.read(authRepositoryProvider).signOut();
     state = Idle();

@@ -6,7 +6,7 @@ part of 'tasks_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tasksListHash() => r'ef06cf5452b676921fc371426950ab3d6013df89';
+String _$tasksListHash() => r'83305469ec0e2cb43b298ca4f1aeb2b4838280d8';
 
 /// Lista de tareas del usuario actual.
 ///
