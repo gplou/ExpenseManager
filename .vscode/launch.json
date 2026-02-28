@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug (Android)",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--dart-define-from-file=dart_defines.json"]
+    },
+    {
+      "name": "Debug (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--dart-define-from-file=dart_defines.json"]
+    },
+    {
+      "name": "Profile",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+      "args": ["--dart-define-from-file=dart_defines.json"]
+    },
+    {
+      "name": "Release",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "args": ["--dart-define-from-file=dart_defines.json"]
+    }
+  ]
+}

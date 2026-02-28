@@ -1,30 +1,43 @@
 /// Configuración global de la aplicación.
-/// 
-/// En producción, usa --dart-define para inyectar las variables:
-/// flutter run --dart-define=SUPABASE_URL=tu_url --dart-define=SUPABASE_ANON_KEY=tu_key
+///
+/// Los valores se inyectan en tiempo de compilación via --dart-define-from-file:
+///   flutter run --dart-define-from-file=dart_defines.json
+///   flutter build apk --dart-define-from-file=dart_defines.json
+///
+/// Copia dart_defines.json.example → dart_defines.json y rellena tus valores.
+/// Nunca commitees dart_defines.json al repositorio.
 class AppConfig {
   AppConfig._();
 
-  static const String appName = 'Productivity App';
+  static const String appName = 'Expense Manager';
 
   // Supabase
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://ufchsvyhcqfppguqxfht.supabase.co', // Reemplaza en dev
-  );
-
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY2hzdnloY3FmcHBndXF4Zmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNDQ1NTYsImV4cCI6MjA4NzYyMDU1Nn0.X-XCDXEngLC9IfkSBaCrD5sGqxUXTGVxsMiWamK96hc', // Reemplaza en dev
-  );
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const String supabaseAnonKey =
+      String.fromEnvironment('SUPABASE_ANON_KEY');
 
   // Google OAuth — Web Client ID de Google Cloud Console
-  static const String googleWebClientId = String.fromEnvironment(
-    'GOOGLE_WEB_CLIENT_ID',
-    defaultValue: '633018728869-1nmmrjl5bq00bhsbuvvah0q4co1nhn0r.apps.googleusercontent.com',
-  );
+  static const String googleWebClientId =
+      String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
   // Entorno
   static const bool isProduction = bool.fromEnvironment('dart.vm.product');
   static const bool isDevelopment = !isProduction;
+
+  /// Valida que las variables de entorno obligatorias estén presentes.
+  /// Lanza [StateError] si falta alguna.
+  static void validate() {
+    if (supabaseUrl.isEmpty) {
+      throw StateError(
+        'SUPABASE_URL no está configurado.\n'
+        'Ejecuta con: flutter run --dart-define-from-file=dart_defines.json',
+      );
+    }
+    if (supabaseAnonKey.isEmpty) {
+      throw StateError(
+        'SUPABASE_ANON_KEY no está configurado.\n'
+        'Ejecuta con: flutter run --dart-define-from-file=dart_defines.json',
+      );
+    }
+  }
 }
