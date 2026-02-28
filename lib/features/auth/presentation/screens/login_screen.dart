@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,12 +43,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    final success =
+        await ref.read(authNotifierProvider.notifier).signInWithGoogle();
+    if (success && mounted) {
+      context.go(AppRoutes.dashboard);
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    final success =
+        await ref.read(authNotifierProvider.notifier).signInWithApple();
+    if (success && mounted) {
+      context.go(AppRoutes.dashboard);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
     final isLoading = authState is Loading;
 
-    // Mostrar error si existe
     ref.listen(authNotifierProvider, (_, next) {
       if (next is Failure) {
         context.showSnackbar(next.failure.userMessage, isError: true);
@@ -72,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   'Inicia sesión para continuar',
                   style: context.textTheme.bodyLarge?.copyWith(
-                    color: context.colors.onSurface.withValues(alpha:0.6),
+                    color: context.colors.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
                 const Gap(48),
@@ -136,6 +153,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         )
                       : const Text('Iniciar sesión'),
                 ),
+                const Gap(32),
+                // ── Separador ──────────────────────────────────────────────
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'O continúa con',
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: context.colors.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const Gap(24),
+                // ── Botón Google ────────────────────────────────────────────
+                _SocialButton(
+                  onPressed: isLoading ? null : _handleGoogleSignIn,
+                  icon: _GoogleIcon(),
+                  label: 'Continuar con Google',
+                ),
+                // ── Botón Apple (solo iOS/macOS) ────────────────────────────
+                if (Platform.isIOS || Platform.isMacOS) ...[
+                  const Gap(12),
+                  _SocialButton(
+                    onPressed: isLoading ? null : _handleAppleSignIn,
+                    icon: const Icon(Icons.apple, size: 22),
+                    label: 'Continuar con Apple',
+                  ),
+                ],
                 const Gap(24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -157,4 +207,109 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
+}
+
+// ── Widgets auxiliares ────────────────────────────────────────────────────────
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+  });
+
+  final VoidCallback? onPressed;
+  final Widget icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: icon,
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: context.colors.outline.withValues(alpha: 0.5),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Logo de Google usando las letras con los colores de la marca.
+class _GoogleIcon extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 22,
+      height: 22,
+      child: _GoogleLetterG(),
+    );
+  }
+}
+
+class _GoogleLetterG extends StatelessWidget {
+  const _GoogleLetterG();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _GoogleGPainter());
+  }
+}
+
+class _GoogleGPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // Arco azul (derecha y arriba) — ~210° a ~90°
+    _drawArc(canvas, center, radius, 210 * (3.14159 / 180),
+        240 * (3.14159 / 180), const Color(0xFF4285F4));
+    // Arco rojo (arriba izquierda) — ~90° a ~210°
+    _drawArc(canvas, center, radius, 90 * (3.14159 / 180),
+        120 * (3.14159 / 180), const Color(0xFFEA4335));
+    // Arco amarillo (izquierda) — ~210° a ~270°
+    _drawArc(canvas, center, radius, 210 * (3.14159 / 180),
+        60 * (3.14159 / 180), const Color(0xFFFBBC05));
+    // Arco verde (abajo) — ~270° a ~330°
+    _drawArc(canvas, center, radius, 270 * (3.14159 / 180),
+        60 * (3.14159 / 180), const Color(0xFF34A853));
+
+    // Barra horizontal derecha
+    final paint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromLTWH(center.dx, center.dy - radius * 0.18,
+          radius + 1, radius * 0.36),
+      paint,
+    );
+  }
+
+  void _drawArc(Canvas canvas, Offset center, double radius, double startAngle,
+      double sweepAngle, Color color) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = radius * 0.28;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius * 0.86),
+      startAngle,
+      sweepAngle,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

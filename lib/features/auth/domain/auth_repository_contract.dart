@@ -27,6 +27,12 @@ abstract interface class AuthRepositoryContract {
   /// Cierra la sesión actual.
   Future<void> signOut();
 
+  /// Inicia sesión (o registra) con Google.
+  Future<UserModel> signInWithGoogle();
+
+  /// Inicia sesión (o registra) con Apple. Solo iOS/macOS.
+  Future<UserModel> signInWithApple();
+
   /// Envía email para resetear contraseña.
   Future<void> sendPasswordReset({required String email});
 }
