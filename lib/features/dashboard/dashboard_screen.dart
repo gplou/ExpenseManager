@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 
 import '../../core/config/router.dart';
 import '../../core/utils/extensions.dart';
+import '../../core/widgets/custom_date_range_picker.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
@@ -18,6 +19,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final period = ref.watch(selectedPeriodProvider);
+    final customRange = ref.watch(customDateRangeProvider);
     final summaryAsync = ref.watch(transactionsSummaryProvider);
     final recentAsync = ref.watch(recentTransactionsProvider);
 
@@ -65,18 +67,48 @@ class DashboardScreen extends ConsumerWidget {
               // ── Selector de período ─────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: TransactionPeriod.values.map((p) {
-                  final isSelected = p == period;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text(p.label),
-                      selected: isSelected,
-                      onSelected: (_) =>
-                          ref.read(selectedPeriodProvider.notifier).state = p,
+                children: [
+                  ...TransactionPeriod.values.map((p) {
+                    final isSelected = p == period && customRange == null;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        label: Text(p.label),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          ref.read(selectedPeriodProvider.notifier).state = p;
+                          ref.read(customDateRangeProvider.notifier).state =
+                              null;
+                        },
+                      ),
+                    );
+                  }),
+                  IconButton(
+                    icon: Icon(
+                      Icons.calendar_month_outlined,
+                      color: customRange != null
+                          ? context.colors.primary
+                          : null,
                     ),
-                  );
-                }).toList(),
+                    tooltip: 'Rango personalizado',
+                    onPressed: () async {
+                      final range = await showCustomDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                        initialDateRange: customRange ??
+                            DateTimeRange(
+                              start: period.dateRange.from,
+                              end: period.dateRange.to,
+                            ),
+                      );
+                      if (range != null) {
+                        ref.read(customDateRangeProvider.notifier).state =
+                            range;
+                      }
+                    },
+                  ),
+                ],
               ),
               const Gap(24),
 
