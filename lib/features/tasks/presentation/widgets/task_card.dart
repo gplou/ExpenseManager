@@ -3,6 +3,7 @@ import 'package:gap/gap.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/task_model.dart';
 
 class TaskCard extends StatelessWidget {
@@ -128,7 +129,8 @@ class TaskCard extends StatelessWidget {
                             ),
                             const Gap(4),
                             Text(
-                              task.dueDate!.relativeDate,
+                              task.dueDate!.relativeDateL10n(
+                                  AppLocalizations.of(context)),
                               style: context.textTheme.bodySmall?.copyWith(
                                 fontSize: 11,
                                 color: task.isOverdue
