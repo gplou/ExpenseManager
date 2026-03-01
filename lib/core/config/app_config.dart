@@ -20,6 +20,10 @@ class AppConfig {
   static const String googleWebClientId =
       String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
+  // Claude API — para interpretar transacciones por voz
+  static const String claudeApiKey =
+      String.fromEnvironment('CLAUDE_API_KEY');
+
   // Entorno
   static const bool isProduction = bool.fromEnvironment('dart.vm.product');
   static const bool isDevelopment = !isProduction;

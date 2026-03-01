@@ -42,6 +42,10 @@ dependencies:
   sign_in_with_apple: ^6.1.1
   crypto: ^3.0.2
 
+  # Voz + IA
+  speech_to_text: ^7.0.0
+  http: ^1.2.0
+
   # Utilidades
   intl: ^0.20.2
   equatable: ^2.0.5
@@ -62,9 +66,6 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
-  assets:
-    - assets/images/
-    - assets/icons/
   fonts:
     - family: Sora
       fonts:
