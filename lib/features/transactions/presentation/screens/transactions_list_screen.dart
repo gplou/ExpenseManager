@@ -8,6 +8,7 @@ import '../../../../core/widgets/custom_date_range_picker.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/transactions_provider.dart';
+import 'add_transaction_screen.dart';
 
 class TransactionsListScreen extends ConsumerWidget {
   const TransactionsListScreen({super.key});
@@ -225,6 +226,12 @@ class _TransactionTile extends ConsumerWidget {
             .delete(transaction.id);
       },
       child: ListTile(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                AddTransactionScreen(transaction: transaction),
+          ),
+        ),
         leading: Container(
           width: 44,
           height: 44,

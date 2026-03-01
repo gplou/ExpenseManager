@@ -19,6 +19,8 @@ abstract class TransactionsRepositoryContract {
 
   Future<TransactionModel> createTransaction(TransactionModel transaction);
 
+  Future<TransactionModel> updateTransaction(TransactionModel transaction);
+
   Future<void> deleteTransaction(String id);
 
   Future<TransactionsSummary> getSummary({
