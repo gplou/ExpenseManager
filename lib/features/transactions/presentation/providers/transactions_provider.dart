@@ -93,6 +93,13 @@ class TransactionsNotifier extends Notifier<void> {
     ref.invalidate(allTransactionsProvider);
   }
 
+  Future<void> update(TransactionModel transaction) async {
+    await ref.read(transactionsRepositoryProvider).updateTransaction(transaction);
+    ref.invalidate(transactionsSummaryProvider);
+    ref.invalidate(recentTransactionsProvider);
+    ref.invalidate(allTransactionsProvider);
+  }
+
   Future<void> delete(String id) async {
     await ref.read(transactionsRepositoryProvider).deleteTransaction(id);
     ref.invalidate(transactionsSummaryProvider);
