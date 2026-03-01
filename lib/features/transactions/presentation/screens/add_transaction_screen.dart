@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
@@ -21,7 +22,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
       _AddTransactionScreenState();
 }
 
-// ── Info banner ────────────────────────────────────────────────────────────────
+// ── Info banner ───────────────────────────────────────────────────────────────
 
 class _RecurrenceInfoBanner extends StatelessWidget {
   const _RecurrenceInfoBanner({required this.date, required this.type});
@@ -30,10 +31,13 @@ class _RecurrenceInfoBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final next = nextRecurrenceDate(date, type);
     final dayStr =
         '${next.day.toString().padLeft(2, '0')}/${next.month.toString().padLeft(2, '0')}/${next.year}';
-    final freq = type == RecurrenceType.weekly ? 'semana' : 'mes';
+    final freq = type == RecurrenceType.weekly
+        ? l10n.frequencyWeek
+        : l10n.frequencyMonth;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -43,13 +47,15 @@ class _RecurrenceInfoBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded,
-              size: 15,
-              color: context.colors.primary.withValues(alpha: 0.8)),
+          Icon(
+            Icons.info_outline_rounded,
+            size: 15,
+            color: context.colors.primary.withValues(alpha: 0.8),
+          ),
           const Gap(8),
           Expanded(
             child: Text(
-              'La próxima repetición será el $dayStr y cada $freq a partir de entonces.',
+              l10n.nextRepetition(dayStr, freq),
               style: context.textTheme.bodySmall?.copyWith(
                 color: context.colors.primary.withValues(alpha: 0.9),
               ),
@@ -61,7 +67,7 @@ class _RecurrenceInfoBanner extends StatelessWidget {
   }
 }
 
-// ── Screen ─────────────────────────────────────────────────────────────────────
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   late TransactionType _type;
@@ -109,20 +115,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     final amountText = _amountController.text.trim().replaceAll(',', '.');
     final amount = double.tryParse(amountText);
 
     if (amount == null || amount <= 0) {
-      context.showSnackbar('Ingresa un importe válido', isError: true);
+      context.showSnackbar(l10n.invalidAmount, isError: true);
       return;
     }
     if (_selectedCategory == null) {
-      context.showSnackbar('Selecciona una categoría', isError: true);
+      context.showSnackbar(l10n.selectCategory, isError: true);
       return;
     }
     if (_isRecurring && _recurrenceType == null) {
-      context.showSnackbar('Selecciona la frecuencia de repetición',
-          isError: true);
+      context.showSnackbar(l10n.selectFrequency, isError: true);
       return;
     }
 
@@ -158,7 +164,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             .read(transactionsNotifierProvider.notifier)
             .create(transaction);
 
-        // Guardar la plantilla recurrente si procede
         if (_isRecurring && _recurrenceType != null) {
           final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
           await ref
@@ -177,7 +182,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     } catch (e) {
       if (mounted) {
         context.showSnackbar(
-          _isEditing ? 'Error al actualizar' : 'Error al guardar',
+          _isEditing ? l10n.errorUpdating : l10n.errorSaving,
           isError: true,
         );
       }
@@ -187,20 +192,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 
   Future<void> _delete() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar'),
-        content: const Text('¿Eliminar esta transacción?'),
+        title: Text(l10n.delete),
+        content: Text(l10n.deleteTransactionConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Eliminar',
-                style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -214,14 +222,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Editar transacción' : 'Nueva transacción'),
+        title: Text(
+            _isEditing ? l10n.editTransaction : l10n.newTransaction),
         actions: [
           if (_isEditing)
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
-              tooltip: 'Eliminar',
+              tooltip: l10n.delete,
               onPressed: _delete,
             ),
         ],
@@ -231,7 +242,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Toggle Gasto / Ingreso ──────────────────────────────────────
+            // ── Toggle Gasto / Ingreso ────────────────────────────────────
             Container(
               decoration: BoxDecoration(
                 color: context.colors.surfaceContainerHighest,
@@ -256,7 +267,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          type.label,
+                          type.l10nLabel(l10n),
                           textAlign: TextAlign.center,
                           style: context.textTheme.labelLarge?.copyWith(
                             color: isSelected
@@ -276,8 +287,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Importe ────────────────────────────────────────────────────
-            Text('Importe', style: context.textTheme.labelMedium),
+            // ── Importe ──────────────────────────────────────────────────
+            Text(l10n.amount, style: context.textTheme.labelMedium),
             const Gap(8),
             TextFormField(
               controller: _amountController,
@@ -294,13 +305,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 prefixStyle: context.textTheme.headlineMedium?.copyWith(
                   color: context.colors.onSurface.withValues(alpha: 0.5),
                 ),
-                hintText: '0,00',
+                hintText: l10n.amountHint,
               ),
             ),
             const Gap(28),
 
-            // ── Categoría ──────────────────────────────────────────────────
-            Text('Categoría', style: context.textTheme.labelMedium),
+            // ── Categoría ────────────────────────────────────────────────
+            Text(l10n.category, style: context.textTheme.labelMedium),
             const Gap(12),
             Wrap(
               spacing: 8,
@@ -309,7 +320,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 final isSelected = _selectedCategory == cat.name;
                 return ChoiceChip(
                   avatar: Icon(cat.icon, size: 16),
-                  label: Text(cat.name),
+                  label: Text(
+                    TransactionCategories.localizedName(cat.name, l10n),
+                  ),
                   selected: isSelected,
                   onSelected: (_) =>
                       setState(() => _selectedCategory = cat.name),
@@ -318,20 +331,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Descripción ────────────────────────────────────────────────
-            Text('Descripción (opcional)', style: context.textTheme.labelMedium),
+            // ── Descripción ──────────────────────────────────────────────
+            Text(l10n.descriptionOptional,
+                style: context.textTheme.labelMedium),
             const Gap(8),
             TextFormField(
               controller: _descriptionController,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                hintText: 'Añade una nota...',
+              decoration: InputDecoration(
+                hintText: l10n.descriptionHint,
               ),
             ),
             const Gap(28),
 
-            // ── Fecha ──────────────────────────────────────────────────────
-            Text('Fecha', style: context.textTheme.labelMedium),
+            // ── Fecha ────────────────────────────────────────────────────
+            Text(l10n.date, style: context.textTheme.labelMedium),
             const Gap(8),
             InkWell(
               onTap: _pickDate,
@@ -341,33 +355,36 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color:
-                        context.colors.outline.withValues(alpha: 0.5),
+                    color: context.colors.outline.withValues(alpha: 0.5),
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today_outlined,
-                        size: 18,
-                        color: context.colors.onSurface
-                            .withValues(alpha: 0.6)),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 18,
+                      color: context.colors.onSurface
+                          .withValues(alpha: 0.6),
+                    ),
                     const Gap(12),
                     Text(
                       _selectedDate.formattedDate,
                       style: context.textTheme.bodyMedium,
                     ),
                     const Spacer(),
-                    Icon(Icons.chevron_right,
-                        color: context.colors.onSurface
-                            .withValues(alpha: 0.4)),
+                    Icon(
+                      Icons.chevron_right,
+                      color: context.colors.onSurface
+                          .withValues(alpha: 0.4),
+                    ),
                   ],
                 ),
               ),
             ),
             const Gap(28),
 
-            // ── Recurrente (solo al crear) ──────────────────────────────────
+            // ── Recurrente (solo al crear) ────────────────────────────────
             if (!_isEditing) ...[
               Row(
                 children: [
@@ -379,7 +396,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   const Gap(8),
                   Expanded(
                     child: Text(
-                      'Transacción recurrente',
+                      l10n.recurringTransaction,
                       style: context.textTheme.labelMedium,
                     ),
                   ),
@@ -397,16 +414,18 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 const Gap(8),
                 SegmentedButton<RecurrenceType>(
                   showSelectedIcon: false,
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: RecurrenceType.weekly,
-                      label: Text('Semanal'),
-                      icon: Icon(Icons.calendar_view_week_outlined, size: 16),
+                      label: Text(l10n.weekly),
+                      icon: const Icon(
+                          Icons.calendar_view_week_outlined, size: 16),
                     ),
                     ButtonSegment(
                       value: RecurrenceType.monthly,
-                      label: Text('Mensual'),
-                      icon: Icon(Icons.calendar_month_outlined, size: 16),
+                      label: Text(l10n.monthly),
+                      icon: const Icon(
+                          Icons.calendar_month_outlined, size: 16),
                     ),
                   ],
                   selected: {_recurrenceType ?? RecurrenceType.monthly},
@@ -424,7 +443,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               const Gap(28),
             ],
 
-            // ── Botón guardar ──────────────────────────────────────────────
+            // ── Botón guardar ────────────────────────────────────────────
             ElevatedButton(
               onPressed: _isSaving ? null : _save,
               style: ElevatedButton.styleFrom(
@@ -442,8 +461,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     )
                   : Text(
                       _isEditing
-                          ? 'Guardar cambios'
-                          : 'Guardar ${_type.label.toLowerCase()}',
+                          ? l10n.saveChanges
+                          : _type.isIncome
+                              ? l10n.saveIncome
+                              : l10n.saveExpense,
                     ),
             ),
           ],

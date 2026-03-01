@@ -8,6 +8,7 @@ import 'package:gap/gap.dart';
 import '../../../../core/config/router.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -61,6 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authNotifierProvider);
     final isLoading = authState is Loading;
 
@@ -82,12 +84,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const Gap(48),
                 Text(
-                  'Bienvenido 👋',
+                  l10n.welcome,
                   style: context.textTheme.headlineMedium,
                 ),
                 const Gap(8),
                 Text(
-                  'Inicia sesión para continuar',
+                  l10n.loginSubtitle,
                   style: context.textTheme.bodyLarge?.copyWith(
                     color: context.colors.onSurface.withValues(alpha: 0.6),
                   ),
@@ -97,13 +99,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.emailLabel,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Ingresa tu email';
-                    if (!v.isValidEmail) return 'Email inválido';
+                    if (v == null || v.isEmpty) return l10n.enterEmail;
+                    if (!v.isValidEmail) return l10n.invalidEmail;
                     return null;
                   },
                 ),
@@ -114,7 +116,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _handleLogin(),
                   decoration: InputDecoration(
-                    labelText: 'Contraseña',
+                    labelText: l10n.passwordLabel,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -127,7 +129,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
+                    if (v == null || v.isEmpty) return l10n.enterPassword;
                     return null;
                   },
                 ),
@@ -136,7 +138,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text('¿Olvidaste tu contraseña?'),
+                    child: Text(l10n.forgotPassword),
                   ),
                 ),
                 const Gap(24),
@@ -151,19 +153,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Iniciar sesión'),
+                      : Text(l10n.signIn),
                 ),
                 const Gap(32),
-                // ── Separador ──────────────────────────────────────────────
                 Row(
                   children: [
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        'O continúa con',
+                        l10n.orContinueWith,
                         style: context.textTheme.bodySmall?.copyWith(
-                          color: context.colors.onSurface.withValues(alpha: 0.5),
+                          color: context.colors.onSurface
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                     ),
@@ -171,19 +173,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
                 const Gap(24),
-                // ── Botón Google ────────────────────────────────────────────
                 _SocialButton(
                   onPressed: isLoading ? null : _handleGoogleSignIn,
                   icon: _GoogleIcon(),
-                  label: 'Continuar con Google',
+                  label: l10n.continueWithGoogle,
                 ),
-                // ── Botón Apple (solo iOS/macOS) ────────────────────────────
                 if (Platform.isIOS || Platform.isMacOS) ...[
                   const Gap(12),
                   _SocialButton(
                     onPressed: isLoading ? null : _handleAppleSignIn,
                     icon: const Icon(Icons.apple, size: 22),
-                    label: 'Continuar con Apple',
+                    label: l10n.continueWithApple,
                   ),
                 ],
                 const Gap(24),
@@ -191,12 +191,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '¿No tienes cuenta? ',
+                      l10n.noAccount,
                       style: context.textTheme.bodyMedium,
                     ),
                     TextButton(
                       onPressed: () => context.push(AppRoutes.register),
-                      child: const Text('Regístrate'),
+                      child: Text(l10n.signUp),
                     ),
                   ],
                 ),
@@ -244,7 +244,6 @@ class _SocialButton extends StatelessWidget {
   }
 }
 
-/// Logo de Google usando las letras con los colores de la marca.
 class _GoogleIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -271,20 +270,15 @@ class _GoogleGPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // Arco azul (derecha y arriba) — ~210° a ~90°
     _drawArc(canvas, center, radius, 210 * (3.14159 / 180),
         240 * (3.14159 / 180), const Color(0xFF4285F4));
-    // Arco rojo (arriba izquierda) — ~90° a ~210°
     _drawArc(canvas, center, radius, 90 * (3.14159 / 180),
         120 * (3.14159 / 180), const Color(0xFFEA4335));
-    // Arco amarillo (izquierda) — ~210° a ~270°
     _drawArc(canvas, center, radius, 210 * (3.14159 / 180),
         60 * (3.14159 / 180), const Color(0xFFFBBC05));
-    // Arco verde (abajo) — ~270° a ~330°
     _drawArc(canvas, center, radius, 270 * (3.14159 / 180),
         60 * (3.14159 / 180), const Color(0xFF34A853));
 
-    // Barra horizontal derecha
     final paint = Paint()
       ..color = const Color(0xFF4285F4)
       ..style = PaintingStyle.fill;

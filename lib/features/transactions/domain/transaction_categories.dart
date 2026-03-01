@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import 'transaction_model.dart';
 
 class TransactionCategory {
@@ -47,4 +48,23 @@ class TransactionCategories {
         )
         .icon;
   }
+
+  /// Returns the localized display name for a DB category key.
+  /// DB keys stay in Spanish; only the UI label is translated.
+  static String localizedName(String dbKey, AppLocalizations l10n) =>
+      switch (dbKey) {
+        'Salario' => l10n.categorySalary,
+        'Freelance' => l10n.categoryFreelance,
+        'Inversión' => l10n.categoryInvestment,
+        'Regalo' => l10n.categoryGift,
+        'Comida' => l10n.categoryFood,
+        'Transporte' => l10n.categoryTransport,
+        'Vivienda' => l10n.categoryHousing,
+        'Ocio' => l10n.categoryLeisure,
+        'Salud' => l10n.categoryHealth,
+        'Educación' => l10n.categoryEducation,
+        'Ropa' => l10n.categoryClothing,
+        'Tecnología' => l10n.categoryTechnology,
+        _ => l10n.categoryOther,
+      };
 }
