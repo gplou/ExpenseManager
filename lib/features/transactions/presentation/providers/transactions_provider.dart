@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/transactions_repository.dart';
@@ -40,13 +41,23 @@ extension TransactionPeriodX on TransactionPeriod {
 final selectedPeriodProvider =
     StateProvider<TransactionPeriod>((ref) => TransactionPeriod.month);
 
+// ── Custom date range (overrides period when set) ─────────────────────────────
+
+final customDateRangeProvider = StateProvider<DateTimeRange?>((ref) => null);
+
+final effectiveDateRangeProvider =
+    Provider<({DateTime from, DateTime to})>((ref) {
+  final custom = ref.watch(customDateRangeProvider);
+  if (custom != null) return (from: custom.start, to: custom.end);
+  return ref.watch(selectedPeriodProvider).dateRange;
+});
+
 // ── Summary ───────────────────────────────────────────────────────────────────
 
 final transactionsSummaryProvider =
     FutureProvider.autoDispose<TransactionsSummary>((ref) {
-  final period = ref.watch(selectedPeriodProvider);
+  final range = ref.watch(effectiveDateRangeProvider);
   final repo = ref.watch(transactionsRepositoryProvider);
-  final range = period.dateRange;
   return repo.getSummary(from: range.from, to: range.to);
 });
 
@@ -54,9 +65,8 @@ final transactionsSummaryProvider =
 
 final recentTransactionsProvider =
     FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
-  final period = ref.watch(selectedPeriodProvider);
+  final range = ref.watch(effectiveDateRangeProvider);
   final repo = ref.watch(transactionsRepositoryProvider);
-  final range = period.dateRange;
   final all = await repo.getTransactions(from: range.from, to: range.to);
   return all.take(5).toList();
 });
@@ -65,9 +75,8 @@ final recentTransactionsProvider =
 
 final allTransactionsProvider =
     FutureProvider.autoDispose<List<TransactionModel>>((ref) {
-  final period = ref.watch(selectedPeriodProvider);
+  final range = ref.watch(effectiveDateRangeProvider);
   final repo = ref.watch(transactionsRepositoryProvider);
-  final range = period.dateRange;
   return repo.getTransactions(from: range.from, to: range.to);
 });
 
