@@ -10,6 +10,7 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/tasks/presentation/screen/tasks_list_screen.dart';
 import '../../features/tasks/presentation/screen/task_detail_screen.dart';
+import '../../features/transactions/domain/parsed_voice_transaction.dart';
 import '../../features/transactions/presentation/screens/add_transaction_screen.dart';
 import '../../features/transactions/presentation/screens/transactions_list_screen.dart';
 
@@ -99,7 +100,9 @@ GoRouter router(RouterRef ref) {
       GoRoute(
         path: AppRoutes.addTransaction,
         name: 'addTransaction',
-        builder: (context, state) => const AddTransactionScreen(),
+        builder: (context, state) => AddTransactionScreen(
+          voiceData: state.extra as ParsedVoiceTransaction?,
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

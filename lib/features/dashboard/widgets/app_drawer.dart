@@ -4,9 +4,12 @@ import 'package:gap/gap.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/network/supabase_client.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/voice_enabled_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/extensions.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -14,16 +17,24 @@ class AppDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);
     final isDark = ref.watch(
       themeModeProvider.select((v) => v.valueOrNull == ThemeMode.dark),
     );
+    final currentLocale = ref.watch(localeProvider).valueOrNull;
+    final currentLocaleName = supportedLocales
+        .firstWhere(
+          (l) => l.code == (currentLocale?.languageCode ?? 'es'),
+          orElse: () => supportedLocales.first,
+        )
+        .name;
 
     return Drawer(
       child: SafeArea(
         child: Column(
           children: [
-            // ── Header ────────────────────────────────────────────────────────
+            // ── Header ──────────────────────────────────────────────────────
             _DrawerHeader(user: user),
             const Divider(height: 1),
 
@@ -31,52 +42,57 @@ class AppDrawer extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  // ── Ajustes de usuario ─────────────────────────────────────
-                  const _SectionLabel('Ajustes de usuario'),
+                  // ── Ajustes de usuario ────────────────────────────────────
+                  _SectionLabel(l10n.userSettings),
                   ListTile(
                     leading: const Icon(Icons.person_outline),
-                    title: const Text('Nombre de usuario'),
+                    title: Text(l10n.username),
                     subtitle: Text(
                       user?.name?.isNotEmpty == true
                           ? user!.name!
-                          : 'Sin nombre',
+                          : l10n.noName,
                     ),
                     trailing: const Icon(Icons.chevron_right, size: 18),
-                    onTap: () => _showEditNameSheet(
-                      context,
-                      ref,
-                      user?.name,
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.email_outlined),
-                    title: const Text('Email'),
-                    subtitle: Text(user?.email ?? ''),
+                    onTap: () => _showEditNameSheet(context, ref, user?.name),
                   ),
                   ListTile(
                     leading: const Icon(Icons.lock_outline),
-                    title: const Text('Cambiar contraseña'),
+                    title: Text(l10n.changePassword),
                     trailing: const Icon(Icons.chevron_right, size: 18),
-                    onTap: () => _confirmChangePassword(
-                      context,
-                      ref,
-                      user?.email,
-                    ),
+                    onTap: () =>
+                        _confirmChangePassword(context, ref, user?.email),
                   ),
                   const Gap(8),
 
                   // ── Ajustes de la app ──────────────────────────────────────
-                  const _SectionLabel('Ajustes de la app'),
+                  _SectionLabel(l10n.appSettings),
                   SwitchListTile(
                     secondary: Icon(
                       isDark
                           ? Icons.dark_mode_outlined
                           : Icons.light_mode_outlined,
                     ),
-                    title: const Text('Modo oscuro'),
+                    title: Text(l10n.darkMode),
                     value: isDark,
                     onChanged: (_) =>
                         ref.read(themeModeProvider.notifier).toggle(),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.language_outlined),
+                    title: Text(l10n.language),
+                    subtitle: Text(currentLocaleName),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    onTap: () => _showLanguageSheet(context, ref),
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.mic_outlined),
+                    title: const Text('Entrada por voz (IA)'),
+                    subtitle: const Text(
+                      'Usa IA para interpretar tus transacciones',
+                    ),
+                    value: ref.watch(voiceEnabledProvider).valueOrNull ?? false,
+                    onChanged: (_) =>
+                        ref.read(voiceEnabledProvider.notifier).toggle(),
                   ),
                 ],
               ),
@@ -84,14 +100,14 @@ class AppDrawer extends ConsumerWidget {
 
             const Divider(height: 1),
 
-            // ── Logout ────────────────────────────────────────────────────────
+            // ── Logout ────────────────────────────────────────────────────
             ListTile(
               leading: Icon(
                 Icons.logout_outlined,
                 color: context.colors.error,
               ),
               title: Text(
-                'Cerrar sesión',
+                l10n.logout,
                 style: TextStyle(color: context.colors.error),
               ),
               onTap: () {
@@ -106,28 +122,74 @@ class AppDrawer extends ConsumerWidget {
     );
   }
 
+  void _showLanguageSheet(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final currentLocale = ref.read(localeProvider).valueOrNull;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Text(l10n.language,
+                    style: ctx.textTheme.titleMedium),
+              ),
+              ...supportedLocales.map((locale) {
+                final isSelected =
+                    currentLocale?.languageCode == locale.code;
+                return ListTile(
+                  leading: Text(
+                    locale.flag,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  title: Text(locale.name),
+                  trailing: isSelected
+                      ? Icon(Icons.check, color: ctx.colors.primary)
+                      : null,
+                  onTap: () {
+                    ref
+                        .read(localeProvider.notifier)
+                        .setLocale(Locale(locale.code));
+                    Navigator.of(ctx).pop();
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _confirmChangePassword(
     BuildContext context,
     WidgetRef ref,
     String? email,
   ) async {
     if (email == null) return;
+    final l10n = AppLocalizations.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cambiar contraseña'),
-        content: Text(
-          'Te enviaremos un enlace de cambio de contraseña a:\n\n$email',
-        ),
+        title: Text(l10n.changePassword),
+        content: Text(l10n.changePasswordContent(email)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Enviar'),
+            child: Text(l10n.send),
           ),
         ],
       ),
@@ -138,11 +200,11 @@ class AppDrawer extends ConsumerWidget {
     try {
       await ref.read(supabaseClientProvider).auth.resetPasswordForEmail(email);
       if (!context.mounted) return;
-      Navigator.of(context).pop(); // cierra el drawer
-      context.showSnackbar('Revisa tu email para cambiar la contraseña');
+      Navigator.of(context).pop();
+      context.showSnackbar(l10n.checkEmailPassword);
     } catch (_) {
       if (!context.mounted) return;
-      context.showSnackbar('No se pudo enviar el email. Intenta de nuevo.', isError: true);
+      context.showSnackbar(l10n.errorSendingEmail, isError: true);
     }
   }
 
@@ -169,7 +231,7 @@ class AppDrawer extends ConsumerWidget {
           currentName: currentName,
           onSaved: () {
             Navigator.of(sheetCtx).pop();
-            Navigator.of(context).pop(); // close drawer too
+            Navigator.of(context).pop();
           },
         ),
       ),
@@ -177,7 +239,7 @@ class AppDrawer extends ConsumerWidget {
   }
 }
 
-// ── Drawer header ──────────────────────────────────────────────────────────────
+// ── Drawer header ─────────────────────────────────────────────────────────────
 
 class _DrawerHeader extends StatelessWidget {
   const _DrawerHeader({required this.user});
@@ -185,6 +247,7 @@ class _DrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final name = (user?.name as String?)?.trim();
     final email = user?.email as String?;
 
@@ -220,7 +283,7 @@ class _DrawerHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name?.isNotEmpty == true ? name! : 'Usuario',
+                  name?.isNotEmpty == true ? name! : l10n.displayUser,
                   style: context.textTheme.titleMedium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -243,7 +306,7 @@ class _DrawerHeader extends StatelessWidget {
   }
 }
 
-// ── Section label ──────────────────────────────────────────────────────────────
+// ── Section label ─────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.label);
@@ -265,7 +328,7 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── Edit name bottom sheet ─────────────────────────────────────────────────────
+// ── Edit name bottom sheet ────────────────────────────────────────────────────
 
 class _EditNameSheet extends ConsumerStatefulWidget {
   const _EditNameSheet({required this.currentName, required this.onSaved});
@@ -296,6 +359,7 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
   Future<void> _save() async {
     final name = _controller.text.trim();
     if (name.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _loading = true;
       _error = null;
@@ -307,7 +371,7 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
       ref.invalidate(currentUserProvider);
       widget.onSaved();
     } catch (e) {
-      setState(() => _error = 'No se pudo guardar. Intenta de nuevo.');
+      if (mounted) setState(() => _error = l10n.errorSavingName);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -315,19 +379,20 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Editar nombre', style: context.textTheme.titleLarge),
+        Text(l10n.editName, style: context.textTheme.titleLarge),
         const Gap(20),
         TextField(
           controller: _controller,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Nombre completo',
-            prefixIcon: Icon(Icons.person_outline),
+          decoration: InputDecoration(
+            labelText: l10n.fullName,
+            prefixIcon: const Icon(Icons.person_outline),
           ),
           onSubmitted: (_) => _save(),
         ),
@@ -350,7 +415,7 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('Guardar'),
+              : Text(l10n.save),
         ),
       ],
     );
