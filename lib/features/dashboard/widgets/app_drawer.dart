@@ -55,11 +55,6 @@ class AppDrawer extends ConsumerWidget {
                     onTap: () => _showEditNameSheet(context, ref, user?.name),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.email_outlined),
-                    title: Text(l10n.email),
-                    subtitle: Text(user?.email ?? ''),
-                  ),
-                  ListTile(
                     leading: const Icon(Icons.lock_outline),
                     title: Text(l10n.changePassword),
                     trailing: const Icon(Icons.chevron_right, size: 18),
