@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../core/utils/extensions.dart';
+import '../../data/recurring_transactions_repository.dart';
+import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/transactions_provider.dart';
@@ -19,6 +21,48 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
       _AddTransactionScreenState();
 }
 
+// ── Info banner ────────────────────────────────────────────────────────────────
+
+class _RecurrenceInfoBanner extends StatelessWidget {
+  const _RecurrenceInfoBanner({required this.date, required this.type});
+  final DateTime date;
+  final RecurrenceType type;
+
+  @override
+  Widget build(BuildContext context) {
+    final next = nextRecurrenceDate(date, type);
+    final dayStr =
+        '${next.day.toString().padLeft(2, '0')}/${next.month.toString().padLeft(2, '0')}/${next.year}';
+    final freq = type == RecurrenceType.weekly ? 'semana' : 'mes';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: context.colors.primaryContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded,
+              size: 15,
+              color: context.colors.primary.withValues(alpha: 0.8)),
+          const Gap(8),
+          Expanded(
+            child: Text(
+              'La próxima repetición será el $dayStr y cada $freq a partir de entonces.',
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.colors.primary.withValues(alpha: 0.9),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Screen ─────────────────────────────────────────────────────────────────────
+
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   late TransactionType _type;
   late final TextEditingController _amountController;
@@ -26,6 +70,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   String? _selectedCategory;
   late DateTime _selectedDate;
   bool _isSaving = false;
+  bool _isRecurring = false;
+  RecurrenceType? _recurrenceType;
 
   bool get _isEditing => widget.transaction != null;
 
@@ -74,6 +120,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       context.showSnackbar('Selecciona una categoría', isError: true);
       return;
     }
+    if (_isRecurring && _recurrenceType == null) {
+      context.showSnackbar('Selecciona la frecuencia de repetición',
+          isError: true);
+      return;
+    }
+
+    final desc = _descriptionController.text.trim().isEmpty
+        ? null
+        : _descriptionController.text.trim();
 
     setState(() => _isSaving = true);
     try {
@@ -82,9 +137,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           amount: amount,
           type: _type,
           category: _selectedCategory!,
-          description: _descriptionController.text.trim().isEmpty
-              ? null
-              : _descriptionController.text.trim(),
+          description: desc,
           date: _selectedDate,
         );
         await ref
@@ -97,15 +150,28 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           amount: amount,
           type: _type,
           category: _selectedCategory!,
-          description: _descriptionController.text.trim().isEmpty
-              ? null
-              : _descriptionController.text.trim(),
+          description: desc,
           date: _selectedDate,
           createdAt: DateTime.now(),
         );
         await ref
             .read(transactionsNotifierProvider.notifier)
             .create(transaction);
+
+        // Guardar la plantilla recurrente si procede
+        if (_isRecurring && _recurrenceType != null) {
+          final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
+          await ref
+              .read(recurringTransactionsRepositoryProvider)
+              .createRecurring(
+                amount: amount,
+                type: _type,
+                category: _selectedCategory!,
+                description: desc,
+                recurrenceType: _recurrenceType!,
+                nextOccurrence: nextDate,
+              );
+        }
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -299,7 +365,64 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
               ),
             ),
-            const Gap(40),
+            const Gap(28),
+
+            // ── Recurrente (solo al crear) ──────────────────────────────────
+            if (!_isEditing) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.repeat_rounded,
+                    size: 18,
+                    color: context.colors.onSurface.withValues(alpha: 0.6),
+                  ),
+                  const Gap(8),
+                  Expanded(
+                    child: Text(
+                      'Transacción recurrente',
+                      style: context.textTheme.labelMedium,
+                    ),
+                  ),
+                  Switch(
+                    value: _isRecurring,
+                    onChanged: (v) => setState(() {
+                      _isRecurring = v;
+                      _recurrenceType =
+                          v ? RecurrenceType.monthly : null;
+                    }),
+                  ),
+                ],
+              ),
+              if (_isRecurring) ...[
+                const Gap(8),
+                SegmentedButton<RecurrenceType>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                      value: RecurrenceType.weekly,
+                      label: Text('Semanal'),
+                      icon: Icon(Icons.calendar_view_week_outlined, size: 16),
+                    ),
+                    ButtonSegment(
+                      value: RecurrenceType.monthly,
+                      label: Text('Mensual'),
+                      icon: Icon(Icons.calendar_month_outlined, size: 16),
+                    ),
+                  ],
+                  selected: {_recurrenceType ?? RecurrenceType.monthly},
+                  onSelectionChanged: (s) =>
+                      setState(() => _recurrenceType = s.first),
+                ),
+                if (_recurrenceType != null) ...[
+                  const Gap(10),
+                  _RecurrenceInfoBanner(
+                    date: _selectedDate,
+                    type: _recurrenceType!,
+                  ),
+                ],
+              ],
+              const Gap(28),
+            ],
 
             // ── Botón guardar ──────────────────────────────────────────────
             ElevatedButton(

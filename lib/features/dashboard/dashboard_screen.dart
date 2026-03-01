@@ -11,6 +11,7 @@ import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
 import '../transactions/domain/transactions_repository_contract.dart';
+import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
 
@@ -19,6 +20,9 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Procesa recurrentes pendientes al abrir la app (una vez por sesión)
+    ref.watch(processRecurringTransactionsProvider);
+
     final user = ref.watch(currentUserProvider);
     final period = ref.watch(selectedPeriodProvider);
     final customRange = ref.watch(customDateRangeProvider);
@@ -51,6 +55,7 @@ class DashboardScreen extends ConsumerWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: RefreshIndicator(
         onRefresh: () async {
+          ref.invalidate(processRecurringTransactionsProvider);
           ref.invalidate(transactionsSummaryProvider);
           ref.invalidate(recentTransactionsProvider);
         },
