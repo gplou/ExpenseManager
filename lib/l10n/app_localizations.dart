@@ -815,6 +815,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Otros'**
   String get categoryOther;
+
+  /// No description provided for @newCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva categoría'**
+  String get newCategory;
+
+  /// No description provided for @categoryName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la categoría'**
+  String get categoryName;
+
+  /// No description provided for @chooseIcon.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige un icono'**
+  String get chooseIcon;
 }
 
 class _AppLocalizationsDelegate

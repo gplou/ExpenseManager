@@ -376,4 +376,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get categoryOther => 'Autres';
+
+  @override
+  String get newCategory => 'Nouvelle catégorie';
+
+  @override
+  String get categoryName => 'Nom de la catégorie';
+
+  @override
+  String get chooseIcon => 'Choisissez une icône';
 }

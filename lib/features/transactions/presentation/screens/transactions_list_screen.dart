@@ -8,6 +8,7 @@ import '../../../../core/widgets/custom_date_range_picker.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
+import '../providers/custom_categories_provider.dart';
 import '../providers/transactions_provider.dart';
 import 'add_transaction_screen.dart';
 
@@ -189,9 +190,11 @@ class _TransactionTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final isIncome = transaction.type.isIncome;
     final color = isIncome ? Colors.green : Colors.red;
+    final customCats = ref.watch(customCategoriesProvider);
     final icon = TransactionCategories.iconFor(
       transaction.category,
       transaction.type,
+      extra: customCats[transaction.type] ?? [],
     );
 
     return Dismissible(

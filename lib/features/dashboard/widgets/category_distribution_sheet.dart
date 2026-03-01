@@ -7,6 +7,7 @@ import '../../../core/utils/extensions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../transactions/domain/transaction_categories.dart';
 import '../../transactions/domain/transaction_model.dart';
+import '../../transactions/presentation/providers/custom_categories_provider.dart';
 import '../../transactions/presentation/providers/transactions_provider.dart';
 
 enum _ChartMode { pie, bar }
@@ -44,6 +45,7 @@ class _CategoryDistributionSheetState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final asyncData = ref.watch(categoryDistributionProvider(widget.type));
+    final customCats = ref.watch(customCategoriesProvider);
     final title =
         widget.type.isIncome ? l10n.incomeDistribution : l10n.expenseDistribution;
 
@@ -122,6 +124,7 @@ class _CategoryDistributionSheetState
                                 entries: entries,
                                 colors: colors,
                                 type: widget.type,
+                                extra: customCats[widget.type] ?? [],
                               ),
                       ),
                       const Gap(16),
@@ -226,11 +229,13 @@ class _BarChartSection extends StatelessWidget {
     required this.entries,
     required this.colors,
     required this.type,
+    this.extra = const [],
   });
 
   final List<MapEntry<String, double>> entries;
   final List<Color> colors;
   final TransactionType type;
+  final List<TransactionCategory> extra;
 
   @override
   Widget build(BuildContext context) {
@@ -265,8 +270,9 @@ class _BarChartSection extends StatelessWidget {
                   if (i < 0 || i >= entries.length) {
                     return const SizedBox.shrink();
                   }
-                  final icon =
-                      TransactionCategories.iconFor(entries[i].key, type);
+                  final icon = TransactionCategories.iconFor(
+                      entries[i].key, type,
+                      extra: extra);
                   return SideTitleWidget(
                     axisSide: meta.axisSide,
                     child: Icon(icon, size: 14, color: colors[i]),

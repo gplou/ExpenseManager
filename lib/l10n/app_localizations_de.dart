@@ -378,4 +378,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get categoryOther => 'Sonstiges';
+
+  @override
+  String get newCategory => 'Neue Kategorie';
+
+  @override
+  String get categoryName => 'Kategoriename';
+
+  @override
+  String get chooseIcon => 'Symbol auswählen';
 }

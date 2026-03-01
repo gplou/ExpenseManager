@@ -15,6 +15,7 @@ import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
 import '../transactions/domain/transactions_repository_contract.dart';
+import '../transactions/presentation/providers/custom_categories_provider.dart';
 import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
@@ -400,18 +401,20 @@ class _SummaryShimmer extends StatelessWidget {
 
 // ── Recent transaction tile ───────────────────────────────────────────────────
 
-class _RecentTransactionTile extends StatelessWidget {
+class _RecentTransactionTile extends ConsumerWidget {
   const _RecentTransactionTile({required this.transaction});
   final TransactionModel transaction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final isIncome = transaction.type.isIncome;
     final color = isIncome ? Colors.green : Colors.red;
+    final customCats = ref.watch(customCategoriesProvider);
     final icon = TransactionCategories.iconFor(
       transaction.category,
       transaction.type,
+      extra: customCats[transaction.type] ?? [],
     );
 
     return ListTile(
