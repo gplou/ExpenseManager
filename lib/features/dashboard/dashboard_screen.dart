@@ -6,6 +6,7 @@ import 'package:gap/gap.dart';
 import '../../core/config/router.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/custom_date_range_picker.dart';
+import 'widgets/app_drawer.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
@@ -24,6 +25,7 @@ class DashboardScreen extends ConsumerWidget {
     final recentAsync = ref.watch(recentTransactionsProvider);
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,13 +42,6 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_outlined),
-            onPressed: () =>
-                ref.read(authNotifierProvider.notifier).signOut(),
-          ),
-        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.addTransaction),
