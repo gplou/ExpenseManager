@@ -375,4 +375,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get categoryOther => 'Otros';
+
+  @override
+  String get newCategory => 'Nueva categoría';
+
+  @override
+  String get categoryName => 'Nombre de la categoría';
+
+  @override
+  String get chooseIcon => 'Elige un icono';
 }
