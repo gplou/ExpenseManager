@@ -8,32 +8,6 @@ import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/custom_categories_provider.dart';
 
-const _pickableIcons = [
-  Icons.sports_soccer_outlined,
-  Icons.fitness_center_outlined,
-  Icons.directions_bike_outlined,
-  Icons.flight_outlined,
-  Icons.hotel_outlined,
-  Icons.local_cafe_outlined,
-  Icons.local_bar_outlined,
-  Icons.movie_outlined,
-  Icons.music_note_outlined,
-  Icons.book_outlined,
-  Icons.local_pharmacy_outlined,
-  Icons.spa_outlined,
-  Icons.pets_outlined,
-  Icons.child_care_outlined,
-  Icons.shopping_cart_outlined,
-  Icons.local_gas_station_outlined,
-  Icons.directions_bus_outlined,
-  Icons.handyman_outlined,
-  Icons.park_outlined,
-  Icons.beach_access_outlined,
-  Icons.savings_outlined,
-  Icons.card_membership_outlined,
-  Icons.volunteer_activism_outlined,
-  Icons.subscriptions_outlined,
-];
 
 class CreateCategoryDialog extends ConsumerStatefulWidget {
   const CreateCategoryDialog({super.key, required this.type});
@@ -93,7 +67,7 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _pickableIcons.map((icon) {
+              children: TransactionCategories.pickableIcons.map((icon) {
                 final isSelected = _selectedIcon == icon;
                 return GestureDetector(
                   onTap: () => setState(() => _selectedIcon = icon),
