@@ -57,6 +57,28 @@ class TransactionsRepository implements TransactionsRepositoryContract {
   }
 
   @override
+  Future<TransactionModel> updateTransaction(TransactionModel transaction) async {
+    try {
+      final data = {
+        'amount': transaction.amount,
+        'type': transaction.type.name,
+        'category': transaction.category,
+        'description': transaction.description,
+        'date': _dateString(transaction.date),
+      };
+      final response = await _client
+          .from('transactions')
+          .update(data)
+          .eq('id', transaction.id)
+          .select()
+          .single();
+      return _fromRow(response);
+    } catch (e) {
+      throw const NetworkFailure('No se pudo actualizar la transacción');
+    }
+  }
+
+  @override
   Future<void> deleteTransaction(String id) async {
     try {
       await _client.from('transactions').delete().eq('id', id);

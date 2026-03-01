@@ -4,9 +4,11 @@ import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/widgets/custom_date_range_picker.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/transactions_provider.dart';
+import 'add_transaction_screen.dart';
 
 class TransactionsListScreen extends ConsumerWidget {
   const TransactionsListScreen({super.key});
@@ -14,6 +16,7 @@ class TransactionsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(selectedPeriodProvider);
+    final customRange = ref.watch(customDateRangeProvider);
     final transactionsAsync = ref.watch(allTransactionsProvider);
 
     return Scaffold(
@@ -26,18 +29,48 @@ class TransactionsListScreen extends ConsumerWidget {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: TransactionPeriod.values.map((p) {
-                final isSelected = p == period;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    label: Text(p.label),
-                    selected: isSelected,
-                    onSelected: (_) =>
-                        ref.read(selectedPeriodProvider.notifier).state = p,
+              children: [
+                ...TransactionPeriod.values.map((p) {
+                  final isSelected = p == period && customRange == null;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ChoiceChip(
+                      label: Text(p.label),
+                      selected: isSelected,
+                      onSelected: (_) {
+                        ref.read(selectedPeriodProvider.notifier).state = p;
+                        ref.read(customDateRangeProvider.notifier).state =
+                            null;
+                      },
+                    ),
+                  );
+                }),
+                IconButton(
+                  icon: Icon(
+                    Icons.calendar_month_outlined,
+                    color: customRange != null
+                        ? context.colors.primary
+                        : null,
                   ),
-                );
-              }).toList(),
+                  tooltip: 'Rango personalizado',
+                  onPressed: () async {
+                    final range = await showCustomDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                      initialDateRange: customRange ??
+                          DateTimeRange(
+                            start: period.dateRange.from,
+                            end: period.dateRange.to,
+                          ),
+                    );
+                    if (range != null) {
+                      ref.read(customDateRangeProvider.notifier).state =
+                          range;
+                    }
+                  },
+                ),
+              ],
             ),
           ),
         ),
@@ -193,6 +226,12 @@ class _TransactionTile extends ConsumerWidget {
             .delete(transaction.id);
       },
       child: ListTile(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                AddTransactionScreen(transaction: transaction),
+          ),
+        ),
         leading: Container(
           width: 44,
           height: 44,
