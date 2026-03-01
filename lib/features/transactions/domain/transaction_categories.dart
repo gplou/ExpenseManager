@@ -39,18 +39,21 @@ class TransactionCategories {
   static List<TransactionCategory> forType(TransactionType type) =>
       type.isIncome ? income : expense;
 
-  static IconData iconFor(String categoryName, TransactionType type) {
-    final categories = forType(type);
+  static IconData iconFor(String categoryName, TransactionType type,
+      {List<TransactionCategory> extra = const []}) {
+    final categories = [...forType(type), ...extra];
     return categories
         .firstWhere(
           (c) => c.name == categoryName,
-          orElse: () => categories.last,
+          orElse: () =>
+              const TransactionCategory(name: '', icon: Icons.label_outlined),
         )
         .icon;
   }
 
   /// Returns the localized display name for a DB category key.
   /// DB keys stay in Spanish; only the UI label is translated.
+  /// Custom categories (unknown keys) are returned as-is.
   static String localizedName(String dbKey, AppLocalizations l10n) =>
       switch (dbKey) {
         'Salario' => l10n.categorySalary,
@@ -65,6 +68,6 @@ class TransactionCategories {
         'Educación' => l10n.categoryEducation,
         'Ropa' => l10n.categoryClothing,
         'Tecnología' => l10n.categoryTechnology,
-        _ => l10n.categoryOther,
+        _ => dbKey,
       };
 }

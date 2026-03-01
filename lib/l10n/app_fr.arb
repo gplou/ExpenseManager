@@ -118,5 +118,9 @@
   "categoryEducation": "Éducation",
   "categoryClothing": "Vêtements",
   "categoryTechnology": "Technologie",
-  "categoryOther": "Autres"
+  "categoryOther": "Autres",
+
+  "newCategory": "Nouvelle catégorie",
+  "categoryName": "Nom de la catégorie",
+  "chooseIcon": "Choisissez une icône"
 }

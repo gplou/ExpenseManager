@@ -10,7 +10,9 @@ import '../../domain/parsed_voice_transaction.dart';
 import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
+import '../providers/custom_categories_provider.dart';
 import '../providers/transactions_provider.dart';
+import '../widgets/create_category_dialog.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key, this.transaction, this.voiceData});
@@ -110,8 +112,40 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     super.dispose();
   }
 
-  List<TransactionCategory> get _categories =>
-      TransactionCategories.forType(_type);
+  Future<void> _openCreateCategoryDialog() async {
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (_) => CreateCategoryDialog(type: _type),
+    );
+    if (newName != null) setState(() => _selectedCategory = newName);
+  }
+
+  Future<void> _confirmDeleteCategory(String name) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text('"$name"'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.delete,
+                style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await ref
+        .read(customCategoriesProvider.notifier)
+        .remove(_type, name);
+    if (_selectedCategory == name) setState(() => _selectedCategory = null);
+  }
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -232,6 +266,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final customCats = ref.watch(customCategoriesProvider);
+    final builtInCategories = TransactionCategories.forType(_type);
+    final allCategories = [
+      ...builtInCategories,
+      ...(customCats[_type] ?? []),
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -325,18 +365,32 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _categories.map((cat) {
+              children: [
+                ...allCategories.map((cat) {
                   final isSelected = _selectedCategory == cat.name;
-                  return ChoiceChip(
-                    avatar: Icon(cat.icon, size: 16),
-                    label: Text(
-                      TransactionCategories.localizedName(cat.name, l10n),
+                  final isCustom = !builtInCategories
+                      .any((c) => c.name == cat.name);
+                  return GestureDetector(
+                    onLongPress: isCustom
+                        ? () => _confirmDeleteCategory(cat.name)
+                        : null,
+                    child: ChoiceChip(
+                      avatar: Icon(cat.icon, size: 16),
+                      label: Text(
+                        TransactionCategories.localizedName(cat.name, l10n),
+                      ),
+                      selected: isSelected,
+                      onSelected: (_) =>
+                          setState(() => _selectedCategory = cat.name),
                     ),
-                    selected: isSelected,
-                    onSelected: (_) =>
-                        setState(() => _selectedCategory = cat.name),
-                    );
-                  }).toList(),
+                  );
+                }),
+                ActionChip(
+                  avatar: const Icon(Icons.add, size: 16),
+                  label: Text(l10n.newCategory),
+                  onPressed: _openCreateCategoryDialog,
+                ),
+              ],
             ),
             const Gap(28),
 
