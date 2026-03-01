@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/voice_enabled_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../l10n/app_localizations.dart';
@@ -82,6 +83,16 @@ class AppDrawer extends ConsumerWidget {
                     subtitle: Text(currentLocaleName),
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () => _showLanguageSheet(context, ref),
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.mic_outlined),
+                    title: const Text('Entrada por voz (IA)'),
+                    subtitle: const Text(
+                      'Usa IA para interpretar tus transacciones',
+                    ),
+                    value: ref.watch(voiceEnabledProvider).valueOrNull ?? false,
+                    onChanged: (_) =>
+                        ref.read(voiceEnabledProvider.notifier).toggle(),
                   ),
                 ],
               ),
