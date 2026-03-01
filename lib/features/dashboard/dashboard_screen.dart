@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 
 import '../../core/config/router.dart';
+import '../../core/providers/voice_enabled_provider.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/custom_date_range_picker.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
+import '../transactions/presentation/widgets/voice_transaction_button.dart';
 import 'widgets/category_distribution_sheet.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
@@ -53,10 +55,23 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.addTransaction),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: ref.watch(voiceEnabledProvider).valueOrNull == true
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const VoiceTransactionButton(),
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  heroTag: 'addFab',
+                  onPressed: () => context.push(AppRoutes.addTransaction),
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            )
+          : FloatingActionButton(
+              onPressed: () => context.push(AppRoutes.addTransaction),
+              child: const Icon(Icons.add),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: RefreshIndicator(
         onRefresh: () async {

@@ -6,16 +6,20 @@ import 'package:gap/gap.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/recurring_transactions_repository.dart';
+import '../../domain/parsed_voice_transaction.dart';
 import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/transactions_provider.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
-  const AddTransactionScreen({super.key, this.transaction});
+  const AddTransactionScreen({super.key, this.transaction, this.voiceData});
 
   /// Si se pasa una transacción existente, la pantalla opera en modo edición.
   final TransactionModel? transaction;
+
+  /// Datos pre-rellenados desde el reconocimiento de voz (solo en modo creación).
+  final ParsedVoiceTransaction? voiceData;
 
   @override
   ConsumerState<AddTransactionScreen> createState() =>
@@ -85,9 +89,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   void initState() {
     super.initState();
     final t = widget.transaction;
-    _type = t?.type ?? TransactionType.expense;
+    final v = widget.voiceData;
+    _type = t?.type ?? v?.type ?? TransactionType.expense;
     _amountController = TextEditingController(
-      text: t != null ? t.amount.toStringAsFixed(2) : '',
+      text: t != null
+          ? t.amount.toStringAsFixed(2)
+          : v != null
+              ? v.amount.toStringAsFixed(2)
+              : '',
     );
     _descriptionController = TextEditingController(text: t?.description ?? '');
     _selectedCategory = t?.category;
@@ -317,17 +326,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               spacing: 8,
               runSpacing: 8,
               children: _categories.map((cat) {
-                final isSelected = _selectedCategory == cat.name;
-                return ChoiceChip(
-                  avatar: Icon(cat.icon, size: 16),
-                  label: Text(
-                    TransactionCategories.localizedName(cat.name, l10n),
-                  ),
-                  selected: isSelected,
-                  onSelected: (_) =>
-                      setState(() => _selectedCategory = cat.name),
-                );
-              }).toList(),
+                  final isSelected = _selectedCategory == cat.name;
+                  return ChoiceChip(
+                    avatar: Icon(cat.icon, size: 16),
+                    label: Text(
+                      TransactionCategories.localizedName(cat.name, l10n),
+                    ),
+                    selected: isSelected,
+                    onSelected: (_) =>
+                        setState(() => _selectedCategory = cat.name),
+                    );
+                  }).toList(),
             ),
             const Gap(28),
 
