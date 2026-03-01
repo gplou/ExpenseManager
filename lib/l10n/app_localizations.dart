@@ -1,0 +1,855 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_de.dart';
+import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
+    Locale('en'),
+    Locale('es'),
+    Locale('fr')
+  ];
+
+  /// No description provided for @greeting.
+  ///
+  /// In es, this message translates to:
+  /// **'Hola, {name} 👋'**
+  String greeting(String name);
+
+  /// No description provided for @defaultUser.
+  ///
+  /// In es, this message translates to:
+  /// **'usuario'**
+  String get defaultUser;
+
+  /// No description provided for @balance.
+  ///
+  /// In es, this message translates to:
+  /// **'Balance'**
+  String get balance;
+
+  /// No description provided for @income.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresos'**
+  String get income;
+
+  /// No description provided for @expenses.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastos'**
+  String get expenses;
+
+  /// No description provided for @recent.
+  ///
+  /// In es, this message translates to:
+  /// **'Recientes'**
+  String get recent;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todo'**
+  String get seeAll;
+
+  /// No description provided for @noTransactionsPeriod.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin transacciones este período'**
+  String get noTransactionsPeriod;
+
+  /// No description provided for @customRange.
+  ///
+  /// In es, this message translates to:
+  /// **'Rango personalizado'**
+  String get customRange;
+
+  /// No description provided for @periodWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'Semana'**
+  String get periodWeek;
+
+  /// No description provided for @periodMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'Mes'**
+  String get periodMonth;
+
+  /// No description provided for @periodYear.
+  ///
+  /// In es, this message translates to:
+  /// **'Año'**
+  String get periodYear;
+
+  /// No description provided for @typeIncome.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingreso'**
+  String get typeIncome;
+
+  /// No description provided for @typeExpense.
+  ///
+  /// In es, this message translates to:
+  /// **'Gasto'**
+  String get typeExpense;
+
+  /// No description provided for @newTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva transacción'**
+  String get newTransaction;
+
+  /// No description provided for @editTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar transacción'**
+  String get editTransaction;
+
+  /// No description provided for @amount.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe'**
+  String get amount;
+
+  /// No description provided for @amountHint.
+  ///
+  /// In es, this message translates to:
+  /// **'0,00'**
+  String get amountHint;
+
+  /// No description provided for @category.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get category;
+
+  /// No description provided for @descriptionOptional.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción (opcional)'**
+  String get descriptionOptional;
+
+  /// No description provided for @descriptionHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Añade una nota...'**
+  String get descriptionHint;
+
+  /// No description provided for @date.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha'**
+  String get date;
+
+  /// No description provided for @recurringTransaction.
+  ///
+  /// In es, this message translates to:
+  /// **'Transacción recurrente'**
+  String get recurringTransaction;
+
+  /// No description provided for @weekly.
+  ///
+  /// In es, this message translates to:
+  /// **'Semanal'**
+  String get weekly;
+
+  /// No description provided for @monthly.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensual'**
+  String get monthly;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar cambios'**
+  String get saveChanges;
+
+  /// No description provided for @saveExpense.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar gasto'**
+  String get saveExpense;
+
+  /// No description provided for @saveIncome.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar ingreso'**
+  String get saveIncome;
+
+  /// No description provided for @nextRepetition.
+  ///
+  /// In es, this message translates to:
+  /// **'La próxima repetición será el {date} y cada {frequency} a partir de entonces.'**
+  String nextRepetition(String date, String frequency);
+
+  /// No description provided for @frequencyWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'semana'**
+  String get frequencyWeek;
+
+  /// No description provided for @frequencyMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'mes'**
+  String get frequencyMonth;
+
+  /// No description provided for @invalidAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa un importe válido'**
+  String get invalidAmount;
+
+  /// No description provided for @selectCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona una categoría'**
+  String get selectCategory;
+
+  /// No description provided for @selectFrequency.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona la frecuencia de repetición'**
+  String get selectFrequency;
+
+  /// No description provided for @errorSaving.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al guardar'**
+  String get errorSaving;
+
+  /// No description provided for @errorUpdating.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al actualizar'**
+  String get errorUpdating;
+
+  /// No description provided for @delete.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar'**
+  String get delete;
+
+  /// No description provided for @deleteTransactionConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar esta transacción?'**
+  String get deleteTransactionConfirm;
+
+  /// No description provided for @cancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar'**
+  String get cancel;
+
+  /// No description provided for @history.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial'**
+  String get history;
+
+  /// No description provided for @errorLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al cargar'**
+  String get errorLoading;
+
+  /// No description provided for @retry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get retry;
+
+  /// No description provided for @noTransactions.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin transacciones'**
+  String get noTransactions;
+
+  /// No description provided for @today.
+  ///
+  /// In es, this message translates to:
+  /// **'HOY'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'AYER'**
+  String get yesterday;
+
+  /// No description provided for @expenseDistribution.
+  ///
+  /// In es, this message translates to:
+  /// **'Distribución de Gastos'**
+  String get expenseDistribution;
+
+  /// No description provided for @incomeDistribution.
+  ///
+  /// In es, this message translates to:
+  /// **'Distribución de Ingresos'**
+  String get incomeDistribution;
+
+  /// No description provided for @noDataPeriod.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin datos en este período'**
+  String get noDataPeriod;
+
+  /// No description provided for @userSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustes de usuario'**
+  String get userSettings;
+
+  /// No description provided for @username.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de usuario'**
+  String get username;
+
+  /// No description provided for @noName.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin nombre'**
+  String get noName;
+
+  /// No description provided for @email.
+  ///
+  /// In es, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar contraseña'**
+  String get changePassword;
+
+  /// No description provided for @appSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustes de la app'**
+  String get appSettings;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo oscuro'**
+  String get darkMode;
+
+  /// No description provided for @language.
+  ///
+  /// In es, this message translates to:
+  /// **'Idioma'**
+  String get language;
+
+  /// No description provided for @logout.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar sesión'**
+  String get logout;
+
+  /// No description provided for @changePasswordContent.
+  ///
+  /// In es, this message translates to:
+  /// **'Te enviaremos un enlace de cambio de contraseña a:\n\n{email}'**
+  String changePasswordContent(String email);
+
+  /// No description provided for @send.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar'**
+  String get send;
+
+  /// No description provided for @checkEmailPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tu email para cambiar la contraseña'**
+  String get checkEmailPassword;
+
+  /// No description provided for @errorSendingEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar el email. Intenta de nuevo.'**
+  String get errorSendingEmail;
+
+  /// No description provided for @editName.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar nombre'**
+  String get editName;
+
+  /// No description provided for @fullName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre completo'**
+  String get fullName;
+
+  /// No description provided for @save.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get save;
+
+  /// No description provided for @errorSavingName.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar. Intenta de nuevo.'**
+  String get errorSavingName;
+
+  /// No description provided for @displayUser.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario'**
+  String get displayUser;
+
+  /// No description provided for @welcome.
+  ///
+  /// In es, this message translates to:
+  /// **'Bienvenido'**
+  String get welcome;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicia sesión para continuar'**
+  String get loginSubtitle;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
+
+  /// No description provided for @enterEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu email'**
+  String get enterEmail;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Email inválido'**
+  String get invalidEmail;
+
+  /// No description provided for @passwordLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña'**
+  String get passwordLabel;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu contraseña'**
+  String get enterPassword;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Olvidaste tu contraseña?'**
+  String get forgotPassword;
+
+  /// No description provided for @signIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión'**
+  String get signIn;
+
+  /// No description provided for @orContinueWith.
+  ///
+  /// In es, this message translates to:
+  /// **'O continúa con'**
+  String get orContinueWith;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar con Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar con Apple'**
+  String get continueWithApple;
+
+  /// No description provided for @noAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'¿No tienes cuenta? '**
+  String get noAccount;
+
+  /// No description provided for @signUp.
+  ///
+  /// In es, this message translates to:
+  /// **'Regístrate'**
+  String get signUp;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cuenta'**
+  String get createAccount;
+
+  /// No description provided for @registerSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Completa los datos para registrarte'**
+  String get registerSubtitle;
+
+  /// No description provided for @nameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get nameLabel;
+
+  /// No description provided for @enterName.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu nombre'**
+  String get enterName;
+
+  /// No description provided for @passwordMinChars.
+  ///
+  /// In es, this message translates to:
+  /// **'Mínimo 8 caracteres'**
+  String get passwordMinChars;
+
+  /// No description provided for @enterPasswordRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa una contraseña'**
+  String get enterPasswordRequired;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña debe tener al menos 8 caracteres'**
+  String get passwordTooShort;
+
+  /// No description provided for @accountCreated.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Cuenta creada! Revisa tu email para verificarla.'**
+  String get accountCreated;
+
+  /// No description provided for @relToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get relToday;
+
+  /// No description provided for @relTomorrow.
+  ///
+  /// In es, this message translates to:
+  /// **'Mañana'**
+  String get relTomorrow;
+
+  /// No description provided for @relOverdue.
+  ///
+  /// In es, this message translates to:
+  /// **'Vencida'**
+  String get relOverdue;
+
+  /// No description provided for @myTasks.
+  ///
+  /// In es, this message translates to:
+  /// **'Mis tareas'**
+  String get myTasks;
+
+  /// No description provided for @newTask.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva tarea'**
+  String get newTask;
+
+  /// No description provided for @noTasks.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Sin tareas pendientes!'**
+  String get noTasks;
+
+  /// No description provided for @noTasksSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pulsa + para crear tu primera tarea'**
+  String get noTasksSubtitle;
+
+  /// No description provided for @taskDetail.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalle de tarea'**
+  String get taskDetail;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente'**
+  String get statusPending;
+
+  /// No description provided for @statusInProgress.
+  ///
+  /// In es, this message translates to:
+  /// **'En progreso'**
+  String get statusInProgress;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Completada'**
+  String get statusCompleted;
+
+  /// No description provided for @priority.
+  ///
+  /// In es, this message translates to:
+  /// **'Prioridad'**
+  String get priority;
+
+  /// No description provided for @dueDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Vencimiento'**
+  String get dueDate;
+
+  /// No description provided for @created.
+  ///
+  /// In es, this message translates to:
+  /// **'Creada'**
+  String get created;
+
+  /// No description provided for @markPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcar como pendiente'**
+  String get markPending;
+
+  /// No description provided for @markCompleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcar como completada'**
+  String get markCompleted;
+
+  /// No description provided for @deleteTask.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar tarea'**
+  String get deleteTask;
+
+  /// No description provided for @deleteTaskConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Estás seguro de que quieres eliminar \"{title}\"?'**
+  String deleteTaskConfirm(String title);
+
+  /// No description provided for @categorySalary.
+  ///
+  /// In es, this message translates to:
+  /// **'Salario'**
+  String get categorySalary;
+
+  /// No description provided for @categoryFreelance.
+  ///
+  /// In es, this message translates to:
+  /// **'Freelance'**
+  String get categoryFreelance;
+
+  /// No description provided for @categoryInvestment.
+  ///
+  /// In es, this message translates to:
+  /// **'Inversión'**
+  String get categoryInvestment;
+
+  /// No description provided for @categoryGift.
+  ///
+  /// In es, this message translates to:
+  /// **'Regalo'**
+  String get categoryGift;
+
+  /// No description provided for @categoryFood.
+  ///
+  /// In es, this message translates to:
+  /// **'Comida'**
+  String get categoryFood;
+
+  /// No description provided for @categoryTransport.
+  ///
+  /// In es, this message translates to:
+  /// **'Transporte'**
+  String get categoryTransport;
+
+  /// No description provided for @categoryHousing.
+  ///
+  /// In es, this message translates to:
+  /// **'Vivienda'**
+  String get categoryHousing;
+
+  /// No description provided for @categoryLeisure.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocio'**
+  String get categoryLeisure;
+
+  /// No description provided for @categoryHealth.
+  ///
+  /// In es, this message translates to:
+  /// **'Salud'**
+  String get categoryHealth;
+
+  /// No description provided for @categoryEducation.
+  ///
+  /// In es, this message translates to:
+  /// **'Educación'**
+  String get categoryEducation;
+
+  /// No description provided for @categoryClothing.
+  ///
+  /// In es, this message translates to:
+  /// **'Ropa'**
+  String get categoryClothing;
+
+  /// No description provided for @categoryTechnology.
+  ///
+  /// In es, this message translates to:
+  /// **'Tecnología'**
+  String get categoryTechnology;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Otros'**
+  String get categoryOther;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['de', 'en', 'es', 'fr'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fr':
+      return AppLocalizationsFr();
+  }
+
+  throw FlutterError(
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
+}

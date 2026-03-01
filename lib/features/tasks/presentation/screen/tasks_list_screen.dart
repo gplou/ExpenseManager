@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 
 import '../../../../core/config/router.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../providers/tasks_provider.dart';
 import '../widgets/task_card.dart';
 
@@ -26,24 +27,23 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final tasksState = ref.watch(tasksNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis tareas'),
+        title: Text(l10n.myTasks),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list_outlined),
-            onPressed: () {
-              // TODO: Implementar filtros
-            },
+            onPressed: () {},
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('${AppRoutes.tasks}/new'),
         icon: const Icon(Icons.add),
-        label: const Text('Nueva tarea'),
+        label: Text(l10n.newTask),
       ),
       body: tasksState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -51,9 +51,10 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
           message: e.toString(),
           onRetry: () =>
               ref.read(tasksNotifierProvider.notifier).loadTasks(),
+          l10n: l10n,
         ),
         data: (tasks) {
-          if (tasks.isEmpty) return const _EmptyView();
+          if (tasks.isEmpty) return _EmptyView(l10n: l10n);
 
           return RefreshIndicator(
             onRefresh: () =>
@@ -84,7 +85,8 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
 }
 
 class _EmptyView extends StatelessWidget {
-  const _EmptyView();
+  const _EmptyView({required this.l10n});
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -95,20 +97,20 @@ class _EmptyView extends StatelessWidget {
           Icon(
             Icons.task_alt_outlined,
             size: 64,
-            color: context.colors.onSurface.withValues(alpha:0.3),
+            color: context.colors.onSurface.withValues(alpha: 0.3),
           ),
           const Gap(16),
           Text(
-            '¡Sin tareas pendientes!',
+            l10n.noTasks,
             style: context.textTheme.titleMedium?.copyWith(
-              color: context.colors.onSurface.withValues(alpha:0.5),
+              color: context.colors.onSurface.withValues(alpha: 0.5),
             ),
           ),
           const Gap(8),
           Text(
-            'Pulsa + para crear tu primera tarea',
+            l10n.noTasksSubtitle,
             style: context.textTheme.bodyMedium?.copyWith(
-              color: context.colors.onSurface.withValues(alpha:0.4),
+              color: context.colors.onSurface.withValues(alpha: 0.4),
             ),
           ),
         ],
@@ -120,8 +122,13 @@ class _EmptyView extends StatelessWidget {
 class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
+  final AppLocalizations l10n;
 
-  const _ErrorView({required this.message, required this.onRetry});
+  const _ErrorView({
+    required this.message,
+    required this.onRetry,
+    required this.l10n,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +144,7 @@ class _ErrorView extends StatelessWidget {
             const Gap(24),
             OutlinedButton(
               onPressed: onRetry,
-              child: const Text('Reintentar'),
+              child: Text(l10n.retry),
             ),
           ],
         ),

@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 part 'transaction_model.freezed.dart';
 part 'transaction_model.g.dart';
 
@@ -11,6 +13,9 @@ enum TransactionType {
   bool get isExpense => this == TransactionType.expense;
 
   String get label => isIncome ? 'Ingreso' : 'Gasto';
+
+  String l10nLabel(AppLocalizations l10n) =>
+      isIncome ? l10n.typeIncome : l10n.typeExpense;
 }
 
 @freezed

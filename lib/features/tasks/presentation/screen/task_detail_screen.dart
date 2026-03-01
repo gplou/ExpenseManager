@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../providers/tasks_provider.dart';
 import '../../domain/task_model.dart';
 
@@ -13,6 +14,7 @@ class TaskDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final tasksState = ref.watch(tasksNotifierProvider);
 
     final task = tasksState.valueOrNull?.firstWhere(
@@ -28,17 +30,15 @@ class TaskDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle de tarea'),
+        title: Text(l10n.taskDetail),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () {
-              // TODO: navegar a edición
-            },
+            onPressed: () {},
           ),
           IconButton(
             icon: Icon(Icons.delete_outline, color: context.colors.error),
-            onPressed: () => _confirmDelete(context, ref, task),
+            onPressed: () => _confirmDelete(context, ref, task, l10n),
           ),
         ],
       ),
@@ -55,29 +55,29 @@ class TaskDetailScreen extends ConsumerWidget {
               Text(
                 task.description!,
                 style: context.textTheme.bodyLarge?.copyWith(
-                  color: context.colors.onSurface.withValues(alpha:0.7),
+                  color: context.colors.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
             const Gap(24),
             _InfoRow(
               icon: Icons.flag_outlined,
-              label: 'Prioridad',
+              label: l10n.priority,
               value: task.priority.name.capitalize,
             ),
             if (task.dueDate != null) ...[
               const Gap(12),
               _InfoRow(
                 icon: Icons.calendar_today_outlined,
-                label: 'Vencimiento',
-                value: task.dueDate!.relativeDate,
+                label: l10n.dueDate,
+                value: task.dueDate!.relativeDateL10n(l10n),
                 valueColor: task.isOverdue ? context.colors.error : null,
               ),
             ],
             const Gap(12),
             _InfoRow(
               icon: Icons.access_time_outlined,
-              label: 'Creada',
+              label: l10n.created,
               value: task.createdAt.formattedDateTime,
             ),
             const Gap(40),
@@ -90,7 +90,7 @@ class TaskDetailScreen extends ConsumerWidget {
                     : context.colors.primary,
               ),
               child: Text(
-                task.isCompleted ? 'Marcar como pendiente' : 'Marcar como completada',
+                task.isCompleted ? l10n.markPending : l10n.markCompleted,
               ),
             ),
           ],
@@ -99,16 +99,21 @@ class TaskDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, TaskModel task) {
+  void _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    TaskModel task,
+    AppLocalizations l10n,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar tarea'),
-        content: Text('¿Estás seguro de que quieres eliminar "${task.title}"?'),
+        title: Text(l10n.deleteTask),
+        content: Text(l10n.deleteTaskConfirm(task.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -119,7 +124,7 @@ class TaskDetailScreen extends ConsumerWidget {
             style: TextButton.styleFrom(
               foregroundColor: context.colors.error,
             ),
-            child: const Text('Eliminar'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -134,18 +139,19 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final (label, color) = switch (status) {
-      TaskStatus.pending => ('Pendiente', Colors.orange),
-      TaskStatus.inProgress => ('En progreso', Colors.blue),
-      TaskStatus.completed => ('Completada', Colors.green),
+      TaskStatus.pending => (l10n.statusPending, Colors.orange),
+      TaskStatus.inProgress => (l10n.statusInProgress, Colors.blue),
+      TaskStatus.completed => (l10n.statusCompleted, Colors.green),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha:0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha:0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -176,12 +182,14 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: context.colors.onSurface.withValues(alpha:0.5)),
+        Icon(icon,
+            size: 18,
+            color: context.colors.onSurface.withValues(alpha: 0.5)),
         const Gap(8),
         Text(
           '$label: ',
           style: context.textTheme.bodyMedium?.copyWith(
-            color: context.colors.onSurface.withValues(alpha:0.5),
+            color: context.colors.onSurface.withValues(alpha: 0.5),
           ),
         ),
         Text(

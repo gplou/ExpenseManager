@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../data/transactions_repository.dart';
 import '../../domain/transaction_model.dart';
 import '../../domain/transactions_repository_contract.dart';
@@ -18,6 +19,17 @@ extension TransactionPeriodX on TransactionPeriod {
         return 'Mes';
       case TransactionPeriod.year:
         return 'Año';
+    }
+  }
+
+  String l10nLabel(AppLocalizations l10n) {
+    switch (this) {
+      case TransactionPeriod.week:
+        return l10n.periodWeek;
+      case TransactionPeriod.month:
+        return l10n.periodMonth;
+      case TransactionPeriod.year:
+        return l10n.periodYear;
     }
   }
 
@@ -78,6 +90,18 @@ final allTransactionsProvider =
   final range = ref.watch(effectiveDateRangeProvider);
   final repo = ref.watch(transactionsRepositoryProvider);
   return repo.getTransactions(from: range.from, to: range.to);
+});
+
+// ── Category distribution (for pie/bar charts) ───────────────────────────────
+
+final categoryDistributionProvider = FutureProvider.autoDispose
+    .family<Map<String, double>, TransactionType>((ref, type) async {
+  final transactions = await ref.watch(allTransactionsProvider.future);
+  final map = <String, double>{};
+  for (final t in transactions.where((t) => t.type == type)) {
+    map[t.category] = (map[t.category] ?? 0) + t.amount;
+  }
+  return map;
 });
 
 // ── Notifier (CRUD) ───────────────────────────────────────────────────────────

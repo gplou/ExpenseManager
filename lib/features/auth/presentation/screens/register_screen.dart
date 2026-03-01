@@ -6,6 +6,7 @@ import 'package:gap/gap.dart';
 import '../../../../core/config/router.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -32,6 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context);
 
     final success = await ref.read(authNotifierProvider.notifier).signUp(
           email: _emailController.text.trim(),
@@ -40,13 +42,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
 
     if (success && mounted) {
-      context.showSnackbar('¡Cuenta creada! Revisa tu email para verificarla.');
+      context.showSnackbar(l10n.accountCreated);
       context.go(AppRoutes.dashboard);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authNotifierProvider);
     final isLoading = authState is Loading;
 
@@ -69,37 +72,38 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Crear cuenta', style: context.textTheme.headlineMedium),
+                Text(l10n.createAccount,
+                    style: context.textTheme.headlineMedium),
                 const Gap(8),
                 Text(
-                  'Completa los datos para registrarte',
+                  l10n.registerSubtitle,
                   style: context.textTheme.bodyLarge?.copyWith(
-                    color: context.colors.onSurface.withValues(alpha:0.6),
+                    color: context.colors.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
                 const Gap(40),
                 TextFormField(
                   controller: _nameController,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: l10n.nameLabel,
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
                   validator: (v) =>
-                      v == null || v.isEmpty ? 'Ingresa tu nombre' : null,
+                      v == null || v.isEmpty ? l10n.enterName : null,
                 ),
                 const Gap(16),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.emailLabel,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Ingresa tu email';
-                    if (!v.isValidEmail) return 'Email inválido';
+                    if (v == null || v.isEmpty) return l10n.enterEmail;
+                    if (!v.isValidEmail) return l10n.invalidEmail;
                     return null;
                   },
                 ),
@@ -110,9 +114,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _handleRegister(),
                   decoration: InputDecoration(
-                    labelText: 'Contraseña',
+                    labelText: l10n.passwordLabel,
                     prefixIcon: const Icon(Icons.lock_outlined),
-                    helperText: 'Mínimo 8 caracteres',
+                    helperText: l10n.passwordMinChars,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -124,10 +128,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Ingresa una contraseña';
-                    if (!v.isValidPassword) {
-                      return 'La contraseña debe tener al menos 8 caracteres';
-                    }
+                    if (v == null || v.isEmpty) return l10n.enterPasswordRequired;
+                    if (!v.isValidPassword) return l10n.passwordTooShort;
                     return null;
                   },
                 ),
@@ -143,7 +145,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Crear cuenta'),
+                      : Text(l10n.createAccount),
                 ),
               ],
             ),
