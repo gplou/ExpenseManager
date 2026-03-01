@@ -12,6 +12,7 @@ import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
 import '../transactions/domain/transactions_repository_contract.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
+import '../transactions/presentation/screens/add_transaction_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -368,6 +369,11 @@ class _RecentTransactionTile extends StatelessWidget {
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => AddTransactionScreen(transaction: transaction),
+        ),
+      ),
       leading: Container(
         width: 44,
         height: 44,
