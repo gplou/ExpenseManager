@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # Backend
   supabase_flutter: ^2.3.4
@@ -27,6 +29,9 @@ dependencies:
   # Storage local
   shared_preferences: ^2.2.2
 
+  # Charts
+  fl_chart: ^0.69.0
+
   # UI
   flutter_svg: ^2.0.10+1
   cached_network_image: ^3.3.1
@@ -38,7 +43,7 @@ dependencies:
   crypto: ^3.0.2
 
   # Utilidades
-  intl: ^0.19.0
+  intl: ^0.20.2
   equatable: ^2.0.5
   logger: ^2.3.0
   gap: ^3.0.1
@@ -55,6 +60,7 @@ dev_dependencies:
   riverpod_generator: ^2.4.0
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/images/
