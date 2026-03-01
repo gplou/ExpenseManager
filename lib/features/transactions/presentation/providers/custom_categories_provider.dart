@@ -33,13 +33,14 @@ class CustomCategoriesNotifier
     if (raw == null) return [];
     try {
       final list = jsonDecode(raw) as List<dynamic>;
-      return list
-          .map((e) => TransactionCategory(
-                name: e['name'] as String,
-                icon: IconData(e['codePoint'] as int,
-                    fontFamily: 'MaterialIcons'),
-              ))
-          .toList();
+      return list.map((e) {
+        final cp = e['codePoint'] as int;
+        final icon = TransactionCategories.pickableIcons.firstWhere(
+          (i) => i.codePoint == cp,
+          orElse: () => Icons.label_outlined,
+        );
+        return TransactionCategory(name: e['name'] as String, icon: icon);
+      }).toList();
     } catch (_) {
       return [];
     }
