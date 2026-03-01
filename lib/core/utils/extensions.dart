@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/app_localizations.dart';
+
 // ── String Extensions ──────────────────────────────────────────────────────────
 
 extension StringExtensions on String {
@@ -42,6 +44,13 @@ extension DateTimeExtensions on DateTime {
     if (isToday) return 'Hoy';
     if (isTomorrow) return 'Mañana';
     if (isOverdue) return 'Vencida';
+    return formattedDate;
+  }
+
+  String relativeDateL10n(AppLocalizations l10n) {
+    if (isToday) return l10n.relToday;
+    if (isTomorrow) return l10n.relTomorrow;
+    if (isOverdue) return l10n.relOverdue;
     return formattedDate;
   }
 }

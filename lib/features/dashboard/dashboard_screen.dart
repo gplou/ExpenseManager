@@ -4,13 +4,19 @@ import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 
 import '../../core/config/router.dart';
+import '../../core/providers/voice_enabled_provider.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/custom_date_range_picker.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
+import '../transactions/presentation/widgets/voice_transaction_button.dart';
+import 'widgets/category_distribution_sheet.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
 import '../transactions/domain/transactions_repository_contract.dart';
+import '../transactions/presentation/providers/custom_categories_provider.dart';
+import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
 
@@ -19,6 +25,10 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Procesa recurrentes pendientes al abrir la app (una vez por sesión)
+    ref.watch(processRecurringTransactionsProvider);
+
+    final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);
     final period = ref.watch(selectedPeriodProvider);
     final customRange = ref.watch(customDateRangeProvider);
@@ -32,7 +42,9 @@ class DashboardScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hola, ${user?.name?.split(' ').first ?? 'usuario'} 👋',
+              l10n.greeting(
+                user?.name?.split(' ').first ?? l10n.defaultUser,
+              ),
               style: context.textTheme.titleLarge,
             ),
             Text(
@@ -44,13 +56,27 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.addTransaction),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: ref.watch(voiceEnabledProvider).valueOrNull == true
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const VoiceTransactionButton(),
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  heroTag: 'addFab',
+                  onPressed: () => context.push(AppRoutes.addTransaction),
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            )
+          : FloatingActionButton(
+              onPressed: () => context.push(AppRoutes.addTransaction),
+              child: const Icon(Icons.add),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: RefreshIndicator(
         onRefresh: () async {
+          ref.invalidate(processRecurringTransactionsProvider);
           ref.invalidate(transactionsSummaryProvider);
           ref.invalidate(recentTransactionsProvider);
         },
@@ -60,7 +86,7 @@ class DashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Selector de período ─────────────────────────────────────
+              // ── Selector de período ──────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -69,7 +95,7 @@ class DashboardScreen extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: ChoiceChip(
-                        label: Text(p.label),
+                        label: Text(p.l10nLabel(l10n)),
                         selected: isSelected,
                         onSelected: (_) {
                           ref.read(selectedPeriodProvider.notifier).state = p;
@@ -86,7 +112,7 @@ class DashboardScreen extends ConsumerWidget {
                           ? context.colors.primary
                           : null,
                     ),
-                    tooltip: 'Rango personalizado',
+                    tooltip: l10n.customRange,
                     onPressed: () async {
                       final range = await showCustomDateRangePicker(
                         context: context,
@@ -108,7 +134,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               const Gap(24),
 
-              // ── Balance principal ───────────────────────────────────────
+              // ── Balance principal ────────────────────────────────────────
               summaryAsync.when(
                 loading: () => const _SummaryShimmer(),
                 error: (_, __) => const SizedBox.shrink(),
@@ -116,14 +142,14 @@ class DashboardScreen extends ConsumerWidget {
               ),
               const Gap(28),
 
-              // ── Transacciones recientes ─────────────────────────────────
+              // ── Transacciones recientes ──────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recientes', style: context.textTheme.titleMedium),
+                  Text(l10n.recent, style: context.textTheme.titleMedium),
                   TextButton(
                     onPressed: () => context.push(AppRoutes.transactions),
-                    child: const Text('Ver todo'),
+                    child: Text(l10n.seeAll),
                   ),
                 ],
               ),
@@ -147,7 +173,7 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                             const Gap(12),
                             Text(
-                              'Sin transacciones este período',
+                              l10n.noTransactionsPeriod,
                               style: context.textTheme.bodyMedium?.copyWith(
                                 color: context.colors.onSurface
                                     .withValues(alpha: 0.4),
@@ -181,6 +207,7 @@ class _SummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final balance = summary.balance;
     final isPositive = balance >= 0;
 
@@ -203,7 +230,7 @@ class _SummarySection extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                'Balance',
+                l10n.balance,
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: Colors.white.withValues(alpha: 0.8),
                 ),
@@ -225,19 +252,27 @@ class _SummarySection extends StatelessWidget {
           children: [
             Expanded(
               child: _MiniCard(
-                label: 'Ingresos',
+                label: l10n.income,
                 amount: summary.income,
                 icon: Icons.arrow_downward_rounded,
                 color: Colors.green,
+                onTap: () => showCategoryDistributionSheet(
+                  context,
+                  TransactionType.income,
+                ),
               ),
             ),
             const Gap(12),
             Expanded(
               child: _MiniCard(
-                label: 'Gastos',
+                label: l10n.expenses,
                 amount: summary.expense,
                 icon: Icons.arrow_upward_rounded,
                 color: Colors.red,
+                onTap: () => showCategoryDistributionSheet(
+                  context,
+                  TransactionType.expense,
+                ),
               ),
             ),
           ],
@@ -253,60 +288,72 @@ class _MiniCard extends StatelessWidget {
     required this.amount,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   final String label;
   final double amount;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 18),
               ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const Gap(12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color:
-                          context.colors.onSurface.withValues(alpha: 0.5),
+              const Gap(12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colors.onSurface
+                            .withValues(alpha: 0.5),
+                      ),
                     ),
-                  ),
-                  Text(
-                    '€${amount.toStringAsFixed(2)}',
-                    style: context.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
+                    Text(
+                      '€${amount.toStringAsFixed(2)}',
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              if (onTap != null)
+                Icon(
+                  Icons.pie_chart_outline,
+                  size: 14,
+                  color: context.colors.onSurface.withValues(alpha: 0.3),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ── Shimmer placeholder ────────────────────────────────────────────────────────
+// ── Shimmer placeholder ───────────────────────────────────────────────────────
 
 class _SummaryShimmer extends StatelessWidget {
   const _SummaryShimmer();
@@ -352,19 +399,22 @@ class _SummaryShimmer extends StatelessWidget {
   }
 }
 
-// ── Recent transaction tile ────────────────────────────────────────────────────
+// ── Recent transaction tile ───────────────────────────────────────────────────
 
-class _RecentTransactionTile extends StatelessWidget {
+class _RecentTransactionTile extends ConsumerWidget {
   const _RecentTransactionTile({required this.transaction});
   final TransactionModel transaction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final isIncome = transaction.type.isIncome;
     final color = isIncome ? Colors.green : Colors.red;
+    final customCats = ref.watch(customCategoriesProvider);
     final icon = TransactionCategories.iconFor(
       transaction.category,
       transaction.type,
+      extra: customCats[transaction.type] ?? [],
     );
 
     return ListTile(
@@ -384,7 +434,7 @@ class _RecentTransactionTile extends StatelessWidget {
         child: Icon(icon, color: color, size: 22),
       ),
       title: Text(
-        transaction.category,
+        TransactionCategories.localizedName(transaction.category, l10n),
         style: context.textTheme.bodyMedium
             ?.copyWith(fontWeight: FontWeight.w600),
       ),

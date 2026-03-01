@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/custom_date_range_picker.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
+import '../providers/custom_categories_provider.dart';
 import '../providers/transactions_provider.dart';
 import 'add_transaction_screen.dart';
 
@@ -15,13 +17,14 @@ class TransactionsListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final period = ref.watch(selectedPeriodProvider);
     final customRange = ref.watch(customDateRangeProvider);
     final transactionsAsync = ref.watch(allTransactionsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial'),
+        title: Text(l10n.history),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(
@@ -35,7 +38,7 @@ class TransactionsListScreen extends ConsumerWidget {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: ChoiceChip(
-                      label: Text(p.label),
+                      label: Text(p.l10nLabel(l10n)),
                       selected: isSelected,
                       onSelected: (_) {
                         ref.read(selectedPeriodProvider.notifier).state = p;
@@ -52,7 +55,7 @@ class TransactionsListScreen extends ConsumerWidget {
                         ? context.colors.primary
                         : null,
                   ),
-                  tooltip: 'Rango personalizado',
+                  tooltip: l10n.customRange,
                   onPressed: () async {
                     final range = await showCustomDateRangePicker(
                       context: context,
@@ -82,13 +85,13 @@ class TransactionsListScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Error al cargar',
+              Text(l10n.errorLoading,
                   style: context.textTheme.bodyLarge),
               const Gap(8),
               TextButton(
                 onPressed: () =>
                     ref.invalidate(allTransactionsProvider),
-                child: const Text('Reintentar'),
+                child: Text(l10n.retry),
               ),
             ],
           ),
@@ -106,9 +109,10 @@ class TransactionsListScreen extends ConsumerWidget {
                   ),
                   const Gap(16),
                   Text(
-                    'Sin transacciones',
+                    l10n.noTransactions,
                     style: context.textTheme.titleMedium?.copyWith(
-                      color: context.colors.onSurface.withValues(alpha: 0.5),
+                      color: context.colors.onSurface
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -116,7 +120,6 @@ class TransactionsListScreen extends ConsumerWidget {
             );
           }
 
-          // Agrupar por fecha
           final grouped = _groupByDate(transactions);
 
           return ListView.builder(
@@ -130,7 +133,7 @@ class TransactionsListScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                     child: Text(
-                      _formatGroupDate(entry.date),
+                      _formatGroupDate(entry.date, l10n),
                       style: context.textTheme.labelSmall?.copyWith(
                         color: context.colors.onSurface
                             .withValues(alpha: 0.5),
@@ -154,21 +157,21 @@ class TransactionsListScreen extends ConsumerWidget {
   List<_DateGroup> _groupByDate(List<TransactionModel> transactions) {
     final map = <String, _DateGroup>{};
     for (final t in transactions) {
-      final key =
-          '${t.date.year}-${t.date.month}-${t.date.day}';
+      final key = '${t.date.year}-${t.date.month}-${t.date.day}';
       map.putIfAbsent(key, () => _DateGroup(t.date)).transactions.add(t);
     }
     return map.values.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
 
-  String _formatGroupDate(DateTime date) {
+  String _formatGroupDate(DateTime date, AppLocalizations l10n) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final d = DateTime(date.year, date.month, date.day);
-    if (d == today) return 'HOY';
-    if (d == today.subtract(const Duration(days: 1))) return 'AYER';
-    return DateFormat('EEEE, d MMMM', 'es').format(date).toUpperCase();
+    if (d == today) return l10n.today;
+    if (d == today.subtract(const Duration(days: 1))) return l10n.yesterday;
+    // Uses Intl.defaultLocale set by the locale provider
+    return DateFormat('EEEE, d MMMM').format(date).toUpperCase();
   }
 }
 
@@ -184,11 +187,14 @@ class _TransactionTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final isIncome = transaction.type.isIncome;
     final color = isIncome ? Colors.green : Colors.red;
+    final customCats = ref.watch(customCategoriesProvider);
     final icon = TransactionCategories.iconFor(
       transaction.category,
       transaction.type,
+      extra: customCats[transaction.type] ?? [],
     );
 
     return Dismissible(
@@ -204,17 +210,19 @@ class _TransactionTile extends ConsumerWidget {
         return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Eliminar'),
-            content: const Text('¿Eliminar esta transacción?'),
+            title: Text(l10n.delete),
+            content: Text(l10n.deleteTransactionConfirm),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancelar'),
+                child: Text(l10n.cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Eliminar',
-                    style: TextStyle(color: Colors.red)),
+                child: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),
@@ -242,7 +250,7 @@ class _TransactionTile extends ConsumerWidget {
           child: Icon(icon, color: color, size: 22),
         ),
         title: Text(
-          transaction.category,
+          TransactionCategories.localizedName(transaction.category, l10n),
           style: context.textTheme.bodyMedium
               ?.copyWith(fontWeight: FontWeight.w600),
         ),

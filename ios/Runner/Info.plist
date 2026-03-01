@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Productivity App</string>
+	<string>Expense Manager</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -66,6 +66,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Necesitamos acceso al micrófono para que puedas añadir transacciones por voz.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Usamos el reconocimiento de voz para interpretar tus transacciones.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
