@@ -9,7 +9,10 @@ import '../../domain/transaction_model.dart';
 import '../providers/transactions_provider.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
-  const AddTransactionScreen({super.key});
+  const AddTransactionScreen({super.key, this.transaction});
+
+  /// Si se pasa una transacción existente, la pantalla opera en modo edición.
+  final TransactionModel? transaction;
 
   @override
   ConsumerState<AddTransactionScreen> createState() =>
@@ -17,12 +20,27 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
 }
 
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
-  TransactionType _type = TransactionType.expense;
-  final _amountController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late TransactionType _type;
+  late final TextEditingController _amountController;
+  late final TextEditingController _descriptionController;
   String? _selectedCategory;
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
   bool _isSaving = false;
+
+  bool get _isEditing => widget.transaction != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final t = widget.transaction;
+    _type = t?.type ?? TransactionType.expense;
+    _amountController = TextEditingController(
+      text: t != null ? t.amount.toStringAsFixed(2) : '',
+    );
+    _descriptionController = TextEditingController(text: t?.description ?? '');
+    _selectedCategory = t?.category;
+    _selectedDate = t?.date ?? DateTime.now();
+  }
 
   @override
   void dispose() {
@@ -59,34 +77,88 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
     setState(() => _isSaving = true);
     try {
-      final transaction = TransactionModel(
-        id: '',
-        userId: '',
-        amount: amount,
-        type: _type,
-        category: _selectedCategory!,
-        description: _descriptionController.text.trim().isEmpty
-            ? null
-            : _descriptionController.text.trim(),
-        date: _selectedDate,
-        createdAt: DateTime.now(),
-      );
-      await ref.read(transactionsNotifierProvider.notifier).create(transaction);
+      if (_isEditing) {
+        final updated = widget.transaction!.copyWith(
+          amount: amount,
+          type: _type,
+          category: _selectedCategory!,
+          description: _descriptionController.text.trim().isEmpty
+              ? null
+              : _descriptionController.text.trim(),
+          date: _selectedDate,
+        );
+        await ref
+            .read(transactionsNotifierProvider.notifier)
+            .update(updated);
+      } else {
+        final transaction = TransactionModel(
+          id: '',
+          userId: '',
+          amount: amount,
+          type: _type,
+          category: _selectedCategory!,
+          description: _descriptionController.text.trim().isEmpty
+              ? null
+              : _descriptionController.text.trim(),
+          date: _selectedDate,
+          createdAt: DateTime.now(),
+        );
+        await ref
+            .read(transactionsNotifierProvider.notifier)
+            .create(transaction);
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        context.showSnackbar('Error al guardar', isError: true);
+        context.showSnackbar(
+          _isEditing ? 'Error al actualizar' : 'Error al guardar',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
+  Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar'),
+        content: const Text('¿Eliminar esta transacción?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar',
+                style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await ref
+        .read(transactionsNotifierProvider.notifier)
+        .delete(widget.transaction!.id);
+    if (mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nueva transacción'),
+        title: Text(_isEditing ? 'Editar transacción' : 'Nueva transacción'),
+        actions: [
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              tooltip: 'Eliminar',
+              onPressed: _delete,
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -245,7 +317,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : Text('Guardar ${_type.label.toLowerCase()}'),
+                  : Text(
+                      _isEditing
+                          ? 'Guardar cambios'
+                          : 'Guardar ${_type.label.toLowerCase()}',
+                    ),
             ),
           ],
         ),
