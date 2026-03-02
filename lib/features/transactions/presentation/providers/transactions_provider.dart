@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../data/recurring_transactions_repository.dart';
 import '../../data/transactions_repository.dart';
 import '../../domain/transaction_model.dart';
 import '../../domain/transactions_repository_contract.dart';
@@ -124,8 +125,13 @@ class TransactionsNotifier extends Notifier<void> {
     ref.invalidate(allTransactionsProvider);
   }
 
-  Future<void> delete(String id) async {
+  Future<void> delete(String id, {String? recurringTransactionId}) async {
     await ref.read(transactionsRepositoryProvider).deleteTransaction(id);
+    if (recurringTransactionId != null) {
+      await ref
+          .read(recurringTransactionsRepositoryProvider)
+          .deleteRecurring(recurringTransactionId);
+    }
     ref.invalidate(transactionsSummaryProvider);
     ref.invalidate(recentTransactionsProvider);
     ref.invalidate(allTransactionsProvider);
