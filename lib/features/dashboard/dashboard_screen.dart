@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 
 import '../../core/config/router.dart';
 import '../../core/providers/voice_enabled_provider.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/custom_date_range_picker.dart';
+import '../../core/widgets/neo_card.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
 import '../transactions/presentation/widgets/voice_transaction_button.dart';
@@ -15,7 +18,6 @@ import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
 import '../transactions/domain/transactions_repository_contract.dart';
-import '../transactions/presentation/providers/custom_categories_provider.dart';
 import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
@@ -25,7 +27,6 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Procesa recurrentes pendientes al abrir la app (una vez por sesión)
     ref.watch(processRecurringTransactionsProvider);
 
     final l10n = AppLocalizations.of(context);
@@ -34,6 +35,7 @@ class DashboardScreen extends ConsumerWidget {
     final customRange = ref.watch(customDateRangeProvider);
     final summaryAsync = ref.watch(transactionsSummaryProvider);
     final recentAsync = ref.watch(recentTransactionsProvider);
+    final cs = context.colors;
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -49,8 +51,12 @@ class DashboardScreen extends ConsumerWidget {
             ),
             Text(
               DateTime.now().formattedDate,
-              style: context.textTheme.bodySmall?.copyWith(
-                color: context.colors.onSurface.withValues(alpha: 0.5),
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: cs.onSurface.withValues(alpha: 0.38),
+                letterSpacing: 0.3,
               ),
             ),
           ],
@@ -62,19 +68,19 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 const VoiceTransactionButton(),
                 const SizedBox(width: 16),
-                FloatingActionButton(
+                NeoFab(
                   heroTag: 'addFab',
-                  onPressed: () => context.push(AppRoutes.addTransaction),
-                  child: const Icon(Icons.add),
+                  onTap: () => context.push(AppRoutes.addTransaction),
                 ),
               ],
             )
-          : FloatingActionButton(
-              onPressed: () => context.push(AppRoutes.addTransaction),
-              child: const Icon(Icons.add),
+          : NeoFab(
+              onTap: () => context.push(AppRoutes.addTransaction),
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: RefreshIndicator(
+        color: AppColors.dustyTeal,
+        backgroundColor: cs.surface,
         onRefresh: () async {
           ref.invalidate(processRecurringTransactionsProvider);
           ref.invalidate(transactionsSummaryProvider);
@@ -82,55 +88,50 @@ class DashboardScreen extends ConsumerWidget {
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Selector de período ──────────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ...TransactionPeriod.values.map((p) {
-                    final isSelected = p == period && customRange == null;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ChoiceChip(
-                        label: Text(p.l10nLabel(l10n)),
-                        selected: isSelected,
-                        onSelected: (_) {
-                          ref.read(selectedPeriodProvider.notifier).state = p;
-                          ref.read(customDateRangeProvider.notifier).state =
-                              null;
-                        },
-                      ),
-                    );
-                  }),
-                  IconButton(
-                    icon: Icon(
-                      Icons.calendar_month_outlined,
-                      color: customRange != null
-                          ? context.colors.primary
-                          : null,
-                    ),
-                    tooltip: l10n.customRange,
-                    onPressed: () async {
-                      final range = await showCustomDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now(),
-                        initialDateRange: customRange ??
-                            DateTimeRange(
-                              start: period.dateRange.from,
-                              end: period.dateRange.to,
-                            ),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ...TransactionPeriod.values.map((p) {
+                      final isSelected = p == period && customRange == null;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: _PeriodChip(
+                          label: p.l10nLabel(l10n),
+                          isSelected: isSelected,
+                          onTap: () {
+                            ref.read(selectedPeriodProvider.notifier).state = p;
+                            ref.read(customDateRangeProvider.notifier).state = null;
+                          },
+                        ),
                       );
-                      if (range != null) {
-                        ref.read(customDateRangeProvider.notifier).state =
-                            range;
-                      }
-                    },
-                  ),
-                ],
+                    }),
+                    _IconChip(
+                      icon: Icons.calendar_month_outlined,
+                      isActive: customRange != null,
+                      onTap: () async {
+                        final range = await showCustomDateRangePicker(
+                          context: context,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                          initialDateRange: customRange ??
+                              DateTimeRange(
+                                start: period.dateRange.from,
+                                end: period.dateRange.to,
+                              ),
+                        );
+                        if (range != null) {
+                          ref.read(customDateRangeProvider.notifier).state = range;
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
               const Gap(24),
 
@@ -140,43 +141,65 @@ class DashboardScreen extends ConsumerWidget {
                 error: (_, __) => const SizedBox.shrink(),
                 data: (summary) => _SummarySection(summary: summary),
               ),
-              const Gap(28),
+              const Gap(32),
 
               // ── Transacciones recientes ──────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(l10n.recent, style: context.textTheme.titleMedium),
-                  TextButton(
-                    onPressed: () => context.push(AppRoutes.transactions),
-                    child: Text(l10n.seeAll),
+                  Text(
+                    l10n.recent.toUpperCase(),
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface.withValues(alpha: 0.4),
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push(AppRoutes.transactions),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.dustyTealLight,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        l10n.seeAll,
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.dustyTeal,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const Gap(8),
+              const Gap(12),
               recentAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.dustyTeal),
+                ),
                 error: (e, _) => Text(e.toString()),
                 data: (transactions) {
                   if (transactions.isEmpty) {
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      padding: const EdgeInsets.symmetric(vertical: 48),
                       child: Center(
                         child: Column(
                           children: [
-                            Icon(
-                              Icons.receipt_long_outlined,
-                              size: 48,
-                              color: context.colors.onSurface
-                                  .withValues(alpha: 0.3),
-                            ),
+                            const Text('📭', style: TextStyle(fontSize: 48)),
                             const Gap(12),
                             Text(
                               l10n.noTransactionsPeriod,
-                              style: context.textTheme.bodyMedium?.copyWith(
-                                color: context.colors.onSurface
-                                    .withValues(alpha: 0.4),
+                              style: TextStyle(
+                                fontFamily: 'Sora',
+                                fontSize: 14,
+                                color: cs.onSurface.withValues(alpha: 0.4),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -199,6 +222,90 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
+// ── Period chip ───────────────────────────────────────────────────────────────
+
+class _PeriodChip extends StatelessWidget {
+  const _PeriodChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.dustyTeal : Colors.transparent,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: isSelected ? AppColors.dustyTeal : AppColors.borderMedium,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Sora',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isSelected
+                ? AppColors.pureWhite
+                : AppColors.textMuted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconChip extends StatelessWidget {
+  const _IconChip({
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.warmAmberLight : Colors.transparent,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: isActive ? AppColors.warmAmber : AppColors.borderMedium,
+            width: 1.5,
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: 18,
+          color: isActive ? AppColors.warmAmber : AppColors.textMuted,
+        ),
+      ),
+    );
+  }
+}
+
 // ── Summary section ───────────────────────────────────────────────────────────
 
 class _SummarySection extends StatelessWidget {
@@ -210,48 +317,67 @@ class _SummarySection extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final balance = summary.balance;
     final isPositive = balance >= 0;
+    final accentColor = isPositive ? AppColors.sageGreen : AppColors.mutedTerra;
+    final accentLight = isPositive ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
 
     return Column(
       children: [
-        // Balance card grande
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
-          decoration: BoxDecoration(
-            color: context.colors.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(20),
-          ),
+        // Balance card principal
+        NeoCard(
+          accentColor: accentColor,
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
           child: Column(
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: accentLight,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      l10n.balance.toUpperCase(),
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                        color: accentColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Gap(16),
               Text(
-                l10n.balance,
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: context.colors.onSurface.withValues(alpha: 0.6),
+                '${isPositive ? '+' : '-'}€${balance.abs().toStringAsFixed(2)}',
+                style: context.textTheme.displaySmall?.copyWith(
+                  color: context.colors.onSurface,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1,
                 ),
               ),
-              const Gap(8),
+              const Gap(4),
               Text(
-                '${isPositive ? '+' : ''}€${balance.abs().toStringAsFixed(2)}',
-                style: context.textTheme.displaySmall?.copyWith(
-                  color: isPositive
-                      ? const Color(0xFF86EFAC)
-                      : const Color(0xFFF9A8D4),
-                  fontWeight: FontWeight.bold,
-                ),
+                isPositive ? '📈' : '📉',
+                style: const TextStyle(fontSize: 18),
               ),
             ],
           ),
         ),
-        const Gap(16),
-        // Ingresos y gastos
+        const Gap(12),
+        // Mini cards Ingresos / Gastos
         Row(
           children: [
             Expanded(
               child: _MiniCard(
                 label: l10n.income,
                 amount: summary.income,
+                accentColor: AppColors.sageGreen,
+                accentLight: AppColors.sageGreenLight,
                 icon: Icons.arrow_downward_rounded,
-                color: Colors.green,
                 onTap: () => showCategoryDistributionSheet(
                   context,
                   TransactionType.income,
@@ -263,8 +389,9 @@ class _SummarySection extends StatelessWidget {
               child: _MiniCard(
                 label: l10n.expenses,
                 amount: summary.expense,
+                accentColor: AppColors.mutedTerra,
+                accentLight: AppColors.mutedTerraLight,
                 icon: Icons.arrow_upward_rounded,
-                color: Colors.red,
                 onTap: () => showCategoryDistributionSheet(
                   context,
                   TransactionType.expense,
@@ -282,68 +409,65 @@ class _MiniCard extends StatelessWidget {
   const _MiniCard({
     required this.label,
     required this.amount,
+    required this.accentColor,
+    required this.accentLight,
     required this.icon,
-    required this.color,
     this.onTap,
   });
 
   final String label;
   final double amount;
+  final Color accentColor;
+  final Color accentLight;
   final IconData icon;
-  final Color color;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 18),
-              ),
-              const Gap(12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: context.colors.onSurface
-                            .withValues(alpha: 0.5),
-                      ),
-                    ),
-                    Text(
-                      '€${amount.toStringAsFixed(2)}',
-                      style: context.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (onTap != null)
-                Icon(
-                  Icons.pie_chart_outline,
-                  size: 14,
-                  color: context.colors.onSurface.withValues(alpha: 0.3),
-                ),
-            ],
+    return NeoCard(
+      accentColor: accentColor,
+      padding: const EdgeInsets.all(16),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: accentLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: accentColor, size: 18),
           ),
-        ),
+          const Gap(12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const Gap(2),
+                Text(
+                  '€${amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: accentColor,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -356,25 +480,28 @@ class _SummaryShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.colors;
     return Column(
       children: [
         Container(
           width: double.infinity,
-          height: 130,
+          height: 140,
           decoration: BoxDecoration(
-            color: context.colors.surfaceContainerHighest,
+            color: cs.surface,
             borderRadius: BorderRadius.circular(20),
+            boxShadow: AppColors.softShadow,
           ),
         ),
-        const Gap(16),
+        const Gap(12),
         Row(
           children: [
             Expanded(
               child: Container(
                 height: 80,
                 decoration: BoxDecoration(
-                  color: context.colors.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(16),
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: AppColors.softShadow,
                 ),
               ),
             ),
@@ -383,8 +510,9 @@ class _SummaryShimmer extends StatelessWidget {
               child: Container(
                 height: 80,
                 decoration: BoxDecoration(
-                  color: context.colors.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(16),
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: AppColors.softShadow,
                 ),
               ),
             ),
@@ -404,60 +532,109 @@ class _RecentTransactionTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final cs = context.colors;
     final isIncome = transaction.type.isIncome;
-    final color = isIncome ? Colors.green : Colors.red;
-    final customCats = ref.watch(customCategoriesProvider);
-    final icon = TransactionCategories.iconFor(
-      transaction.category,
-      transaction.type,
-      extra: customCats[transaction.type] ?? [],
-    );
+    final accentColor = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
+    final accentLight = isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+    final emoji = _emojiForCategory(transaction.category, isIncome);
 
-    return ListTile(
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-      minVerticalPadding: 0,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => AddTransactionScreen(transaction: transaction),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AddTransactionScreen(transaction: transaction),
+          ),
         ),
-      ),
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: color, size: 18),
-      ),
-      title: Text(
-        TransactionCategories.localizedName(transaction.category, l10n),
-        style: context.textTheme.bodyMedium
-            ?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      subtitle: transaction.description != null
-          ? Text(
-              transaction.description!,
-              style: context.textTheme.bodySmall?.copyWith(
-                color: context.colors.onSurface.withValues(alpha: 0.5),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            )
-          : Text(
-              transaction.date.formattedDate,
-              style: context.textTheme.bodySmall?.copyWith(
-                color: context.colors.onSurface.withValues(alpha: 0.4),
-              ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: AppColors.softShadowSm,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: accentLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                  ),
+                ),
+                const Gap(12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        TransactionCategories.localizedName(transaction.category, l10n),
+                        style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      if (transaction.description != null)
+                        Text(
+                          transaction.description!,
+                          style: const TextStyle(
+                            fontFamily: 'Sora',
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      else
+                        Text(
+                          transaction.date.formattedDate,
+                          style: const TextStyle(
+                            fontFamily: 'Sora',
+                            fontSize: 12,
+                            color: AppColors.textSubtle,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const Gap(8),
+                Text(
+                  '${isIncome ? '+' : '-'}€${transaction.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: accentColor,
+                  ),
+                ),
+              ],
             ),
-      trailing: Text(
-        '${isIncome ? '+' : '-'}€${transaction.amount.toStringAsFixed(2)}',
-        style: context.textTheme.bodyMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
+
+  String _emojiForCategory(String category, bool isIncome) => switch (category) {
+    'Salario'    => '💼',
+    'Freelance'  => '💻',
+    'Inversión'  => '📈',
+    'Regalo'     => '🎁',
+    'Comida'     => '🍕',
+    'Transporte' => '🚗',
+    'Vivienda'   => '🏠',
+    'Ocio'       => '🎮',
+    'Salud'      => '💊',
+    'Educación'  => '📚',
+    'Ropa'       => '👕',
+    'Tecnología' => '⚡',
+    _            => isIncome ? '💰' : '💸',
+  };
 }
