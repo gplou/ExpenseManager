@@ -214,6 +214,14 @@ class AppTheme {
           thickness: 1,
         ),
 
+        // ── Drawer ───────────────────────────────────────────────────────
+        drawerTheme: const DrawerThemeData(
+          backgroundColor: AppColors.pureWhite,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          scrimColor: Color(0x52000000),
+        ),
+
         // ── BottomSheet ──────────────────────────────────────────────────
         bottomSheetTheme: const BottomSheetThemeData(
           backgroundColor: AppColors.pureWhite,
@@ -284,6 +292,8 @@ class AppTheme {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: false,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
           titleTextStyle: TextStyle(
             fontFamily: 'Sora',
             fontSize: 20,
@@ -456,6 +466,14 @@ class AppTheme {
         dividerTheme: const DividerThemeData(
           color: AppColors.darkBorderColor,
           thickness: 1,
+        ),
+
+        // ── Drawer ───────────────────────────────────────────────────────
+        drawerTheme: const DrawerThemeData(
+          backgroundColor: AppColors.darkSurface,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          scrimColor: Color(0x52000000),
         ),
 
         // ── BottomSheet ──────────────────────────────────────────────────
