@@ -414,20 +414,22 @@ class _RecentTransactionTile extends ConsumerWidget {
     );
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      minVerticalPadding: 0,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => AddTransactionScreen(transaction: transaction),
         ),
       ),
       leading: Container(
-        width: 44,
-        height: 44,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: color, size: 22),
+        child: Icon(icon, color: color, size: 18),
       ),
       title: Text(
         TransactionCategories.localizedName(transaction.category, l10n),

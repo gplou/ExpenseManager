@@ -73,14 +73,14 @@ final transactionsSummaryProvider =
   return repo.getSummary(from: range.from, to: range.to);
 });
 
-// ── Recent transactions (last 5) ──────────────────────────────────────────────
+// ── Recent transactions (last 3) ──────────────────────────────────────────────
 
 final recentTransactionsProvider =
     FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
   final range = ref.watch(effectiveDateRangeProvider);
   final repo = ref.watch(transactionsRepositoryProvider);
   final all = await repo.getTransactions(from: range.from, to: range.to);
-  return all.take(5).toList();
+  return all.take(3).toList();
 });
 
 // ── All transactions ──────────────────────────────────────────────────────────
