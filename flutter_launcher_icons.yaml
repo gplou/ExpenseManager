@@ -1,0 +1,7 @@
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/ExpenseManagerLogo.png"
+  adaptive_icon_background: "#C8E6C9"
+  adaptive_icon_foreground: "assets/images/ExpenseManagerLogo.png"
+  min_sdk_android: 21

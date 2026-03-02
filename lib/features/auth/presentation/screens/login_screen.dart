@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
@@ -247,63 +248,10 @@ class _SocialButton extends StatelessWidget {
 class _GoogleIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
+    return SvgPicture.asset(
+      'assets/images/google_logo.svg',
       width: 22,
       height: 22,
-      child: _GoogleLetterG(),
     );
   }
-}
-
-class _GoogleLetterG extends StatelessWidget {
-  const _GoogleLetterG();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _GoogleGPainter());
-  }
-}
-
-class _GoogleGPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    _drawArc(canvas, center, radius, 210 * (3.14159 / 180),
-        240 * (3.14159 / 180), const Color(0xFF4285F4));
-    _drawArc(canvas, center, radius, 90 * (3.14159 / 180),
-        120 * (3.14159 / 180), const Color(0xFFEA4335));
-    _drawArc(canvas, center, radius, 210 * (3.14159 / 180),
-        60 * (3.14159 / 180), const Color(0xFFFBBC05));
-    _drawArc(canvas, center, radius, 270 * (3.14159 / 180),
-        60 * (3.14159 / 180), const Color(0xFF34A853));
-
-    final paint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTWH(center.dx, center.dy - radius * 0.18,
-          radius + 1, radius * 0.36),
-      paint,
-    );
-  }
-
-  void _drawArc(Canvas canvas, Offset center, double radius, double startAngle,
-      double sweepAngle, Color color) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = radius * 0.28;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius * 0.86),
-      startAngle,
-      sweepAngle,
-      false,
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
