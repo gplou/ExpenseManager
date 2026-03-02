@@ -23,11 +23,11 @@ class AppColors {
   static const Color textSecondaryLight = Color(0xFF64748B);
 
   // Dark mode
-  static const Color backgroundDark = Color(0xFF0B1120);
-  static const Color surfaceDark = Color(0xFF151F32);
-  static const Color borderDark = Color(0xFF1E293B);
-  static const Color textPrimaryDark = Color(0xFFF1F5F9);
-  static const Color textSecondaryDark = Color(0xFF94A3B8);
+  static const Color backgroundDark = Color(0xFF111111);
+  static const Color surfaceDark = Color(0xFF1C1C1C);
+  static const Color borderDark = Color(0xFF2A2A2A);
+  static const Color textPrimaryDark = Color(0xFFF0F0F0);
+  static const Color textSecondaryDark = Color(0xFF9E9E9E);
 
   // Prioridades de tareas
   static const Color priorityHigh = Color(0xFFEF4444);
