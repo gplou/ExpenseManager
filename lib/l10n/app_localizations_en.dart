@@ -289,53 +289,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get relOverdue => 'Overdue';
 
   @override
-  String get myTasks => 'My tasks';
-
-  @override
-  String get newTask => 'New task';
-
-  @override
-  String get noTasks => 'No pending tasks!';
-
-  @override
-  String get noTasksSubtitle => 'Tap + to create your first task';
-
-  @override
-  String get taskDetail => 'Task detail';
-
-  @override
-  String get statusPending => 'Pending';
-
-  @override
-  String get statusInProgress => 'In progress';
-
-  @override
-  String get statusCompleted => 'Completed';
-
-  @override
-  String get priority => 'Priority';
-
-  @override
-  String get dueDate => 'Due date';
-
-  @override
-  String get created => 'Created';
-
-  @override
-  String get markPending => 'Mark as pending';
-
-  @override
-  String get markCompleted => 'Mark as completed';
-
-  @override
-  String get deleteTask => 'Delete task';
-
-  @override
-  String deleteTaskConfirm(String title) {
-    return 'Are you sure you want to delete \"$title\"?';
-  }
-
-  @override
   String get categorySalary => 'Salary';
 
   @override

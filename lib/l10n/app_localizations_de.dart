@@ -293,54 +293,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get relOverdue => 'Überfällig';
 
   @override
-  String get myTasks => 'Meine Aufgaben';
-
-  @override
-  String get newTask => 'Neue Aufgabe';
-
-  @override
-  String get noTasks => 'Keine ausstehenden Aufgaben!';
-
-  @override
-  String get noTasksSubtitle =>
-      'Tippe auf +, um deine erste Aufgabe zu erstellen';
-
-  @override
-  String get taskDetail => 'Aufgabendetail';
-
-  @override
-  String get statusPending => 'Ausstehend';
-
-  @override
-  String get statusInProgress => 'In Bearbeitung';
-
-  @override
-  String get statusCompleted => 'Abgeschlossen';
-
-  @override
-  String get priority => 'Priorität';
-
-  @override
-  String get dueDate => 'Fälligkeitsdatum';
-
-  @override
-  String get created => 'Erstellt';
-
-  @override
-  String get markPending => 'Als ausstehend markieren';
-
-  @override
-  String get markCompleted => 'Als abgeschlossen markieren';
-
-  @override
-  String get deleteTask => 'Aufgabe löschen';
-
-  @override
-  String deleteTaskConfirm(String title) {
-    return 'Möchten Sie \"$title\" wirklich löschen?';
-  }
-
-  @override
   String get categorySalary => 'Gehalt';
 
   @override

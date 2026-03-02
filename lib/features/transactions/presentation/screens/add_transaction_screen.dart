@@ -11,6 +11,7 @@ import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/custom_categories_provider.dart';
+import '../providers/hidden_builtin_categories_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../widgets/create_category_dialog.dart';
 
@@ -120,7 +121,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (newName != null) setState(() => _selectedCategory = newName);
   }
 
-  Future<void> _confirmDeleteCategory(String name) async {
+  Future<void> _confirmDeleteCategory(String name, {required bool isCustom}) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -141,9 +142,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await ref
-        .read(customCategoriesProvider.notifier)
-        .remove(_type, name);
+    if (isCustom) {
+      await ref.read(customCategoriesProvider.notifier).remove(_type, name);
+    } else {
+      await ref.read(hiddenBuiltInCategoriesProvider.notifier).hide(_type, name);
+    }
     if (_selectedCategory == name) setState(() => _selectedCategory = null);
   }
 
@@ -267,7 +270,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final customCats = ref.watch(customCategoriesProvider);
-    final builtInCategories = TransactionCategories.forType(_type);
+    final hiddenBuiltIns = ref.watch(hiddenBuiltInCategoriesProvider);
+    final builtInCategories = TransactionCategories.forType(_type)
+        .where((c) => !(hiddenBuiltIns[_type]?.contains(c.name) ?? false))
+        .toList();
     final allCategories = [
       ...builtInCategories,
       ...(customCats[_type] ?? []),
@@ -368,21 +374,19 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               children: [
                 ...allCategories.map((cat) {
                   final isSelected = _selectedCategory == cat.name;
-                  final isCustom = !builtInCategories
+                  final isCustom = !TransactionCategories.forType(_type)
                       .any((c) => c.name == cat.name);
-                  return GestureDetector(
-                    onLongPress: isCustom
-                        ? () => _confirmDeleteCategory(cat.name)
-                        : null,
-                    child: ChoiceChip(
-                      avatar: Icon(cat.icon, size: 16),
-                      label: Text(
-                        TransactionCategories.localizedName(cat.name, l10n),
-                      ),
-                      selected: isSelected,
-                      onSelected: (_) =>
-                          setState(() => _selectedCategory = cat.name),
+                  return InputChip(
+                    avatar: Icon(cat.icon, size: 16),
+                    label: Text(
+                      TransactionCategories.localizedName(cat.name, l10n),
                     ),
+                    selected: isSelected,
+                    onSelected: (_) =>
+                        setState(() => _selectedCategory = cat.name),
+                    onDeleted: () =>
+                        _confirmDeleteCategory(cat.name, isCustom: isCustom),
+                    deleteIcon: const Icon(Icons.close, size: 14),
                   );
                 }),
                 ActionChip(
