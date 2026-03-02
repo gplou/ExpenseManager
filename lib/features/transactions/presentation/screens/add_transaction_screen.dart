@@ -99,8 +99,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ? v.amount.toStringAsFixed(2)
               : '',
     );
-    _descriptionController = TextEditingController(text: t?.description ?? '');
-    _selectedCategory = t?.category;
+    _descriptionController = TextEditingController(text: t?.description ?? v?.description ?? '');
+    _selectedCategory = t?.category ?? v?.category;
     _selectedDate = t?.date ?? DateTime.now();
   }
 
