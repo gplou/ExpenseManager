@@ -460,6 +460,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   return _CategoryChip(
                     label: TransactionCategories.localizedName(cat.name, l10n),
                     emoji: catEmoji,
+                    iconOverride: isCustom ? cat.icon : null,
                     isSelected: isSelected,
                     accentColor: accentColor,
                     accentLight: accentLight,
@@ -681,6 +682,7 @@ class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
     required this.label,
     required this.emoji,
+    this.iconOverride,
     required this.isSelected,
     required this.accentColor,
     required this.accentLight,
@@ -690,6 +692,7 @@ class _CategoryChip extends StatelessWidget {
 
   final String label;
   final String emoji;
+  final IconData? iconOverride;
   final bool isSelected;
   final Color accentColor;
   final Color accentLight;
@@ -729,7 +732,11 @@ class _CategoryChip extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(emoji, style: const TextStyle(fontSize: 14)),
+                  if (iconOverride != null)
+                    Icon(iconOverride, size: 14,
+                        color: isSelected ? accentColor : AppColors.textMuted)
+                  else
+                    Text(emoji, style: const TextStyle(fontSize: 14)),
                   const Gap(6),
                   Text(
                     label,
