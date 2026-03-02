@@ -56,15 +56,6 @@ class _CategoryDistributionSheetState
       expand: false,
       builder: (_, scrollController) => Column(
         children: [
-          const Gap(12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: context.colors.onSurface.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
           const Gap(16),
           Text(title, style: context.textTheme.titleLarge),
           const Gap(12),
