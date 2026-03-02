@@ -218,13 +218,7 @@ class _SummarySection extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isPositive
-                  ? [const Color(0xFF10B981), const Color(0xFF059669)]
-                  : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: context.colors.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -232,14 +226,16 @@ class _SummarySection extends StatelessWidget {
               Text(
                 l10n.balance,
                 style: context.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: context.colors.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const Gap(8),
               Text(
                 '${isPositive ? '+' : ''}€${balance.abs().toStringAsFixed(2)}',
                 style: context.textTheme.displaySmall?.copyWith(
-                  color: Colors.white,
+                  color: isPositive
+                      ? const Color(0xFF86EFAC)
+                      : const Color(0xFFF9A8D4),
                   fontWeight: FontWeight.bold,
                 ),
               ),
