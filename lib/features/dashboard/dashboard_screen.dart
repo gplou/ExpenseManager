@@ -353,7 +353,7 @@ class _SummarySection extends StatelessWidget {
               ),
               const Gap(16),
               Text(
-                '${isPositive ? '+' : '-'}€${balance.abs().toStringAsFixed(2)}',
+                '${isPositive ? '' : '-'}€${balance.abs().toStringAsFixed(2)}',
                 style: context.textTheme.displaySmall?.copyWith(
                   color: context.colors.onSurface,
                   fontWeight: FontWeight.w800,
