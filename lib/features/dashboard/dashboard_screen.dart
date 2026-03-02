@@ -18,6 +18,7 @@ import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
 import '../transactions/domain/transactions_repository_contract.dart';
+import '../transactions/presentation/providers/custom_categories_provider.dart';
 import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
@@ -537,6 +538,11 @@ class _RecentTransactionTile extends ConsumerWidget {
     final accentColor = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
     final accentLight = isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
     final emoji = _emojiForCategory(transaction.category, isIncome);
+    final customCats = ref.watch(customCategoriesProvider)[transaction.type] ?? const [];
+    IconData? customIcon;
+    for (final c in customCats) {
+      if (c.name == transaction.category) { customIcon = c.icon; break; }
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -564,7 +570,9 @@ class _RecentTransactionTile extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
-                    child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                    child: customIcon != null
+                        ? Icon(customIcon, size: 22, color: accentColor)
+                        : Text(emoji, style: const TextStyle(fontSize: 22)),
                   ),
                 ),
                 const Gap(12),

@@ -29,6 +29,7 @@ class TransactionModel with _$TransactionModel {
     String? description,
     required DateTime date,
     required DateTime createdAt,
+    String? recurringTransactionId,
   }) = _TransactionModel;
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) =>

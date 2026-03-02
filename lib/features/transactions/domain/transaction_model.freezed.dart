@@ -28,6 +28,7 @@ mixin _$TransactionModel {
   String? get description => throw _privateConstructorUsedError;
   DateTime get date => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
+  String? get recurringTransactionId => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -49,7 +50,8 @@ abstract class $TransactionModelCopyWith<$Res> {
       String category,
       String? description,
       DateTime date,
-      DateTime createdAt});
+      DateTime createdAt,
+      String? recurringTransactionId});
 }
 
 /// @nodoc
@@ -73,6 +75,7 @@ class _$TransactionModelCopyWithImpl<$Res, $Val extends TransactionModel>
     Object? description = freezed,
     Object? date = null,
     Object? createdAt = null,
+    Object? recurringTransactionId = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -107,6 +110,10 @@ class _$TransactionModelCopyWithImpl<$Res, $Val extends TransactionModel>
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      recurringTransactionId: freezed == recurringTransactionId
+          ? _value.recurringTransactionId
+          : recurringTransactionId // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -127,7 +134,8 @@ abstract class _$$TransactionModelImplCopyWith<$Res>
       String category,
       String? description,
       DateTime date,
-      DateTime createdAt});
+      DateTime createdAt,
+      String? recurringTransactionId});
 }
 
 /// @nodoc
@@ -149,6 +157,7 @@ class __$$TransactionModelImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? date = null,
     Object? createdAt = null,
+    Object? recurringTransactionId = freezed,
   }) {
     return _then(_$TransactionModelImpl(
       id: null == id
@@ -183,6 +192,10 @@ class __$$TransactionModelImplCopyWithImpl<$Res>
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      recurringTransactionId: freezed == recurringTransactionId
+          ? _value.recurringTransactionId
+          : recurringTransactionId // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -198,7 +211,8 @@ class _$TransactionModelImpl implements _TransactionModel {
       required this.category,
       this.description,
       required this.date,
-      required this.createdAt});
+      required this.createdAt,
+      this.recurringTransactionId});
 
   factory _$TransactionModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$TransactionModelImplFromJson(json);
@@ -219,10 +233,12 @@ class _$TransactionModelImpl implements _TransactionModel {
   final DateTime date;
   @override
   final DateTime createdAt;
+  @override
+  final String? recurringTransactionId;
 
   @override
   String toString() {
-    return 'TransactionModel(id: $id, userId: $userId, amount: $amount, type: $type, category: $category, description: $description, date: $date, createdAt: $createdAt)';
+    return 'TransactionModel(id: $id, userId: $userId, amount: $amount, type: $type, category: $category, description: $description, date: $date, createdAt: $createdAt, recurringTransactionId: $recurringTransactionId)';
   }
 
   @override
@@ -240,13 +256,15 @@ class _$TransactionModelImpl implements _TransactionModel {
                 other.description == description) &&
             (identical(other.date, date) || other.date == date) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+                other.createdAt == createdAt) &&
+            (identical(other.recurringTransactionId, recurringTransactionId) ||
+                other.recurringTransactionId == recurringTransactionId));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, id, userId, amount, type,
-      category, description, date, createdAt);
+      category, description, date, createdAt, recurringTransactionId);
 
   @JsonKey(ignore: true)
   @override
@@ -272,7 +290,8 @@ abstract class _TransactionModel implements TransactionModel {
       required final String category,
       final String? description,
       required final DateTime date,
-      required final DateTime createdAt}) = _$TransactionModelImpl;
+      required final DateTime createdAt,
+      final String? recurringTransactionId}) = _$TransactionModelImpl;
 
   factory _TransactionModel.fromJson(Map<String, dynamic> json) =
       _$TransactionModelImpl.fromJson;
@@ -293,6 +312,8 @@ abstract class _TransactionModel implements TransactionModel {
   DateTime get date;
   @override
   DateTime get createdAt;
+  @override
+  String? get recurringTransactionId;
   @override
   @JsonKey(ignore: true)
   _$$TransactionModelImplCopyWith<_$TransactionModelImpl> get copyWith =>

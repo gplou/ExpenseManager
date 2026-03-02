@@ -99,8 +99,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ? v.amount.toStringAsFixed(2)
               : '',
     );
-    _descriptionController = TextEditingController(text: t?.description ?? '');
-    _selectedCategory = t?.category;
+    _descriptionController = TextEditingController(text: t?.description ?? v?.description ?? '');
+    _selectedCategory = t?.category ?? v?.category;
     _selectedDate = t?.date ?? DateTime.now();
   }
 
@@ -208,6 +208,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           date: _selectedDate,
         );
         await ref.read(transactionsNotifierProvider.notifier).update(updated);
+
+        if (_isRecurring && _recurrenceType != null) {
+          final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
+          await ref
+              .read(recurringTransactionsRepositoryProvider)
+              .createRecurring(
+                amount: amount,
+                type: _type,
+                category: _selectedCategory!,
+                description: desc,
+                recurrenceType: _recurrenceType!,
+                nextOccurrence: nextDate,
+              );
+        }
       } else {
         final transaction = TransactionModel(
           id: '',
@@ -542,9 +556,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Recurring (create only) ───────────────────────────────────
-            if (!_isEditing) ...[
-              Container(
+            // ── Recurring ────────────────────────────────────────────────
+            Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
                   color: cs.surface,
@@ -615,8 +628,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   ),
                 ],
               ],
-              const Gap(28),
-            ],
+            const Gap(28),
 
             // ── Save button ───────────────────────────────────────────────
             NeoBrutalButton(
