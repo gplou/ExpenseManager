@@ -320,7 +320,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Toggle Gasto / Ingreso ────────────────────────────────────
+            // ── Expense / Income toggle ──────────────────────────────────
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -387,7 +387,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Importe ───────────────────────────────────────────────────
+            // ── Amount ────────────────────────────────────────────────────
             NeoCard(
               accentColor: accentColor,
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
@@ -445,7 +445,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Categoría ─────────────────────────────────────────────────
+            // ── Category ──────────────────────────────────────────────────
             _SectionLabel(label: l10n.category),
             const Gap(12),
             Wrap(
@@ -477,7 +477,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Descripción ───────────────────────────────────────────────
+            // ── Description ───────────────────────────────────────────────
             _SectionLabel(label: l10n.descriptionOptional),
             const Gap(8),
             TextFormField(
@@ -495,7 +495,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Fecha ─────────────────────────────────────────────────────
+            // ── Date ──────────────────────────────────────────────────────
             _SectionLabel(label: l10n.date),
             const Gap(8),
             GestureDetector(
@@ -542,7 +542,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Recurrente (solo al crear) ─────────────────────────────────
+            // ── Recurring (create only) ───────────────────────────────────
             if (!_isEditing) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -618,7 +618,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               const Gap(28),
             ],
 
-            // ── Botón guardar ─────────────────────────────────────────────
+            // ── Save button ───────────────────────────────────────────────
             NeoBrutalButton(
               label: _isEditing
                   ? l10n.saveChanges
@@ -721,7 +721,7 @@ class _CategoryChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Zona de selección
+          // Selection area
           GestureDetector(
             onTap: () {
               HapticFeedback.selectionClick();
@@ -751,7 +751,7 @@ class _CategoryChip extends StatelessWidget {
               ),
             ),
           ),
-          // Botón eliminar
+          // Delete button
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
