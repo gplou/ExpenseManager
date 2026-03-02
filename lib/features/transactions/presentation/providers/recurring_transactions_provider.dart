@@ -28,6 +28,7 @@ final processRecurringTransactionsProvider = FutureProvider<void>((ref) async {
         description: r.description,
         date: r.nextOccurrence,
         createdAt: DateTime.now(),
+        recurringTransactionId: r.id,
       ),
     );
 
