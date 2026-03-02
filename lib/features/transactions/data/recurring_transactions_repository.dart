@@ -54,6 +54,10 @@ class RecurringTransactionsRepository {
         .update({'next_occurrence': _dateStr(next)})
         .eq('id', id);
   }
+
+  Future<void> deleteRecurring(String id) async {
+    await _client.from('recurring_transactions').delete().eq('id', id);
+  }
 }
 
 final recurringTransactionsRepositoryProvider =
