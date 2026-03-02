@@ -292,53 +292,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get relOverdue => 'En retard';
 
   @override
-  String get myTasks => 'Mes tâches';
-
-  @override
-  String get newTask => 'Nouvelle tâche';
-
-  @override
-  String get noTasks => 'Aucune tâche en attente !';
-
-  @override
-  String get noTasksSubtitle => 'Appuyez sur + pour créer votre première tâche';
-
-  @override
-  String get taskDetail => 'Détail de la tâche';
-
-  @override
-  String get statusPending => 'En attente';
-
-  @override
-  String get statusInProgress => 'En cours';
-
-  @override
-  String get statusCompleted => 'Terminée';
-
-  @override
-  String get priority => 'Priorité';
-
-  @override
-  String get dueDate => 'Échéance';
-
-  @override
-  String get created => 'Créée';
-
-  @override
-  String get markPending => 'Marquer comme en attente';
-
-  @override
-  String get markCompleted => 'Marquer comme terminée';
-
-  @override
-  String get deleteTask => 'Supprimer la tâche';
-
-  @override
-  String deleteTaskConfirm(String title) {
-    return 'Êtes-vous sûr de vouloir supprimer \"$title\" ?';
-  }
-
-  @override
   String get categorySalary => 'Salaire';
 
   @override
