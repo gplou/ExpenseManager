@@ -17,6 +17,7 @@ _$TransactionModelImpl _$$TransactionModelImplFromJson(
       description: json['description'] as String?,
       date: DateTime.parse(json['date'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      recurringTransactionId: json['recurringTransactionId'] as String?,
     );
 
 Map<String, dynamic> _$$TransactionModelImplToJson(
@@ -30,6 +31,7 @@ Map<String, dynamic> _$$TransactionModelImplToJson(
       'description': instance.description,
       'date': instance.date.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
+      'recurringTransactionId': instance.recurringTransactionId,
     };
 
 const _$TransactionTypeEnumMap = {

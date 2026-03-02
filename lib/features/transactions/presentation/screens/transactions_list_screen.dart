@@ -10,6 +10,7 @@ import '../../../../core/widgets/custom_date_range_picker.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
+import '../providers/custom_categories_provider.dart';
 import '../providers/transactions_provider.dart';
 import 'add_transaction_screen.dart';
 
@@ -311,6 +312,11 @@ class _TransactionTile extends ConsumerWidget {
     final accentColor = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
     final accentLight = isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
     final emoji = _emojiForCategory(transaction.category, isIncome);
+    final customCats = ref.watch(customCategoriesProvider)[transaction.type] ?? const [];
+    IconData? customIcon;
+    for (final c in customCats) {
+      if (c.name == transaction.category) { customIcon = c.icon; break; }
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -351,7 +357,7 @@ class _TransactionTile extends ConsumerWidget {
         onDismissed: (_) async {
           await ref
               .read(transactionsNotifierProvider.notifier)
-              .delete(transaction.id);
+              .delete(transaction.id, recurringTransactionId: transaction.recurringTransactionId);
         },
         child: GestureDetector(
           onTap: () => Navigator.of(context).push(
@@ -377,7 +383,9 @@ class _TransactionTile extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                      child: customIcon != null
+                          ? Icon(customIcon, size: 22, color: accentColor)
+                          : Text(emoji, style: const TextStyle(fontSize: 22)),
                     ),
                   ),
                   const Gap(12),
