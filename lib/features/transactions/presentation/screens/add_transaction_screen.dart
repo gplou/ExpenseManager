@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/widgets/neo_card.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../domain/parsed_voice_transaction.dart';
@@ -18,10 +20,7 @@ import '../widgets/create_category_dialog.dart';
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key, this.transaction, this.voiceData});
 
-  /// Si se pasa una transacción existente, la pantalla opera en modo edición.
   final TransactionModel? transaction;
-
-  /// Datos pre-rellenados desde el reconocimiento de voz (solo en modo creación).
   final ParsedVoiceTransaction? voiceData;
 
   @override
@@ -29,7 +28,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
       _AddTransactionScreenState();
 }
 
-// ── Info banner ───────────────────────────────────────────────────────────────
+// ── Recurrence info banner ────────────────────────────────────────────────────
 
 class _RecurrenceInfoBanner extends StatelessWidget {
   const _RecurrenceInfoBanner({required this.date, required this.type});
@@ -42,29 +41,28 @@ class _RecurrenceInfoBanner extends StatelessWidget {
     final next = nextRecurrenceDate(date, type);
     final dayStr =
         '${next.day.toString().padLeft(2, '0')}/${next.month.toString().padLeft(2, '0')}/${next.year}';
-    final freq = type == RecurrenceType.weekly
-        ? l10n.frequencyWeek
-        : l10n.frequencyMonth;
+    final freq =
+        type == RecurrenceType.weekly ? l10n.frequencyWeek : l10n.frequencyMonth;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: context.colors.primaryContainer.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.dustyTealLight,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.info_outline_rounded,
-            size: 15,
-            color: context.colors.primary.withValues(alpha: 0.8),
-          ),
-          const Gap(8),
+          const Text('🔁', style: TextStyle(fontSize: 16)),
+          const Gap(10),
           Expanded(
             child: Text(
               l10n.nextRepetition(dayStr, freq),
-              style: context.textTheme.bodySmall?.copyWith(
-                color: context.colors.primary.withValues(alpha: 0.9),
+              style: const TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.dustyTeal,
+                height: 1.5,
               ),
             ),
           ),
@@ -121,7 +119,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (newName != null) setState(() => _selectedCategory = newName);
   }
 
-  Future<void> _confirmDeleteCategory(String name, {required bool isCustom}) async {
+  Future<void> _confirmDeleteCategory(
+    String name, {
+    required bool isCustom,
+  }) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -135,8 +136,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete,
-                style: const TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.mutedTerra),
+            ),
           ),
         ],
       ),
@@ -145,17 +148,29 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (isCustom) {
       await ref.read(customCategoriesProvider.notifier).remove(_type, name);
     } else {
-      await ref.read(hiddenBuiltInCategoriesProvider.notifier).hide(_type, name);
+      await ref
+          .read(hiddenBuiltInCategoriesProvider.notifier)
+          .hide(_type, name);
     }
     if (_selectedCategory == name) setState(() => _selectedCategory = null);
   }
 
   Future<void> _pickDate() async {
+    final cs = context.colors;
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: cs.copyWith(
+            primary: AppColors.dustyTeal,
+            onPrimary: AppColors.pureWhite,
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (picked != null) setState(() => _selectedDate = picked);
   }
@@ -192,9 +207,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           description: desc,
           date: _selectedDate,
         );
-        await ref
-            .read(transactionsNotifierProvider.notifier)
-            .update(updated);
+        await ref.read(transactionsNotifierProvider.notifier).update(updated);
       } else {
         final transaction = TransactionModel(
           id: '',
@@ -253,7 +266,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               l10n.delete,
-              style: const TextStyle(color: Colors.red),
+              style: const TextStyle(color: AppColors.mutedTerra),
             ),
           ),
         ],
@@ -269,6 +282,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final cs = context.colors;
     final customCats = ref.watch(customCategoriesProvider);
     final hiddenBuiltIns = ref.watch(hiddenBuiltInCategoriesProvider);
     final builtInCategories = TransactionCategories.forType(_type)
@@ -279,60 +293,91 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ...(customCats[_type] ?? []),
     ];
 
+    final accentColor = _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
+    final accentLight = _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-            _isEditing ? l10n.editTransaction : l10n.newTransaction),
+        title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
         actions: [
           if (_isEditing)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              tooltip: l10n.delete,
-              onPressed: _delete,
+            GestureDetector(
+              onTap: _delete,
+              child: Container(
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.mutedTerraLight,
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: const Text('🗑️', style: TextStyle(fontSize: 16)),
+              ),
             ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Toggle Gasto / Ingreso ────────────────────────────────────
             Container(
-              decoration: BoxDecoration(
-                color: context.colors.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
-              ),
               padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Row(
                 children: TransactionType.values.map((type) {
                   final isSelected = _type == type;
-                  final color = type.isIncome ? Colors.green : Colors.red;
+                  final isIncome = type.isIncome;
+                  final color = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
+                  final lightColor = isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+                  final emoji = isIncome ? '💰' : '💳';
+
                   return Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() {
-                        _type = type;
-                        _selectedCategory = null;
-                      }),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _type = type;
+                          _selectedCategory = null;
+                        });
+                      },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        curve: Curves.easeOut,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: isSelected ? color : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
+                          color: isSelected ? cs.surface : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: isSelected ? AppColors.softShadowSm : [],
                         ),
-                        child: Text(
-                          type.l10nLabel(l10n),
-                          textAlign: TextAlign.center,
-                          style: context.textTheme.labelLarge?.copyWith(
-                            color: isSelected
-                                ? Colors.white
-                                : context.colors.onSurface
-                                    .withValues(alpha: 0.6),
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: isSelected ? lightColor : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(emoji, style: const TextStyle(fontSize: 14)),
+                              ),
+                            ),
+                            const Gap(8),
+                            Text(
+                              type.l10nLabel(l10n),
+                              style: TextStyle(
+                                fontFamily: 'Sora',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? color : AppColors.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -342,31 +387,66 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Importe ──────────────────────────────────────────────────
-            Text(l10n.amount, style: context.textTheme.labelMedium),
-            const Gap(8),
-            TextFormField(
-              controller: _amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-              ],
-              style: context.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              decoration: InputDecoration(
-                prefixText: '€ ',
-                prefixStyle: context.textTheme.headlineMedium?.copyWith(
-                  color: context.colors.onSurface.withValues(alpha: 0.5),
-                ),
-                hintText: l10n.amountHint,
+            // ── Importe ───────────────────────────────────────────────────
+            NeoCard(
+              accentColor: accentColor,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    l10n.amount.toUpperCase(),
+                    style: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                      color: AppColors.textSubtle,
+                    ),
+                  ),
+                  TextFormField(
+                    controller: _amountController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+                    ],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 52,
+                      fontWeight: FontWeight.w800,
+                      color: accentColor,
+                      letterSpacing: -1,
+                    ),
+                    decoration: InputDecoration(
+                      prefixText: '€ ',
+                      prefixStyle: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600,
+                        color: accentColor.withValues(alpha: 0.35),
+                      ),
+                      hintText: '0.00',
+                      hintStyle: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 52,
+                        fontWeight: FontWeight.w800,
+                        color: cs.onSurface.withValues(alpha: 0.08),
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      fillColor: Colors.transparent,
+                    ),
+                  ),
+                ],
               ),
             ),
             const Gap(28),
 
-            // ── Categoría ────────────────────────────────────────────────
-            Text(l10n.category, style: context.textTheme.labelMedium),
+            // ── Categoría ─────────────────────────────────────────────────
+            _SectionLabel(label: l10n.category),
             const Gap(12),
             Wrap(
               spacing: 8,
@@ -376,74 +456,84 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   final isSelected = _selectedCategory == cat.name;
                   final isCustom = !TransactionCategories.forType(_type)
                       .any((c) => c.name == cat.name);
-                  return InputChip(
-                    avatar: Icon(cat.icon, size: 16),
-                    label: Text(
-                      TransactionCategories.localizedName(cat.name, l10n),
-                    ),
-                    selected: isSelected,
-                    onSelected: (_) =>
-                        setState(() => _selectedCategory = cat.name),
-                    onDeleted: () =>
+                  final catEmoji = _emojiForCategory(cat.name, _type.isIncome);
+                  return _CategoryChip(
+                    label: TransactionCategories.localizedName(cat.name, l10n),
+                    emoji: catEmoji,
+                    isSelected: isSelected,
+                    accentColor: accentColor,
+                    accentLight: accentLight,
+                    onTap: () => setState(() => _selectedCategory = cat.name),
+                    onDelete: () =>
                         _confirmDeleteCategory(cat.name, isCustom: isCustom),
-                    deleteIcon: const Icon(Icons.close, size: 14),
                   );
                 }),
-                ActionChip(
-                  avatar: const Icon(Icons.add, size: 16),
-                  label: Text(l10n.newCategory),
-                  onPressed: _openCreateCategoryDialog,
+                _AddCategoryChip(
+                  label: l10n.newCategory,
+                  onTap: _openCreateCategoryDialog,
                 ),
               ],
             ),
             const Gap(28),
 
-            // ── Descripción ──────────────────────────────────────────────
-            Text(l10n.descriptionOptional,
-                style: context.textTheme.labelMedium),
+            // ── Descripción ───────────────────────────────────────────────
+            _SectionLabel(label: l10n.descriptionOptional),
             const Gap(8),
             TextFormField(
               controller: _descriptionController,
               textCapitalization: TextCapitalization.sentences,
+              style: TextStyle(
+                fontFamily: 'Sora',
+                color: cs.onSurface,
+                fontSize: 15,
+                height: 1.5,
+              ),
               decoration: InputDecoration(
                 hintText: l10n.descriptionHint,
               ),
             ),
             const Gap(28),
 
-            // ── Fecha ────────────────────────────────────────────────────
-            Text(l10n.date, style: context.textTheme.labelMedium),
+            // ── Fecha ─────────────────────────────────────────────────────
+            _SectionLabel(label: l10n.date),
             const Gap(8),
-            InkWell(
+            GestureDetector(
               onTap: _pickDate,
-              borderRadius: BorderRadius.circular(12),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
-                  border: Border.all(
-                    color: context.colors.outline.withValues(alpha: 0.5),
-                  ),
-                  borderRadius: BorderRadius.circular(12),
+                  color: cs.surface,
+                  border: Border.all(color: AppColors.borderLight, width: 1.5),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppColors.softShadowSm,
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      size: 18,
-                      color: context.colors.onSurface
-                          .withValues(alpha: 0.6),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.warmAmberLight,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Center(
+                        child: Text('📅', style: TextStyle(fontSize: 18)),
+                      ),
                     ),
                     const Gap(12),
                     Text(
                       _selectedDate.formattedDate,
-                      style: context.textTheme.bodyMedium,
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface,
+                      ),
                     ),
                     const Spacer(),
-                    Icon(
-                      Icons.chevron_right,
-                      color: context.colors.onSurface
-                          .withValues(alpha: 0.4),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textSubtle,
                     ),
                   ],
                 ),
@@ -451,48 +541,65 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(28),
 
-            // ── Recurrente (solo al crear) ────────────────────────────────
+            // ── Recurrente (solo al crear) ─────────────────────────────────
             if (!_isEditing) ...[
-              Row(
-                children: [
-                  Icon(
-                    Icons.repeat_rounded,
-                    size: 18,
-                    color: context.colors.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const Gap(8),
-                  Expanded(
-                    child: Text(
-                      l10n.recurringTransaction,
-                      style: context.textTheme.labelMedium,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  border: Border.all(color: AppColors.borderLight, width: 1.5),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppColors.softShadowSm,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.dustyTealLight,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Center(
+                        child: Text('🔁', style: TextStyle(fontSize: 18)),
+                      ),
                     ),
-                  ),
-                  Switch(
-                    value: _isRecurring,
-                    onChanged: (v) => setState(() {
-                      _isRecurring = v;
-                      _recurrenceType =
-                          v ? RecurrenceType.monthly : null;
-                    }),
-                  ),
-                ],
+                    const Gap(12),
+                    Expanded(
+                      child: Text(
+                        l10n.recurringTransaction,
+                        style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: _isRecurring,
+                      onChanged: (v) => setState(() {
+                        _isRecurring = v;
+                        _recurrenceType = v ? RecurrenceType.monthly : null;
+                      }),
+                    ),
+                  ],
+                ),
               ),
               if (_isRecurring) ...[
-                const Gap(8),
+                const Gap(12),
                 SegmentedButton<RecurrenceType>(
                   showSelectedIcon: false,
                   segments: [
                     ButtonSegment(
                       value: RecurrenceType.weekly,
                       label: Text(l10n.weekly),
-                      icon: const Icon(
-                          Icons.calendar_view_week_outlined, size: 16),
+                      icon: const Icon(Icons.calendar_view_week_outlined, size: 16),
                     ),
                     ButtonSegment(
                       value: RecurrenceType.monthly,
                       label: Text(l10n.monthly),
-                      icon: const Icon(
-                          Icons.calendar_month_outlined, size: 16),
+                      icon: const Icon(Icons.calendar_month_outlined, size: 16),
                     ),
                   ],
                   selected: {_recurrenceType ?? RecurrenceType.monthly},
@@ -500,7 +607,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       setState(() => _recurrenceType = s.first),
                 ),
                 if (_recurrenceType != null) ...[
-                  const Gap(10),
+                  const Gap(12),
                   _RecurrenceInfoBanner(
                     date: _selectedDate,
                     type: _recurrenceType!,
@@ -510,29 +617,182 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               const Gap(28),
             ],
 
-            // ── Botón guardar ────────────────────────────────────────────
-            ElevatedButton(
-              onPressed: _isSaving ? null : _save,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _type.isIncome ? Colors.green : Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: _isSaving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      _isEditing
-                          ? l10n.saveChanges
-                          : _type.isIncome
-                              ? l10n.saveIncome
-                              : l10n.saveExpense,
+            // ── Botón guardar ─────────────────────────────────────────────
+            NeoBrutalButton(
+              label: _isEditing
+                  ? l10n.saveChanges
+                  : _type.isIncome
+                      ? l10n.saveIncome
+                      : l10n.saveExpense,
+              backgroundColor: accentColor,
+              foregroundColor: AppColors.pureWhite,
+              isLoading: _isSaving,
+              disabled: _isSaving,
+              onTap: _save,
+            ),
+            const Gap(16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _emojiForCategory(String category, bool isIncome) => switch (category) {
+    'Salario'    => '💼',
+    'Freelance'  => '💻',
+    'Inversión'  => '📈',
+    'Regalo'     => '🎁',
+    'Comida'     => '🍕',
+    'Transporte' => '🚗',
+    'Vivienda'   => '🏠',
+    'Ocio'       => '🎮',
+    'Salud'      => '💊',
+    'Educación'  => '📚',
+    'Ropa'       => '👕',
+    'Tecnología' => '⚡',
+    _            => isIncome ? '💰' : '💸',
+  };
+}
+
+// ── Section label ─────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label.toUpperCase(),
+      style: const TextStyle(
+        fontFamily: 'Sora',
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.5,
+        color: AppColors.textMuted,
+      ),
+    );
+  }
+}
+
+// ── Category chips ────────────────────────────────────────────────────────────
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.label,
+    required this.emoji,
+    required this.isSelected,
+    required this.accentColor,
+    required this.accentLight,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final String label;
+  final String emoji;
+  final bool isSelected;
+  final Color accentColor;
+  final Color accentLight;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    final deleteColor = isSelected
+        ? accentColor.withValues(alpha: 0.55)
+        : AppColors.textSubtle;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: isSelected ? accentLight : cs.surface,
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(
+          color: isSelected ? accentColor : AppColors.borderLight,
+          width: 1.5,
+        ),
+        boxShadow: isSelected ? null : AppColors.softShadowSm,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Zona de selección
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onTap();
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 14)),
+                  const Gap(6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? accentColor : AppColors.textMuted,
                     ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Botón eliminar
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onDelete();
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(2, 8, 10, 8),
+              child: Icon(Icons.close_rounded, size: 13, color: deleteColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddCategoryChip extends StatelessWidget {
+  const _AddCategoryChip({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: AppColors.dustyTeal,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.add_rounded, size: 14, color: AppColors.dustyTeal),
+            const Gap(4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.dustyTeal,
+              ),
             ),
           ],
         ),
