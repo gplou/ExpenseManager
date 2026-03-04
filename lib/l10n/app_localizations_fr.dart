@@ -131,6 +131,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Supprimer cette transaction récurrente ? Tous les futurs prélèvements seront annulés.';
 
   @override
+  String get deleteRecurringExpenseConfirm =>
+      'Supprimer cette dépense récurrente ? Cette dépense ou ce revenu ne sera plus ajouté à l\'avenir.';
+
+  @override
+  String get deleteRecurringIncomeConfirm =>
+      'Supprimer ce revenu récurrent ? Cette dépense ou ce revenu ne sera plus ajouté à l\'avenir.';
+
+  @override
   String get cancel => 'Annuler';
 
   @override
