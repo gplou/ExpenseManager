@@ -87,137 +87,159 @@ class DashboardScreen extends ConsumerWidget {
           ref.invalidate(transactionsSummaryProvider);
           ref.invalidate(recentTransactionsProvider);
         },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Selector de período ──────────────────────────────────────
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ...TransactionPeriod.values.map((p) {
-                      final isSelected = p == period && customRange == null;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _PeriodChip(
-                          label: p.l10nLabel(l10n),
-                          isSelected: isSelected,
-                          onTap: () {
-                            ref.read(selectedPeriodProvider.notifier).state = p;
-                            ref.read(customDateRangeProvider.notifier).state = null;
-                          },
-                        ),
-                      );
-                    }),
-                    _IconChip(
-                      icon: Icons.calendar_month_outlined,
-                      isActive: customRange != null,
-                      onTap: () async {
-                        final range = await showCustomDateRangePicker(
-                          context: context,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now(),
-                          initialDateRange: customRange ??
-                              DateTimeRange(
-                                start: period.dateRange.from,
-                                end: period.dateRange.to,
+                    // ── Selector de período ──────────────────────────────────────
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ...TransactionPeriod.values.map((p) {
+                            final isSelected = p == period && customRange == null;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: _PeriodChip(
+                                label: p.l10nLabel(l10n),
+                                isSelected: isSelected,
+                                onTap: () {
+                                  ref.read(selectedPeriodProvider.notifier).state = p;
+                                  ref.read(customDateRangeProvider.notifier).state = null;
+                                },
                               ),
-                        );
-                        if (range != null) {
-                          ref.read(customDateRangeProvider.notifier).state = range;
+                            );
+                          }),
+                          _IconChip(
+                            icon: Icons.calendar_month_outlined,
+                            isActive: customRange != null,
+                            onTap: () async {
+                              final range = await showCustomDateRangePicker(
+                                context: context,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now(),
+                                initialDateRange: customRange ??
+                                    DateTimeRange(
+                                      start: period.dateRange.from,
+                                      end: period.dateRange.to,
+                                    ),
+                              );
+                              if (range != null) {
+                                ref.read(customDateRangeProvider.notifier).state = range;
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Gap(12),
+
+                    // ── Balance principal ────────────────────────────────────────
+                    summaryAsync.when(
+                      loading: () => const _SummaryShimmer(),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (summary) => _SummarySection(summary: summary),
+                    ),
+                    const Gap(12),
+
+                    // ── Transacciones recientes ──────────────────────────────────
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.recent.toUpperCase(),
+                          style: TextStyle(
+                            fontFamily: 'Sora',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurface.withValues(alpha: 0.4),
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.push(AppRoutes.transactions),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.dustyTealLight,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              l10n.seeAll,
+                              style: const TextStyle(
+                                fontFamily: 'Sora',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.dustyTeal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Gap(8),
+                    recentAsync.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(color: AppColors.dustyTeal),
+                      ),
+                      error: (e, _) => Text(e.toString()),
+                      data: (transactions) {
+                        if (transactions.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('📭', style: TextStyle(fontSize: 40)),
+                                const Gap(8),
+                                Text(
+                                  l10n.noTransactionsPeriod,
+                                  style: TextStyle(
+                                    fontFamily: 'Sora',
+                                    fontSize: 14,
+                                    color: cs.onSurface.withValues(alpha: 0.4),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
                         }
+                        return Column(
+                          children: transactions
+                              .map((t) => _RecentTransactionTile(transaction: t))
+                              .toList(),
+                        );
                       },
                     ),
+
+                    // ── Empuja el banner al fondo ────────────────────────────────
+                    const Spacer(),
                   ],
                 ),
               ),
-              const Gap(24),
+            ),
 
-              // ── Balance principal ────────────────────────────────────────
-              summaryAsync.when(
-                loading: () => const _SummaryShimmer(),
-                error: (_, __) => const SizedBox.shrink(),
-                data: (summary) => _SummarySection(summary: summary),
-              ),
-              const Gap(32),
-
-              // ── Transacciones recientes ──────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.recent.toUpperCase(),
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface.withValues(alpha: 0.4),
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => context.push(AppRoutes.transactions),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.dustyTealLight,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        l10n.seeAll,
-                        style: const TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.dustyTeal,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Gap(12),
-              recentAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.dustyTeal),
-                ),
-                error: (e, _) => Text(e.toString()),
-                data: (transactions) {
-                  if (transactions.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 48),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            const Text('📭', style: TextStyle(fontSize: 48)),
-                            const Gap(12),
-                            Text(
-                              l10n.noTransactionsPeriod,
-                              style: TextStyle(
-                                fontFamily: 'Sora',
-                                fontSize: 14,
-                                color: cs.onSurface.withValues(alpha: 0.4),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  return Column(
-                    children: transactions
-                        .map((t) => _RecentTransactionTile(transaction: t))
-                        .toList(),
-                  );
-                },
-              ),
-            ],
-          ),
+            // ── Banner de anuncio ───────────────────────────────────────────
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: _AdBanner(),
+            ),
+            const Gap(12),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 80),
+          ],
         ),
+      ),
+    ),
+  ),
       ),
     );
   }
@@ -326,7 +348,7 @@ class _SummarySection extends StatelessWidget {
         // Balance card principal
         NeoCard(
           accentColor: accentColor,
-          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 24),
           child: Column(
             children: [
               Row(
@@ -351,7 +373,7 @@ class _SummarySection extends StatelessWidget {
                   ),
                 ],
               ),
-              const Gap(16),
+              const Gap(12),
               Text(
                 '${isPositive ? '' : '-'}€${balance.abs().toStringAsFixed(2)}',
                 style: context.textTheme.displaySmall?.copyWith(
@@ -645,4 +667,49 @@ class _RecentTransactionTile extends ConsumerWidget {
     'Tecnología' => '⚡',
     _            => isIncome ? '💰' : '💸',
   };
+}
+
+// ── Ad banner placeholder ─────────────────────────────────────────────────────
+
+class _AdBanner extends StatelessWidget {
+  const _AdBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Container(
+      width: double.infinity,
+      height: 90,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.borderLight,
+          width: 1,
+        ),
+        boxShadow: AppColors.softShadowSm,
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.campaign_outlined,
+            size: 18,
+            color: AppColors.textSubtle,
+          ),
+          SizedBox(width: 8),
+          Text(
+            'Publicidad',
+            style: TextStyle(
+              fontFamily: 'Sora',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSubtle,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

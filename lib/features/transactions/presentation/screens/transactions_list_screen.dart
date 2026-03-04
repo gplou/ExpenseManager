@@ -192,6 +192,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   },
                 ),
               ),
+              const _TxAdBanner(),
               _ExportButton(
                 onTap: _exporting ? null : () => _exportToExcel(transactions),
                 exporting: _exporting,
@@ -225,7 +226,7 @@ class _ExportButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
         color: context.colors.surface,
         boxShadow: [
@@ -394,6 +395,45 @@ class _IconChip extends StatelessWidget {
           size: 18,
           color: isActive ? AppColors.warmAmber : AppColors.textMuted,
         ),
+      ),
+    );
+  }
+}
+
+// ── Ad banner placeholder ─────────────────────────────────────────────────────
+
+class _TxAdBanner extends StatelessWidget {
+  const _TxAdBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Container(
+      width: double.infinity,
+      height: 70,
+      margin: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight, width: 1),
+        boxShadow: AppColors.softShadowSm,
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.campaign_outlined, size: 18, color: AppColors.textSubtle),
+          SizedBox(width: 8),
+          Text(
+            'Publicidad',
+            style: TextStyle(
+              fontFamily: 'Sora',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSubtle,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }
