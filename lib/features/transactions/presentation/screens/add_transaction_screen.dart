@@ -211,7 +211,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
         if (_isRecurring && _recurrenceType != null) {
           final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
-          await ref
+          final recurringId = await ref
               .read(recurringTransactionsRepositoryProvider)
               .createRecurring(
                 amount: amount,
@@ -221,6 +221,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 recurrenceType: _recurrenceType!,
                 nextOccurrence: nextDate,
               );
+          await ref
+              .read(transactionsNotifierProvider.notifier)
+              .update(updated.copyWith(recurringTransactionId: recurringId));
         }
       } else {
         String? recurringId;
