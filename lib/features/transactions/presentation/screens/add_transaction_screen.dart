@@ -267,11 +267,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _delete() async {
     final l10n = AppLocalizations.of(context);
+    final t = widget.transaction!;
+    final isRecurring = t.recurringTransactionId != null;
+    final String confirmMessage;
+    if (isRecurring) {
+      confirmMessage = t.type.isExpense
+          ? l10n.deleteRecurringExpenseConfirm
+          : l10n.deleteRecurringIncomeConfirm;
+    } else {
+      confirmMessage = l10n.deleteTransactionConfirm;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.delete),
-        content: Text(l10n.deleteTransactionConfirm),
+        content: Text(confirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),

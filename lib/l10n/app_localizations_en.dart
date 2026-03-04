@@ -131,6 +131,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Delete this recurring transaction? All future charges will be cancelled.';
 
   @override
+  String get deleteRecurringExpenseConfirm =>
+      'Delete this recurring expense? This expense or income will no longer be added in the future.';
+
+  @override
+  String get deleteRecurringIncomeConfirm =>
+      'Delete this recurring income? This expense or income will no longer be added in the future.';
+
+  @override
   String get cancel => 'Cancel';
 
   @override

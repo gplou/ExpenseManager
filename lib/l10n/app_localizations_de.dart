@@ -131,6 +131,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diese wiederkehrende Transaktion löschen? Alle zukünftigen Abbuchungen werden storniert.';
 
   @override
+  String get deleteRecurringExpenseConfirm =>
+      'Diese wiederkehrende Ausgabe löschen? Diese Ausgabe oder Einnahme wird in Zukunft nicht mehr hinzugefügt.';
+
+  @override
+  String get deleteRecurringIncomeConfirm =>
+      'Diese wiederkehrende Einnahme löschen? Diese Ausgabe oder Einnahme wird in Zukunft nicht mehr hinzugefügt.';
+
+  @override
   String get cancel => 'Abbrechen';
 
   @override
