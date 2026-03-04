@@ -94,6 +94,12 @@ class AppDrawer extends ConsumerWidget {
                     onChanged: (_) =>
                         ref.read(voiceEnabledProvider.notifier).toggle(),
                   ),
+                  ListTile(
+                    leading: const Icon(Icons.local_offer_outlined),
+                    title: const Text('Código promocional'),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    onTap: () => _showPromoCodeDialog(context),
+                  ),
                 ],
               ),
             ),
@@ -119,6 +125,13 @@ class AppDrawer extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showPromoCodeDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => const _PromoCodeDialog(),
     );
   }
 
@@ -416,6 +429,53 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
                   ),
                 )
               : Text(l10n.save),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Promo code dialog ─────────────────────────────────────────────────────────
+
+class _PromoCodeDialog extends StatefulWidget {
+  const _PromoCodeDialog();
+
+  @override
+  State<_PromoCodeDialog> createState() => _PromoCodeDialogState();
+}
+
+class _PromoCodeDialogState extends State<_PromoCodeDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Código promocional'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLength: 20,
+        textCapitalization: TextCapitalization.characters,
+        decoration: const InputDecoration(
+          hintText: 'Introduce tu código',
+          prefixIcon: Icon(Icons.local_offer_outlined),
+        ),
+        onSubmitted: (_) => Navigator.of(context).pop(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Aplicar'),
         ),
       ],
     );
