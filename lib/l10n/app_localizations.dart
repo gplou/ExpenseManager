@@ -761,6 +761,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Elige un icono'**
   String get chooseIcon;
+
+  /// No description provided for @exportExcel.
+  ///
+  /// In es, this message translates to:
+  /// **'Exportar a Excel'**
+  String get exportExcel;
+
+  /// No description provided for @exportSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardado en Descargas'**
+  String get exportSuccess;
+
+  /// No description provided for @exportError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al exportar el archivo'**
+  String get exportError;
+
+  /// No description provided for @exportColumnDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha'**
+  String get exportColumnDate;
+
+  /// No description provided for @exportColumnType.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo'**
+  String get exportColumnType;
+
+  /// No description provided for @exportColumnCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get exportColumnCategory;
+
+  /// No description provided for @exportColumnDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción'**
+  String get exportColumnDescription;
+
+  /// No description provided for @exportColumnAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe'**
+  String get exportColumnAmount;
 }
 
 class _AppLocalizationsDelegate

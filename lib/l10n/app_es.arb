@@ -241,5 +241,22 @@
   "categoryName": "Nombre de la categoría",
   "@categoryName": {},
   "chooseIcon": "Elige un icono",
-  "@chooseIcon": {}
+  "@chooseIcon": {},
+
+  "exportExcel": "Exportar a Excel",
+  "@exportExcel": {},
+  "exportSuccess": "Guardado en Descargas",
+  "@exportSuccess": {},
+  "exportError": "Error al exportar el archivo",
+  "@exportError": {},
+  "exportColumnDate": "Fecha",
+  "@exportColumnDate": {},
+  "exportColumnType": "Tipo",
+  "@exportColumnType": {},
+  "exportColumnCategory": "Categoría",
+  "@exportColumnCategory": {},
+  "exportColumnDescription": "Descripción",
+  "@exportColumnDescription": {},
+  "exportColumnAmount": "Importe",
+  "@exportColumnAmount": {}
 }

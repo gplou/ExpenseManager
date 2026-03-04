@@ -112,5 +112,13 @@
   "categoryOther": "Sonstiges",
   "newCategory": "Neue Kategorie",
   "categoryName": "Kategoriename",
-  "chooseIcon": "Symbol auswählen"
+  "chooseIcon": "Symbol auswählen",
+  "exportExcel": "Nach Excel exportieren",
+  "exportSuccess": "In Downloads gespeichert",
+  "exportError": "Fehler beim Exportieren der Datei",
+  "exportColumnDate": "Datum",
+  "exportColumnType": "Typ",
+  "exportColumnCategory": "Kategorie",
+  "exportColumnDescription": "Beschreibung",
+  "exportColumnAmount": "Betrag"
 }
