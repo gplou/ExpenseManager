@@ -223,23 +223,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               );
         }
       } else {
-        final transaction = TransactionModel(
-          id: '',
-          userId: '',
-          amount: amount,
-          type: _type,
-          category: _selectedCategory!,
-          description: desc,
-          date: _selectedDate,
-          createdAt: DateTime.now(),
-        );
-        await ref
-            .read(transactionsNotifierProvider.notifier)
-            .create(transaction);
-
+        String? recurringId;
         if (_isRecurring && _recurrenceType != null) {
           final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
-          await ref
+          recurringId = await ref
               .read(recurringTransactionsRepositoryProvider)
               .createRecurring(
                 amount: amount,
@@ -250,6 +237,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 nextOccurrence: nextDate,
               );
         }
+        final transaction = TransactionModel(
+          id: '',
+          userId: '',
+          amount: amount,
+          type: _type,
+          category: _selectedCategory!,
+          description: desc,
+          date: _selectedDate,
+          createdAt: DateTime.now(),
+          recurringTransactionId: recurringId,
+        );
+        await ref
+            .read(transactionsNotifierProvider.notifier)
+            .create(transaction);
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -289,7 +290,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (confirmed != true || !mounted) return;
     await ref
         .read(transactionsNotifierProvider.notifier)
-        .delete(widget.transaction!.id);
+        .delete(widget.transaction!.id, recurringTransactionId: widget.transaction!.recurringTransactionId);
     if (mounted) Navigator.of(context).pop();
   }
 

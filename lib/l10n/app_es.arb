@@ -89,6 +89,8 @@
   "@delete": {},
   "deleteTransactionConfirm": "¿Eliminar esta transacción?",
   "@deleteTransactionConfirm": {},
+  "deleteRecurringTransactionConfirm": "¿Eliminar esta transacción recurrente? Se cancelarán todos los cobros futuros.",
+  "@deleteRecurringTransactionConfirm": {},
   "cancel": "Cancelar",
   "@cancel": {},
 
