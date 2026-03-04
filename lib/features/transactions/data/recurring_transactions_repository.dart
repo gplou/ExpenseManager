@@ -29,7 +29,7 @@ class RecurringTransactionsRepository {
         .toList();
   }
 
-  Future<void> createRecurring({
+  Future<String> createRecurring({
     required double amount,
     required TransactionType type,
     required String category,
@@ -37,15 +37,20 @@ class RecurringTransactionsRepository {
     required RecurrenceType recurrenceType,
     required DateTime nextOccurrence,
   }) async {
-    await _client.from('recurring_transactions').insert({
-      'user_id': _userId,
-      'amount': amount,
-      'type': type.name,
-      'category': category,
-      'description': description,
-      'recurrence_type': recurrenceType.name,
-      'next_occurrence': _dateStr(nextOccurrence),
-    });
+    final response = await _client
+        .from('recurring_transactions')
+        .insert({
+          'user_id': _userId,
+          'amount': amount,
+          'type': type.name,
+          'category': category,
+          'description': description,
+          'recurrence_type': recurrenceType.name,
+          'next_occurrence': _dateStr(nextOccurrence),
+        })
+        .select('id')
+        .single();
+    return response['id'] as String;
   }
 
   Future<void> updateNextOccurrence(String id, DateTime next) async {
@@ -56,6 +61,12 @@ class RecurringTransactionsRepository {
   }
 
   Future<void> deleteRecurring(String id) async {
+    try {
+      await _client
+          .from('transactions')
+          .update({'recurring_transaction_id': null})
+          .eq('recurring_transaction_id', id);
+    } catch (_) {}
     await _client.from('recurring_transactions').delete().eq('id', id);
   }
 }

@@ -38,6 +38,12 @@
   "errorUpdating": "Fehler beim Aktualisieren",
   "delete": "Löschen",
   "deleteTransactionConfirm": "Diese Transaktion löschen?",
+  "deleteRecurringTransactionConfirm": "Diese wiederkehrende Transaktion löschen? Alle zukünftigen Abbuchungen werden storniert.",
+  "@deleteRecurringTransactionConfirm": {},
+  "deleteRecurringExpenseConfirm": "Diese wiederkehrende Ausgabe löschen? Diese Ausgabe oder Einnahme wird in Zukunft nicht mehr hinzugefügt.",
+  "@deleteRecurringExpenseConfirm": {},
+  "deleteRecurringIncomeConfirm": "Diese wiederkehrende Einnahme löschen? Diese Ausgabe oder Einnahme wird in Zukunft nicht mehr hinzugefügt.",
+  "@deleteRecurringIncomeConfirm": {},
   "cancel": "Abbrechen",
   "history": "Verlauf",
   "errorLoading": "Ladefehler",
@@ -106,5 +112,13 @@
   "categoryOther": "Sonstiges",
   "newCategory": "Neue Kategorie",
   "categoryName": "Kategoriename",
-  "chooseIcon": "Symbol auswählen"
+  "chooseIcon": "Symbol auswählen",
+  "exportExcel": "Nach Excel exportieren",
+  "exportSuccess": "In Downloads gespeichert",
+  "exportError": "Fehler beim Exportieren der Datei",
+  "exportColumnDate": "Datum",
+  "exportColumnType": "Typ",
+  "exportColumnCategory": "Kategorie",
+  "exportColumnDescription": "Beschreibung",
+  "exportColumnAmount": "Betrag"
 }

@@ -89,6 +89,12 @@
   "@delete": {},
   "deleteTransactionConfirm": "¿Eliminar esta transacción?",
   "@deleteTransactionConfirm": {},
+  "deleteRecurringTransactionConfirm": "¿Eliminar esta transacción recurrente? Se cancelarán todos los cobros futuros.",
+  "@deleteRecurringTransactionConfirm": {},
+  "deleteRecurringExpenseConfirm": "¿Eliminar este gasto recurrente? Este gasto o ingreso no se agregará más veces en el futuro.",
+  "@deleteRecurringExpenseConfirm": {},
+  "deleteRecurringIncomeConfirm": "¿Eliminar este ingreso recurrente? Este gasto o ingreso no se agregará más veces en el futuro.",
+  "@deleteRecurringIncomeConfirm": {},
   "cancel": "Cancelar",
   "@cancel": {},
 
@@ -235,5 +241,22 @@
   "categoryName": "Nombre de la categoría",
   "@categoryName": {},
   "chooseIcon": "Elige un icono",
-  "@chooseIcon": {}
+  "@chooseIcon": {},
+
+  "exportExcel": "Exportar a Excel",
+  "@exportExcel": {},
+  "exportSuccess": "Guardado en Descargas",
+  "@exportSuccess": {},
+  "exportError": "Error al exportar el archivo",
+  "@exportError": {},
+  "exportColumnDate": "Fecha",
+  "@exportColumnDate": {},
+  "exportColumnType": "Tipo",
+  "@exportColumnType": {},
+  "exportColumnCategory": "Categoría",
+  "@exportColumnCategory": {},
+  "exportColumnDescription": "Descripción",
+  "@exportColumnDescription": {},
+  "exportColumnAmount": "Importe",
+  "@exportColumnAmount": {}
 }

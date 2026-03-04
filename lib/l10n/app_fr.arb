@@ -38,6 +38,12 @@
   "errorUpdating": "Erreur lors de la mise à jour",
   "delete": "Supprimer",
   "deleteTransactionConfirm": "Supprimer cette transaction ?",
+  "deleteRecurringTransactionConfirm": "Supprimer cette transaction récurrente ? Tous les futurs prélèvements seront annulés.",
+  "@deleteRecurringTransactionConfirm": {},
+  "deleteRecurringExpenseConfirm": "Supprimer cette dépense récurrente ? Cette dépense ou ce revenu ne sera plus ajouté à l'avenir.",
+  "@deleteRecurringExpenseConfirm": {},
+  "deleteRecurringIncomeConfirm": "Supprimer ce revenu récurrent ? Cette dépense ou ce revenu ne sera plus ajouté à l'avenir.",
+  "@deleteRecurringIncomeConfirm": {},
   "cancel": "Annuler",
   "history": "Historique",
   "errorLoading": "Erreur de chargement",
@@ -106,5 +112,13 @@
   "categoryOther": "Autres",
   "newCategory": "Nouvelle catégorie",
   "categoryName": "Nom de la catégorie",
-  "chooseIcon": "Choisissez une icône"
+  "chooseIcon": "Choisissez une icône",
+  "exportExcel": "Exporter vers Excel",
+  "exportSuccess": "Enregistré dans Téléchargements",
+  "exportError": "Erreur lors de l'exportation du fichier",
+  "exportColumnDate": "Date",
+  "exportColumnType": "Type",
+  "exportColumnCategory": "Catégorie",
+  "exportColumnDescription": "Description",
+  "exportColumnAmount": "Montant"
 }

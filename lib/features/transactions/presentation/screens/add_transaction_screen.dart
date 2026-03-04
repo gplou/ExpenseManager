@@ -211,7 +211,25 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
         if (_isRecurring && _recurrenceType != null) {
           final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
+          final recurringId = await ref
+              .read(recurringTransactionsRepositoryProvider)
+              .createRecurring(
+                amount: amount,
+                type: _type,
+                category: _selectedCategory!,
+                description: desc,
+                recurrenceType: _recurrenceType!,
+                nextOccurrence: nextDate,
+              );
           await ref
+              .read(transactionsNotifierProvider.notifier)
+              .update(updated.copyWith(recurringTransactionId: recurringId));
+        }
+      } else {
+        String? recurringId;
+        if (_isRecurring && _recurrenceType != null) {
+          final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
+          recurringId = await ref
               .read(recurringTransactionsRepositoryProvider)
               .createRecurring(
                 amount: amount,
@@ -222,7 +240,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 nextOccurrence: nextDate,
               );
         }
-      } else {
         final transaction = TransactionModel(
           id: '',
           userId: '',
@@ -232,24 +249,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           description: desc,
           date: _selectedDate,
           createdAt: DateTime.now(),
+          recurringTransactionId: recurringId,
         );
         await ref
             .read(transactionsNotifierProvider.notifier)
             .create(transaction);
-
-        if (_isRecurring && _recurrenceType != null) {
-          final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
-          await ref
-              .read(recurringTransactionsRepositoryProvider)
-              .createRecurring(
-                amount: amount,
-                type: _type,
-                category: _selectedCategory!,
-                description: desc,
-                recurrenceType: _recurrenceType!,
-                nextOccurrence: nextDate,
-              );
-        }
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -266,11 +270,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _delete() async {
     final l10n = AppLocalizations.of(context);
+    final t = widget.transaction!;
+    final isRecurring = t.recurringTransactionId != null;
+    final String confirmMessage;
+    if (isRecurring) {
+      confirmMessage = t.type.isExpense
+          ? l10n.deleteRecurringExpenseConfirm
+          : l10n.deleteRecurringIncomeConfirm;
+    } else {
+      confirmMessage = l10n.deleteTransactionConfirm;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.delete),
-        content: Text(l10n.deleteTransactionConfirm),
+        content: Text(confirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -289,7 +303,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (confirmed != true || !mounted) return;
     await ref
         .read(transactionsNotifierProvider.notifier)
-        .delete(widget.transaction!.id);
+        .delete(widget.transaction!.id, recurringTransactionId: widget.transaction!.recurringTransactionId);
     if (mounted) Navigator.of(context).pop();
   }
 

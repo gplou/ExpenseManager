@@ -127,6 +127,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteTransactionConfirm => 'Diese Transaktion löschen?';
 
   @override
+  String get deleteRecurringTransactionConfirm =>
+      'Diese wiederkehrende Transaktion löschen? Alle zukünftigen Abbuchungen werden storniert.';
+
+  @override
+  String get deleteRecurringExpenseConfirm =>
+      'Diese wiederkehrende Ausgabe löschen? Diese Ausgabe oder Einnahme wird in Zukunft nicht mehr hinzugefügt.';
+
+  @override
+  String get deleteRecurringIncomeConfirm =>
+      'Diese wiederkehrende Einnahme löschen? Diese Ausgabe oder Einnahme wird in Zukunft nicht mehr hinzugefügt.';
+
+  @override
   String get cancel => 'Abbrechen';
 
   @override
@@ -339,4 +351,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chooseIcon => 'Symbol auswählen';
+
+  @override
+  String get exportExcel => 'Nach Excel exportieren';
+
+  @override
+  String get exportSuccess => 'In Downloads gespeichert';
+
+  @override
+  String get exportError => 'Fehler beim Exportieren der Datei';
+
+  @override
+  String get exportColumnDate => 'Datum';
+
+  @override
+  String get exportColumnType => 'Typ';
+
+  @override
+  String get exportColumnCategory => 'Kategorie';
+
+  @override
+  String get exportColumnDescription => 'Beschreibung';
+
+  @override
+  String get exportColumnAmount => 'Betrag';
 }

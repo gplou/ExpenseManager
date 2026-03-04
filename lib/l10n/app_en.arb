@@ -38,6 +38,12 @@
   "errorUpdating": "Error updating",
   "delete": "Delete",
   "deleteTransactionConfirm": "Delete this transaction?",
+  "deleteRecurringTransactionConfirm": "Delete this recurring transaction? All future charges will be cancelled.",
+  "@deleteRecurringTransactionConfirm": {},
+  "deleteRecurringExpenseConfirm": "Delete this recurring expense? This expense or income will no longer be added in the future.",
+  "@deleteRecurringExpenseConfirm": {},
+  "deleteRecurringIncomeConfirm": "Delete this recurring income? This expense or income will no longer be added in the future.",
+  "@deleteRecurringIncomeConfirm": {},
   "cancel": "Cancel",
   "history": "History",
   "errorLoading": "Error loading",
@@ -106,5 +112,13 @@
   "categoryOther": "Other",
   "newCategory": "New category",
   "categoryName": "Category name",
-  "chooseIcon": "Choose an icon"
+  "chooseIcon": "Choose an icon",
+  "exportExcel": "Export to Excel",
+  "exportSuccess": "Saved to Downloads",
+  "exportError": "Error exporting the file",
+  "exportColumnDate": "Date",
+  "exportColumnType": "Type",
+  "exportColumnCategory": "Category",
+  "exportColumnDescription": "Description",
+  "exportColumnAmount": "Amount"
 }
