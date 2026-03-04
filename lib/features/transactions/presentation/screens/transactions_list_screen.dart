@@ -334,13 +334,19 @@ class _TransactionTile extends ConsumerWidget {
         ),
         confirmDismiss: (_) async {
           final isRecurring = transaction.recurringTransactionId != null;
+          final String confirmMessage;
+          if (isRecurring) {
+            confirmMessage = transaction.type.isExpense
+                ? l10n.deleteRecurringExpenseConfirm
+                : l10n.deleteRecurringIncomeConfirm;
+          } else {
+            confirmMessage = l10n.deleteTransactionConfirm;
+          }
           return await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
               title: Text(l10n.delete),
-              content: Text(isRecurring
-                  ? l10n.deleteRecurringTransactionConfirm
-                  : l10n.deleteTransactionConfirm),
+              content: Text(confirmMessage),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),

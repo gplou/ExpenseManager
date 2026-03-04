@@ -336,6 +336,18 @@ abstract class AppLocalizations {
   /// **'¿Eliminar esta transacción recurrente? Se cancelarán todos los cobros futuros.'**
   String get deleteRecurringTransactionConfirm;
 
+  /// No description provided for @deleteRecurringExpenseConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar este gasto recurrente? Este gasto o ingreso no se agregará más veces en el futuro.'**
+  String get deleteRecurringExpenseConfirm;
+
+  /// No description provided for @deleteRecurringIncomeConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar este ingreso recurrente? Este gasto o ingreso no se agregará más veces en el futuro.'**
+  String get deleteRecurringIncomeConfirm;
+
   /// No description provided for @cancel.
   ///
   /// In es, this message translates to:
