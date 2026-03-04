@@ -330,6 +330,12 @@ abstract class AppLocalizations {
   /// **'¿Eliminar esta transacción?'**
   String get deleteTransactionConfirm;
 
+  /// No description provided for @deleteRecurringTransactionConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar esta transacción recurrente? Se cancelarán todos los cobros futuros.'**
+  String get deleteRecurringTransactionConfirm;
+
   /// No description provided for @cancel.
   ///
   /// In es, this message translates to:

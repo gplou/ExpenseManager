@@ -38,6 +38,8 @@
   "errorUpdating": "Erreur lors de la mise à jour",
   "delete": "Supprimer",
   "deleteTransactionConfirm": "Supprimer cette transaction ?",
+  "deleteRecurringTransactionConfirm": "Supprimer cette transaction récurrente ? Tous les futurs prélèvements seront annulés.",
+  "@deleteRecurringTransactionConfirm": {},
   "cancel": "Annuler",
   "history": "Historique",
   "errorLoading": "Erreur de chargement",

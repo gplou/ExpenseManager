@@ -333,11 +333,14 @@ class _TransactionTile extends ConsumerWidget {
           child: const Icon(Icons.delete_outline_rounded, color: AppColors.mutedTerra, size: 26),
         ),
         confirmDismiss: (_) async {
+          final isRecurring = transaction.recurringTransactionId != null;
           return await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
               title: Text(l10n.delete),
-              content: Text(l10n.deleteTransactionConfirm),
+              content: Text(isRecurring
+                  ? l10n.deleteRecurringTransactionConfirm
+                  : l10n.deleteTransactionConfirm),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),

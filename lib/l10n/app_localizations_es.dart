@@ -127,6 +127,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deleteTransactionConfirm => '¿Eliminar esta transacción?';
 
   @override
+  String get deleteRecurringTransactionConfirm =>
+      '¿Eliminar esta transacción recurrente? Se cancelarán todos los cobros futuros.';
+
+  @override
   String get cancel => 'Cancelar';
 
   @override

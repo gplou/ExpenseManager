@@ -38,6 +38,8 @@
   "errorUpdating": "Error updating",
   "delete": "Delete",
   "deleteTransactionConfirm": "Delete this transaction?",
+  "deleteRecurringTransactionConfirm": "Delete this recurring transaction? All future charges will be cancelled.",
+  "@deleteRecurringTransactionConfirm": {},
   "cancel": "Cancel",
   "history": "History",
   "errorLoading": "Error loading",
