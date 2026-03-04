@@ -112,5 +112,13 @@
   "categoryOther": "Autres",
   "newCategory": "Nouvelle catégorie",
   "categoryName": "Nom de la catégorie",
-  "chooseIcon": "Choisissez une icône"
+  "chooseIcon": "Choisissez une icône",
+  "exportExcel": "Exporter vers Excel",
+  "exportSuccess": "Enregistré dans Téléchargements",
+  "exportError": "Erreur lors de l'exportation du fichier",
+  "exportColumnDate": "Date",
+  "exportColumnType": "Type",
+  "exportColumnCategory": "Catégorie",
+  "exportColumnDescription": "Description",
+  "exportColumnAmount": "Montant"
 }

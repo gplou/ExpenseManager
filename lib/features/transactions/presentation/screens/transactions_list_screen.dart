@@ -8,17 +8,44 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/custom_date_range_picker.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../data/export_excel_service.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/custom_categories_provider.dart';
 import '../providers/transactions_provider.dart';
 import 'add_transaction_screen.dart';
 
-class TransactionsListScreen extends ConsumerWidget {
+class TransactionsListScreen extends ConsumerStatefulWidget {
   const TransactionsListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TransactionsListScreen> createState() => _TransactionsListScreenState();
+}
+
+class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen> {
+  bool _exporting = false;
+
+  Future<void> _exportToExcel(List<TransactionModel> transactions) async {
+    final l10n = AppLocalizations.of(context);
+    setState(() => _exporting = true);
+    try {
+      await ExportExcelService.exportTransactions(transactions, l10n);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.exportError),
+            backgroundColor: AppColors.mutedTerra,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final period = ref.watch(selectedPeriodProvider);
     final customRange = ref.watch(customDateRangeProvider);
@@ -142,24 +169,35 @@ class TransactionsListScreen extends ConsumerWidget {
 
           final grouped = _groupByDate(transactions);
 
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-            itemCount: grouped.length,
-            itemBuilder: (context, index) {
-              final entry = grouped[index];
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 20, 0, 10),
-                    child: _DateHeader(date: entry.date, l10n: l10n),
-                  ),
-                  ...entry.transactions.map(
-                    (t) => _TransactionTile(transaction: t),
-                  ),
-                ],
-              );
-            },
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  itemCount: grouped.length,
+                  itemBuilder: (context, index) {
+                    final entry = grouped[index];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 20, 0, 10),
+                          child: _DateHeader(date: entry.date, l10n: l10n),
+                        ),
+                        ...entry.transactions.map(
+                          (t) => _TransactionTile(transaction: t),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              _ExportButton(
+                onTap: _exporting ? null : () => _exportToExcel(transactions),
+                exporting: _exporting,
+                label: l10n.exportExcel,
+              ),
+            ],
           );
         },
       ),
@@ -173,6 +211,69 @@ class TransactionsListScreen extends ConsumerWidget {
       map.putIfAbsent(key, () => _DateGroup(t.date)).transactions.add(t);
     }
     return map.values.toList()..sort((a, b) => b.date.compareTo(a.date));
+  }
+}
+
+// ── Export button ─────────────────────────────────────────────────────────────
+
+class _ExportButton extends StatelessWidget {
+  const _ExportButton({required this.onTap, required this.exporting, required this.label});
+  final VoidCallback? onTap;
+  final bool exporting;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 52,
+          decoration: BoxDecoration(
+            color: onTap != null ? AppColors.dustyTeal : AppColors.dustyTeal.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (exporting)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.pureWhite,
+                  ),
+                )
+              else
+                const Icon(Icons.download_rounded, color: AppColors.pureWhite, size: 20),
+              const Gap(8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.pureWhite,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

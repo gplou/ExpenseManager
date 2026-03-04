@@ -350,4 +350,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chooseIcon => 'Choisissez une icône';
+
+  @override
+  String get exportExcel => 'Exporter vers Excel';
+
+  @override
+  String get exportSuccess => 'Enregistré dans Téléchargements';
+
+  @override
+  String get exportError => 'Erreur lors de l\'exportation du fichier';
+
+  @override
+  String get exportColumnDate => 'Date';
+
+  @override
+  String get exportColumnType => 'Type';
+
+  @override
+  String get exportColumnCategory => 'Catégorie';
+
+  @override
+  String get exportColumnDescription => 'Description';
+
+  @override
+  String get exportColumnAmount => 'Montant';
 }
