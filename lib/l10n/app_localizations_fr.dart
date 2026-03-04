@@ -127,6 +127,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deleteTransactionConfirm => 'Supprimer cette transaction ?';
 
   @override
+  String get deleteRecurringTransactionConfirm =>
+      'Supprimer cette transaction récurrente ? Tous les futurs prélèvements seront annulés.';
+
+  @override
   String get cancel => 'Annuler';
 
   @override

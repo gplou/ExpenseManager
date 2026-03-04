@@ -38,6 +38,8 @@
   "errorUpdating": "Fehler beim Aktualisieren",
   "delete": "Löschen",
   "deleteTransactionConfirm": "Diese Transaktion löschen?",
+  "deleteRecurringTransactionConfirm": "Diese wiederkehrende Transaktion löschen? Alle zukünftigen Abbuchungen werden storniert.",
+  "@deleteRecurringTransactionConfirm": {},
   "cancel": "Abbrechen",
   "history": "Verlauf",
   "errorLoading": "Ladefehler",
