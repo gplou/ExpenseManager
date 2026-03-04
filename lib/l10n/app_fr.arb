@@ -120,5 +120,45 @@
   "exportColumnType": "Type",
   "exportColumnCategory": "Catégorie",
   "exportColumnDescription": "Description",
-  "exportColumnAmount": "Montant"
+  "exportColumnAmount": "Montant",
+
+  "proPlanTitle": "Plan PRO",
+  "proDrawerSubtitle": "Débloquez les fonctionnalités premium",
+  "proActiveStatus": "Actif · expire dans {days} jours",
+  "@proActiveStatus": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "proBenefitsTitle": "Qu'est-ce qu'inclut PRO ?",
+  "proNoBannerAds": "Sans publicité",
+  "proNoBannerAdsSubtitle": "Expérience propre, sans interruptions",
+  "proVoiceAI": "Saisie vocale avec IA",
+  "proVoiceAISubtitle": "Enregistrez des transactions en parlant",
+  "proFutureFeatures": "Fonctionnalités futures",
+  "proFutureFeaturesSubtitle": "Accès anticipé aux nouveautés",
+  "proPrice": "4,99 € / mois",
+  "proPriceSubtitle": "Annulez quand vous voulez",
+  "proSubscribe": "S'abonner",
+  "proRestorePurchases": "Restaurer les achats",
+  "proRefreshStatus": "Actualiser le statut",
+  "proLegalDisclaimer": "Le paiement sera débité de votre compte de magasin. L'abonnement se renouvelle automatiquement chaque mois.",
+  "proVoiceLockedSubtitle": "Fonctionnalité exclusive PRO",
+  "proHeaderActiveTitle": "PRO Actif",
+  "proHeaderInactiveTitle": "Passer à PRO",
+  "proHeaderActiveSubtitle": "Merci pour votre soutien",
+  "proHeaderInactiveSubtitle": "Débloquez toutes les fonctionnalités premium",
+  "proActiveCardTitle": "Abonnement actif",
+  "proActiveCardExpiry": "Expire dans {days} jours · {source}",
+  "@proActiveCardExpiry": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "source": { "type": "String" }
+    }
+  },
+  "proSourceGooglePlay": "Google Play",
+  "proSourceAppStore": "App Store",
+  "proSourcePromoCode": "Code promo",
+  "proProductUnavailable": "Produit non disponible. Réessayez plus tard.",
+  "proPromoBadInput": "Entrez un code",
+  "proPromoSuccess": "Code appliqué ! Profitez de PRO.",
+  "proPromoUnexpectedError": "Erreur inattendue. Réessayez."
 }

@@ -809,6 +809,186 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Importe'**
   String get exportColumnAmount;
+
+  /// No description provided for @proPlanTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Plan PRO'**
+  String get proPlanTitle;
+
+  /// No description provided for @proDrawerSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquea funciones premium'**
+  String get proDrawerSubtitle;
+
+  /// No description provided for @proActiveStatus.
+  ///
+  /// In es, this message translates to:
+  /// **'Activo · expira en {days} días'**
+  String proActiveStatus(int days);
+
+  /// No description provided for @proBenefitsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué incluye PRO?'**
+  String get proBenefitsTitle;
+
+  /// No description provided for @proNoBannerAds.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin publicidad'**
+  String get proNoBannerAds;
+
+  /// No description provided for @proNoBannerAdsSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Experiencia limpia, sin interrupciones'**
+  String get proNoBannerAdsSubtitle;
+
+  /// No description provided for @proVoiceAI.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrada por voz con IA'**
+  String get proVoiceAI;
+
+  /// No description provided for @proVoiceAISubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Registra transacciones hablando'**
+  String get proVoiceAISubtitle;
+
+  /// No description provided for @proFutureFeatures.
+  ///
+  /// In es, this message translates to:
+  /// **'Funciones futuras'**
+  String get proFutureFeatures;
+
+  /// No description provided for @proFutureFeaturesSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso anticipado a novedades'**
+  String get proFutureFeaturesSubtitle;
+
+  /// No description provided for @proPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'€4,99 / mes'**
+  String get proPrice;
+
+  /// No description provided for @proPriceSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancela cuando quieras'**
+  String get proPriceSubtitle;
+
+  /// No description provided for @proSubscribe.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscribirse'**
+  String get proSubscribe;
+
+  /// No description provided for @proRestorePurchases.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar compras'**
+  String get proRestorePurchases;
+
+  /// No description provided for @proRefreshStatus.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar estado'**
+  String get proRefreshStatus;
+
+  /// No description provided for @proLegalDisclaimer.
+  ///
+  /// In es, this message translates to:
+  /// **'El pago se cargará a tu cuenta de la tienda. La suscripción se renueva automáticamente cada mes.'**
+  String get proLegalDisclaimer;
+
+  /// No description provided for @proVoiceLockedSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Función exclusiva PRO'**
+  String get proVoiceLockedSubtitle;
+
+  /// No description provided for @proHeaderActiveTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'PRO Activo'**
+  String get proHeaderActiveTitle;
+
+  /// No description provided for @proHeaderInactiveTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Hazte PRO'**
+  String get proHeaderInactiveTitle;
+
+  /// No description provided for @proHeaderActiveSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Gracias por tu apoyo'**
+  String get proHeaderActiveSubtitle;
+
+  /// No description provided for @proHeaderInactiveSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquea todas las funciones premium'**
+  String get proHeaderInactiveSubtitle;
+
+  /// No description provided for @proActiveCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscripción activa'**
+  String get proActiveCardTitle;
+
+  /// No description provided for @proActiveCardExpiry.
+  ///
+  /// In es, this message translates to:
+  /// **'Expira en {days} días · {source}'**
+  String proActiveCardExpiry(int days, String source);
+
+  /// No description provided for @proSourceGooglePlay.
+  ///
+  /// In es, this message translates to:
+  /// **'Google Play'**
+  String get proSourceGooglePlay;
+
+  /// No description provided for @proSourceAppStore.
+  ///
+  /// In es, this message translates to:
+  /// **'App Store'**
+  String get proSourceAppStore;
+
+  /// No description provided for @proSourcePromoCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código promo'**
+  String get proSourcePromoCode;
+
+  /// No description provided for @proProductUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Producto no disponible. Inténtalo más tarde.'**
+  String get proProductUnavailable;
+
+  /// No description provided for @proPromoBadInput.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un código'**
+  String get proPromoBadInput;
+
+  /// No description provided for @proPromoSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Código aplicado! Disfruta de PRO.'**
+  String get proPromoSuccess;
+
+  /// No description provided for @proPromoUnexpectedError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error inesperado. Inténtalo de nuevo.'**
+  String get proPromoUnexpectedError;
 }
 
 class _AppLocalizationsDelegate

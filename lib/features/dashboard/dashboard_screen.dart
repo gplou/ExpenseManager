@@ -22,12 +22,38 @@ import '../transactions/presentation/providers/custom_categories_provider.dart';
 import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
+import '../subscription/subscription_provider.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(subscriptionProvider.notifier).forceRefresh();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.watch(processRecurringTransactionsProvider);
 
     final l10n = AppLocalizations.of(context);
@@ -63,8 +89,13 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: ref.watch(voiceEnabledProvider).valueOrNull == true
-          ? Row(
+      floatingActionButton: Builder(
+        builder: (context) {
+          final isPro = ref.watch(isProProvider);
+          final voiceEnabled =
+              ref.watch(voiceEnabledProvider).valueOrNull ?? false;
+          if (isPro && voiceEnabled) {
+            return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const VoiceTransactionButton(),
@@ -74,10 +105,13 @@ class DashboardScreen extends ConsumerWidget {
                   onTap: () => context.push(AppRoutes.addTransaction),
                 ),
               ],
-            )
-          : NeoFab(
-              onTap: () => context.push(AppRoutes.addTransaction),
-            ),
+            );
+          }
+          return NeoFab(
+            onTap: () => context.push(AppRoutes.addTransaction),
+          );
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: RefreshIndicator(
         color: AppColors.dustyTeal,
@@ -86,6 +120,7 @@ class DashboardScreen extends ConsumerWidget {
           ref.invalidate(processRecurringTransactionsProvider);
           ref.invalidate(transactionsSummaryProvider);
           ref.invalidate(recentTransactionsProvider);
+          await ref.read(subscriptionProvider.notifier).forceRefresh();
         },
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
@@ -228,10 +263,15 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
 
-            // ── Banner de anuncio ───────────────────────────────────────────
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: _AdBanner(),
+            // ── Banner de anuncio (oculto para usuarios PRO) ────────────
+            Consumer(
+              builder: (context, ref, _) {
+                if (ref.watch(isProProvider)) return const SizedBox.shrink();
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: _AdBanner(),
+                );
+              },
             ),
             const Gap(12),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 80),

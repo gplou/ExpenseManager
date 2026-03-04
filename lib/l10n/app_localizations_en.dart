@@ -371,4 +371,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportColumnAmount => 'Amount';
+
+  @override
+  String get proPlanTitle => 'PRO Plan';
+
+  @override
+  String get proDrawerSubtitle => 'Unlock premium features';
+
+  @override
+  String proActiveStatus(int days) {
+    return 'Active · expires in $days days';
+  }
+
+  @override
+  String get proBenefitsTitle => 'What\'s included in PRO?';
+
+  @override
+  String get proNoBannerAds => 'No banner ads';
+
+  @override
+  String get proNoBannerAdsSubtitle => 'Clean experience, no interruptions';
+
+  @override
+  String get proVoiceAI => 'AI voice input';
+
+  @override
+  String get proVoiceAISubtitle => 'Log transactions by speaking';
+
+  @override
+  String get proFutureFeatures => 'Future features';
+
+  @override
+  String get proFutureFeaturesSubtitle => 'Early access to new features';
+
+  @override
+  String get proPrice => '€4.99 / month';
+
+  @override
+  String get proPriceSubtitle => 'Cancel anytime';
+
+  @override
+  String get proSubscribe => 'Subscribe';
+
+  @override
+  String get proRestorePurchases => 'Restore purchases';
+
+  @override
+  String get proRefreshStatus => 'Refresh status';
+
+  @override
+  String get proLegalDisclaimer =>
+      'Payment will be charged to your store account. Subscription auto-renews monthly.';
+
+  @override
+  String get proVoiceLockedSubtitle => 'PRO exclusive feature';
+
+  @override
+  String get proHeaderActiveTitle => 'PRO Active';
+
+  @override
+  String get proHeaderInactiveTitle => 'Go PRO';
+
+  @override
+  String get proHeaderActiveSubtitle => 'Thank you for your support';
+
+  @override
+  String get proHeaderInactiveSubtitle => 'Unlock all premium features';
+
+  @override
+  String get proActiveCardTitle => 'Active subscription';
+
+  @override
+  String proActiveCardExpiry(int days, String source) {
+    return 'Expires in $days days · $source';
+  }
+
+  @override
+  String get proSourceGooglePlay => 'Google Play';
+
+  @override
+  String get proSourceAppStore => 'App Store';
+
+  @override
+  String get proSourcePromoCode => 'Promo code';
+
+  @override
+  String get proProductUnavailable => 'Product not available. Try again later.';
+
+  @override
+  String get proPromoBadInput => 'Enter a code';
+
+  @override
+  String get proPromoSuccess => 'Code applied! Enjoy PRO.';
+
+  @override
+  String get proPromoUnexpectedError => 'Unexpected error. Please try again.';
 }

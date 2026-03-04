@@ -373,4 +373,101 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get exportColumnAmount => 'Importe';
+
+  @override
+  String get proPlanTitle => 'Plan PRO';
+
+  @override
+  String get proDrawerSubtitle => 'Desbloquea funciones premium';
+
+  @override
+  String proActiveStatus(int days) {
+    return 'Activo · expira en $days días';
+  }
+
+  @override
+  String get proBenefitsTitle => '¿Qué incluye PRO?';
+
+  @override
+  String get proNoBannerAds => 'Sin publicidad';
+
+  @override
+  String get proNoBannerAdsSubtitle => 'Experiencia limpia, sin interrupciones';
+
+  @override
+  String get proVoiceAI => 'Entrada por voz con IA';
+
+  @override
+  String get proVoiceAISubtitle => 'Registra transacciones hablando';
+
+  @override
+  String get proFutureFeatures => 'Funciones futuras';
+
+  @override
+  String get proFutureFeaturesSubtitle => 'Acceso anticipado a novedades';
+
+  @override
+  String get proPrice => '€4,99 / mes';
+
+  @override
+  String get proPriceSubtitle => 'Cancela cuando quieras';
+
+  @override
+  String get proSubscribe => 'Suscribirse';
+
+  @override
+  String get proRestorePurchases => 'Restaurar compras';
+
+  @override
+  String get proRefreshStatus => 'Actualizar estado';
+
+  @override
+  String get proLegalDisclaimer =>
+      'El pago se cargará a tu cuenta de la tienda. La suscripción se renueva automáticamente cada mes.';
+
+  @override
+  String get proVoiceLockedSubtitle => 'Función exclusiva PRO';
+
+  @override
+  String get proHeaderActiveTitle => 'PRO Activo';
+
+  @override
+  String get proHeaderInactiveTitle => 'Hazte PRO';
+
+  @override
+  String get proHeaderActiveSubtitle => 'Gracias por tu apoyo';
+
+  @override
+  String get proHeaderInactiveSubtitle =>
+      'Desbloquea todas las funciones premium';
+
+  @override
+  String get proActiveCardTitle => 'Suscripción activa';
+
+  @override
+  String proActiveCardExpiry(int days, String source) {
+    return 'Expira en $days días · $source';
+  }
+
+  @override
+  String get proSourceGooglePlay => 'Google Play';
+
+  @override
+  String get proSourceAppStore => 'App Store';
+
+  @override
+  String get proSourcePromoCode => 'Código promo';
+
+  @override
+  String get proProductUnavailable =>
+      'Producto no disponible. Inténtalo más tarde.';
+
+  @override
+  String get proPromoBadInput => 'Introduce un código';
+
+  @override
+  String get proPromoSuccess => '¡Código aplicado! Disfruta de PRO.';
+
+  @override
+  String get proPromoUnexpectedError => 'Error inesperado. Inténtalo de nuevo.';
 }
