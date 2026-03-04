@@ -8,7 +8,6 @@ import '../../../core/config/router.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
-import '../../../core/providers/voice_enabled_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../l10n/app_localizations.dart';
@@ -128,46 +127,6 @@ class AppDrawer extends ConsumerWidget {
                         onTap: () {
                           Navigator.of(context).pop();
                           context.push(AppRoutes.pro);
-                        },
-                      );
-                    },
-                  ),
-                  // ── Voice (IA) — PRO only ──────────────────────────────
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final isPro = ref.watch(isProProvider);
-                      final voiceEnabled =
-                          ref.watch(voiceEnabledProvider).valueOrNull ?? false;
-                      return SwitchListTile(
-                        secondary: const Icon(Icons.mic_outlined),
-                        title: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                l10n.proVoiceAI,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            if (!isPro) const ProBadge(),
-                          ],
-                        ),
-                        subtitle: Text(
-                          isPro
-                              ? l10n.proVoiceAISubtitle
-                              : l10n.proVoiceLockedSubtitle,
-                        ),
-                        value: isPro && voiceEnabled,
-                        onChanged: (_) {
-                          if (isPro) {
-                            ref
-                                .read(voiceEnabledProvider.notifier)
-                                .toggle();
-                          } else {
-                            Navigator.of(context).pop();
-                            context.push(AppRoutes.pro);
-                          }
                         },
                       );
                     },

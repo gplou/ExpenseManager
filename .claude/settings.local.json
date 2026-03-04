@@ -5,7 +5,8 @@
       "Bash(dart run flutter_native_splash:create)",
       "Bash(flutter pub get)",
       "Bash(flutter gen-l10n)",
-      "Bash(flutter analyze)"
+      "Bash(flutter analyze)",
+      "Bash(flutter analyze lib/features/dashboard/dashboard_screen.dart)"
     ]
   }
 }

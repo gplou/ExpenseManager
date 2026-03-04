@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/config/router.dart';
-import '../../core/providers/voice_enabled_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/custom_date_range_picker.dart';
 import '../../core/widgets/neo_card.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
-import '../transactions/presentation/widgets/voice_transaction_button.dart';
 import 'widgets/category_distribution_sheet.dart';
+import '../transactions/data/voice_transaction_parser.dart';
+import '../transactions/domain/parsed_voice_transaction.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
@@ -89,31 +90,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ],
         ),
       ),
-      floatingActionButton: Builder(
-        builder: (context) {
-          final isPro = ref.watch(isProProvider);
-          final voiceEnabled =
-              ref.watch(voiceEnabledProvider).valueOrNull ?? false;
-          if (isPro && voiceEnabled) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const VoiceTransactionButton(),
-                const SizedBox(width: 16),
-                NeoFab(
-                  heroTag: 'addFab',
-                  onTap: () => context.push(AppRoutes.addTransaction),
-                ),
-              ],
-            );
-          }
-          return NeoFab(
-            onTap: () => context.push(AppRoutes.addTransaction),
-          );
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      body: RefreshIndicator(
+      body: Stack(
+        children: [
+          RefreshIndicator(
         color: AppColors.dustyTeal,
         backgroundColor: cs.surface,
         onRefresh: () async {
@@ -129,10 +108,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               height: constraints.maxHeight,
               child: Column(
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                      child: Column(
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Selector de período ──────────────────────────────────────
@@ -256,12 +234,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       },
                     ),
 
-                    // ── Empuja el banner al fondo ────────────────────────────────
-                    const Spacer(),
                   ],
                 ),
-              ),
-            ),
+                  ),
+            const Gap(12),
 
             // ── Banner de anuncio (oculto para usuarios PRO) ────────────
             Consumer(
@@ -280,6 +256,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ),
     ),
   ),
+      ),
+          // ── Speed dial overlay (backdrop + radial buttons) ─────────────
+          const Positioned.fill(
+            child: _SpeedDialFab(),
+          ),
+        ],
       ),
     );
   }
@@ -749,6 +731,312 @@ class _AdBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Speed dial FAB ────────────────────────────────────────────────────────────
+
+enum _VoiceInputState { idle, listening, processing }
+
+class _SpeedDialFab extends StatefulWidget {
+  const _SpeedDialFab();
+
+  @override
+  State<_SpeedDialFab> createState() => _SpeedDialFabState();
+}
+
+class _SpeedDialFabState extends State<_SpeedDialFab> {
+  bool _open = false;
+  _VoiceInputState _voiceState = _VoiceInputState.idle;
+
+  final _speech = SpeechToText();
+  final _parser = VoiceTransactionParser();
+
+  @override
+  void dispose() {
+    _speech.stop();
+    super.dispose();
+  }
+
+  void _toggle() => setState(() => _open = !_open);
+
+  void _closeDial() {
+    if (_open) setState(() => _open = false);
+  }
+
+  Future<void> _startVoice() async {
+    _closeDial();
+
+    final available = await _speech.initialize(
+      onError: (_) {
+        if (mounted) setState(() => _voiceState = _VoiceInputState.idle);
+      },
+    );
+
+    if (!available) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Micrófono no disponible')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _voiceState = _VoiceInputState.listening);
+
+    await _speech.listen(
+      localeId: 'es_ES',
+      onResult: (result) {
+        if (result.finalResult) _processVoice(result.recognizedWords);
+      },
+    );
+  }
+
+  Future<void> _processVoice(String text) async {
+    if (text.trim().isEmpty) {
+      if (mounted) setState(() => _voiceState = _VoiceInputState.idle);
+      return;
+    }
+    setState(() => _voiceState = _VoiceInputState.processing);
+    final ParsedVoiceTransaction? parsed = await _parser.parse(text);
+    if (!mounted) return;
+    setState(() => _voiceState = _VoiceInputState.idle);
+    if (parsed == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo interpretar. Inténtalo de nuevo.'),
+        ),
+      );
+      return;
+    }
+    context.push(AppRoutes.addTransaction, extra: parsed);
+  }
+
+  // ── Layout constants ──────────────────────────────────────────────────────
+  //
+  //  Stack size: 220 × 175 px
+  //  FAB (64 px) → bottom-centre of the Stack: centre at (110, 143)
+  //  Mini buttons (50 px) on a circle of r = 85 px, ±65° and 0° from straight-up:
+  //
+  //           [🎤]   [✏️]   [📷]
+  //             \     |     /
+  //              \    |    /    ← r = 85 px
+  //               \   |   /
+  //                  [+]
+  //
+  //  Mic    → centre (33, 107)  = FAB centre + (−77, −36)
+  //  Pencil → centre (110, 58)  = FAB centre + (  0, −85)
+  //  Camera → centre (187, 107) = FAB centre + (+77, −36)
+  static const double _stackW   = 220;
+  static const double _stackH   = 175;
+  static const double _fabSize  =  64;
+  static const double _miniSize =  50;
+
+  // FAB centre inside the Stack (Stack coords: origin = top-left)
+  static const double _fabCx = _stackW / 2;             // 110
+  static const double _fabCy = _stackH - _fabSize / 2;  // 143
+
+  // Mini-button target centres when open
+  static const Offset _micTarget    = Offset(33,  107);
+  static const Offset _pencilTarget = Offset(110,  58);
+  static const Offset _cameraTarget = Offset(187, 107);
+
+  // Starting position: collapsed at the FAB centre
+  static const Offset _closedPos = Offset(_fabCx, _fabCy);
+
+  // Convert a centre-Offset to AnimatedPositioned.left
+  static double _left(Offset c)   => c.dx - _miniSize / 2;
+  // Convert a centre-Offset to AnimatedPositioned.bottom
+  static double _bottom(Offset c) => _stackH - c.dy - _miniSize / 2;
+
+  @override
+  Widget build(BuildContext context) {
+    // Distance from the bottom of the body area to the FAB bottom edge,
+    // matching Flutter's standard centerFloat margin.
+    final fabBottom =
+        MediaQuery.of(context).padding.bottom + 16.0;
+
+    // ── Voice active: show mic state widget centred at FAB position ──────────
+    if (_voiceState != _VoiceInputState.idle) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            bottom: fabBottom,
+            left: 0,
+            right: 0,
+            child: Center(child: _buildVoiceWidget()),
+          ),
+        ],
+      );
+    }
+
+    // ── Normal state: backdrop + radial speed dial ───────────────────────────
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Backdrop — absorbs ALL pointer events when open (blocks scroll/swipe too)
+        IgnorePointer(
+          ignoring: !_open,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: _open ? 1.0 : 0.0,
+            child: GestureDetector(
+              onTap: _closeDial,
+              // opaque → swallows drags/scrolls as well
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.35),
+              ),
+            ),
+          ),
+        ),
+
+        // Speed dial (positioned at the same spot as standard centerFloat FAB)
+        Positioned(
+          bottom: fabBottom,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: SizedBox(
+              width: _stackW,
+              height: _stackH,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Mini radial buttons (behind the FAB)
+                  _radialButton(
+                    context,
+                    icon: Icons.mic_outlined,
+                    target: _micTarget,
+                    onTap: _startVoice,
+                  ),
+                  _radialButton(
+                    context,
+                    icon: Icons.edit_outlined,
+                    target: _pencilTarget,
+                    onTap: () {
+                      _closeDial();
+                      context.push(AppRoutes.addTransaction);
+                    },
+                  ),
+                  _radialButton(
+                    context,
+                    icon: Icons.camera_alt_outlined,
+                    target: _cameraTarget,
+                    onTap: _closeDial,
+                  ),
+                  // Main FAB (always on top)
+                  Positioned(
+                    left: (_stackW - _fabSize) / 2,
+                    bottom: 0,
+                    child: NeoFab(
+                      icon: _open ? Icons.close : Icons.add,
+                      onTap: _toggle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds one mini button that animates radially from the FAB centre.
+  Widget _radialButton(
+    BuildContext context, {
+    required IconData icon,
+    required Offset target,
+    required VoidCallback onTap,
+  }) {
+    final centre = _open ? target : _closedPos;
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      left:   _left(centre),
+      bottom: _bottom(centre),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: _open ? 1.0 : 0.0,
+        child: IgnorePointer(
+          ignoring: !_open,
+          child: _MiniDialButton(icon: icon, onTap: onTap),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVoiceWidget() {
+    if (_voiceState == _VoiceInputState.processing) {
+      return Container(
+        width: _fabSize,
+        height: _fabSize,
+        decoration: const BoxDecoration(
+          color: AppColors.dustyTeal,
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+    // Listening → red stop button
+    return GestureDetector(
+      onTap: () async {
+        await _speech.stop();
+        if (mounted) setState(() => _voiceState = _VoiceInputState.idle);
+      },
+      child: Container(
+        width: _fabSize,
+        height: _fabSize,
+        decoration: const BoxDecoration(
+          color: Colors.red,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.stop_rounded, color: Colors.white, size: 28),
+      ),
+    );
+  }
+}
+
+// ── Mini radial button ────────────────────────────────────────────────────────
+
+class _MiniDialButton extends StatelessWidget {
+  const _MiniDialButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: AppColors.dustyTeal,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.dustyTeal.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: Colors.white, size: 22),
       ),
     );
   }
