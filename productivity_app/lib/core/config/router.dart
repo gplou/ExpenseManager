@@ -6,8 +6,6 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/dashboard/dashboard_screen.dart';
-import '../../features/tasks/presentation/screen/tasks_list_screen.dart';
-import '../../features/tasks/presentation/screen/task_detail_screen.dart';
 
 part 'router.g.dart';
 
@@ -16,8 +14,6 @@ abstract class AppRoutes {
   static const login = '/login';
   static const register = '/register';
   static const dashboard = '/dashboard';
-  static const tasks = '/tasks';
-  static const taskDetail = '/tasks/:id';
 }
 
 @riverpod
@@ -51,21 +47,6 @@ GoRouter router(RouterRef ref) {
         path: AppRoutes.dashboard,
         name: 'dashboard',
         builder: (context, state) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.tasks,
-        name: 'tasks',
-        builder: (context, state) => const TasksListScreen(),
-        routes: [
-          GoRoute(
-            path: ':id',
-            name: 'taskDetail',
-            builder: (context, state) {
-              final taskId = state.pathParameters['id']!;
-              return TaskDetailScreen(taskId: taskId);
-            },
-          ),
-        ],
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
