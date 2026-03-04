@@ -67,6 +67,8 @@ class TransactionsRepository implements TransactionsRepositoryContract {
         'category': transaction.category,
         'description': transaction.description,
         'date': _dateString(transaction.date),
+        if (transaction.recurringTransactionId != null)
+          'recurring_transaction_id': transaction.recurringTransactionId,
       };
       final response = await _client
           .from('transactions')
