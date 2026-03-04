@@ -120,5 +120,45 @@
   "exportColumnType": "Typ",
   "exportColumnCategory": "Kategorie",
   "exportColumnDescription": "Beschreibung",
-  "exportColumnAmount": "Betrag"
+  "exportColumnAmount": "Betrag",
+
+  "proPlanTitle": "PRO-Plan",
+  "proDrawerSubtitle": "Premium-Funktionen freischalten",
+  "proActiveStatus": "Aktiv · läuft in {days} Tagen ab",
+  "@proActiveStatus": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "proBenefitsTitle": "Was ist in PRO enthalten?",
+  "proNoBannerAds": "Keine Werbebanner",
+  "proNoBannerAdsSubtitle": "Saubere Erfahrung, keine Unterbrechungen",
+  "proVoiceAI": "KI-Spracheingabe",
+  "proVoiceAISubtitle": "Transaktionen per Sprache erfassen",
+  "proFutureFeatures": "Zukünftige Funktionen",
+  "proFutureFeaturesSubtitle": "Frühzeitiger Zugang zu Neuheiten",
+  "proPrice": "4,99 € / Monat",
+  "proPriceSubtitle": "Jederzeit kündbar",
+  "proSubscribe": "Abonnieren",
+  "proRestorePurchases": "Käufe wiederherstellen",
+  "proRefreshStatus": "Status aktualisieren",
+  "proLegalDisclaimer": "Die Zahlung wird Ihrem Store-Konto belastet. Das Abonnement verlängert sich automatisch monatlich.",
+  "proVoiceLockedSubtitle": "Exklusive PRO-Funktion",
+  "proHeaderActiveTitle": "PRO Aktiv",
+  "proHeaderInactiveTitle": "PRO werden",
+  "proHeaderActiveSubtitle": "Danke für Ihre Unterstützung",
+  "proHeaderInactiveSubtitle": "Alle Premium-Funktionen freischalten",
+  "proActiveCardTitle": "Aktives Abonnement",
+  "proActiveCardExpiry": "Läuft in {days} Tagen ab · {source}",
+  "@proActiveCardExpiry": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "source": { "type": "String" }
+    }
+  },
+  "proSourceGooglePlay": "Google Play",
+  "proSourceAppStore": "App Store",
+  "proSourcePromoCode": "Promo-Code",
+  "proProductUnavailable": "Produkt nicht verfügbar. Versuchen Sie es später.",
+  "proPromoBadInput": "Geben Sie einen Code ein",
+  "proPromoSuccess": "Code angewendet! Viel Spaß mit PRO.",
+  "proPromoUnexpectedError": "Unerwarteter Fehler. Bitte erneut versuchen."
 }

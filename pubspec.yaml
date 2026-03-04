@@ -29,6 +29,9 @@ dependencies:
   # Storage local
   shared_preferences: ^2.2.2
 
+  # In-App Purchases
+  in_app_purchase: ^3.2.0
+
   # Charts
   fl_chart: ^0.69.0
 
