@@ -28,6 +28,10 @@ dependencies:
 
   # Storage local
   shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.2.4
+
+  # In-App Purchases
+  in_app_purchase: ^3.2.0
 
   # Charts
   fl_chart: ^0.69.0
@@ -44,6 +48,7 @@ dependencies:
 
   # Voz + IA
   speech_to_text: ^7.0.0
+  image_picker: ^1.1.2
   http: ^1.2.0
 
   # Exportación

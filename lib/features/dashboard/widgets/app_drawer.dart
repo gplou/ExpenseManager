@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/router.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
-import '../../../core/providers/voice_enabled_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
+import '../../subscription/subscription_provider.dart';
+import '../../subscription/subscription_repository.dart';
+import '../../subscription/widgets/pro_badge.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -84,15 +88,48 @@ class AppDrawer extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () => _showLanguageSheet(context, ref),
                   ),
-                  SwitchListTile(
-                    secondary: const Icon(Icons.mic_outlined),
-                    title: const Text('Entrada por voz (IA)'),
-                    subtitle: const Text(
-                      'Usa IA para interpretar tus transacciones',
-                    ),
-                    value: ref.watch(voiceEnabledProvider).valueOrNull ?? false,
-                    onChanged: (_) =>
-                        ref.read(voiceEnabledProvider.notifier).toggle(),
+                  // ── Plan PRO ──────────────────────────────────────────
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final isPro = ref.watch(isProProvider);
+                      final sub = ref.watch(subscriptionProvider).valueOrNull;
+                      return ListTile(
+                        leading: Icon(
+                          Icons.star_rounded,
+                          color: isPro
+                              ? AppColors.warmAmber
+                              : AppColors.textMuted,
+                        ),
+                        title: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                l10n.proPlanTitle,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            if (!isPro) const ProBadge(),
+                          ],
+                        ),
+                        subtitle: Text(
+                          isPro && sub?.expiresAt != null
+                              ? l10n.proActiveStatus(
+                                  sub!.expiresAt!
+                                      .difference(DateTime.now())
+                                      .inDays,
+                                )
+                              : l10n.proDrawerSubtitle,
+                        ),
+                        trailing:
+                            const Icon(Icons.chevron_right, size: 18),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          context.push(AppRoutes.pro);
+                        },
+                      );
+                    },
                   ),
                   ListTile(
                     leading: const Icon(Icons.local_offer_outlined),
@@ -437,15 +474,17 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
 
 // ── Promo code dialog ─────────────────────────────────────────────────────────
 
-class _PromoCodeDialog extends StatefulWidget {
+class _PromoCodeDialog extends ConsumerStatefulWidget {
   const _PromoCodeDialog();
 
   @override
-  State<_PromoCodeDialog> createState() => _PromoCodeDialogState();
+  ConsumerState<_PromoCodeDialog> createState() => _PromoCodeDialogState();
 }
 
-class _PromoCodeDialogState extends State<_PromoCodeDialog> {
+class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
   final _controller = TextEditingController();
+  bool _loading = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -453,29 +492,84 @@ class _PromoCodeDialogState extends State<_PromoCodeDialog> {
     super.dispose();
   }
 
+  Future<void> _applyCode() async {
+    final code = _controller.text.trim();
+    if (code.isEmpty) return;
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      await ref.read(subscriptionProvider.notifier).redeemPromoCode(code);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Código aplicado! Disfruta de PRO.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on PromoCodeException catch (e) {
+      if (mounted) setState(() { _error = e.message; _loading = false; });
+    } catch (_) {
+      if (mounted) {
+        setState(() { _error = 'Error inesperado. Inténtalo de nuevo.'; _loading = false; });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Código promocional'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        maxLength: 20,
-        textCapitalization: TextCapitalization.characters,
-        decoration: const InputDecoration(
-          hintText: 'Introduce tu código',
-          prefixIcon: Icon(Icons.local_offer_outlined),
-        ),
-        onSubmitted: (_) => Navigator.of(context).pop(),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            maxLength: 20,
+            textCapitalization: TextCapitalization.characters,
+            enabled: !_loading,
+            decoration: const InputDecoration(
+              hintText: 'Introduce tu código',
+              prefixIcon: Icon(Icons.local_offer_outlined),
+            ),
+            onSubmitted: (_) => _applyCode(),
+          ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                _error!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 12,
+                  fontFamily: 'Sora',
+                ),
+              ),
+            ),
+        ],
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _loading ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
         FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Aplicar'),
+          onPressed: _loading ? null : _applyCode,
+          child: _loading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Aplicar'),
         ),
       ],
     );

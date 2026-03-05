@@ -90,9 +90,9 @@
   "registerSubtitle": "Complete the details to register",
   "nameLabel": "Name",
   "enterName": "Enter your name",
-  "passwordMinChars": "Minimum 8 characters",
+  "passwordMinChars": "Minimum 8 characters, one letter and one number",
   "enterPasswordRequired": "Enter a password",
-  "passwordTooShort": "Password must be at least 8 characters",
+  "passwordTooShort": "Password must have at least 8 characters, one letter and one number",
   "accountCreated": "Account created! Check your email to verify it.",
   "relToday": "Today",
   "relTomorrow": "Tomorrow",
@@ -120,5 +120,45 @@
   "exportColumnType": "Type",
   "exportColumnCategory": "Category",
   "exportColumnDescription": "Description",
-  "exportColumnAmount": "Amount"
+  "exportColumnAmount": "Amount",
+
+  "proPlanTitle": "PRO Plan",
+  "proDrawerSubtitle": "Unlock premium features",
+  "proActiveStatus": "Active · expires in {days} days",
+  "@proActiveStatus": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "proBenefitsTitle": "What's included in PRO?",
+  "proNoBannerAds": "No banner ads",
+  "proNoBannerAdsSubtitle": "Clean experience, no interruptions",
+  "proVoiceAI": "AI voice input",
+  "proVoiceAISubtitle": "Log transactions by speaking",
+  "proFutureFeatures": "Future features",
+  "proFutureFeaturesSubtitle": "Early access to new features",
+  "proPrice": "€4.99 / month",
+  "proPriceSubtitle": "Cancel anytime",
+  "proSubscribe": "Subscribe",
+  "proRestorePurchases": "Restore purchases",
+  "proRefreshStatus": "Refresh status",
+  "proLegalDisclaimer": "Payment will be charged to your store account. Subscription auto-renews monthly.",
+  "proVoiceLockedSubtitle": "PRO exclusive feature",
+  "proHeaderActiveTitle": "PRO Active",
+  "proHeaderInactiveTitle": "Go PRO",
+  "proHeaderActiveSubtitle": "Thank you for your support",
+  "proHeaderInactiveSubtitle": "Unlock all premium features",
+  "proActiveCardTitle": "Active subscription",
+  "proActiveCardExpiry": "Expires in {days} days · {source}",
+  "@proActiveCardExpiry": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "source": { "type": "String" }
+    }
+  },
+  "proSourceGooglePlay": "Google Play",
+  "proSourceAppStore": "App Store",
+  "proSourcePromoCode": "Promo code",
+  "proProductUnavailable": "Product not available. Try again later.",
+  "proPromoBadInput": "Enter a code",
+  "proPromoSuccess": "Code applied! Enjoy PRO.",
+  "proPromoUnexpectedError": "Unexpected error. Please try again."
 }

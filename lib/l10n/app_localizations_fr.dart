@@ -281,14 +281,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get enterName => 'Entrez votre nom';
 
   @override
-  String get passwordMinChars => 'Minimum 8 caractères';
+  String get passwordMinChars =>
+      'Minimum 8 caractères, une lettre et un chiffre';
 
   @override
   String get enterPasswordRequired => 'Entrez un mot de passe';
 
   @override
   String get passwordTooShort =>
-      'Le mot de passe doit avoir au moins 8 caractères';
+      'Le mot de passe doit avoir au moins 8 caractères, une lettre et un chiffre';
 
   @override
   String get accountCreated =>
@@ -374,4 +375,101 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get exportColumnAmount => 'Montant';
+
+  @override
+  String get proPlanTitle => 'Plan PRO';
+
+  @override
+  String get proDrawerSubtitle => 'Débloquez les fonctionnalités premium';
+
+  @override
+  String proActiveStatus(int days) {
+    return 'Actif · expire dans $days jours';
+  }
+
+  @override
+  String get proBenefitsTitle => 'Qu\'est-ce qu\'inclut PRO ?';
+
+  @override
+  String get proNoBannerAds => 'Sans publicité';
+
+  @override
+  String get proNoBannerAdsSubtitle => 'Expérience propre, sans interruptions';
+
+  @override
+  String get proVoiceAI => 'Saisie vocale avec IA';
+
+  @override
+  String get proVoiceAISubtitle => 'Enregistrez des transactions en parlant';
+
+  @override
+  String get proFutureFeatures => 'Fonctionnalités futures';
+
+  @override
+  String get proFutureFeaturesSubtitle => 'Accès anticipé aux nouveautés';
+
+  @override
+  String get proPrice => '4,99 € / mois';
+
+  @override
+  String get proPriceSubtitle => 'Annulez quand vous voulez';
+
+  @override
+  String get proSubscribe => 'S\'abonner';
+
+  @override
+  String get proRestorePurchases => 'Restaurer les achats';
+
+  @override
+  String get proRefreshStatus => 'Actualiser le statut';
+
+  @override
+  String get proLegalDisclaimer =>
+      'Le paiement sera débité de votre compte de magasin. L\'abonnement se renouvelle automatiquement chaque mois.';
+
+  @override
+  String get proVoiceLockedSubtitle => 'Fonctionnalité exclusive PRO';
+
+  @override
+  String get proHeaderActiveTitle => 'PRO Actif';
+
+  @override
+  String get proHeaderInactiveTitle => 'Passer à PRO';
+
+  @override
+  String get proHeaderActiveSubtitle => 'Merci pour votre soutien';
+
+  @override
+  String get proHeaderInactiveSubtitle =>
+      'Débloquez toutes les fonctionnalités premium';
+
+  @override
+  String get proActiveCardTitle => 'Abonnement actif';
+
+  @override
+  String proActiveCardExpiry(int days, String source) {
+    return 'Expire dans $days jours · $source';
+  }
+
+  @override
+  String get proSourceGooglePlay => 'Google Play';
+
+  @override
+  String get proSourceAppStore => 'App Store';
+
+  @override
+  String get proSourcePromoCode => 'Code promo';
+
+  @override
+  String get proProductUnavailable =>
+      'Produit non disponible. Réessayez plus tard.';
+
+  @override
+  String get proPromoBadInput => 'Entrez un code';
+
+  @override
+  String get proPromoSuccess => 'Code appliqué ! Profitez de PRO.';
+
+  @override
+  String get proPromoUnexpectedError => 'Erreur inattendue. Réessayez.';
 }

@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/config/router.dart';
-import '../../core/providers/voice_enabled_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/custom_date_range_picker.dart';
 import '../../core/widgets/neo_card.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
-import '../transactions/presentation/widgets/voice_transaction_button.dart';
 import 'widgets/category_distribution_sheet.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../transactions/data/voice_transaction_parser.dart';
+import '../transactions/data/image_transaction_parser.dart';
+import '../transactions/domain/parsed_voice_transaction.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
 import '../transactions/domain/transaction_model.dart';
@@ -22,12 +26,38 @@ import '../transactions/presentation/providers/custom_categories_provider.dart';
 import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
+import '../subscription/subscription_provider.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(subscriptionProvider.notifier).forceRefresh();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.watch(processRecurringTransactionsProvider);
 
     final l10n = AppLocalizations.of(context);
@@ -63,161 +93,178 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: ref.watch(voiceEnabledProvider).valueOrNull == true
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const VoiceTransactionButton(),
-                const SizedBox(width: 16),
-                NeoFab(
-                  heroTag: 'addFab',
-                  onTap: () => context.push(AppRoutes.addTransaction),
-                ),
-              ],
-            )
-          : NeoFab(
-              onTap: () => context.push(AppRoutes.addTransaction),
-            ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      body: RefreshIndicator(
+      body: Stack(
+        children: [
+          RefreshIndicator(
         color: AppColors.dustyTeal,
         backgroundColor: cs.surface,
         onRefresh: () async {
           ref.invalidate(processRecurringTransactionsProvider);
           ref.invalidate(transactionsSummaryProvider);
           ref.invalidate(recentTransactionsProvider);
+          await ref.read(subscriptionProvider.notifier).forceRefresh();
         },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Selector de período ──────────────────────────────────────
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    ...TransactionPeriod.values.map((p) {
-                      final isSelected = p == period && customRange == null;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _PeriodChip(
-                          label: p.l10nLabel(l10n),
-                          isSelected: isSelected,
-                          onTap: () {
-                            ref.read(selectedPeriodProvider.notifier).state = p;
-                            ref.read(customDateRangeProvider.notifier).state = null;
-                          },
-                        ),
-                      );
-                    }),
-                    _IconChip(
-                      icon: Icons.calendar_month_outlined,
-                      isActive: customRange != null,
-                      onTap: () async {
-                        final range = await showCustomDateRangePicker(
-                          context: context,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now(),
-                          initialDateRange: customRange ??
-                              DateTimeRange(
-                                start: period.dateRange.from,
-                                end: period.dateRange.to,
-                              ),
-                        );
-                        if (range != null) {
-                          ref.read(customDateRangeProvider.notifier).state = range;
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const Gap(24),
-
-              // ── Balance principal ────────────────────────────────────────
-              summaryAsync.when(
-                loading: () => const _SummaryShimmer(),
-                error: (_, __) => const SizedBox.shrink(),
-                data: (summary) => _SummarySection(summary: summary),
-              ),
-              const Gap(32),
-
-              // ── Transacciones recientes ──────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Column(
                 children: [
-                  Text(
-                    l10n.recent.toUpperCase(),
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface.withValues(alpha: 0.4),
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => context.push(AppRoutes.transactions),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.dustyTealLight,
-                        borderRadius: BorderRadius.circular(100),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Selector de período ──────────────────────────────────────
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ...TransactionPeriod.values.map((p) {
+                            final isSelected = p == period && customRange == null;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: _PeriodChip(
+                                label: p.l10nLabel(l10n),
+                                isSelected: isSelected,
+                                onTap: () {
+                                  ref.read(selectedPeriodProvider.notifier).state = p;
+                                  ref.read(customDateRangeProvider.notifier).state = null;
+                                },
+                              ),
+                            );
+                          }),
+                          _IconChip(
+                            icon: Icons.calendar_month_outlined,
+                            isActive: customRange != null,
+                            onTap: () async {
+                              final range = await showCustomDateRangePicker(
+                                context: context,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now(),
+                                initialDateRange: customRange ??
+                                    DateTimeRange(
+                                      start: period.dateRange.from,
+                                      end: period.dateRange.to,
+                                    ),
+                              );
+                              if (range != null) {
+                                ref.read(customDateRangeProvider.notifier).state = range;
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        l10n.seeAll,
-                        style: const TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.dustyTeal,
+                    ),
+                    const Gap(12),
+
+                    // ── Balance principal ────────────────────────────────────────
+                    summaryAsync.when(
+                      loading: () => const _SummaryShimmer(),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (summary) => _SummarySection(summary: summary),
+                    ),
+                    const Gap(12),
+
+                    // ── Transacciones recientes ──────────────────────────────────
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.recent.toUpperCase(),
+                          style: TextStyle(
+                            fontFamily: 'Sora',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurface.withValues(alpha: 0.4),
+                            letterSpacing: 1.5,
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Gap(12),
-              recentAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.dustyTeal),
-                ),
-                error: (e, _) => Text(e.toString()),
-                data: (transactions) {
-                  if (transactions.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 48),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            const Text('📭', style: TextStyle(fontSize: 48)),
-                            const Gap(12),
-                            Text(
-                              l10n.noTransactionsPeriod,
-                              style: TextStyle(
+                        GestureDetector(
+                          onTap: () => context.push(AppRoutes.transactions),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.dustyTealLight,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              l10n.seeAll,
+                              style: const TextStyle(
                                 fontFamily: 'Sora',
-                                fontSize: 14,
-                                color: cs.onSurface.withValues(alpha: 0.4),
-                                fontWeight: FontWeight.w500,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.dustyTeal,
                               ),
                             ),
-                          ],
+                          ),
                         ),
+                      ],
+                    ),
+                    const Gap(8),
+                    recentAsync.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(color: AppColors.dustyTeal),
                       ),
-                    );
-                  }
-                  return Column(
-                    children: transactions
-                        .map((t) => _RecentTransactionTile(transaction: t))
-                        .toList(),
-                  );
-                },
-              ),
-            ],
-          ),
+                      error: (e, _) => Text(e.toString()),
+                      data: (transactions) {
+                        if (transactions.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('📭', style: TextStyle(fontSize: 40)),
+                                const Gap(8),
+                                Text(
+                                  l10n.noTransactionsPeriod,
+                                  style: TextStyle(
+                                    fontFamily: 'Sora',
+                                    fontSize: 14,
+                                    color: cs.onSurface.withValues(alpha: 0.4),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return Column(
+                          children: transactions
+                              .map((t) => _RecentTransactionTile(transaction: t))
+                              .toList(),
+                        );
+                      },
+                    ),
+
+                  ],
+                ),
+                  ),
+            const Gap(12),
+
+            // ── Banner de anuncio (oculto para usuarios PRO) ────────────
+            Consumer(
+              builder: (context, ref, _) {
+                if (ref.watch(isProProvider)) return const SizedBox.shrink();
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: _AdBanner(),
+                );
+              },
+            ),
+            const Gap(12),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 80),
+          ],
         ),
+      ),
+    ),
+  ),
+      ),
+          // ── Speed dial overlay (backdrop + radial buttons) ─────────────
+          const Positioned.fill(
+            child: _SpeedDialFab(),
+          ),
+        ],
       ),
     );
   }
@@ -326,7 +373,7 @@ class _SummarySection extends StatelessWidget {
         // Balance card principal
         NeoCard(
           accentColor: accentColor,
-          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 24),
           child: Column(
             children: [
               Row(
@@ -351,7 +398,7 @@ class _SummarySection extends StatelessWidget {
                   ),
                 ],
               ),
-              const Gap(16),
+              const Gap(12),
               Text(
                 '${isPositive ? '' : '-'}€${balance.abs().toStringAsFixed(2)}',
                 style: context.textTheme.displaySmall?.copyWith(
@@ -645,4 +692,449 @@ class _RecentTransactionTile extends ConsumerWidget {
     'Tecnología' => '⚡',
     _            => isIncome ? '💰' : '💸',
   };
+}
+
+// ── Ad banner placeholder ─────────────────────────────────────────────────────
+
+class _AdBanner extends StatelessWidget {
+  const _AdBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Container(
+      width: double.infinity,
+      height: 90,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.borderLight,
+          width: 1,
+        ),
+        boxShadow: AppColors.softShadowSm,
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.campaign_outlined,
+            size: 18,
+            color: AppColors.textSubtle,
+          ),
+          SizedBox(width: 8),
+          Text(
+            'Publicidad',
+            style: TextStyle(
+              fontFamily: 'Sora',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSubtle,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Speed dial FAB ────────────────────────────────────────────────────────────
+
+enum _VoiceInputState { idle, listening, processing, cameraProcessing }
+
+class _SpeedDialFab extends StatefulWidget {
+  const _SpeedDialFab();
+
+  @override
+  State<_SpeedDialFab> createState() => _SpeedDialFabState();
+}
+
+class _SpeedDialFabState extends State<_SpeedDialFab> {
+  bool _open = false;
+  _VoiceInputState _voiceState = _VoiceInputState.idle;
+
+  final _speech = SpeechToText();
+  final _parser = VoiceTransactionParser();
+  final _imagePicker = ImagePicker();
+  final _imageParser = ImageTransactionParser();
+
+  @override
+  void dispose() {
+    _speech.stop();
+    super.dispose();
+  }
+
+  void _toggle() => setState(() => _open = !_open);
+
+  void _closeDial() {
+    if (_open) setState(() => _open = false);
+  }
+
+  Future<void> _startVoice() async {
+    _closeDial();
+
+    final available = await _speech.initialize(
+      onError: (_) {
+        if (mounted) setState(() => _voiceState = _VoiceInputState.idle);
+      },
+    );
+
+    if (!available) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Micrófono no disponible')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _voiceState = _VoiceInputState.listening);
+
+    await _speech.listen(
+      localeId: 'es_ES',
+      onResult: (result) {
+        if (result.finalResult) _processVoice(result.recognizedWords);
+      },
+    );
+  }
+
+  Future<void> _processVoice(String text) async {
+    if (text.trim().isEmpty) {
+      if (mounted) setState(() => _voiceState = _VoiceInputState.idle);
+      return;
+    }
+    setState(() => _voiceState = _VoiceInputState.processing);
+    final ParsedVoiceTransaction? parsed = await _parser.parse(text);
+    if (!mounted) return;
+    setState(() => _voiceState = _VoiceInputState.idle);
+    if (parsed == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo interpretar. Inténtalo de nuevo.'),
+        ),
+      );
+      return;
+    }
+    context.push(AppRoutes.addTransaction, extra: parsed);
+  }
+
+  Future<void> _startCamera() async {
+    _closeDial();
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: const Text('Cámara'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Galería'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null || !mounted) return;
+
+    final XFile? picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+
+    if (picked == null || !mounted) return;
+    await _processImage(picked);
+  }
+
+  Future<void> _processImage(XFile pickedFile) async {
+    if (!mounted) return;
+    setState(() => _voiceState = _VoiceInputState.cameraProcessing);
+
+    File? tempFile;
+    try {
+      tempFile = File(pickedFile.path);
+      final imageBytes = await tempFile.readAsBytes();
+
+      final ParsedVoiceTransaction? parsed = await _imageParser.parse(imageBytes);
+
+      if (!mounted) return;
+      setState(() => _voiceState = _VoiceInputState.idle);
+
+      if (parsed == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo detectar una transacción en la imagen.'),
+          ),
+        );
+        return;
+      }
+      context.push(AppRoutes.addTransaction, extra: parsed);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _voiceState = _VoiceInputState.idle);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al procesar la imagen.')),
+        );
+      }
+    } finally {
+      try {
+        if (tempFile != null && await tempFile.exists()) {
+          await tempFile.delete();
+        }
+      } catch (_) {}
+    }
+  }
+
+  // ── Layout constants ──────────────────────────────────────────────────────
+  //
+  //  Stack size: 220 × 175 px
+  //  FAB (64 px) → bottom-centre of the Stack: centre at (110, 143)
+  //  Mini buttons (50 px) on a circle of r = 85 px, ±65° and 0° from straight-up:
+  //
+  //           [🎤]   [✏️]   [📷]
+  //             \     |     /
+  //              \    |    /    ← r = 85 px
+  //               \   |   /
+  //                  [+]
+  //
+  //  Mic    → centre (33, 107)  = FAB centre + (−77, −36)
+  //  Pencil → centre (110, 58)  = FAB centre + (  0, −85)
+  //  Camera → centre (187, 107) = FAB centre + (+77, −36)
+  static const double _stackW   = 220;
+  static const double _stackH   = 175;
+  static const double _fabSize  =  64;
+  static const double _miniSize =  50;
+
+  // FAB centre inside the Stack (Stack coords: origin = top-left)
+  static const double _fabCx = _stackW / 2;             // 110
+  static const double _fabCy = _stackH - _fabSize / 2;  // 143
+
+  // Mini-button target centres when open
+  static const Offset _micTarget    = Offset(33,  107);
+  static const Offset _pencilTarget = Offset(110,  58);
+  static const Offset _cameraTarget = Offset(187, 107);
+
+  // Starting position: collapsed at the FAB centre
+  static const Offset _closedPos = Offset(_fabCx, _fabCy);
+
+  // Convert a centre-Offset to AnimatedPositioned.left
+  static double _left(Offset c)   => c.dx - _miniSize / 2;
+  // Convert a centre-Offset to AnimatedPositioned.bottom
+  static double _bottom(Offset c) => _stackH - c.dy - _miniSize / 2;
+
+  @override
+  Widget build(BuildContext context) {
+    // Distance from the bottom of the body area to the FAB bottom edge,
+    // matching Flutter's standard centerFloat margin.
+    final fabBottom =
+        MediaQuery.of(context).padding.bottom + 16.0;
+
+    // ── Voice active: show mic state widget centred at FAB position ──────────
+    if (_voiceState != _VoiceInputState.idle) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            bottom: fabBottom,
+            left: 0,
+            right: 0,
+            child: Center(child: _buildVoiceWidget()),
+          ),
+        ],
+      );
+    }
+
+    // ── Normal state: backdrop + radial speed dial ───────────────────────────
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Backdrop — absorbs ALL pointer events when open (blocks scroll/swipe too)
+        IgnorePointer(
+          ignoring: !_open,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: _open ? 1.0 : 0.0,
+            child: GestureDetector(
+              onTap: _closeDial,
+              // opaque → swallows drags/scrolls as well
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.35),
+              ),
+            ),
+          ),
+        ),
+
+        // Speed dial (positioned at the same spot as standard centerFloat FAB)
+        Positioned(
+          bottom: fabBottom,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: SizedBox(
+              width: _stackW,
+              height: _stackH,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Mini radial buttons (behind the FAB)
+                  _radialButton(
+                    context,
+                    icon: Icons.mic_outlined,
+                    target: _micTarget,
+                    onTap: _startVoice,
+                  ),
+                  _radialButton(
+                    context,
+                    icon: Icons.edit_outlined,
+                    target: _pencilTarget,
+                    onTap: () {
+                      _closeDial();
+                      context.push(AppRoutes.addTransaction);
+                    },
+                  ),
+                  _radialButton(
+                    context,
+                    icon: Icons.camera_alt_outlined,
+                    target: _cameraTarget,
+                    onTap: _startCamera,
+                  ),
+                  // Main FAB (always on top)
+                  Positioned(
+                    left: (_stackW - _fabSize) / 2,
+                    bottom: 0,
+                    child: NeoFab(
+                      icon: _open ? Icons.close : Icons.add,
+                      onTap: _toggle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds one mini button that animates radially from the FAB centre.
+  Widget _radialButton(
+    BuildContext context, {
+    required IconData icon,
+    required Offset target,
+    required VoidCallback onTap,
+  }) {
+    final centre = _open ? target : _closedPos;
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      left:   _left(centre),
+      bottom: _bottom(centre),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: _open ? 1.0 : 0.0,
+        child: IgnorePointer(
+          ignoring: !_open,
+          child: _MiniDialButton(icon: icon, onTap: onTap),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVoiceWidget() {
+    if (_voiceState == _VoiceInputState.processing ||
+        _voiceState == _VoiceInputState.cameraProcessing) {
+      return Container(
+        width: _fabSize,
+        height: _fabSize,
+        decoration: const BoxDecoration(
+          color: AppColors.dustyTeal,
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+    // Listening → red stop button
+    return GestureDetector(
+      onTap: () async {
+        await _speech.stop();
+        if (mounted) setState(() => _voiceState = _VoiceInputState.idle);
+      },
+      child: Container(
+        width: _fabSize,
+        height: _fabSize,
+        decoration: const BoxDecoration(
+          color: Colors.red,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.stop_rounded, color: Colors.white, size: 28),
+      ),
+    );
+  }
+}
+
+// ── Mini radial button ────────────────────────────────────────────────────────
+
+class _MiniDialButton extends StatelessWidget {
+  const _MiniDialButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: AppColors.dustyTeal,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.dustyTeal.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: Colors.white, size: 22),
+      ),
+    );
+  }
 }

@@ -11,6 +11,7 @@ import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/transactions/domain/parsed_voice_transaction.dart';
 import '../../features/transactions/presentation/screens/add_transaction_screen.dart';
 import '../../features/transactions/presentation/screens/transactions_list_screen.dart';
+import '../../features/subscription/pro_screen.dart';
 
 part 'router.g.dart';
 
@@ -21,6 +22,7 @@ abstract class AppRoutes {
   static const dashboard = '/dashboard';
   static const transactions = '/transactions';
   static const addTransaction = '/transactions/add';
+  static const pro = '/pro';
 }
 
 /// Notifier que escucha el stream de auth y notifica a GoRouter para
@@ -84,6 +86,11 @@ GoRouter router(RouterRef ref) {
         builder: (context, state) => AddTransactionScreen(
           voiceData: state.extra as ParsedVoiceTransaction?,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.pro,
+        name: 'pro',
+        builder: (context, state) => const ProScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
