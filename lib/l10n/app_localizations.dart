@@ -627,7 +627,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordMinChars.
   ///
   /// In es, this message translates to:
-  /// **'Mínimo 8 caracteres'**
+  /// **'Mínimo 8 caracteres, una letra y un número'**
   String get passwordMinChars;
 
   /// No description provided for @enterPasswordRequired.
@@ -639,7 +639,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordTooShort.
   ///
   /// In es, this message translates to:
-  /// **'La contraseña debe tener al menos 8 caracteres'**
+  /// **'La contraseña debe tener al menos 8 caracteres, una letra y un número'**
   String get passwordTooShort;
 
   /// No description provided for @accountCreated.

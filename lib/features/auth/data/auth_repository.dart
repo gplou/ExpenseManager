@@ -81,8 +81,9 @@ class AuthRepository implements AuthRepositoryContract {
   Future<void> signOut() async {
     try {
       await _client.auth.signOut();
-    } on AuthException catch (e) {
-      throw AuthFailure(e.message);
+    } on AuthException catch (_) {
+      // signOut failures are non-critical — the session is cleared locally
+      // regardless, so swallow the error silently.
     }
   }
 
@@ -228,7 +229,11 @@ class AuthRepository implements AuthRepositoryContract {
     if (message.contains('User already registered')) {
       return 'Este email ya está registrado';
     }
-    return message;
+    if (message.contains('rate limit') || message.contains('too many')) {
+      return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+    }
+    // Never expose raw Supabase/server error messages to the user.
+    return 'Error de autenticación. Inténtalo de nuevo.';
   }
 }
 

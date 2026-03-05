@@ -6,7 +6,8 @@
       "Bash(flutter pub get)",
       "Bash(flutter gen-l10n)",
       "Bash(flutter analyze)",
-      "Bash(flutter analyze lib/features/dashboard/dashboard_screen.dart)"
+      "Bash(flutter analyze lib/features/dashboard/dashboard_screen.dart)",
+      "Bash(xargs grep -l \"camera_alt_outlined\\\\|camera_alt\\\\|camera\")"
     ]
   }
 }
