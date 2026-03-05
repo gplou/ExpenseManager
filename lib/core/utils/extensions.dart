@@ -10,7 +10,13 @@ extension StringExtensions on String {
     r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
   ).hasMatch(this);
 
-  bool get isValidPassword => length >= 8;
+  /// Password is valid when it has ≥ 8 characters, at least one letter and one digit.
+  bool get isValidPassword {
+    if (length < 8) return false;
+    final hasLetter = contains(RegExp(r'[a-zA-Z]'));
+    final hasDigit = contains(RegExp(r'[0-9]'));
+    return hasLetter && hasDigit;
+  }
 
   String get capitalize =>
       isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';

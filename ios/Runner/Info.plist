@@ -70,6 +70,10 @@
 		<string>Necesitamos acceso al micrófono para que puedas añadir transacciones por voz.</string>
 		<key>NSSpeechRecognitionUsageDescription</key>
 		<string>Usamos el reconocimiento de voz para interpretar tus transacciones.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Necesitamos acceso a la cámara para fotografiar recibos y añadir transacciones automáticamente.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Necesitamos acceso a tu galería para seleccionar fotos de recibos.</string>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>

@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/security/secure_storage.dart';
 import 'subscription_repository.dart';
 import 'subscription_state.dart';
 
@@ -17,10 +17,20 @@ const _kCacheSourceKey = 'sub_source';
 /// Re-check the store/Supabase at most once every 24 hours.
 const _kCacheTtl = Duration(hours: 24);
 
+/// Max failed promo-code attempts before triggering a cooldown.
+const _kMaxPromoAttempts = 3;
+
+/// Cooldown duration after [_kMaxPromoAttempts] consecutive failures.
+const _kPromoCooldown = Duration(seconds: 30);
+
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
 class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
+
+  // ── Promo-code rate-limiting (in-memory, per session) ─────────────────────
+  int _promoFailedAttempts = 0;
+  DateTime? _promoCooldownUntil;
 
   @override
   Future<SubscriptionState> build() async {
@@ -60,24 +70,46 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     // Result arrives via _handlePurchaseUpdate
   }
 
-  /// Redeems a promo code. Throws [PromoCodeException] on failure so
-  /// callers can display the error message directly.
+  /// Redeems a promo code with client-side rate limiting.
+  /// Throws [PromoCodeException] on failure so callers can display the message.
   Future<void> redeemPromoCode(String code) async {
+    // ── Rate limiting ────────────────────────────────────────────────────────
+    if (_promoCooldownUntil != null &&
+        DateTime.now().isBefore(_promoCooldownUntil!)) {
+      final remaining =
+          _promoCooldownUntil!.difference(DateTime.now()).inSeconds;
+      throw PromoCodeException(
+          'Demasiados intentos. Espera $remaining segundos.');
+    }
+
     final repo = ref.read(subscriptionRepositoryProvider);
-    // PromoCodeException bubbles up to the caller — no try/catch here.
-    final days = await repo.redeemPromoCode(code);
 
-    final now = DateTime.now();
-    final current = state.valueOrNull;
-    final base = (current?.isPro == true) ? current!.expiresAt! : now;
-    final expiresAt = base.add(Duration(days: days));
+    try {
+      final days = await repo.redeemPromoCode(code);
 
-    await repo.upsertSubscription(expiresAt: expiresAt, source: 'promo_code');
-    await _persistCache(expiresAt: expiresAt, source: 'promo_code');
+      // Reset counter on success
+      _promoFailedAttempts = 0;
+      _promoCooldownUntil = null;
 
-    state = AsyncData(
-      SubscriptionState(expiresAt: expiresAt, source: 'promo_code'),
-    );
+      final now = DateTime.now();
+      final current = state.valueOrNull;
+      final base = (current?.isPro == true) ? current!.expiresAt! : now;
+      final expiresAt = base.add(Duration(days: days));
+
+      await repo.upsertSubscription(expiresAt: expiresAt, source: 'promo_code');
+      await _persistCache(expiresAt: expiresAt, source: 'promo_code');
+
+      state = AsyncData(
+        SubscriptionState(expiresAt: expiresAt, source: 'promo_code'),
+      );
+    } on PromoCodeException {
+      _promoFailedAttempts++;
+      if (_promoFailedAttempts >= _kMaxPromoAttempts) {
+        _promoCooldownUntil = DateTime.now().add(_kPromoCooldown);
+        _promoFailedAttempts = 0;
+      }
+      rethrow;
+    }
   }
 
   /// Forces a re-check against Supabase, ignoring the 24 h cache.
@@ -90,10 +122,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   // ── Internal ───────────────────────────────────────────────────────────────
 
   Future<SubscriptionState> _loadInitialState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cachedExpiry = prefs.getString(_kCacheExpiresAtKey);
-    final cachedCheckedAt = prefs.getString(_kCacheCheckedAtKey);
-    final cachedSource = prefs.getString(_kCacheSourceKey);
+    final storage = SecureStorageService.instance;
+    final cachedExpiry = await storage.read(_kCacheExpiresAtKey);
+    final cachedCheckedAt = await storage.read(_kCacheCheckedAtKey);
+    final cachedSource = await storage.read(_kCacheSourceKey);
 
     // Build the fast cached state (may be null / expired).
     SubscriptionState fast = const SubscriptionState();
@@ -111,11 +143,6 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       cacheStale = DateTime.now().difference(checkedAt) > _kCacheTtl;
     }
 
-    // Refresh in background when:
-    // 1. Cache is stale (> 24 h) — regular daily check.
-    // 2. The cached state is not PRO — catches expired subscriptions and
-    //    potential renewals that happened while the app was closed.
-    //    (If user IS PRO with a fresh cache, trust it to avoid unnecessary calls.)
     final shouldRefresh = cacheStale || !fast.isPro;
 
     if (!shouldRefresh) return fast;
@@ -144,19 +171,19 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   }
 
   Future<void> _persistCache({DateTime? expiresAt, String? source}) async {
-    final prefs = await SharedPreferences.getInstance();
+    final storage = SecureStorageService.instance;
     if (expiresAt != null) {
-      await prefs.setString(
+      await storage.write(
           _kCacheExpiresAtKey, expiresAt.toUtc().toIso8601String());
     } else {
-      await prefs.remove(_kCacheExpiresAtKey);
+      await storage.delete(_kCacheExpiresAtKey);
     }
-    await prefs.setString(
+    await storage.write(
         _kCacheCheckedAtKey, DateTime.now().toUtc().toIso8601String());
     if (source != null) {
-      await prefs.setString(_kCacheSourceKey, source);
+      await storage.write(_kCacheSourceKey, source);
     } else {
-      await prefs.remove(_kCacheSourceKey);
+      await storage.delete(_kCacheSourceKey);
     }
   }
 

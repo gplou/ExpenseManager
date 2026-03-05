@@ -280,14 +280,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get enterName => 'Ingresa tu nombre';
 
   @override
-  String get passwordMinChars => 'Mínimo 8 caracteres';
+  String get passwordMinChars => 'Mínimo 8 caracteres, una letra y un número';
 
   @override
   String get enterPasswordRequired => 'Ingresa una contraseña';
 
   @override
   String get passwordTooShort =>
-      'La contraseña debe tener al menos 8 caracteres';
+      'La contraseña debe tener al menos 8 caracteres, una letra y un número';
 
   @override
   String get accountCreated =>

@@ -13,7 +13,10 @@ import '../../core/widgets/neo_card.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/category_distribution_sheet.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../transactions/data/voice_transaction_parser.dart';
+import '../transactions/data/image_transaction_parser.dart';
 import '../transactions/domain/parsed_voice_transaction.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/domain/transaction_categories.dart';
@@ -738,7 +741,7 @@ class _AdBanner extends StatelessWidget {
 
 // ── Speed dial FAB ────────────────────────────────────────────────────────────
 
-enum _VoiceInputState { idle, listening, processing }
+enum _VoiceInputState { idle, listening, processing, cameraProcessing }
 
 class _SpeedDialFab extends StatefulWidget {
   const _SpeedDialFab();
@@ -753,6 +756,8 @@ class _SpeedDialFabState extends State<_SpeedDialFab> {
 
   final _speech = SpeechToText();
   final _parser = VoiceTransactionParser();
+  final _imagePicker = ImagePicker();
+  final _imageParser = ImageTransactionParser();
 
   @override
   void dispose() {
@@ -812,6 +817,97 @@ class _SpeedDialFabState extends State<_SpeedDialFab> {
       return;
     }
     context.push(AppRoutes.addTransaction, extra: parsed);
+  }
+
+  Future<void> _startCamera() async {
+    _closeDial();
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: const Text('Cámara'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Galería'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null || !mounted) return;
+
+    final XFile? picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+
+    if (picked == null || !mounted) return;
+    await _processImage(picked);
+  }
+
+  Future<void> _processImage(XFile pickedFile) async {
+    if (!mounted) return;
+    setState(() => _voiceState = _VoiceInputState.cameraProcessing);
+
+    File? tempFile;
+    try {
+      tempFile = File(pickedFile.path);
+      final imageBytes = await tempFile.readAsBytes();
+
+      final ParsedVoiceTransaction? parsed = await _imageParser.parse(imageBytes);
+
+      if (!mounted) return;
+      setState(() => _voiceState = _VoiceInputState.idle);
+
+      if (parsed == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo detectar una transacción en la imagen.'),
+          ),
+        );
+        return;
+      }
+      context.push(AppRoutes.addTransaction, extra: parsed);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _voiceState = _VoiceInputState.idle);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al procesar la imagen.')),
+        );
+      }
+    } finally {
+      try {
+        if (tempFile != null && await tempFile.exists()) {
+          await tempFile.delete();
+        }
+      } catch (_) {}
+    }
   }
 
   // ── Layout constants ──────────────────────────────────────────────────────
@@ -926,7 +1022,7 @@ class _SpeedDialFabState extends State<_SpeedDialFab> {
                     context,
                     icon: Icons.camera_alt_outlined,
                     target: _cameraTarget,
-                    onTap: _closeDial,
+                    onTap: _startCamera,
                   ),
                   // Main FAB (always on top)
                   Positioned(
@@ -971,7 +1067,8 @@ class _SpeedDialFabState extends State<_SpeedDialFab> {
   }
 
   Widget _buildVoiceWidget() {
-    if (_voiceState == _VoiceInputState.processing) {
+    if (_voiceState == _VoiceInputState.processing ||
+        _voiceState == _VoiceInputState.cameraProcessing) {
       return Container(
         width: _fabSize,
         height: _fabSize,
