@@ -805,7 +805,18 @@ class _SpeedDialFabState extends State<_SpeedDialFab> {
       return;
     }
     setState(() => _voiceState = _VoiceInputState.processing);
-    final ParsedVoiceTransaction? parsed = await _parser.parse(text);
+    ParsedVoiceTransaction? parsed;
+    try {
+      parsed = await _parser.parse(text);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _voiceState = _VoiceInputState.idle);
+      final info = e.toString().split('\n').first;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error IA voz [${e.runtimeType}]: $info')),
+      );
+      return;
+    }
     if (!mounted) return;
     setState(() => _voiceState = _VoiceInputState.idle);
     if (parsed == null) {
@@ -894,11 +905,12 @@ class _SpeedDialFabState extends State<_SpeedDialFab> {
         return;
       }
       context.push(AppRoutes.addTransaction, extra: parsed);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _voiceState = _VoiceInputState.idle);
+        final info = e.toString().split('\n').first;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al procesar la imagen.')),
+          SnackBar(content: Text('Error IA imagen [${e.runtimeType}]: $info')),
         );
       }
     } finally {
