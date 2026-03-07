@@ -29,7 +29,7 @@ jwt_expiry = 3600
 enable_signup = true
 
 [functions.parse-voice-transaction]
-verify_jwt = true
+verify_jwt = false
 
 [functions.parse-image-transaction]
-verify_jwt = true
+verify_jwt = false
