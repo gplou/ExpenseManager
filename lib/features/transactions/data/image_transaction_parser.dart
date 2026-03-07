@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/parsed_voice_transaction.dart';
@@ -54,8 +55,9 @@ class ImageTransactionParser {
         category: category,
         description: (desc?.isEmpty ?? true) ? null : desc,
       );
-    } catch (_) {
-      return null;
+    } catch (e, st) {
+      debugPrint('ImageTransactionParser error: $e\n$st');
+      rethrow;
     }
   }
 
