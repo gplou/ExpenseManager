@@ -13,7 +13,8 @@
       "Bash(git remote add origin https://github.com/gplou/ExpenseManager.git)",
       "Bash(supabase functions deploy parse-voice-transaction)",
       "Bash(supabase status)",
-      "Bash(supabase functions deploy parse-image-transaction)"
+      "Bash(supabase functions deploy parse-image-transaction)",
+      "Bash(supabase functions deploy parse-voice-transaction parse-image-transaction)"
     ]
   }
 }

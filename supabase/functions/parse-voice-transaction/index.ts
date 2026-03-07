@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY') ?? ''
+const GOOGLE_AI_KEY = Deno.env.get('GOOGLE_AI_KEY') ?? ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 
@@ -72,43 +72,41 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 3. Call Claude API (key stays server-side) ────────────────────────────
-  if (!CLAUDE_API_KEY) {
+  // ── 3. Call Gemini API (key stays server-side) ────────────────────────────
+  if (!GOOGLE_AI_KEY) {
     return new Response(
-      JSON.stringify({ error: 'Server misconfiguration: CLAUDE_API_KEY is not set' }),
+      JSON.stringify({ error: 'Server misconfiguration: GOOGLE_AI_KEY is not set' }),
       { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } }
     )
   }
 
   const prompt = PROMPT_TEMPLATE.replace('{transcription}', transcription)
 
-  const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  })
+  const geminiRes = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 200, temperature: 0 },
+      }),
+    }
+  )
 
-  if (!claudeRes.ok) {
-    const claudeErr = await claudeRes.text()
+  if (!geminiRes.ok) {
+    const geminiErr = await geminiRes.text()
     return new Response(
-      JSON.stringify({ error: `Claude ${claudeRes.status}: ${claudeErr}` }),
+      JSON.stringify({ error: `Gemini ${geminiRes.status}: ${geminiErr}` }),
       { status: 502, headers: { ...corsHeaders, 'content-type': 'application/json' } }
     )
   }
 
   // ── 4. Return only the parsed result to the client ────────────────────────
-  const claudeData = await claudeRes.json()
-  let text: string = claudeData?.content?.[0]?.text ?? ''
+  const geminiData = await geminiRes.json()
+  let text: string = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 
-  // Strip markdown code fences Claude sometimes adds (```json ... ```)
+  // Strip markdown code fences Gemini sometimes adds (```json ... ```)
   text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
 
   return new Response(
