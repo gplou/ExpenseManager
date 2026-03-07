@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY')!
+const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY') ?? ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 
@@ -77,6 +77,13 @@ serve(async (req: Request) => {
   }
 
   // ── 3. Call Claude API (key stays server-side) ────────────────────────────
+  if (!CLAUDE_API_KEY) {
+    return new Response(
+      JSON.stringify({ error: 'Server misconfiguration: CLAUDE_API_KEY is not set' }),
+      { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } }
+    )
+  }
+
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
