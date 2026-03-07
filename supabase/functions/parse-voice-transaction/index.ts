@@ -98,7 +98,10 @@ serve(async (req: Request) => {
 
   // ── 4. Return only the parsed result to the client ────────────────────────
   const claudeData = await claudeRes.json()
-  const text: string = claudeData?.content?.[0]?.text ?? ''
+  let text: string = claudeData?.content?.[0]?.text ?? ''
+
+  // Strip markdown code fences Claude sometimes adds (```json ... ```)
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
 
   return new Response(
     JSON.stringify({ result: text }),
