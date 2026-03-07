@@ -107,8 +107,9 @@ serve(async (req: Request) => {
   })
 
   if (!claudeRes.ok) {
+    const claudeErr = await claudeRes.text()
     return new Response(
-      JSON.stringify({ error: 'AI service unavailable' }),
+      JSON.stringify({ error: `Claude ${claudeRes.status}: ${claudeErr}` }),
       { status: 502, headers: { ...corsHeaders, 'content-type': 'application/json' } }
     )
   }
