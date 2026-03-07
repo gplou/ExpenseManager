@@ -10,7 +10,10 @@
       "Bash(xargs grep -l \"camera_alt_outlined\\\\|camera_alt\\\\|camera\")",
       "Bash(# Check Flutter SDK for its embedded JDK \\(Flutter ships with one via Dart\\) flutter doctor -v)",
       "Bash(\"/d/Android/jbr/bin/keytool\" -list -v -keystore \"/c/Users/guill/.android/debug.keystore\" -alias androiddebugkey -storepass android -keypass android)",
-      "Bash(git remote add origin https://github.com/gplou/ExpenseManager.git)"
+      "Bash(git remote add origin https://github.com/gplou/ExpenseManager.git)",
+      "Bash(supabase functions deploy parse-voice-transaction)",
+      "Bash(supabase status)",
+      "Bash(supabase functions deploy parse-image-transaction)"
     ]
   }
 }
