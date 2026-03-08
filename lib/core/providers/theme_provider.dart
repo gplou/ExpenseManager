@@ -11,12 +11,12 @@ class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
     return switch (prefs.getString(_kThemeModeKey)) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
-      _ => ThemeMode.system,
+      _ => ThemeMode.light,
     };
   }
 
   Future<void> toggle() async {
-    final next = (state.valueOrNull ?? ThemeMode.system) == ThemeMode.dark
+    final next = (state.valueOrNull ?? ThemeMode.light) == ThemeMode.dark
         ? ThemeMode.light
         : ThemeMode.dark;
     state = AsyncData(next);
