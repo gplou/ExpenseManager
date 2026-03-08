@@ -31,7 +31,6 @@ const corsHeaders = {
 }
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -76,7 +75,7 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 3. Call Gemini API (key stays server-side) ────────────────────────────
+  // ── 3. Call Gemini API ────────────────────────────────────────────────────
   if (!GOOGLE_AI_KEY) {
     return new Response(
       JSON.stringify({ error: 'Server misconfiguration: GOOGLE_AI_KEY is not set' }),
@@ -85,7 +84,7 @@ serve(async (req: Request) => {
   }
 
   const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${GOOGLE_AI_KEY}`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
