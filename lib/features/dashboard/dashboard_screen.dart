@@ -743,14 +743,14 @@ class _AdBanner extends StatelessWidget {
 
 enum _VoiceInputState { idle, listening, processing, cameraProcessing }
 
-class _SpeedDialFab extends StatefulWidget {
+class _SpeedDialFab extends ConsumerStatefulWidget {
   const _SpeedDialFab();
 
   @override
-  State<_SpeedDialFab> createState() => _SpeedDialFabState();
+  ConsumerState<_SpeedDialFab> createState() => _SpeedDialFabState();
 }
 
-class _SpeedDialFabState extends State<_SpeedDialFab> {
+class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
   bool _open = false;
   _VoiceInputState _voiceState = _VoiceInputState.idle;
 
@@ -818,8 +818,8 @@ class _SpeedDialFabState extends State<_SpeedDialFab> {
       return;
     }
     if (!mounted) return;
-    setState(() => _voiceState = _VoiceInputState.idle);
     if (parsed == null) {
+      setState(() => _voiceState = _VoiceInputState.idle);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No se pudo interpretar. Inténtalo de nuevo.'),
@@ -827,7 +827,40 @@ class _SpeedDialFabState extends State<_SpeedDialFab> {
       );
       return;
     }
-    context.push(AppRoutes.addTransaction, extra: parsed);
+    // Save directly without navigating to verification screen
+    try {
+      final transaction = TransactionModel(
+        id: '',
+        userId: '',
+        amount: parsed.amount,
+        type: parsed.type,
+        category: parsed.category,
+        description: parsed.description,
+        date: DateTime.now(),
+        createdAt: DateTime.now(),
+      );
+      await ref
+          .read(transactionsNotifierProvider.notifier)
+          .create(transaction);
+      if (!mounted) return;
+      setState(() => _voiceState = _VoiceInputState.idle);
+      final l10n = AppLocalizations.of(context);
+      final catName = TransactionCategories.localizedName(parsed.category, l10n);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${parsed.type == TransactionType.income ? '+' : '-'}€${parsed.amount.toStringAsFixed(2)} · $catName',
+          ),
+          backgroundColor: AppColors.dustyTeal,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _voiceState = _VoiceInputState.idle);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar: ${e.toString().split('\n').first}')),
+      );
+    }
   }
 
   Future<void> _startCamera() async {
