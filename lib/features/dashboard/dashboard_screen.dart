@@ -877,15 +877,6 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined),
                 title: const Text('Cámara'),
