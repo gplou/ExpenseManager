@@ -81,7 +81,7 @@ serve(async (req: Request) => {
   const prompt = PROMPT_TEMPLATE.replace('{transcription}', transcription)
 
   const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=${GOOGLE_AI_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GOOGLE_AI_KEY}`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
