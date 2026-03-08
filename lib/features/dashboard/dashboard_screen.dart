@@ -937,7 +937,31 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
         );
         return;
       }
-      context.push(AppRoutes.addTransaction, extra: parsed);
+      // Save directly without navigating to verification screen
+      final transaction = TransactionModel(
+        id: '',
+        userId: '',
+        amount: parsed.amount,
+        type: parsed.type,
+        category: parsed.category,
+        description: parsed.description,
+        date: DateTime.now(),
+        createdAt: DateTime.now(),
+      );
+      await ref
+          .read(transactionsNotifierProvider.notifier)
+          .create(transaction);
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      final catName = TransactionCategories.localizedName(parsed.category, l10n);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${parsed.type == TransactionType.income ? '+' : '-'}€${parsed.amount.toStringAsFixed(2)} · $catName',
+          ),
+          backgroundColor: AppColors.dustyTeal,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _voiceState = _VoiceInputState.idle);
