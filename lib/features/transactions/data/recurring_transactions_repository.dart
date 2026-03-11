@@ -60,7 +60,7 @@ class RecurringTransactionsRepository {
         .eq('id', id)
         .maybeSingle();
     if (response == null) return null;
-    return RecurringTransactionModel.fromJson(response as Map<String, dynamic>);
+    return RecurringTransactionModel.fromJson(response);
   }
 
   Future<void> updateRecurring({
