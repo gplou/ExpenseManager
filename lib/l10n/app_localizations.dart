@@ -252,6 +252,12 @@ abstract class AppLocalizations {
   /// **'Mensual'**
   String get monthly;
 
+  /// No description provided for @yearly.
+  ///
+  /// In es, this message translates to:
+  /// **'Anual'**
+  String get yearly;
+
   /// No description provided for @saveChanges.
   ///
   /// In es, this message translates to:
@@ -287,6 +293,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'mes'**
   String get frequencyMonth;
+
+  /// No description provided for @frequencyYear.
+  ///
+  /// In es, this message translates to:
+  /// **'año'**
+  String get frequencyYear;
 
   /// No description provided for @invalidAmount.
   ///
@@ -989,6 +1001,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Error inesperado. Inténtalo de nuevo.'**
   String get proPromoUnexpectedError;
+
+  /// No description provided for @subcategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Subcategoría'**
+  String get subcategory;
+
+  /// No description provided for @newSubcategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva subcategoría'**
+  String get newSubcategory;
+
+  /// No description provided for @subcategoryName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la subcategoría'**
+  String get subcategoryName;
+
+  /// No description provided for @exportColumnSubcategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Subcategoría'**
+  String get exportColumnSubcategory;
+
+  /// No description provided for @deleteSubcategoryConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar esta subcategoría?'**
+  String get deleteSubcategoryConfirm;
 }
 
 class _AppLocalizationsDelegate

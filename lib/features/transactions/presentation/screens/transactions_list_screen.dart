@@ -453,7 +453,7 @@ class _TransactionTile extends ConsumerWidget {
     final accentColor = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
     final accentLight = isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
     final emoji = _emojiForCategory(transaction.category, isIncome);
-    final customCats = ref.watch(customCategoriesProvider)[transaction.type] ?? const [];
+    final customCats = ref.watch(customCategoriesSyncProvider)[transaction.type] ?? const [];
     IconData? customIcon;
     for (final c in customCats) {
       if (c.name == transaction.category) { customIcon = c.icon; break; }
@@ -555,7 +555,18 @@ class _TransactionTile extends ConsumerWidget {
                             color: cs.onSurface,
                           ),
                         ),
-                        if (transaction.description != null)
+                        if (transaction.subcategory != null)
+                          Text(
+                            transaction.subcategory!,
+                            style: const TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 12,
+                              color: AppColors.textMuted,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        else if (transaction.description != null)
                           Text(
                             transaction.description!,
                             style: const TextStyle(

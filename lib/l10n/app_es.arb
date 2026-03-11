@@ -56,6 +56,8 @@
   "@weekly": {},
   "monthly": "Mensual",
   "@monthly": {},
+  "yearly": "Anual",
+  "@yearly": {},
   "saveChanges": "Guardar cambios",
   "@saveChanges": {},
   "saveExpense": "Guardar gasto",
@@ -73,6 +75,8 @@
   "@frequencyWeek": {},
   "frequencyMonth": "mes",
   "@frequencyMonth": {},
+  "frequencyYear": "año",
+  "@frequencyYear": {},
 
   "invalidAmount": "Ingresa un importe válido",
   "@invalidAmount": {},
@@ -326,5 +330,16 @@
   "proPromoSuccess": "¡Código aplicado! Disfruta de PRO.",
   "@proPromoSuccess": {},
   "proPromoUnexpectedError": "Error inesperado. Inténtalo de nuevo.",
-  "@proPromoUnexpectedError": {}
+  "@proPromoUnexpectedError": {},
+
+  "subcategory": "Subcategoría",
+  "@subcategory": {},
+  "newSubcategory": "Nueva subcategoría",
+  "@newSubcategory": {},
+  "subcategoryName": "Nombre de la subcategoría",
+  "@subcategoryName": {},
+  "exportColumnSubcategory": "Subcategoría",
+  "@exportColumnSubcategory": {},
+  "deleteSubcategoryConfirm": "¿Eliminar esta subcategoría?",
+  "@deleteSubcategoryConfirm": {}
 }

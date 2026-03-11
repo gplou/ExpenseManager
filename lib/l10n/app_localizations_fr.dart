@@ -86,6 +86,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get monthly => 'Mensuel';
 
   @override
+  String get yearly => 'Annuel';
+
+  @override
   String get saveChanges => 'Enregistrer les modifications';
 
   @override
@@ -104,6 +107,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get frequencyMonth => 'mois';
+
+  @override
+  String get frequencyYear => 'an';
 
   @override
   String get invalidAmount => 'Entrez un montant valide';
@@ -472,4 +478,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get proPromoUnexpectedError => 'Erreur inattendue. Réessayez.';
+
+  @override
+  String get subcategory => 'Sous-catégorie';
+
+  @override
+  String get newSubcategory => 'Nouvelle sous-catégorie';
+
+  @override
+  String get subcategoryName => 'Nom de la sous-catégorie';
+
+  @override
+  String get exportColumnSubcategory => 'Sous-catégorie';
+
+  @override
+  String get deleteSubcategoryConfirm => 'Supprimer cette sous-catégorie ?';
 }

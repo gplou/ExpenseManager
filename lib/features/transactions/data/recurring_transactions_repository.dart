@@ -33,6 +33,7 @@ class RecurringTransactionsRepository {
     required double amount,
     required TransactionType type,
     required String category,
+    String? subcategory,
     String? description,
     required RecurrenceType recurrenceType,
     required DateTime nextOccurrence,
@@ -44,6 +45,7 @@ class RecurringTransactionsRepository {
           'amount': amount,
           'type': type.name,
           'category': category,
+          'subcategory': subcategory,
           'description': description,
           'recurrence_type': recurrenceType.name,
           'next_occurrence': _dateStr(nextOccurrence),
@@ -51,6 +53,40 @@ class RecurringTransactionsRepository {
         .select('id')
         .single();
     return response['id'] as String;
+  }
+
+  Future<RecurringTransactionModel?> getById(String id) async {
+    final response = await _client
+        .from('recurring_transactions')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    if (response == null) return null;
+    return RecurringTransactionModel.fromJson(response);
+  }
+
+  Future<void> updateRecurring({
+    required String id,
+    required double amount,
+    required TransactionType type,
+    required String category,
+    String? subcategory,
+    String? description,
+    required RecurrenceType recurrenceType,
+    required DateTime nextOccurrence,
+  }) async {
+    await _client
+        .from('recurring_transactions')
+        .update({
+          'amount': amount,
+          'type': type.name,
+          'category': category,
+          'subcategory': subcategory,
+          'description': description,
+          'recurrence_type': recurrenceType.name,
+          'next_occurrence': _dateStr(nextOccurrence),
+        })
+        .eq('id', id);
   }
 
   Future<void> updateNextOccurrence(String id, DateTime next) async {

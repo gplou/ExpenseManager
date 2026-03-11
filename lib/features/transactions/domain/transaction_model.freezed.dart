@@ -25,6 +25,7 @@ mixin _$TransactionModel {
   double get amount => throw _privateConstructorUsedError;
   TransactionType get type => throw _privateConstructorUsedError;
   String get category => throw _privateConstructorUsedError;
+  String? get subcategory => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   DateTime get date => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
@@ -48,6 +49,7 @@ abstract class $TransactionModelCopyWith<$Res> {
       double amount,
       TransactionType type,
       String category,
+      String? subcategory,
       String? description,
       DateTime date,
       DateTime createdAt,
@@ -72,6 +74,7 @@ class _$TransactionModelCopyWithImpl<$Res, $Val extends TransactionModel>
     Object? amount = null,
     Object? type = null,
     Object? category = null,
+    Object? subcategory = freezed,
     Object? description = freezed,
     Object? date = null,
     Object? createdAt = null,
@@ -98,6 +101,10 @@ class _$TransactionModelCopyWithImpl<$Res, $Val extends TransactionModel>
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
               as String,
+      subcategory: freezed == subcategory
+          ? _value.subcategory
+          : subcategory // ignore: cast_nullable_to_non_nullable
+              as String?,
       description: freezed == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
@@ -132,6 +139,7 @@ abstract class _$$TransactionModelImplCopyWith<$Res>
       double amount,
       TransactionType type,
       String category,
+      String? subcategory,
       String? description,
       DateTime date,
       DateTime createdAt,
@@ -154,6 +162,7 @@ class __$$TransactionModelImplCopyWithImpl<$Res>
     Object? amount = null,
     Object? type = null,
     Object? category = null,
+    Object? subcategory = freezed,
     Object? description = freezed,
     Object? date = null,
     Object? createdAt = null,
@@ -180,6 +189,10 @@ class __$$TransactionModelImplCopyWithImpl<$Res>
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
               as String,
+      subcategory: freezed == subcategory
+          ? _value.subcategory
+          : subcategory // ignore: cast_nullable_to_non_nullable
+              as String?,
       description: freezed == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
@@ -209,6 +222,7 @@ class _$TransactionModelImpl implements _TransactionModel {
       required this.amount,
       required this.type,
       required this.category,
+      this.subcategory,
       this.description,
       required this.date,
       required this.createdAt,
@@ -228,6 +242,8 @@ class _$TransactionModelImpl implements _TransactionModel {
   @override
   final String category;
   @override
+  final String? subcategory;
+  @override
   final String? description;
   @override
   final DateTime date;
@@ -238,7 +254,7 @@ class _$TransactionModelImpl implements _TransactionModel {
 
   @override
   String toString() {
-    return 'TransactionModel(id: $id, userId: $userId, amount: $amount, type: $type, category: $category, description: $description, date: $date, createdAt: $createdAt, recurringTransactionId: $recurringTransactionId)';
+    return 'TransactionModel(id: $id, userId: $userId, amount: $amount, type: $type, category: $category, subcategory: $subcategory, description: $description, date: $date, createdAt: $createdAt, recurringTransactionId: $recurringTransactionId)';
   }
 
   @override
@@ -252,6 +268,8 @@ class _$TransactionModelImpl implements _TransactionModel {
             (identical(other.type, type) || other.type == type) &&
             (identical(other.category, category) ||
                 other.category == category) &&
+            (identical(other.subcategory, subcategory) ||
+                other.subcategory == subcategory) &&
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.date, date) || other.date == date) &&
@@ -263,8 +281,18 @@ class _$TransactionModelImpl implements _TransactionModel {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, userId, amount, type,
-      category, description, date, createdAt, recurringTransactionId);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      userId,
+      amount,
+      type,
+      category,
+      subcategory,
+      description,
+      date,
+      createdAt,
+      recurringTransactionId);
 
   @JsonKey(ignore: true)
   @override
@@ -288,6 +316,7 @@ abstract class _TransactionModel implements TransactionModel {
       required final double amount,
       required final TransactionType type,
       required final String category,
+      final String? subcategory,
       final String? description,
       required final DateTime date,
       required final DateTime createdAt,
@@ -306,6 +335,8 @@ abstract class _TransactionModel implements TransactionModel {
   TransactionType get type;
   @override
   String get category;
+  @override
+  String? get subcategory;
   @override
   String? get description;
   @override

@@ -2,11 +2,13 @@ import 'transaction_model.dart';
 
 enum RecurrenceType {
   weekly,
-  monthly;
+  monthly,
+  annual;
 
   String get label => switch (this) {
         RecurrenceType.weekly => 'Semanal',
         RecurrenceType.monthly => 'Mensual',
+        RecurrenceType.annual => 'Anual',
       };
 }
 
@@ -14,6 +16,12 @@ enum RecurrenceType {
 DateTime nextRecurrenceDate(DateTime date, RecurrenceType type) {
   if (type == RecurrenceType.weekly) {
     return date.add(const Duration(days: 7));
+  }
+  if (type == RecurrenceType.annual) {
+    // Anual: mismo día y mes del año siguiente, ajustando feb 29.
+    final nextYear = date.year + 1;
+    final lastDay = DateTime(nextYear, date.month + 1, 0).day;
+    return DateTime(nextYear, date.month, date.day.clamp(1, lastDay));
   }
   // Mensual: mismo día del mes siguiente, ajustando si el mes es más corto.
   int nextMonth = date.month + 1;
@@ -33,6 +41,7 @@ class RecurringTransactionModel {
     required this.amount,
     required this.type,
     required this.category,
+    this.subcategory,
     this.description,
     required this.recurrenceType,
     required this.nextOccurrence,
@@ -44,6 +53,7 @@ class RecurringTransactionModel {
   final double amount;
   final TransactionType type;
   final String category;
+  final String? subcategory;
   final String? description;
   final RecurrenceType recurrenceType;
   final DateTime nextOccurrence;
@@ -56,6 +66,7 @@ class RecurringTransactionModel {
       amount: (json['amount'] as num).toDouble(),
       type: TransactionType.values.byName(json['type'] as String),
       category: json['category'] as String,
+      subcategory: json['subcategory'] as String?,
       description: json['description'] as String?,
       recurrenceType:
           RecurrenceType.values.byName(json['recurrence_type'] as String),

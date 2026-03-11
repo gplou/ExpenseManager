@@ -8,22 +8,31 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const MAX_BASE64_LENGTH = 5_600_000 // ~4 MB in base64
 
-const TEXT_PROMPT = `You are a transaction parser for a personal finance app.
+function buildImagePrompt(subcatBlock: string): string {
+  return `You are a transaction parser for a personal finance app.
 Analyze this image (receipt, invoice, price tag, or bill).
 Extract the main transaction details visible.
 
 Available expense categories: Comida, Transporte, Vivienda, Ocio, Salud, Educación, Ropa, Tecnología, Otros
 Available income categories: Salario, Freelance, Inversión, Regalo, Otros
 
+The user has these existing subcategories:
+${subcatBlock}
+
 Return ONLY valid JSON (no explanation):
-{"amount": <positive number>, "type": "expense" or "income", "category": "<exact category name>", "description": "<brief description or empty string>"}
+{"amount": <positive number>, "type": "expense" or "income", "category": "<exact category name>", "subcategory": "<subcategory or null>", "is_new_subcategory": <boolean>, "description": "<brief description or empty string>"}
 
 Rules:
 - amount must be a positive number (the total/final amount)
 - If type is ambiguous, default to "expense"
 - Pick the closest matching category; use "Otros" if unclear
-- description should be concise (max 50 chars)
-- If no transaction is visible, return: {"amount": 0, "type": "expense", "category": "Otros", "description": ""}`
+- Think of the transaction in 3 levels of detail:
+  1. category: the main theme (e.g. "Comida" for a restaurant receipt)
+  2. subcategory: the second most descriptive element (e.g. "Cena" for a dinner receipt). First try to match one of the user's existing subcategories for the detected category. If none match but the image implies one, suggest a concise new name (max 30 chars). If nothing is implied, use null.
+  3. description: the third level of detail if present (e.g. "Mexicano" for a Mexican restaurant). Should be concise (max 50 chars). If no extra detail beyond category and subcategory, use empty string.
+- is_new_subcategory: true if you are suggesting a subcategory not in the user's existing list, false if matching an existing one, false if subcategory is null
+- If no transaction is visible, return: {"amount": 0, "type": "expense", "category": "Otros", "subcategory": null, "is_new_subcategory": false, "description": ""}`
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,7 +65,48 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 2. Validate request body ──────────────────────────────────────────────
+  // ── 2. Check rate limit ───────────────────────────────────────────────────
+  const windowStart = new Date()
+  windowStart.setSeconds(0, 0)
+
+  const { data: allowed, error: rateLimitError } = await supabase.rpc('increment_rate_limit', {
+    p_user_id: user.id,
+    p_endpoint: 'parse-image',
+    p_window_start: windowStart.toISOString(),
+    p_limit: 25,
+  })
+
+  if (rateLimitError || allowed === false) {
+    return new Response(
+      JSON.stringify({ error: 'Rate limit exceeded. Maximum 25 requests per minute.' }),
+      { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } }
+    )
+  }
+
+  // ── 3. Fetch user's subcategories ─────────────────────────────────────────
+  let subcatBlock = 'None yet.'
+  try {
+    const { data: subcatRows } = await supabase
+      .from('subcategories')
+      .select('category, type, name')
+      .eq('user_id', user.id)
+
+    if (subcatRows && subcatRows.length > 0) {
+      const subcatMap: Record<string, string[]> = {}
+      for (const row of subcatRows) {
+        const key = `${row.type} - ${row.category}`
+        if (!subcatMap[key]) subcatMap[key] = []
+        subcatMap[key].push(row.name)
+      }
+      subcatBlock = Object.entries(subcatMap)
+        .map(([k, v]) => `${k}: ${v.join(', ')}`)
+        .join('\n')
+    }
+  } catch {
+    // If subcategory fetch fails, proceed without them
+  }
+
+  // ── 4. Validate request body ──────────────────────────────────────────────
   let imageBase64: string
   let mimeType: string
 
@@ -75,7 +125,7 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 3. Call Gemini API ────────────────────────────────────────────────────
+  // ── 5. Call Gemini API ────────────────────────────────────────────────────
   if (!GOOGLE_AI_KEY) {
     return new Response(
       JSON.stringify({ error: 'Server misconfiguration: GOOGLE_AI_KEY is not set' }),
@@ -98,7 +148,7 @@ serve(async (req: Request) => {
                   data: imageBase64,
                 },
               },
-              { text: TEXT_PROMPT },
+              { text: buildImagePrompt(subcatBlock) },
             ],
           },
         ],
@@ -115,7 +165,7 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 4. Return only the parsed result to the client ────────────────────────
+  // ── 6. Return only the parsed result to the client ────────────────────────
   const geminiData = await geminiRes.json()
   let text: string = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 

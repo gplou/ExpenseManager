@@ -31,6 +31,7 @@ class ExportExcelService {
       l10n.exportColumnDate,
       l10n.exportColumnType,
       l10n.exportColumnCategory,
+      l10n.exportColumnSubcategory,
       l10n.exportColumnDescription,
       l10n.exportColumnAmount,
     ];
@@ -44,8 +45,9 @@ class ExportExcelService {
     sheet.setColumnWidth(0, 15);
     sheet.setColumnWidth(1, 12);
     sheet.setColumnWidth(2, 18);
-    sheet.setColumnWidth(3, 30);
-    sheet.setColumnWidth(4, 14);
+    sheet.setColumnWidth(3, 18);
+    sheet.setColumnWidth(4, 30);
+    sheet.setColumnWidth(5, 14);
 
     // Data rows (sorted by date desc, matching the UI)
     final sorted = [...transactions]..sort((a, b) => b.date.compareTo(a.date));
@@ -72,8 +74,9 @@ class ExportExcelService {
       setCell(0, TextCellValue(dateFmt.format(t.date)));
       setCell(1, TextCellValue(t.type.l10nLabel(l10n)));
       setCell(2, TextCellValue(TransactionCategories.localizedName(t.category, l10n)));
-      setCell(3, TextCellValue(t.description ?? ''));
-      setCell(4, DoubleCellValue(t.amount * sign));
+      setCell(3, TextCellValue(t.subcategory ?? ''));
+      setCell(4, TextCellValue(t.description ?? ''));
+      setCell(5, DoubleCellValue(t.amount * sign));
     }
 
     final bytes = excel.encode();

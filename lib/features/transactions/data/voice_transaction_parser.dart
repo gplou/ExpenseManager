@@ -36,12 +36,16 @@ class VoiceTransactionParser {
       final amount = (json['amount'] as num).toDouble();
       final category = json['category'] as String;
       final desc = json['description'] as String?;
+      final subcategory = json['subcategory'] as String?;
+      final isNewSubcategory = json['is_new_subcategory'] as bool? ?? false;
 
       return ParsedVoiceTransaction(
         amount: amount,
         type: type,
         category: category,
         description: (desc?.isEmpty ?? true) ? null : desc,
+        subcategory: (subcategory?.isEmpty ?? true) ? null : subcategory,
+        isNewSubcategory: isNewSubcategory,
       );
     } catch (e, st) {
       debugPrint('VoiceTransactionParser error: $e\n$st');
