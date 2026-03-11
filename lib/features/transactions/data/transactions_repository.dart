@@ -42,6 +42,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
         'amount': transaction.amount,
         'type': transaction.type.name,
         'category': transaction.category,
+        'subcategory': transaction.subcategory,
         'description': transaction.description,
         'date': _dateString(transaction.date),
         if (transaction.recurringTransactionId != null)
@@ -65,6 +66,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
         'amount': transaction.amount,
         'type': transaction.type.name,
         'category': transaction.category,
+        'subcategory': transaction.subcategory,
         'description': transaction.description,
         'date': _dateString(transaction.date),
         if (transaction.recurringTransactionId != null)
@@ -120,6 +122,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
         amount: (row['amount'] as num).toDouble(),
         type: TransactionType.values.byName(row['type'] as String),
         category: row['category'] as String,
+        subcategory: row['subcategory'] as String?,
         description: row['description'] as String?,
         date: DateTime.parse(row['date'] as String),
         createdAt: DateTime.parse(row['created_at'] as String),

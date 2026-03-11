@@ -41,6 +41,7 @@ class RecurringTransactionModel {
     required this.amount,
     required this.type,
     required this.category,
+    this.subcategory,
     this.description,
     required this.recurrenceType,
     required this.nextOccurrence,
@@ -52,6 +53,7 @@ class RecurringTransactionModel {
   final double amount;
   final TransactionType type;
   final String category;
+  final String? subcategory;
   final String? description;
   final RecurrenceType recurrenceType;
   final DateTime nextOccurrence;
@@ -64,6 +66,7 @@ class RecurringTransactionModel {
       amount: (json['amount'] as num).toDouble(),
       type: TransactionType.values.byName(json['type'] as String),
       category: json['category'] as String,
+      subcategory: json['subcategory'] as String?,
       description: json['description'] as String?,
       recurrenceType:
           RecurrenceType.values.byName(json['recurrence_type'] as String),

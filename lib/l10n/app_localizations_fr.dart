@@ -478,4 +478,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get proPromoUnexpectedError => 'Erreur inattendue. Réessayez.';
+
+  @override
+  String get subcategory => 'Sous-catégorie';
+
+  @override
+  String get newSubcategory => 'Nouvelle sous-catégorie';
+
+  @override
+  String get subcategoryName => 'Nom de la sous-catégorie';
+
+  @override
+  String get exportColumnSubcategory => 'Sous-catégorie';
+
+  @override
+  String get deleteSubcategoryConfirm => 'Supprimer cette sous-catégorie ?';
 }

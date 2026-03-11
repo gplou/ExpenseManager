@@ -162,5 +162,11 @@
   "proProductUnavailable": "Produit non disponible. Réessayez plus tard.",
   "proPromoBadInput": "Entrez un code",
   "proPromoSuccess": "Code appliqué ! Profitez de PRO.",
-  "proPromoUnexpectedError": "Erreur inattendue. Réessayez."
+  "proPromoUnexpectedError": "Erreur inattendue. Réessayez.",
+
+  "subcategory": "Sous-catégorie",
+  "newSubcategory": "Nouvelle sous-catégorie",
+  "subcategoryName": "Nom de la sous-catégorie",
+  "exportColumnSubcategory": "Sous-catégorie",
+  "deleteSubcategoryConfirm": "Supprimer cette sous-catégorie ?"
 }

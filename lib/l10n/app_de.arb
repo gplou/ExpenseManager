@@ -162,5 +162,11 @@
   "proProductUnavailable": "Produkt nicht verfügbar. Versuchen Sie es später.",
   "proPromoBadInput": "Geben Sie einen Code ein",
   "proPromoSuccess": "Code angewendet! Viel Spaß mit PRO.",
-  "proPromoUnexpectedError": "Unerwarteter Fehler. Bitte erneut versuchen."
+  "proPromoUnexpectedError": "Unerwarteter Fehler. Bitte erneut versuchen.",
+
+  "subcategory": "Unterkategorie",
+  "newSubcategory": "Neue Unterkategorie",
+  "subcategoryName": "Name der Unterkategorie",
+  "exportColumnSubcategory": "Unterkategorie",
+  "deleteSubcategoryConfirm": "Diese Unterkategorie löschen?"
 }

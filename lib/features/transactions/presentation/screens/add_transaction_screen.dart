@@ -8,14 +8,17 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/neo_card.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/recurring_transactions_repository.dart';
+import '../../data/subcategories_repository.dart';
 import '../../domain/parsed_voice_transaction.dart';
 import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/custom_categories_provider.dart';
 import '../providers/hidden_builtin_categories_provider.dart';
+import '../providers/subcategories_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../widgets/create_category_dialog.dart';
+import '../widgets/create_subcategory_dialog.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key, this.transaction, this.voiceData});
@@ -82,6 +85,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   late final TextEditingController _amountController;
   late final TextEditingController _descriptionController;
   String? _selectedCategory;
+  String? _selectedSubcategory;
   late DateTime _selectedDate;
   bool _isSaving = false;
   bool _isRecurring = false;
@@ -104,6 +108,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
     _descriptionController = TextEditingController(text: t?.description ?? v?.description ?? '');
     _selectedCategory = t?.category ?? v?.category;
+    _selectedSubcategory = t?.subcategory;
     _selectedDate = t?.date ?? DateTime.now();
     if (t?.recurringTransactionId != null) {
       _isRecurring = true;
@@ -220,6 +225,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           amount: amount,
           type: _type,
           category: _selectedCategory!,
+          subcategory: _selectedSubcategory,
           description: desc,
           date: _selectedDate,
         );
@@ -236,6 +242,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   amount: amount,
                   type: _type,
                   category: _selectedCategory!,
+                  subcategory: _selectedSubcategory,
                   description: desc,
                   recurrenceType: _recurrenceType!,
                   nextOccurrence: nextDate,
@@ -251,6 +258,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   amount: amount,
                   type: _type,
                   category: _selectedCategory!,
+                  subcategory: _selectedSubcategory,
                   description: desc,
                   recurrenceType: _recurrenceType!,
                   nextOccurrence: nextDate,
@@ -272,6 +280,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 amount: amount,
                 type: _type,
                 category: _selectedCategory!,
+                subcategory: _selectedSubcategory,
                 description: desc,
                 recurrenceType: _recurrenceType!,
                 nextOccurrence: nextDate,
@@ -283,6 +292,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           amount: amount,
           type: _type,
           category: _selectedCategory!,
+          subcategory: _selectedSubcategory,
           description: desc,
           date: _selectedDate,
           createdAt: DateTime.now(),
@@ -348,7 +358,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
-    final customCats = ref.watch(customCategoriesProvider);
+    final customCats = ref.watch(customCategoriesSyncProvider);
     final hiddenBuiltIns = ref.watch(hiddenBuiltInCategoriesProvider);
     final builtInCategories = TransactionCategories.forType(_type)
         .where((c) => !(hiddenBuiltIns[_type]?.contains(c.name) ?? false))
@@ -407,6 +417,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         setState(() {
                           _type = type;
                           _selectedCategory = null;
+                          _selectedSubcategory = null;
                         });
                       },
                       child: AnimatedContainer(
@@ -529,7 +540,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     isSelected: isSelected,
                     accentColor: accentColor,
                     accentLight: accentLight,
-                    onTap: () => setState(() => _selectedCategory = cat.name),
+                    onTap: () => setState(() {
+                      _selectedCategory = cat.name;
+                      _selectedSubcategory = null;
+                    }),
                     onDelete: () =>
                         _confirmDeleteCategory(cat.name, isCustom: isCustom),
                   );
@@ -541,6 +555,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ],
             ),
             const Gap(28),
+
+            // ── Subcategory ───────────────────────────────────────────────
+            if (_selectedCategory != null) ...[
+              _SectionLabel(label: l10n.subcategory),
+              const Gap(8),
+              _SubcategorySelector(
+                category: _selectedCategory!,
+                type: _type,
+                selectedSubcategory: _selectedSubcategory,
+                accentColor: accentColor,
+                accentLight: accentLight,
+                onSelected: (name) =>
+                    setState(() => _selectedSubcategory = name),
+              ),
+              const Gap(28),
+            ],
 
             // ── Description ───────────────────────────────────────────────
             _SectionLabel(label: l10n.descriptionOptional),
@@ -871,6 +901,188 @@ class _AddCategoryChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Subcategory selector ──────────────────────────────────────────────────────
+
+class _SubcategorySelector extends ConsumerWidget {
+  const _SubcategorySelector({
+    required this.category,
+    required this.type,
+    required this.selectedSubcategory,
+    required this.accentColor,
+    required this.accentLight,
+    required this.onSelected,
+  });
+
+  final String category;
+  final TransactionType type;
+  final String? selectedSubcategory;
+  final Color accentColor;
+  final Color accentLight;
+  final ValueChanged<String?> onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final asyncSubs = ref.watch(
+      subcategoriesProvider((category: category, type: type)),
+    );
+
+    return asyncSubs.when(
+      loading: () => const SizedBox(
+        height: 36,
+        child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (subcategories) {
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ...subcategories.map((name) {
+              final isSelected = selectedSubcategory == name;
+              return _SubcategoryChip(
+                label: name,
+                isSelected: isSelected,
+                accentColor: accentColor,
+                accentLight: accentLight,
+                onTap: () => onSelected(isSelected ? null : name),
+                onDelete: () => _confirmDeleteSubcategory(context, ref, name),
+              );
+            }),
+            _AddCategoryChip(
+              label: l10n.newSubcategory,
+              onTap: () => _openCreateSubcategoryDialog(context, ref),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _openCreateSubcategoryDialog(
+      BuildContext context, WidgetRef ref) async {
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (_) => CreateSubcategoryDialog(
+        category: category,
+        type: type,
+      ),
+    );
+    if (newName != null) {
+      ref.invalidate(
+        subcategoriesProvider((category: category, type: type)),
+      );
+      onSelected(newName);
+    }
+  }
+
+  Future<void> _confirmDeleteSubcategory(
+      BuildContext context, WidgetRef ref, String name) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text('"$name"'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.mutedTerra),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref
+        .read(subcategoriesRepositoryProvider)
+        .remove(category, type, name);
+    ref.invalidate(
+      subcategoriesProvider((category: category, type: type)),
+    );
+    if (selectedSubcategory == name) onSelected(null);
+  }
+}
+
+class _SubcategoryChip extends StatelessWidget {
+  const _SubcategoryChip({
+    required this.label,
+    required this.isSelected,
+    required this.accentColor,
+    required this.accentLight,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final String label;
+  final bool isSelected;
+  final Color accentColor;
+  final Color accentLight;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    final deleteColor = isSelected
+        ? accentColor.withValues(alpha: 0.55)
+        : AppColors.textSubtle;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: isSelected ? accentLight : cs.surface,
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(
+          color: isSelected ? accentColor : AppColors.borderLight,
+          width: 1.5,
+        ),
+        boxShadow: isSelected ? null : AppColors.softShadowSm,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onTap();
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? accentColor : AppColors.textMuted,
+                ),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onDelete();
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(2, 8, 10, 8),
+              child: Icon(Icons.close_rounded, size: 13, color: deleteColor),
+            ),
+          ),
+        ],
       ),
     );
   }

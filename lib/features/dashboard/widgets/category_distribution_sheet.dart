@@ -45,7 +45,7 @@ class _CategoryDistributionSheetState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final asyncData = ref.watch(categoryDistributionProvider(widget.type));
-    final customCats = ref.watch(customCategoriesProvider);
+    final customCats = ref.watch(customCategoriesSyncProvider);
     final title =
         widget.type.isIncome ? l10n.incomeDistribution : l10n.expenseDistribution;
 

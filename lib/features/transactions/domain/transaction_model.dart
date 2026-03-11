@@ -26,6 +26,7 @@ class TransactionModel with _$TransactionModel {
     required double amount,
     required TransactionType type,
     required String category,
+    String? subcategory,
     String? description,
     required DateTime date,
     required DateTime createdAt,

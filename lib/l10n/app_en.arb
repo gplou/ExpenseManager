@@ -162,5 +162,11 @@
   "proProductUnavailable": "Product not available. Try again later.",
   "proPromoBadInput": "Enter a code",
   "proPromoSuccess": "Code applied! Enjoy PRO.",
-  "proPromoUnexpectedError": "Unexpected error. Please try again."
+  "proPromoUnexpectedError": "Unexpected error. Please try again.",
+
+  "subcategory": "Subcategory",
+  "newSubcategory": "New subcategory",
+  "subcategoryName": "Subcategory name",
+  "exportColumnSubcategory": "Subcategory",
+  "deleteSubcategoryConfirm": "Delete this subcategory?"
 }

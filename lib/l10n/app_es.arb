@@ -330,5 +330,16 @@
   "proPromoSuccess": "¡Código aplicado! Disfruta de PRO.",
   "@proPromoSuccess": {},
   "proPromoUnexpectedError": "Error inesperado. Inténtalo de nuevo.",
-  "@proPromoUnexpectedError": {}
+  "@proPromoUnexpectedError": {},
+
+  "subcategory": "Subcategoría",
+  "@subcategory": {},
+  "newSubcategory": "Nueva subcategoría",
+  "@newSubcategory": {},
+  "subcategoryName": "Nombre de la subcategoría",
+  "@subcategoryName": {},
+  "exportColumnSubcategory": "Subcategoría",
+  "@exportColumnSubcategory": {},
+  "deleteSubcategoryConfirm": "¿Eliminar esta subcategoría?",
+  "@deleteSubcategoryConfirm": {}
 }
