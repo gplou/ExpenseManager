@@ -86,6 +86,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get monthly => 'Monatlich';
 
   @override
+  String get yearly => 'Jährlich';
+
+  @override
   String get saveChanges => 'Änderungen speichern';
 
   @override
@@ -104,6 +107,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get frequencyMonth => 'Monat';
+
+  @override
+  String get frequencyYear => 'Jahr';
 
   @override
   String get invalidAmount => 'Geben Sie einen gültigen Betrag ein';

@@ -16,7 +16,8 @@
       "Bash(supabase functions deploy parse-image-transaction)",
       "Bash(supabase functions deploy parse-voice-transaction parse-image-transaction)",
       "Bash(grep -n \"generativelanguage.googleapis.com\" /c/Users/guill/Desktop/ExpenseManager/productivity_app/supabase/functions/parse-*/index.ts)",
-      "Bash(xargs grep -l \"class NeoFab\")"
+      "Bash(xargs grep -l \"class NeoFab\")",
+      "Bash(flutter build apk --debug)"
     ]
   }
 }

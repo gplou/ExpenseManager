@@ -86,6 +86,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthly => 'Monthly';
 
   @override
+  String get yearly => 'Yearly';
+
+  @override
   String get saveChanges => 'Save changes';
 
   @override
@@ -104,6 +107,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get frequencyMonth => 'month';
+
+  @override
+  String get frequencyYear => 'year';
 
   @override
   String get invalidAmount => 'Enter a valid amount';

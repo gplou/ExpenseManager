@@ -41,8 +41,11 @@ class _RecurrenceInfoBanner extends StatelessWidget {
     final next = nextRecurrenceDate(date, type);
     final dayStr =
         '${next.day.toString().padLeft(2, '0')}/${next.month.toString().padLeft(2, '0')}/${next.year}';
-    final freq =
-        type == RecurrenceType.weekly ? l10n.frequencyWeek : l10n.frequencyMonth;
+    final freq = switch (type) {
+      RecurrenceType.weekly => l10n.frequencyWeek,
+      RecurrenceType.monthly => l10n.frequencyMonth,
+      RecurrenceType.annual => l10n.frequencyYear,
+    };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -662,6 +665,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       value: RecurrenceType.monthly,
                       label: Text(l10n.monthly),
                       icon: const Icon(Icons.calendar_month_outlined, size: 16),
+                    ),
+                    ButtonSegment(
+                      value: RecurrenceType.annual,
+                      label: Text(l10n.yearly),
+                      icon: const Icon(Icons.event_repeat_outlined, size: 16),
                     ),
                   ],
                   selected: {_recurrenceType ?? RecurrenceType.monthly},

@@ -56,6 +56,8 @@
   "@weekly": {},
   "monthly": "Mensual",
   "@monthly": {},
+  "yearly": "Anual",
+  "@yearly": {},
   "saveChanges": "Guardar cambios",
   "@saveChanges": {},
   "saveExpense": "Guardar gasto",
@@ -73,6 +75,8 @@
   "@frequencyWeek": {},
   "frequencyMonth": "mes",
   "@frequencyMonth": {},
+  "frequencyYear": "año",
+  "@frequencyYear": {},
 
   "invalidAmount": "Ingresa un importe válido",
   "@invalidAmount": {},

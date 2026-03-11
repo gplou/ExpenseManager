@@ -252,6 +252,12 @@ abstract class AppLocalizations {
   /// **'Mensual'**
   String get monthly;
 
+  /// No description provided for @yearly.
+  ///
+  /// In es, this message translates to:
+  /// **'Anual'**
+  String get yearly;
+
   /// No description provided for @saveChanges.
   ///
   /// In es, this message translates to:
@@ -287,6 +293,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'mes'**
   String get frequencyMonth;
+
+  /// No description provided for @frequencyYear.
+  ///
+  /// In es, this message translates to:
+  /// **'año'**
+  String get frequencyYear;
 
   /// No description provided for @invalidAmount.
   ///
