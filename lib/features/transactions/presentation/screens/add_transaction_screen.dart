@@ -108,8 +108,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
     _descriptionController = TextEditingController(text: t?.description ?? v?.description ?? '');
     _selectedCategory = t?.category ?? v?.category;
-    _selectedSubcategory = t?.subcategory;
+    _selectedSubcategory = t?.subcategory ?? v?.subcategory;
     _selectedDate = t?.date ?? DateTime.now();
+    // If voice/image AI suggested a new subcategory, auto-create it
+    if (v?.isNewSubcategory == true &&
+        v?.subcategory != null &&
+        v?.category != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final repo = ref.read(subcategoriesRepositoryProvider);
+        await repo.add(v!.category, v.type, v.subcategory!);
+        ref.invalidate(subcategoriesProvider(
+          (category: v.category, type: v.type),
+        ));
+      });
+    }
     if (t?.recurringTransactionId != null) {
       _isRecurring = true;
       _loadRecurrenceType(t!.recurringTransactionId!);

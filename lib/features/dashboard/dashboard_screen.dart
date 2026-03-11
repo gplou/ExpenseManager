@@ -26,6 +26,8 @@ import '../transactions/presentation/providers/custom_categories_provider.dart';
 import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
+import '../transactions/data/subcategories_repository.dart';
+import '../transactions/presentation/providers/subcategories_provider.dart';
 import '../subscription/subscription_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -841,12 +843,24 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
     }
     // Save directly without navigating to verification screen
     try {
+      // Auto-create new subcategory if the AI suggested one
+      if (parsed.isNewSubcategory && parsed.subcategory != null) {
+        await ref.read(subcategoriesRepositoryProvider).add(
+              parsed.category,
+              parsed.type,
+              parsed.subcategory!,
+            );
+        ref.invalidate(subcategoriesProvider(
+          (category: parsed.category, type: parsed.type),
+        ));
+      }
       final transaction = TransactionModel(
         id: '',
         userId: '',
         amount: parsed.amount,
         type: parsed.type,
         category: parsed.category,
+        subcategory: parsed.subcategory,
         description: parsed.description,
         date: DateTime.now(),
         createdAt: DateTime.now(),
@@ -940,6 +954,17 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
         );
         return;
       }
+      // Auto-create new subcategory if the AI suggested one
+      if (parsed.isNewSubcategory && parsed.subcategory != null) {
+        await ref.read(subcategoriesRepositoryProvider).add(
+              parsed.category,
+              parsed.type,
+              parsed.subcategory!,
+            );
+        ref.invalidate(subcategoriesProvider(
+          (category: parsed.category, type: parsed.type),
+        ));
+      }
       // Save directly without navigating to verification screen
       final transaction = TransactionModel(
         id: '',
@@ -947,6 +972,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
         amount: parsed.amount,
         type: parsed.type,
         category: parsed.category,
+        subcategory: parsed.subcategory,
         description: parsed.description,
         date: DateTime.now(),
         createdAt: DateTime.now(),
