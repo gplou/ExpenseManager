@@ -52,7 +52,25 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 2. Validate request body ──────────────────────────────────────────────
+  // ── 2. Check rate limit ───────────────────────────────────────────────────
+  const windowStart = new Date()
+  windowStart.setSeconds(0, 0)
+
+  const { data: allowed, error: rateLimitError } = await supabase.rpc('increment_rate_limit', {
+    p_user_id: user.id,
+    p_endpoint: 'parse-voice',
+    p_window_start: windowStart.toISOString(),
+    p_limit: 25,
+  })
+
+  if (rateLimitError || allowed === false) {
+    return new Response(
+      JSON.stringify({ error: 'Rate limit exceeded. Maximum 25 requests per minute.' }),
+      { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } }
+    )
+  }
+
+  // ── 3. Validate request body ──────────────────────────────────────────────
   let transcription: string
   try {
     const body = await req.json()
@@ -70,7 +88,7 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 3. Call Gemini API ────────────────────────────────────────────────────
+  // ── 4. Call Gemini API ────────────────────────────────────────────────────
   if (!GOOGLE_AI_KEY) {
     return new Response(
       JSON.stringify({ error: 'Server misconfiguration: GOOGLE_AI_KEY is not set' }),
@@ -100,7 +118,7 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 4. Return only the parsed result to the client ────────────────────────
+  // ── 5. Return only the parsed result to the client ────────────────────────
   const geminiData = await geminiRes.json()
   let text: string = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 
