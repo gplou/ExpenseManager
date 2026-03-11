@@ -53,6 +53,38 @@ class RecurringTransactionsRepository {
     return response['id'] as String;
   }
 
+  Future<RecurringTransactionModel?> getById(String id) async {
+    final response = await _client
+        .from('recurring_transactions')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    if (response == null) return null;
+    return RecurringTransactionModel.fromJson(response as Map<String, dynamic>);
+  }
+
+  Future<void> updateRecurring({
+    required String id,
+    required double amount,
+    required TransactionType type,
+    required String category,
+    String? description,
+    required RecurrenceType recurrenceType,
+    required DateTime nextOccurrence,
+  }) async {
+    await _client
+        .from('recurring_transactions')
+        .update({
+          'amount': amount,
+          'type': type.name,
+          'category': category,
+          'description': description,
+          'recurrence_type': recurrenceType.name,
+          'next_occurrence': _dateStr(nextOccurrence),
+        })
+        .eq('id', id);
+  }
+
   Future<void> updateNextOccurrence(String id, DateTime next) async {
     await _client
         .from('recurring_transactions')

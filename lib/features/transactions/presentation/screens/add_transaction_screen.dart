@@ -102,6 +102,19 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     _descriptionController = TextEditingController(text: t?.description ?? v?.description ?? '');
     _selectedCategory = t?.category ?? v?.category;
     _selectedDate = t?.date ?? DateTime.now();
+    if (t?.recurringTransactionId != null) {
+      _isRecurring = true;
+      _loadRecurrenceType(t!.recurringTransactionId!);
+    }
+  }
+
+  Future<void> _loadRecurrenceType(String recurringId) async {
+    final recurring = await ref
+        .read(recurringTransactionsRepositoryProvider)
+        .getById(recurringId);
+    if (recurring != null && mounted) {
+      setState(() => _recurrenceType = recurring.recurrenceType);
+    }
   }
 
   @override
@@ -207,23 +220,44 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           description: desc,
           date: _selectedDate,
         );
-        await ref.read(transactionsNotifierProvider.notifier).update(updated);
 
+        final existingRecurringId = widget.transaction!.recurringTransactionId;
         if (_isRecurring && _recurrenceType != null) {
           final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
-          final recurringId = await ref
-              .read(recurringTransactionsRepositoryProvider)
-              .createRecurring(
-                amount: amount,
-                type: _type,
-                category: _selectedCategory!,
-                description: desc,
-                recurrenceType: _recurrenceType!,
-                nextOccurrence: nextDate,
-              );
-          await ref
-              .read(transactionsNotifierProvider.notifier)
-              .update(updated.copyWith(recurringTransactionId: recurringId));
+          if (existingRecurringId != null) {
+            // Actualiza la entrada existente en recurring_transactions
+            await ref
+                .read(recurringTransactionsRepositoryProvider)
+                .updateRecurring(
+                  id: existingRecurringId,
+                  amount: amount,
+                  type: _type,
+                  category: _selectedCategory!,
+                  description: desc,
+                  recurrenceType: _recurrenceType!,
+                  nextOccurrence: nextDate,
+                );
+            await ref
+                .read(transactionsNotifierProvider.notifier)
+                .update(updated);
+          } else {
+            // La transacción no era recurrente → crear nueva entrada
+            final recurringId = await ref
+                .read(recurringTransactionsRepositoryProvider)
+                .createRecurring(
+                  amount: amount,
+                  type: _type,
+                  category: _selectedCategory!,
+                  description: desc,
+                  recurrenceType: _recurrenceType!,
+                  nextOccurrence: nextDate,
+                );
+            await ref
+                .read(transactionsNotifierProvider.notifier)
+                .update(updated.copyWith(recurringTransactionId: recurringId));
+          }
+        } else {
+          await ref.read(transactionsNotifierProvider.notifier).update(updated);
         }
       } else {
         String? recurringId;
