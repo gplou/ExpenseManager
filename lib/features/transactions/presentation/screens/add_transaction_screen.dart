@@ -268,7 +268,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 .update(updated.copyWith(recurringTransactionId: recurringId));
           }
         } else {
-          await ref.read(transactionsNotifierProvider.notifier).update(updated);
+          // Se quitó la recurrencia → eliminar el registro de recurring_transactions
+          if (existingRecurringId != null) {
+            await ref
+                .read(recurringTransactionsRepositoryProvider)
+                .deleteRecurring(existingRecurringId);
+          }
+          await ref
+              .read(transactionsNotifierProvider.notifier)
+              .update(updated.copyWith(recurringTransactionId: null));
         }
       } else {
         String? recurringId;
