@@ -256,7 +256,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               },
             ),
             const Gap(12),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 80),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 100),
           ],
         ),
       ),
