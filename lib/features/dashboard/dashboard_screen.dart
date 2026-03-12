@@ -12,7 +12,6 @@ import '../../core/widgets/custom_date_range_picker.dart';
 import '../../core/widgets/neo_card.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
-import 'widgets/category_distribution_sheet.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../transactions/data/voice_transaction_parser.dart';
@@ -427,10 +426,6 @@ class _SummarySection extends StatelessWidget {
                 accentColor: AppColors.sageGreen,
                 accentLight: AppColors.sageGreenLight,
                 icon: Icons.arrow_downward_rounded,
-                onTap: () => showCategoryDistributionSheet(
-                  context,
-                  TransactionType.income,
-                ),
               ),
             ),
             const Gap(12),
@@ -441,13 +436,27 @@ class _SummarySection extends StatelessWidget {
                 accentColor: AppColors.mutedTerra,
                 accentLight: AppColors.mutedTerraLight,
                 icon: Icons.arrow_upward_rounded,
-                onTap: () => showCategoryDistributionSheet(
-                  context,
-                  TransactionType.expense,
-                ),
               ),
             ),
           ],
+        ),
+        const Gap(12),
+        // Charts button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => context.push(AppRoutes.charts),
+            icon: const Icon(Icons.pie_chart_outline, size: 18),
+            label: Text(l10n.viewCharts),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.dustyTeal,
+              side: const BorderSide(color: AppColors.dustyTeal, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
         ),
       ],
     );
@@ -461,7 +470,6 @@ class _MiniCard extends StatelessWidget {
     required this.accentColor,
     required this.accentLight,
     required this.icon,
-    this.onTap,
   });
 
   final String label;
@@ -469,14 +477,12 @@ class _MiniCard extends StatelessWidget {
   final Color accentColor;
   final Color accentLight;
   final IconData icon;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return NeoCard(
       accentColor: accentColor,
       padding: const EdgeInsets.all(16),
-      onTap: onTap,
       child: Row(
         children: [
           Container(

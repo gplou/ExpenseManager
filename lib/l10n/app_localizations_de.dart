@@ -500,4 +500,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get currency => 'Währung';
+
+  @override
+  String get charts => 'Diagramme';
+
+  @override
+  String get viewCharts => 'Diagramme anzeigen';
+
+  @override
+  String get allCategories => 'Alle Kategorien';
+
+  @override
+  String get allSubcategories => 'Alle Unterkategorien';
+
+  @override
+  String get noSubcategory => 'Ohne Unterkategorie';
 }

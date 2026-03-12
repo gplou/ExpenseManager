@@ -169,5 +169,11 @@
   "subcategoryName": "Name der Unterkategorie",
   "exportColumnSubcategory": "Unterkategorie",
   "deleteSubcategoryConfirm": "Diese Unterkategorie löschen?",
-  "currency": "Währung"
+  "currency": "Währung",
+
+  "charts": "Diagramme",
+  "viewCharts": "Diagramme anzeigen",
+  "allCategories": "Alle Kategorien",
+  "allSubcategories": "Alle Unterkategorien",
+  "noSubcategory": "Ohne Unterkategorie"
 }

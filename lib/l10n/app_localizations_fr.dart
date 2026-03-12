@@ -496,4 +496,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get currency => 'Devise';
+
+  @override
+  String get charts => 'Graphiques';
+
+  @override
+  String get viewCharts => 'Voir les graphiques';
+
+  @override
+  String get allCategories => 'Toutes les catégories';
+
+  @override
+  String get allSubcategories => 'Toutes les sous-catégories';
+
+  @override
+  String get noSubcategory => 'Sans sous-catégorie';
 }

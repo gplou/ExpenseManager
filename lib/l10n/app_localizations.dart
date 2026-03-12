@@ -1037,6 +1037,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Moneda'**
   String get currency;
+
+  /// No description provided for @charts.
+  ///
+  /// In es, this message translates to:
+  /// **'Gráficos'**
+  String get charts;
+
+  /// No description provided for @viewCharts.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver gráficos'**
+  String get viewCharts;
+
+  /// No description provided for @allCategories.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas las categorías'**
+  String get allCategories;
+
+  /// No description provided for @allSubcategories.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas las subcategorías'**
+  String get allSubcategories;
+
+  /// No description provided for @noSubcategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin subcategoría'**
+  String get noSubcategory;
 }
 
 class _AppLocalizationsDelegate

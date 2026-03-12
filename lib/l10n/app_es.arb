@@ -344,5 +344,16 @@
   "@deleteSubcategoryConfirm": {},
 
   "currency": "Moneda",
-  "@currency": {}
+  "@currency": {},
+
+  "charts": "Gráficos",
+  "@charts": {},
+  "viewCharts": "Ver gráficos",
+  "@viewCharts": {},
+  "allCategories": "Todas las categorías",
+  "@allCategories": {},
+  "allSubcategories": "Todas las subcategorías",
+  "@allSubcategories": {},
+  "noSubcategory": "Sin subcategoría",
+  "@noSubcategory": {}
 }
