@@ -27,7 +27,7 @@ Rules:
 - Pick the closest matching category; use "Otros" if unclear
 - Think of the transaction in 3 levels of detail:
   1. category: the main theme (e.g. "Comida" for dining out)
-  2. subcategory: the second most descriptive element (e.g. "Cena" for dinner). First try to match one of the user's existing subcategories for the detected category. If none match but the text implies one, suggest a concise new name (max 30 chars). If nothing is implied, use null.
+  2. subcategory: PRIORITY — if the user explicitly says "subcategoría [name]" or "subcategoria [name]", use that name exactly as the subcategory. Otherwise use the second most descriptive element (e.g. "Cena" for dinner). First try to match one of the user's existing subcategories for the detected category. If none match but the text implies one, suggest a concise new name (max 30 chars). If nothing is implied, use null.
   3. description: the third level of detail if present (e.g. "Mexicano" for Mexican food). Should be concise (max 50 chars). If no extra detail beyond category and subcategory, use empty string.
 - is_new_subcategory: true if you are suggesting a subcategory not in the user's existing list, false if matching an existing one, false if subcategory is null
 - date: if the user mentions a date (e.g. "ayer", "el lunes", "el 5 de marzo", "la semana pasada"), resolve it relative to today and return in YYYY-MM-DD format. If no date is mentioned, return null.

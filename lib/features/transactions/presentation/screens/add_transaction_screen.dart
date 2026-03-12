@@ -978,7 +978,16 @@ class _SubcategorySelector extends ConsumerWidget {
         height: 36,
         child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          _AddCategoryChip(
+            label: l10n.newSubcategory,
+            onTap: () => _openCreateSubcategoryDialog(context, ref),
+          ),
+        ],
+      ),
       data: (subcategories) {
         return Wrap(
           spacing: 8,

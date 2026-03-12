@@ -839,7 +839,11 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       );
       return;
     }
+    // Stop the speech session completely before navigating.
+    // On iOS, keeping it active can block gesture recognition on the next screen.
+    await _speech.stop();
     setState(() => _voiceState = _VoiceInputState.idle);
+    if (!mounted) return;
     context.push(AppRoutes.addTransaction, extra: parsed);
   }
 
