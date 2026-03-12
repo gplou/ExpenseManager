@@ -119,16 +119,24 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         _ => RecurrenceType.monthly,
       };
     }
-    // If voice/image AI suggested a new subcategory, auto-create it
-    if (v?.isNewSubcategory == true &&
-        v?.subcategory != null &&
-        v?.category != null) {
+    // If voice/image AI provided a subcategory, ensure it exists in the DB.
+    // We always upsert: if it's new (isNewSubcategory: true) or if the AI
+    // incorrectly flagged an existing match that isn't actually in the DB.
+    if (v?.subcategory != null && v?.category != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        final repo = ref.read(subcategoriesRepositoryProvider);
-        await repo.add(v!.category, v.type, v.subcategory!);
-        ref.invalidate(subcategoriesProvider(
-          (category: v.category, type: v.type),
-        ));
+        if (!mounted) return;
+        try {
+          final repo = ref.read(subcategoriesRepositoryProvider);
+          final existing = await repo.getForCategory(v!.category, v.type);
+          if (!existing.contains(v.subcategory)) {
+            await repo.add(v.category, v.type, v.subcategory!);
+          }
+          ref.invalidate(subcategoriesProvider(
+            (category: v.category, type: v.type),
+          ));
+        } catch (_) {
+          // Subcategory creation failed — not critical, user can add manually
+        }
       });
     }
     if (t?.recurringTransactionId != null) {
@@ -199,11 +207,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _pickDate() async {
     final cs = context.colors;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // Clamp initialDate so it's never after lastDate (voice AI can return future dates)
+    final initialDate = _selectedDate.isAfter(today) ? today : _selectedDate;
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: initialDate,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      lastDate: today,
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: cs.copyWith(

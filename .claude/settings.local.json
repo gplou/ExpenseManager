@@ -18,7 +18,9 @@
       "Bash(grep -n \"generativelanguage.googleapis.com\" /c/Users/guill/Desktop/ExpenseManager/productivity_app/supabase/functions/parse-*/index.ts)",
       "Bash(xargs grep -l \"class NeoFab\")",
       "Bash(flutter build apk --debug)",
-      "Bash(dart run build_runner build --delete-conflicting-outputs)"
+      "Bash(dart run build_runner build --delete-conflicting-outputs)",
+      "Bash(xargs grep:*)",
+      "Bash(find C:UsersguillDesktopExpenseManagerproductivity_app -type f \\\\\\(-name *.sql -o -name schema* -o -name *supabase* \\\\\\))"
     ]
   }
 }
