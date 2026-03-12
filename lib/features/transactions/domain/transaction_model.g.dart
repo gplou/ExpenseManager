@@ -19,6 +19,7 @@ _$TransactionModelImpl _$$TransactionModelImplFromJson(
       date: DateTime.parse(json['date'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
       recurringTransactionId: json['recurringTransactionId'] as String?,
+      currency: json['currency'] as String? ?? 'EUR',
     );
 
 Map<String, dynamic> _$$TransactionModelImplToJson(
@@ -34,6 +35,7 @@ Map<String, dynamic> _$$TransactionModelImplToJson(
       'date': instance.date.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
       'recurringTransactionId': instance.recurringTransactionId,
+      'currency': instance.currency,
     };
 
 const _$TransactionTypeEnumMap = {

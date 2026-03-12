@@ -168,5 +168,6 @@
   "newSubcategory": "New subcategory",
   "subcategoryName": "Subcategory name",
   "exportColumnSubcategory": "Subcategory",
-  "deleteSubcategoryConfirm": "Delete this subcategory?"
+  "deleteSubcategoryConfirm": "Delete this subcategory?",
+  "currency": "Currency"
 }

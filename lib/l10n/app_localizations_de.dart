@@ -497,4 +497,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteSubcategoryConfirm => 'Diese Unterkategorie löschen?';
+
+  @override
+  String get currency => 'Währung';
 }

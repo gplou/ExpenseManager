@@ -31,6 +31,7 @@ class TransactionModel with _$TransactionModel {
     required DateTime date,
     required DateTime createdAt,
     String? recurringTransactionId,
+    @Default('EUR') String currency,
   }) = _TransactionModel;
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) =>

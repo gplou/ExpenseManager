@@ -491,4 +491,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteSubcategoryConfirm => '¿Eliminar esta subcategoría?';
+
+  @override
+  String get currency => 'Moneda';
 }

@@ -30,6 +30,7 @@ mixin _$TransactionModel {
   DateTime get date => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   String? get recurringTransactionId => throw _privateConstructorUsedError;
+  String get currency => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -53,7 +54,8 @@ abstract class $TransactionModelCopyWith<$Res> {
       String? description,
       DateTime date,
       DateTime createdAt,
-      String? recurringTransactionId});
+      String? recurringTransactionId,
+      String currency});
 }
 
 /// @nodoc
@@ -79,6 +81,7 @@ class _$TransactionModelCopyWithImpl<$Res, $Val extends TransactionModel>
     Object? date = null,
     Object? createdAt = null,
     Object? recurringTransactionId = freezed,
+    Object? currency = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -121,6 +124,10 @@ class _$TransactionModelCopyWithImpl<$Res, $Val extends TransactionModel>
           ? _value.recurringTransactionId
           : recurringTransactionId // ignore: cast_nullable_to_non_nullable
               as String?,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -143,7 +150,8 @@ abstract class _$$TransactionModelImplCopyWith<$Res>
       String? description,
       DateTime date,
       DateTime createdAt,
-      String? recurringTransactionId});
+      String? recurringTransactionId,
+      String currency});
 }
 
 /// @nodoc
@@ -167,6 +175,7 @@ class __$$TransactionModelImplCopyWithImpl<$Res>
     Object? date = null,
     Object? createdAt = null,
     Object? recurringTransactionId = freezed,
+    Object? currency = null,
   }) {
     return _then(_$TransactionModelImpl(
       id: null == id
@@ -209,6 +218,10 @@ class __$$TransactionModelImplCopyWithImpl<$Res>
           ? _value.recurringTransactionId
           : recurringTransactionId // ignore: cast_nullable_to_non_nullable
               as String?,
+      currency: null == currency
+          ? _value.currency
+          : currency // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -226,7 +239,8 @@ class _$TransactionModelImpl implements _TransactionModel {
       this.description,
       required this.date,
       required this.createdAt,
-      this.recurringTransactionId});
+      this.recurringTransactionId,
+      this.currency = 'EUR'});
 
   factory _$TransactionModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$TransactionModelImplFromJson(json);
@@ -251,10 +265,13 @@ class _$TransactionModelImpl implements _TransactionModel {
   final DateTime createdAt;
   @override
   final String? recurringTransactionId;
+  @override
+  @JsonKey()
+  final String currency;
 
   @override
   String toString() {
-    return 'TransactionModel(id: $id, userId: $userId, amount: $amount, type: $type, category: $category, subcategory: $subcategory, description: $description, date: $date, createdAt: $createdAt, recurringTransactionId: $recurringTransactionId)';
+    return 'TransactionModel(id: $id, userId: $userId, amount: $amount, type: $type, category: $category, subcategory: $subcategory, description: $description, date: $date, createdAt: $createdAt, recurringTransactionId: $recurringTransactionId, currency: $currency)';
   }
 
   @override
@@ -276,7 +293,9 @@ class _$TransactionModelImpl implements _TransactionModel {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.recurringTransactionId, recurringTransactionId) ||
-                other.recurringTransactionId == recurringTransactionId));
+                other.recurringTransactionId == recurringTransactionId) &&
+            (identical(other.currency, currency) ||
+                other.currency == currency));
   }
 
   @JsonKey(ignore: true)
@@ -292,7 +311,8 @@ class _$TransactionModelImpl implements _TransactionModel {
       description,
       date,
       createdAt,
-      recurringTransactionId);
+      recurringTransactionId,
+      currency);
 
   @JsonKey(ignore: true)
   @override
@@ -320,7 +340,8 @@ abstract class _TransactionModel implements TransactionModel {
       final String? description,
       required final DateTime date,
       required final DateTime createdAt,
-      final String? recurringTransactionId}) = _$TransactionModelImpl;
+      final String? recurringTransactionId,
+      final String currency}) = _$TransactionModelImpl;
 
   factory _TransactionModel.fromJson(Map<String, dynamic> json) =
       _$TransactionModelImpl.fromJson;
@@ -345,6 +366,8 @@ abstract class _TransactionModel implements TransactionModel {
   DateTime get createdAt;
   @override
   String? get recurringTransactionId;
+  @override
+  String get currency;
   @override
   @JsonKey(ignore: true)
   _$$TransactionModelImplCopyWith<_$TransactionModelImpl> get copyWith =>

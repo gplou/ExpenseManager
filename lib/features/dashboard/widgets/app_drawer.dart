@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/config/router.dart';
 import '../../../core/network/supabase_client.dart';
+import '../../../core/providers/currency_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -33,6 +34,11 @@ class AppDrawer extends ConsumerWidget {
           orElse: () => supportedLocales.first,
         )
         .name;
+    final currentCurrencyCode = ref.watch(currencyProvider).valueOrNull ?? 'EUR';
+    final currentCurrency = supportedCurrencies.firstWhere(
+      (c) => c.code == currentCurrencyCode,
+      orElse: () => supportedCurrencies.first,
+    );
 
     return Drawer(
       child: SafeArea(
@@ -87,6 +93,14 @@ class AppDrawer extends ConsumerWidget {
                     subtitle: Text(currentLocaleName),
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () => _showLanguageSheet(context, ref),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.attach_money_outlined),
+                    title: Text(l10n.currency),
+                    subtitle: Text(
+                        '${currentCurrency.flag} ${currentCurrency.code} — ${currentCurrency.name}'),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    onTap: () => _showCurrencySheet(context, ref),
                   ),
                   // ── Plan PRO ──────────────────────────────────────────
                   Consumer(
@@ -212,6 +226,55 @@ class AppDrawer extends ConsumerWidget {
                   },
                 );
               }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCurrencySheet(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final currentCode = ref.read(currencyProvider).valueOrNull ?? 'EUR';
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Text(l10n.currency, style: ctx.textTheme.titleMedium),
+              ),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: supportedCurrencies.map((c) {
+                    final isSelected = currentCode == c.code;
+                    return ListTile(
+                      leading: Text(c.flag,
+                          style: const TextStyle(fontSize: 24)),
+                      title: Text('${c.code} — ${c.name}'),
+                      subtitle: Text(c.symbol),
+                      trailing: isSelected
+                          ? Icon(Icons.check, color: ctx.colors.primary)
+                          : null,
+                      onTap: () {
+                        ref
+                            .read(currencyProvider.notifier)
+                            .setCurrency(c.code);
+                        Navigator.of(ctx).pop();
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
             ],
           ),
         ),

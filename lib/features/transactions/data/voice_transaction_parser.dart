@@ -44,6 +44,7 @@ class VoiceTransactionParser {
           : null;
       final isRecurring = json['is_recurring'] as bool? ?? false;
       final recurrenceType = json['recurrence_type'] as String?;
+      final currency = json['currency'] as String?;
 
       return ParsedVoiceTransaction(
         amount: amount,
@@ -55,6 +56,7 @@ class VoiceTransactionParser {
         date: date,
         isRecurring: isRecurring,
         recurrenceType: recurrenceType,
+        currency: (currency?.isEmpty ?? true) ? null : currency,
       );
     } catch (e, st) {
       debugPrint('VoiceTransactionParser error: $e\n$st');

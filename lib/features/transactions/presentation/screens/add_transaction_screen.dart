@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import '../../../../core/providers/currency_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/neo_card.dart';
@@ -87,6 +88,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   String? _selectedCategory;
   String? _selectedSubcategory;
   late DateTime _selectedDate;
+  late String _selectedCurrency;
   bool _isSaving = false;
   bool _isRecurring = false;
   RecurrenceType? _recurrenceType;
@@ -110,6 +112,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     _selectedCategory = t?.category ?? v?.category;
     _selectedSubcategory = t?.subcategory ?? v?.subcategory;
     _selectedDate = t?.date ?? v?.date ?? DateTime.now();
+    _selectedCurrency =
+        t?.currency ?? v?.currency ?? ref.read(currencyProvider).valueOrNull ?? 'EUR';
     // If voice AI detected recurring, pre-fill it
     if (v?.isRecurring == true) {
       _isRecurring = true;
@@ -229,6 +233,52 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
+  void _showCurrencySheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Text(l10n.currency, style: ctx.textTheme.titleMedium),
+              ),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: supportedCurrencies.map((c) {
+                    final isSelected = _selectedCurrency == c.code;
+                    return ListTile(
+                      leading: Text(c.flag,
+                          style: const TextStyle(fontSize: 24)),
+                      title: Text('${c.code} — ${c.name}'),
+                      subtitle: Text(c.symbol),
+                      trailing: isSelected
+                          ? Icon(Icons.check,
+                              color: Theme.of(ctx).colorScheme.primary)
+                          : null,
+                      onTap: () {
+                        setState(() => _selectedCurrency = c.code);
+                        Navigator.of(ctx).pop();
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final amountText = _amountController.text.trim().replaceAll(',', '.');
@@ -261,6 +311,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           subcategory: _selectedSubcategory,
           description: desc,
           date: _selectedDate,
+          currency: _selectedCurrency,
         );
 
         final existingRecurringId = widget.transaction!.recurringTransactionId;
@@ -338,6 +389,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           date: _selectedDate,
           createdAt: DateTime.now(),
           recurringTransactionId: recurringId,
+          currency: _selectedCurrency,
         );
         await ref
             .read(transactionsNotifierProvider.notifier)
@@ -511,15 +563,52 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    l10n.amount.toUpperCase(),
-                    style: const TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.5,
-                      color: AppColors.textSubtle,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        l10n.amount.toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                          color: AppColors.textSubtle,
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () => _showCurrencySheet(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                                color: accentColor.withValues(alpha: 0.3),
+                                width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _selectedCurrency,
+                                style: TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: accentColor,
+                                ),
+                              ),
+                              const Gap(4),
+                              Icon(Icons.expand_more_rounded,
+                                  size: 14, color: accentColor),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   TextFormField(
                     controller: _amountController,
@@ -537,7 +626,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       letterSpacing: -1,
                     ),
                     decoration: InputDecoration(
-                      prefixText: '€ ',
+                      prefixText: '${currencySymbol(_selectedCurrency)} ',
                       prefixStyle: TextStyle(
                         fontFamily: 'Sora',
                         fontSize: 28,

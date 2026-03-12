@@ -49,6 +49,7 @@ class ImageTransactionParser {
       final desc = json['description'] as String?;
       final subcategory = json['subcategory'] as String?;
       final isNewSubcategory = json['is_new_subcategory'] as bool? ?? false;
+      final currency = json['currency'] as String?;
 
       return ParsedVoiceTransaction(
         amount: amount,
@@ -57,6 +58,7 @@ class ImageTransactionParser {
         description: (desc?.isEmpty ?? true) ? null : desc,
         subcategory: (subcategory?.isEmpty ?? true) ? null : subcategory,
         isNewSubcategory: isNewSubcategory,
+        currency: (currency?.isEmpty ?? true) ? null : currency,
       );
     } catch (e, st) {
       debugPrint('ImageTransactionParser error: $e\n$st');

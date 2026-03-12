@@ -341,5 +341,8 @@
   "exportColumnSubcategory": "Subcategoría",
   "@exportColumnSubcategory": {},
   "deleteSubcategoryConfirm": "¿Eliminar esta subcategoría?",
-  "@deleteSubcategoryConfirm": {}
+  "@deleteSubcategoryConfirm": {},
+
+  "currency": "Moneda",
+  "@currency": {}
 }

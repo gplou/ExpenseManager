@@ -1031,6 +1031,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'¿Eliminar esta subcategoría?'**
   String get deleteSubcategoryConfirm;
+
+  /// No description provided for @currency.
+  ///
+  /// In es, this message translates to:
+  /// **'Moneda'**
+  String get currency;
 }
 
 class _AppLocalizationsDelegate

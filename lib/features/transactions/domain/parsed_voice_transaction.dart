@@ -11,6 +11,7 @@ class ParsedVoiceTransaction {
     this.date,
     this.isRecurring = false,
     this.recurrenceType,
+    this.currency,
   });
 
   final double amount;
@@ -22,4 +23,5 @@ class ParsedVoiceTransaction {
   final DateTime? date;
   final bool isRecurring;
   final String? recurrenceType;
+  final String? currency;
 }
