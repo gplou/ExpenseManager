@@ -13,6 +13,7 @@ import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/custom_categories_provider.dart';
 import '../providers/transactions_provider.dart';
+import '../../../subscription/subscription_provider.dart';
 import 'add_transaction_screen.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {
@@ -402,11 +403,12 @@ class _IconChip extends StatelessWidget {
 
 // ── Ad banner placeholder ─────────────────────────────────────────────────────
 
-class _TxAdBanner extends StatelessWidget {
+class _TxAdBanner extends ConsumerWidget {
   const _TxAdBanner();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(isProProvider)) return const SizedBox.shrink();
     final cs = context.colors;
     return Container(
       width: double.infinity,

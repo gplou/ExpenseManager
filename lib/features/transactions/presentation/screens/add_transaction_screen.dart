@@ -109,7 +109,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     _descriptionController = TextEditingController(text: t?.description ?? v?.description ?? '');
     _selectedCategory = t?.category ?? v?.category;
     _selectedSubcategory = t?.subcategory ?? v?.subcategory;
-    _selectedDate = t?.date ?? DateTime.now();
+    _selectedDate = t?.date ?? v?.date ?? DateTime.now();
+    // If voice AI detected recurring, pre-fill it
+    if (v?.isRecurring == true) {
+      _isRecurring = true;
+      _recurrenceType = switch (v?.recurrenceType) {
+        'weekly' => RecurrenceType.weekly,
+        'annual' => RecurrenceType.annual,
+        _ => RecurrenceType.monthly,
+      };
+    }
     // If voice/image AI suggested a new subcategory, auto-create it
     if (v?.isNewSubcategory == true &&
         v?.subcategory != null &&
