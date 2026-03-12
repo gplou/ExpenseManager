@@ -8,6 +8,9 @@ class ParsedVoiceTransaction {
     this.description,
     this.subcategory,
     this.isNewSubcategory = false,
+    this.date,
+    this.isRecurring = false,
+    this.recurrenceType,
   });
 
   final double amount;
@@ -16,4 +19,7 @@ class ParsedVoiceTransaction {
   final String? description;
   final String? subcategory;
   final bool isNewSubcategory;
+  final DateTime? date;
+  final bool isRecurring;
+  final String? recurrenceType;
 }
