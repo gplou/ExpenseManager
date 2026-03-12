@@ -26,8 +26,6 @@ import '../transactions/presentation/providers/custom_categories_provider.dart';
 import '../transactions/presentation/providers/recurring_transactions_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
-import '../transactions/data/subcategories_repository.dart';
-import '../transactions/presentation/providers/subcategories_provider.dart';
 import '../subscription/subscription_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -841,52 +839,8 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       );
       return;
     }
-    // Save directly without navigating to verification screen
-    try {
-      // Auto-create new subcategory if the AI suggested one
-      if (parsed.isNewSubcategory && parsed.subcategory != null) {
-        await ref.read(subcategoriesRepositoryProvider).add(
-              parsed.category,
-              parsed.type,
-              parsed.subcategory!,
-            );
-        ref.invalidate(subcategoriesProvider(
-          (category: parsed.category, type: parsed.type),
-        ));
-      }
-      final transaction = TransactionModel(
-        id: '',
-        userId: '',
-        amount: parsed.amount,
-        type: parsed.type,
-        category: parsed.category,
-        subcategory: parsed.subcategory,
-        description: parsed.description,
-        date: DateTime.now(),
-        createdAt: DateTime.now(),
-      );
-      await ref
-          .read(transactionsNotifierProvider.notifier)
-          .create(transaction);
-      if (!mounted) return;
-      setState(() => _voiceState = _VoiceInputState.idle);
-      final l10n = AppLocalizations.of(context);
-      final catName = TransactionCategories.localizedName(parsed.category, l10n);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${parsed.type == TransactionType.income ? '+' : '-'}€${parsed.amount.toStringAsFixed(2)} · $catName',
-          ),
-          backgroundColor: AppColors.dustyTeal,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _voiceState = _VoiceInputState.idle);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al guardar: ${e.toString().split('\n').first}')),
-      );
-    }
+    setState(() => _voiceState = _VoiceInputState.idle);
+    context.push(AppRoutes.addTransaction, extra: parsed);
   }
 
   Future<void> _startCamera() async {
@@ -954,43 +908,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
         );
         return;
       }
-      // Auto-create new subcategory if the AI suggested one
-      if (parsed.isNewSubcategory && parsed.subcategory != null) {
-        await ref.read(subcategoriesRepositoryProvider).add(
-              parsed.category,
-              parsed.type,
-              parsed.subcategory!,
-            );
-        ref.invalidate(subcategoriesProvider(
-          (category: parsed.category, type: parsed.type),
-        ));
-      }
-      // Save directly without navigating to verification screen
-      final transaction = TransactionModel(
-        id: '',
-        userId: '',
-        amount: parsed.amount,
-        type: parsed.type,
-        category: parsed.category,
-        subcategory: parsed.subcategory,
-        description: parsed.description,
-        date: DateTime.now(),
-        createdAt: DateTime.now(),
-      );
-      await ref
-          .read(transactionsNotifierProvider.notifier)
-          .create(transaction);
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      final catName = TransactionCategories.localizedName(parsed.category, l10n);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${parsed.type == TransactionType.income ? '+' : '-'}€${parsed.amount.toStringAsFixed(2)} · $catName',
-          ),
-          backgroundColor: AppColors.dustyTeal,
-        ),
-      );
+      context.push(AppRoutes.addTransaction, extra: parsed);
     } catch (e) {
       if (mounted) {
         setState(() => _voiceState = _VoiceInputState.idle);
