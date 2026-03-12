@@ -5,10 +5,12 @@ const GOOGLE_AI_KEY = Deno.env.get('GOOGLE_AI_KEY') ?? ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 
-function buildPrompt(transcription: string, subcatBlock: string): string {
+function buildPrompt(transcription: string, subcatBlock: string, todayDate: string): string {
   return `You are a transaction parser for a personal finance app.
 Extract transaction details from this text (may be in Spanish or English):
 "${transcription}"
+
+Today's date is ${todayDate}.
 
 Available expense categories: Comida, Transporte, Vivienda, Ocio, Salud, Educación, Ropa, Tecnología, Otros
 Available income categories: Salario, Freelance, Inversión, Regalo, Otros
@@ -17,7 +19,7 @@ The user has these existing subcategories:
 ${subcatBlock}
 
 Return ONLY valid JSON (no explanation):
-{"amount": <positive number>, "type": "expense" or "income", "category": "<exact category name>", "subcategory": "<subcategory or null>", "is_new_subcategory": <boolean>, "description": "<brief description or empty string>"}
+{"amount": <positive number>, "type": "expense" or "income", "category": "<exact category name>", "subcategory": "<subcategory or null>", "is_new_subcategory": <boolean>, "description": "<brief description or empty string>", "date": "<YYYY-MM-DD or null>", "is_recurring": <boolean>, "recurrence_type": "<weekly|monthly|annual or null>"}
 
 Rules:
 - amount must be a positive number
@@ -28,7 +30,10 @@ Rules:
   2. subcategory: the second most descriptive element (e.g. "Cena" for dinner). First try to match one of the user's existing subcategories for the detected category. If none match but the text implies one, suggest a concise new name (max 30 chars). If nothing is implied, use null.
   3. description: the third level of detail if present (e.g. "Mexicano" for Mexican food). Should be concise (max 50 chars). If no extra detail beyond category and subcategory, use empty string.
 - is_new_subcategory: true if you are suggesting a subcategory not in the user's existing list, false if matching an existing one, false if subcategory is null
-- Example: "He salido a cenar mexicano" → category: "Comida", subcategory: "Cena", description: "Mexicano"`
+- date: if the user mentions a date (e.g. "ayer", "el lunes", "el 5 de marzo", "la semana pasada"), resolve it relative to today and return in YYYY-MM-DD format. If no date is mentioned, return null.
+- is_recurring: true if the user mentions the transaction is recurring (e.g. "recurrente", "cada mes", "cada semana", "mensual", "semanal", "anual"). Default false.
+- recurrence_type: if is_recurring is true, detect the frequency: "weekly" (cada semana, semanal), "monthly" (cada mes, mensual, or just "recurrente"), "annual" (cada año, anual). If is_recurring is true but no specific frequency is mentioned, default to "monthly". If is_recurring is false, return null.
+- Example: "He salido a cenar mexicano" → category: "Comida", subcategory: "Cena", description: "Mexicano", date: null, is_recurring: false, recurrence_type: null`
 }
 
 const corsHeaders = {
@@ -129,7 +134,8 @@ serve(async (req: Request) => {
     )
   }
 
-  const prompt = buildPrompt(transcription, subcatBlock)
+  const todayDate = new Date().toISOString().slice(0, 10)
+  const prompt = buildPrompt(transcription, subcatBlock, todayDate)
 
   const geminiRes = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GOOGLE_AI_KEY}`,
@@ -138,7 +144,7 @@ serve(async (req: Request) => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 300, temperature: 0 },
+        generationConfig: { maxOutputTokens: 400, temperature: 0 },
       }),
     }
   )

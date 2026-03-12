@@ -38,6 +38,12 @@ class VoiceTransactionParser {
       final desc = json['description'] as String?;
       final subcategory = json['subcategory'] as String?;
       final isNewSubcategory = json['is_new_subcategory'] as bool? ?? false;
+      final dateStr = json['date'] as String?;
+      final date = (dateStr != null && dateStr.isNotEmpty)
+          ? DateTime.tryParse(dateStr)
+          : null;
+      final isRecurring = json['is_recurring'] as bool? ?? false;
+      final recurrenceType = json['recurrence_type'] as String?;
 
       return ParsedVoiceTransaction(
         amount: amount,
@@ -46,6 +52,9 @@ class VoiceTransactionParser {
         description: (desc?.isEmpty ?? true) ? null : desc,
         subcategory: (subcategory?.isEmpty ?? true) ? null : subcategory,
         isNewSubcategory: isNewSubcategory,
+        date: date,
+        isRecurring: isRecurring,
+        recurrenceType: recurrenceType,
       );
     } catch (e, st) {
       debugPrint('VoiceTransactionParser error: $e\n$st');
