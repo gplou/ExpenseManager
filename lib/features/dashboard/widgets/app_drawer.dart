@@ -361,6 +361,7 @@ class _DrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final name = (user?.name as String?)?.trim();
     final email = user?.email as String?;
 
@@ -373,20 +374,55 @@ class _DrawerHeader extends StatelessWidget {
             .join()
         : (email?.isNotEmpty == true ? email![0].toUpperCase() : '?');
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  AppColors.darkSurfaceHigh,
+                  AppColors.darkSurface,
+                ]
+              : [
+                  AppColors.dustyTealLight.withValues(alpha: 0.4),
+                  AppColors.pureWhite,
+                ],
+        ),
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-            child: Text(
-              initials,
-              style: const TextStyle(
-                fontFamily: 'Sora',
-                fontWeight: FontWeight.w600,
-                fontSize: 18,
-                color: AppColors.primary,
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.dustyTeal,
+                  AppColors.dustyTeal.withValues(alpha: 0.75),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.dustyTeal.withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  fontFamily: 'Sora',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
+                  color: AppColors.pureWhite,
+                ),
               ),
             ),
           ),
@@ -397,7 +433,9 @@ class _DrawerHeader extends StatelessWidget {
               children: [
                 Text(
                   name?.isNotEmpty == true ? name! : l10n.displayUser,
-                  style: context.textTheme.titleMedium,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

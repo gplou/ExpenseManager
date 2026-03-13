@@ -20,7 +20,9 @@
       "Bash(flutter build apk --debug)",
       "Bash(dart run build_runner build --delete-conflicting-outputs)",
       "Bash(xargs grep:*)",
-      "Bash(find C:UsersguillDesktopExpenseManagerproductivity_app -type f \\\\\\(-name *.sql -o -name schema* -o -name *supabase* \\\\\\))"
+      "Bash(find C:UsersguillDesktopExpenseManagerproductivity_app -type f \\\\\\(-name *.sql -o -name schema* -o -name *supabase* \\\\\\))",
+      "Bash(xargs head:*)",
+      "Bash(flutter analyze:*)"
     ]
   }
 }

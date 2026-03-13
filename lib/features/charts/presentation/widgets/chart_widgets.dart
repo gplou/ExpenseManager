@@ -92,6 +92,7 @@ class ChartBarSection extends StatelessWidget {
     required this.type,
     this.extra = const [],
     this.isSubcategoryView = false,
+    this.cSymbol = '€',
   });
 
   final List<MapEntry<String, double>> entries;
@@ -99,6 +100,7 @@ class ChartBarSection extends StatelessWidget {
   final TransactionType type;
   final List<TransactionCategory> extra;
   final bool isSubcategoryView;
+  final String cSymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +117,7 @@ class ChartBarSection extends StatelessWidget {
             touchTooltipData: BarTouchTooltipData(
               getTooltipItem: (group, groupIndex, rod, rodIndex) =>
                   BarTooltipItem(
-                '€${rod.toY.toStringAsFixed(2)}',
+                '$cSymbol${rod.toY.toStringAsFixed(2)}',
                 const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -168,7 +170,7 @@ class ChartBarSection extends StatelessWidget {
                   return SideTitleWidget(
                     axisSide: meta.axisSide,
                     child: Text(
-                      '€${value.toStringAsFixed(0)}',
+                      '$cSymbol${value.toStringAsFixed(0)}',
                       style: context.textTheme.bodySmall?.copyWith(
                         fontSize: 10,
                         color:
@@ -224,6 +226,7 @@ class ChartLegend extends StatelessWidget {
     required this.l10n,
     required this.type,
     this.isSubcategoryView = false,
+    this.cSymbol = '€',
   });
 
   final List<MapEntry<String, double>> entries;
@@ -232,6 +235,7 @@ class ChartLegend extends StatelessWidget {
   final AppLocalizations l10n;
   final TransactionType type;
   final bool isSubcategoryView;
+  final String cSymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +272,7 @@ class ChartLegend extends StatelessWidget {
                 ),
                 const Gap(8),
                 Text(
-                  '€${entry.value.toStringAsFixed(2)}',
+                  '$cSymbol${entry.value.toStringAsFixed(2)}',
                   style: context.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

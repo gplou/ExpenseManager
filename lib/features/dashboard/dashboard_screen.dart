@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/config/router.dart';
+import '../../core/providers/currency_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/custom_date_range_picker.dart';
@@ -66,6 +68,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final summaryAsync = ref.watch(transactionsSummaryProvider);
     final recentAsync = ref.watch(recentTransactionsProvider);
     final cs = context.colors;
+    final cSymbol = currencySymbol(ref.watch(currencyProvider).value ?? 'EUR');
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -163,7 +166,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     summaryAsync.when(
                       loading: () => const _SummaryShimmer(),
                       error: (_, __) => const SizedBox.shrink(),
-                      data: (summary) => _SummarySection(summary: summary),
+                      data: (summary) => _SummarySection(summary: summary, cSymbol: cSymbol),
                     ),
                     const Gap(12),
 
@@ -210,22 +213,62 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       error: (e, _) => Text(e.toString()),
                       data: (transactions) {
                         if (transactions.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('📭', style: TextStyle(fontSize: 40)),
-                                const Gap(8),
-                                Text(
-                                  l10n.noTransactionsPeriod,
-                                  style: TextStyle(
-                                    fontFamily: 'Sora',
-                                    fontSize: 14,
-                                    color: cs.onSurface.withValues(alpha: 0.4),
-                                    fontWeight: FontWeight.w500,
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 32),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 72,
+                                    height: 72,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.dustyTealLight.withValues(alpha: 0.5),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Center(
+                                      child: Text('📭', style: TextStyle(fontSize: 32)),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const Gap(16),
+                                  Text(
+                                    l10n.noTransactionsPeriod,
+                                    style: TextStyle(
+                                      fontFamily: 'Sora',
+                                      fontSize: 14,
+                                      color: cs.onSurface.withValues(alpha: 0.45),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const Gap(8),
+                                  GestureDetector(
+                                    onTap: () => context.push(AppRoutes.addTransaction),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.dustyTealLight,
+                                        borderRadius: BorderRadius.circular(100),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.add, size: 16, color: AppColors.dustyTeal),
+                                          const Gap(4),
+                                          Text(
+                                            l10n.newTransaction,
+                                            style: const TextStyle(
+                                              fontFamily: 'Sora',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.dustyTeal,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         }
@@ -357,35 +400,81 @@ class _IconChip extends StatelessWidget {
 // ── Summary section ───────────────────────────────────────────────────────────
 
 class _SummarySection extends StatelessWidget {
-  const _SummarySection({required this.summary});
+  const _SummarySection({required this.summary, required this.cSymbol});
   final TransactionsSummary summary;
+  final String cSymbol;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final cs = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final balance = summary.balance;
     final isPositive = balance >= 0;
     final accentColor = isPositive ? AppColors.sageGreen : AppColors.mutedTerra;
     final accentLight = isPositive ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+    final total = summary.income + summary.expense;
+    final incomePercent = total > 0 ? (summary.income / total * 100).round() : 0;
+    final expensePercent = total > 0 ? (summary.expense / total * 100).round() : 0;
 
     return Column(
       children: [
-        // Balance card principal
-        NeoCard(
-          accentColor: accentColor,
-          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 24),
+        // Balance card unificada
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      AppColors.darkSurfaceHigh,
+                      AppColors.darkSurface,
+                    ]
+                  : [
+                      accentLight.withValues(alpha: 0.45),
+                      cs.surface,
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: isDark
+                ? Border.all(color: cs.outline, width: 1)
+                : null,
+            boxShadow: isDark
+                ? null
+                : [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.12),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                    const BoxShadow(
+                      color: Color(0x08000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+          ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: accentLight,
-                      borderRadius: BorderRadius.circular(100),
+              // Badge de balance
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: isDark ? 0.2 : 0.12),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                      size: 14,
+                      color: accentColor,
                     ),
-                    child: Text(
+                    const Gap(4),
+                    Text(
                       l10n.balance.toUpperCase(),
                       style: TextStyle(
                         fontFamily: 'Sora',
@@ -395,50 +484,162 @@ class _SummarySection extends StatelessWidget {
                         color: accentColor,
                       ),
                     ),
+                  ],
+                ),
+              ),
+              const Gap(10),
+              // Monto del balance
+              Text(
+                '${isPositive ? '' : '-'}$cSymbol${balance.abs().toStringAsFixed(2)}',
+                style: context.textTheme.headlineLarge?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              if (total > 0) ...[
+                const Gap(12),
+                // Barra de proporción
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: SizedBox(
+                    height: 5,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: incomePercent.clamp(1, 99),
+                          child: Container(color: AppColors.sageGreen),
+                        ),
+                        const Gap(2),
+                        Expanded(
+                          flex: expensePercent.clamp(1, 99),
+                          child: Container(color: AppColors.mutedTerra),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const Gap(12),
+              // Separador sutil
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: isDark
+                    ? AppColors.darkBorderColor.withValues(alpha: 0.5)
+                    : AppColors.borderLight.withValues(alpha: 0.7),
+              ),
+              const Gap(12),
+              // Fila de ingresos y gastos
+              Row(
+                children: [
+                  // Ingresos
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppColors.sageGreen.withValues(alpha: isDark ? 0.15 : 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.south_west_rounded,
+                            size: 16,
+                            color: AppColors.sageGreen,
+                          ),
+                        ),
+                        const Gap(10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.income,
+                                style: TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: cs.onSurface.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              Text(
+                                '$cSymbol${summary.income.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.sageGreen,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Divisor vertical
+                  Container(
+                    width: 1,
+                    height: 36,
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    color: isDark
+                        ? AppColors.darkBorderColor.withValues(alpha: 0.5)
+                        : AppColors.borderLight.withValues(alpha: 0.7),
+                  ),
+                  // Gastos
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppColors.mutedTerra.withValues(alpha: isDark ? 0.15 : 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.north_east_rounded,
+                            size: 16,
+                            color: AppColors.mutedTerra,
+                          ),
+                        ),
+                        const Gap(10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.expenses,
+                                style: TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: cs.onSurface.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              Text(
+                                '$cSymbol${summary.expense.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.mutedTerra,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              const Gap(12),
-              Text(
-                '${isPositive ? '' : '-'}€${balance.abs().toStringAsFixed(2)}',
-                style: context.textTheme.displaySmall?.copyWith(
-                  color: context.colors.onSurface,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -1,
-                ),
-              ),
-              const Gap(4),
-              Text(
-                isPositive ? '📈' : '📉',
-                style: const TextStyle(fontSize: 18),
-              ),
             ],
           ),
-        ),
-        const Gap(12),
-        // Mini cards Ingresos / Gastos
-        Row(
-          children: [
-            Expanded(
-              child: _MiniCard(
-                label: l10n.income,
-                amount: summary.income,
-                accentColor: AppColors.sageGreen,
-                accentLight: AppColors.sageGreenLight,
-                icon: Icons.arrow_downward_rounded,
-              ),
-            ),
-            const Gap(12),
-            Expanded(
-              child: _MiniCard(
-                label: l10n.expenses,
-                amount: summary.expense,
-                accentColor: AppColors.mutedTerra,
-                accentLight: AppColors.mutedTerraLight,
-                icon: Icons.arrow_upward_rounded,
-              ),
-            ),
-          ],
         ),
         const Gap(12),
         // Charts button
@@ -463,71 +664,6 @@ class _SummarySection extends StatelessWidget {
   }
 }
 
-class _MiniCard extends StatelessWidget {
-  const _MiniCard({
-    required this.label,
-    required this.amount,
-    required this.accentColor,
-    required this.accentLight,
-    required this.icon,
-  });
-
-  final String label;
-  final double amount;
-  final Color accentColor;
-  final Color accentLight;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return NeoCard(
-      accentColor: accentColor,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: accentLight,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: accentColor, size: 18),
-          ),
-          const Gap(12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const Gap(2),
-                Text(
-                  '€${amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: accentColor,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Shimmer placeholder ───────────────────────────────────────────────────────
 
 class _SummaryShimmer extends StatelessWidget {
@@ -536,44 +672,34 @@ class _SummaryShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.colors;
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          height: 140,
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: AppColors.softShadow,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? AppColors.darkSurfaceHigh : const Color(0xFFECEAE4);
+    final highlightColor = isDark ? AppColors.darkSurface.withValues(alpha: 0.7) : const Color(0xFFF8F7F2);
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            height: 185,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(24),
+            ),
           ),
-        ),
-        const Gap(12),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 80,
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: AppColors.softShadow,
-                ),
-              ),
+          const Gap(12),
+          Container(
+            width: double.infinity,
+            height: 48,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(14),
             ),
-            const Gap(12),
-            Expanded(
-              child: Container(
-                height: 80,
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: AppColors.softShadow,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -612,82 +738,119 @@ class _RecentTransactionTile extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: AppColors.softShadowSm,
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accentLight,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: customIcon != null
-                        ? Icon(customIcon, size: 22, color: accentColor)
-                        : Text(emoji, style: const TextStyle(fontSize: 22)),
-                  ),
-                ),
-                const Gap(12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        TransactionCategories.localizedName(transaction.category, l10n),
-                        style: TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onSurface,
-                        ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  // Barra lateral de acento
+                  Container(
+                    width: 4,
+                    decoration: BoxDecoration(
+                      color: accentColor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
                       ),
-                      if (transaction.subcategory != null)
-                        Text(
-                          transaction.subcategory!,
-                          style: const TextStyle(
-                            fontFamily: 'Sora',
-                            fontSize: 12,
-                            color: AppColors.textMuted,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        )
-                      else if (transaction.description != null)
-                        Text(
-                          transaction.description!,
-                          style: const TextStyle(
-                            fontFamily: 'Sora',
-                            fontSize: 12,
-                            color: AppColors.textMuted,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        )
-                      else
-                        Text(
-                          transaction.date.formattedDate,
-                          style: const TextStyle(
-                            fontFamily: 'Sora',
-                            fontSize: 12,
-                            color: AppColors.textSubtle,
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
-                const Gap(8),
-                Text(
-                  '${isIncome ? '+' : '-'}€${transaction.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: accentColor,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 14, 16, 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: accentLight,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: customIcon != null
+                                  ? Icon(customIcon, size: 22, color: accentColor)
+                                  : Text(emoji, style: const TextStyle(fontSize: 22)),
+                            ),
+                          ),
+                          const Gap(12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  TransactionCategories.localizedName(transaction.category, l10n),
+                                  style: TextStyle(
+                                    fontFamily: 'Sora',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: cs.onSurface,
+                                  ),
+                                ),
+                                if (transaction.subcategory != null)
+                                  Text(
+                                    transaction.subcategory!,
+                                    style: const TextStyle(
+                                      fontFamily: 'Sora',
+                                      fontSize: 12,
+                                      color: AppColors.textMuted,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  )
+                                else if (transaction.description != null)
+                                  Text(
+                                    transaction.description!,
+                                    style: const TextStyle(
+                                      fontFamily: 'Sora',
+                                      fontSize: 12,
+                                      color: AppColors.textMuted,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  )
+                                else
+                                  Text(
+                                    transaction.date.formattedDate,
+                                    style: const TextStyle(
+                                      fontFamily: 'Sora',
+                                      fontSize: 12,
+                                      color: AppColors.textSubtle,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const Gap(8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')}${transaction.amount.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: accentColor,
+                                ),
+                              ),
+                              Text(
+                                transaction.date.relativeDateL10n(AppLocalizations.of(context)),
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 11,
+                                  color: AppColors.textSubtle,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1032,12 +1195,14 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                   _radialButton(
                     context,
                     icon: Icons.mic_outlined,
+                    label: 'Voz',
                     target: _micTarget,
                     onTap: _startVoice,
                   ),
                   _radialButton(
                     context,
                     icon: Icons.edit_outlined,
+                    label: 'Manual',
                     target: _pencilTarget,
                     onTap: () {
                       _closeDial();
@@ -1047,6 +1212,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                   _radialButton(
                     context,
                     icon: Icons.camera_alt_outlined,
+                    label: 'Foto',
                     target: _cameraTarget,
                     onTap: _startCamera,
                   ),
@@ -1072,6 +1238,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
   Widget _radialButton(
     BuildContext context, {
     required IconData icon,
+    required String label,
     required Offset target,
     required VoidCallback onTap,
   }) {
@@ -1086,7 +1253,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
         opacity: _open ? 1.0 : 0.0,
         child: IgnorePointer(
           ignoring: !_open,
-          child: _MiniDialButton(icon: icon, onTap: onTap),
+          child: _MiniDialButton(icon: icon, label: label, onTap: onTap),
         ),
       ),
     );
@@ -1136,30 +1303,60 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
 // ── Mini radial button ────────────────────────────────────────────────────────
 
 class _MiniDialButton extends StatelessWidget {
-  const _MiniDialButton({required this.icon, required this.onTap});
+  const _MiniDialButton({required this.icon, required this.label, required this.onTap});
 
   final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: AppColors.dustyTeal,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.dustyTeal.withValues(alpha: 0.35),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: AppColors.dustyTeal,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.dustyTeal.withValues(alpha: 0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Icon(icon, color: Colors.white, size: 22),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          const Gap(4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x20000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
