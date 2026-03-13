@@ -6,6 +6,7 @@ import 'package:gap/gap.dart';
 import '../../../../core/providers/currency_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/widgets/ad_banner_footer.dart';
 import '../../../../core/widgets/custom_date_range_picker.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../transactions/domain/transaction_categories.dart';
@@ -14,6 +15,7 @@ import '../../../transactions/presentation/providers/custom_categories_provider.
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../providers/chart_providers.dart';
 import '../widgets/chart_widgets.dart';
+import '../../../subscription/subscription_provider.dart';
 
 enum _ChartMode { pie, bar }
 
@@ -55,6 +57,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
         : period.l10nLabel(l10n);
 
     return Scaffold(
+      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
         title: Text(l10n.charts),
         centerTitle: true,

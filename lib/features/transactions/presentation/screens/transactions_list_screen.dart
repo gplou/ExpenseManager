@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/providers/currency_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../../../core/widgets/custom_date_range_picker.dart';
+import '../../../../core/widgets/ad_banner_footer.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/export_excel_service.dart';
 import '../../domain/transaction_categories.dart';
@@ -26,6 +26,7 @@ class TransactionsListScreen extends ConsumerStatefulWidget {
 
 class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen> {
   bool _exporting = false;
+  String? _selectedCategory; // null = todas
 
   Future<void> _exportToExcel(List<TransactionModel> transactions) async {
     final l10n = AppLocalizations.of(context);
@@ -49,61 +50,96 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final period = ref.watch(selectedPeriodProvider);
-    final customRange = ref.watch(customDateRangeProvider);
     final transactionsAsync = ref.watch(allTransactionsProvider);
     final cs = context.colors;
 
     return Scaffold(
+      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
         title: Text(l10n.history),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  ...TransactionPeriod.values.map((p) {
-                    final isSelected = p == period && customRange == null;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _PeriodChip(
-                        label: p.l10nLabel(l10n),
-                        isSelected: isSelected,
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          ref.read(selectedPeriodProvider.notifier).state = p;
-                          ref.read(customDateRangeProvider.notifier).state = null;
-                        },
-                      ),
-                    );
-                  }),
-                  _IconChip(
-                    icon: Icons.calendar_month_outlined,
-                    isActive: customRange != null,
-                    onTap: () async {
-                      final range = await showCustomDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now(),
-                        initialDateRange: customRange ??
-                            DateTimeRange(
-                              start: period.dateRange.from,
-                              end: period.dateRange.to,
-                            ),
-                      );
-                      if (range != null) {
-                        ref.read(customDateRangeProvider.notifier).state = range;
-                      }
-                    },
+        actions: [
+          transactionsAsync.whenOrNull(
+            data: (transactions) {
+              final categories = transactions
+                  .map((t) => t.category)
+                  .toSet()
+                  .toList()
+                ..sort();
+              if (categories.isEmpty) return const SizedBox.shrink();
+              final isActive = _selectedCategory != null;
+              return PopupMenuButton<String?>(
+                icon: Icon(
+                  Icons.filter_list_rounded,
+                  color: isActive ? AppColors.dustyTeal : null,
+                ),
+                tooltip: l10n.category,
+                onSelected: (value) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedCategory = value);
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem<String?>(
+                    value: null,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.clear_all_rounded,
+                          size: 18,
+                          color: _selectedCategory == null
+                              ? AppColors.dustyTeal
+                              : AppColors.textMuted,
+                        ),
+                        const Gap(10),
+                        Text(
+                          l10n.allCategories,
+                          style: TextStyle(
+                            fontFamily: 'Sora',
+                            fontWeight: _selectedCategory == null
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                            color: _selectedCategory == null
+                                ? AppColors.dustyTeal
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const PopupMenuDivider(),
+                  ...categories.map((cat) => PopupMenuItem<String?>(
+                    value: cat,
+                    child: Row(
+                      children: [
+                        Icon(
+                          cat == _selectedCategory
+                              ? Icons.check_rounded
+                              : Icons.label_outline_rounded,
+                          size: 18,
+                          color: cat == _selectedCategory
+                              ? AppColors.dustyTeal
+                              : AppColors.textMuted,
+                        ),
+                        const Gap(10),
+                        Text(
+                          TransactionCategories.localizedName(cat, l10n),
+                          style: TextStyle(
+                            fontFamily: 'Sora',
+                            fontWeight: cat == _selectedCategory
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                            color: cat == _selectedCategory
+                                ? AppColors.dustyTeal
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
                 ],
-              ),
-            ),
-          ),
-        ),
+              );
+            },
+          ) ?? const SizedBox.shrink(),
+        ],
       ),
       body: transactionsAsync.when(
         loading: () => const Center(
@@ -147,7 +183,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ],
           ),
         ),
-        data: (transactions) {
+        data: (allTx) {
+          final transactions = _selectedCategory == null
+              ? allTx
+              : allTx.where((t) => t.category == _selectedCategory).toList();
           if (transactions.isEmpty) {
             return Center(
               child: Column(
@@ -213,7 +252,6 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   },
                 ),
               ),
-              const _TxAdBanner(),
               _ExportButton(
                 onTap: _exporting ? null : () => _exportToExcel(transactions),
                 exporting: _exporting,
@@ -340,123 +378,6 @@ class _DateHeader extends StatelessWidget {
           child: Divider(color: AppColors.borderLight, thickness: 1),
         ),
       ],
-    );
-  }
-}
-
-// ── Period chip ───────────────────────────────────────────────────────────────
-
-class _PeriodChip extends StatelessWidget {
-  const _PeriodChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.dustyTeal : Colors.transparent,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: isSelected ? AppColors.dustyTeal : AppColors.borderMedium,
-            width: 1.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Sora',
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? AppColors.pureWhite : AppColors.textMuted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _IconChip extends StatelessWidget {
-  const _IconChip({
-    required this.icon,
-    required this.isActive,
-    required this.onTap,
-  });
-  final IconData icon;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.warmAmberLight : Colors.transparent,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: isActive ? AppColors.warmAmber : AppColors.borderMedium,
-            width: 1.5,
-          ),
-        ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: isActive ? AppColors.warmAmber : AppColors.textMuted,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Ad banner placeholder ─────────────────────────────────────────────────────
-
-class _TxAdBanner extends ConsumerWidget {
-  const _TxAdBanner();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (ref.watch(isProProvider)) return const SizedBox.shrink();
-    final cs = context.colors;
-    return Container(
-      width: double.infinity,
-      height: 70,
-      margin: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderLight, width: 1),
-        boxShadow: AppColors.softShadowSm,
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.campaign_outlined, size: 18, color: AppColors.textSubtle),
-          SizedBox(width: 8),
-          Text(
-            'Publicidad',
-            style: TextStyle(
-              fontFamily: 'Sora',
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSubtle,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

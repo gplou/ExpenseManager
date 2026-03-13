@@ -10,6 +10,7 @@ import '../../core/config/router.dart';
 import '../../core/providers/currency_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/extensions.dart';
+import '../../core/widgets/ad_banner_footer.dart';
 import '../../core/widgets/custom_date_range_picker.dart';
 import '../../core/widgets/neo_card.dart';
 import '../../l10n/app_localizations.dart';
@@ -72,6 +73,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
     return Scaffold(
       drawer: const AppDrawer(),
+      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -284,19 +286,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
                   ),
             const Gap(12),
-
-            // ── Banner de anuncio (oculto para usuarios PRO) ────────────
-            Consumer(
-              builder: (context, ref, _) {
-                if (ref.watch(isProProvider)) return const SizedBox.shrink();
-                return const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: _AdBanner(),
-                );
-              },
-            ),
-            const Gap(12),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 100),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
           ],
         ),
       ),
@@ -873,51 +863,6 @@ class _RecentTransactionTile extends ConsumerWidget {
     'Tecnología' => '⚡',
     _            => isIncome ? '💰' : '💸',
   };
-}
-
-// ── Ad banner placeholder ─────────────────────────────────────────────────────
-
-class _AdBanner extends StatelessWidget {
-  const _AdBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.colors;
-    return Container(
-      width: double.infinity,
-      height: 90,
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.borderLight,
-          width: 1,
-        ),
-        boxShadow: AppColors.softShadowSm,
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.campaign_outlined,
-            size: 18,
-            color: AppColors.textSubtle,
-          ),
-          SizedBox(width: 8),
-          Text(
-            'Publicidad',
-            style: TextStyle(
-              fontFamily: 'Sora',
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSubtle,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Speed dial FAB ────────────────────────────────────────────────────────────
