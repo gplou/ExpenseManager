@@ -169,5 +169,11 @@
   "subcategoryName": "Nom de la sous-catégorie",
   "exportColumnSubcategory": "Sous-catégorie",
   "deleteSubcategoryConfirm": "Supprimer cette sous-catégorie ?",
-  "currency": "Devise"
+  "currency": "Devise",
+
+  "charts": "Graphiques",
+  "viewCharts": "Voir les graphiques",
+  "allCategories": "Toutes les catégories",
+  "allSubcategories": "Toutes les sous-catégories",
+  "noSubcategory": "Sans sous-catégorie"
 }

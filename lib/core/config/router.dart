@@ -11,6 +11,7 @@ import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/transactions/domain/parsed_voice_transaction.dart';
 import '../../features/transactions/presentation/screens/add_transaction_screen.dart';
 import '../../features/transactions/presentation/screens/transactions_list_screen.dart';
+import '../../features/charts/presentation/screens/charts_screen.dart';
 import '../../features/subscription/pro_screen.dart';
 
 part 'router.g.dart';
@@ -22,6 +23,7 @@ abstract class AppRoutes {
   static const dashboard = '/dashboard';
   static const transactions = '/transactions';
   static const addTransaction = '/transactions/add';
+  static const charts = '/charts';
   static const pro = '/pro';
 }
 
@@ -86,6 +88,11 @@ GoRouter router(RouterRef ref) {
         builder: (context, state) => AddTransactionScreen(
           voiceData: state.extra as ParsedVoiceTransaction?,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.charts,
+        name: 'charts',
+        builder: (context, state) => const ChartsScreen(),
       ),
       GoRoute(
         path: AppRoutes.pro,

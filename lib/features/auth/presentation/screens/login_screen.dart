@@ -8,6 +8,7 @@ import 'package:gap/gap.dart';
 
 import '../../../../core/config/router.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
@@ -83,7 +84,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Gap(48),
+                const Gap(32),
+                // Logo / Brand element
+                Center(
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.dustyTeal,
+                          AppColors.dustyTeal.withValues(alpha: 0.7),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.dustyTeal.withValues(alpha: 0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+                ),
+                const Gap(32),
                 Text(
                   l10n.welcome,
                   style: context.textTheme.headlineMedium,
@@ -95,7 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     color: context.colors.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
-                const Gap(48),
+                const Gap(40),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
