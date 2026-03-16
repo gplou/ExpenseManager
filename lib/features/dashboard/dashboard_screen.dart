@@ -1224,8 +1224,10 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                   Positioned(
                     left: (_stackW - _fabSize) / 2,
                     bottom: 0,
-                    child: KeyedSubtree(
+                    child: SizedBox(
                       key: TutorialKeys.fabKey,
+                      width: _fabSize,
+                      height: _fabSize,
                       child: NeoFab(
                         icon: _open ? Icons.close : Icons.add,
                         onTap: _toggle,
