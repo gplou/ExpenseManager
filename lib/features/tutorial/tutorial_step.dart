@@ -68,7 +68,7 @@ final List<TutorialStep> kTutorialSteps = [
     spotlightPadding: 12,
     spotlightRadius: 28,
     // SpeedDial open animation takes 300 ms; wait for it to finish.
-    measureDelay: Duration(milliseconds: 380),
+    measureDelay: const Duration(milliseconds: 380),
   ),
 
   // ── 2 · Manual ────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ final List<TutorialStep> kTutorialSteps = [
     icon: Icons.edit_outlined,
     spotlightPadding: 12,
     spotlightRadius: 28,
-    measureDelay: Duration(milliseconds: 380),
+    measureDelay: const Duration(milliseconds: 380),
   ),
 
   // ── 3 · Camera ────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ final List<TutorialStep> kTutorialSteps = [
     icon: Icons.camera_alt_outlined,
     spotlightPadding: 12,
     spotlightRadius: 28,
-    measureDelay: Duration(milliseconds: 380),
+    measureDelay: const Duration(milliseconds: 380),
   ),
 
   // ── 4 · Balance card ──────────────────────────────────────────────────────

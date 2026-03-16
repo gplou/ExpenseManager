@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 import '../../core/security/secure_storage.dart';
+import '../auth/presentation/providers/auth_provider.dart';
 import 'subscription_repository.dart';
 import 'subscription_state.dart';
 
@@ -13,6 +14,7 @@ const kProProductId = 'pro_monthly_subscription';
 const _kCacheExpiresAtKey = 'sub_expires_at';
 const _kCacheCheckedAtKey = 'sub_checked_at';
 const _kCacheSourceKey = 'sub_source';
+const _kCacheUserIdKey = 'sub_user_id';
 
 /// Re-check the store/Supabase at most once every 24 hours.
 const _kCacheTtl = Duration(hours: 24);
@@ -34,6 +36,9 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
   @override
   Future<SubscriptionState> build() async {
+    // Rebuild when the logged-in user changes so stale cache is never reused.
+    ref.watch(currentUserProvider);
+
     // Listen to IAP purchase stream for the lifetime of this notifier.
     _purchaseSub = ref
         .read(subscriptionRepositoryProvider)
@@ -123,6 +128,15 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
   Future<SubscriptionState> _loadInitialState() async {
     final storage = SecureStorageService.instance;
+
+    // If the user changed (e.g. switched accounts), discard the old cache.
+    final cachedUserId = await storage.read(_kCacheUserIdKey);
+    final currentUserId = ref.read(currentUserProvider)?.id;
+    if (cachedUserId != currentUserId) {
+      await _clearCache(storage);
+      return _fetchRemote();
+    }
+
     final cachedExpiry = await storage.read(_kCacheExpiresAtKey);
     final cachedCheckedAt = await storage.read(_kCacheCheckedAtKey);
     final cachedSource = await storage.read(_kCacheSourceKey);
@@ -185,6 +199,19 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     } else {
       await storage.delete(_kCacheSourceKey);
     }
+    final currentUserId = ref.read(currentUserProvider)?.id;
+    if (currentUserId != null) {
+      await storage.write(_kCacheUserIdKey, currentUserId);
+    } else {
+      await storage.delete(_kCacheUserIdKey);
+    }
+  }
+
+  Future<void> _clearCache(SecureStorageService storage) async {
+    await storage.delete(_kCacheExpiresAtKey);
+    await storage.delete(_kCacheCheckedAtKey);
+    await storage.delete(_kCacheSourceKey);
+    await storage.delete(_kCacheUserIdKey);
   }
 
   void _setLoading(bool loading) {
