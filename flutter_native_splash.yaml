@@ -1,15 +1,9 @@
 flutter_native_splash:
-  color: "#C8E6C9"
-  color_dark: "#0f1923"
-  image: assets/images/ExpenseManagerLogo.png
-  image_dark: assets/images/ExpenseManagerLogo.png
-  android_gravity: fill
-  ios_content_mode: scaleAspectFill
+  color: "#F8F7F2"
+  color_dark: "#1E2329"
 
   android_12:
-    color: "#C8E6C9"
-    color_dark: "#0f1923"
-    image: assets/images/ExpenseManagerLogo.png
-    image_dark: assets/images/ExpenseManagerLogo.png
-    icon_background_color: "#C8E6C9"
-    icon_background_color_dark: "#0f1923"
+    color: "#F8F7F2"
+    color_dark: "#1E2329"
+    icon_background_color: "#F8F7F2"
+    icon_background_color_dark: "#1E2329"
