@@ -509,4 +509,36 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noSubcategory => 'Sin subcategoría';
+
+  @override
+  String get chatTitle => 'Asesor Financiero';
+
+  @override
+  String get chatPlaceholder => 'Pregunta sobre tus finanzas...';
+
+  @override
+  String get chatWelcomeTitle => 'Tu asesor financiero con IA';
+
+  @override
+  String get chatWelcomeSubtitle =>
+      'Pregunta sobre tus gastos, ingresos y obtén consejos personalizados';
+
+  @override
+  String get chatSuggestion1 => '¿Cuánto gasté este mes?';
+
+  @override
+  String get chatSuggestion2 => '¿Cuál es mi mayor gasto?';
+
+  @override
+  String get chatSuggestion3 => 'Consejos para ahorrar';
+
+  @override
+  String get chatError => 'Error al enviar el mensaje';
+
+  @override
+  String get chatRateLimit =>
+      'Has alcanzado el límite de mensajes. Espera un momento.';
+
+  @override
+  String get chatProRequired => 'Función exclusiva PRO';
 }

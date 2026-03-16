@@ -175,5 +175,16 @@
   "viewCharts": "Voir les graphiques",
   "allCategories": "Toutes les catégories",
   "allSubcategories": "Toutes les sous-catégories",
-  "noSubcategory": "Sans sous-catégorie"
+  "noSubcategory": "Sans sous-catégorie",
+
+  "chatTitle": "Conseiller Financier",
+  "chatPlaceholder": "Posez une question sur vos finances...",
+  "chatWelcomeTitle": "Votre conseiller financier IA",
+  "chatWelcomeSubtitle": "Posez des questions sur vos dépenses, revenus et obtenez des conseils personnalisés",
+  "chatSuggestion1": "Combien ai-je dépensé ce mois-ci ?",
+  "chatSuggestion2": "Quelle est ma plus grosse dépense ?",
+  "chatSuggestion3": "Conseils pour économiser",
+  "chatError": "Erreur lors de l'envoi du message",
+  "chatRateLimit": "Vous avez atteint la limite de messages. Patientez un moment.",
+  "chatProRequired": "Fonction exclusive PRO"
 }

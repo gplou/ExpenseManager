@@ -96,6 +96,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
           ],
         ),
+        actions: [
+          if (ref.watch(isProProvider))
+            IconButton(
+              icon: const Icon(Icons.auto_awesome, color: AppColors.dustyTeal),
+              tooltip: l10n.chatTitle,
+              onPressed: () => context.push(AppRoutes.chat),
+            ),
+        ],
       ),
       body: Stack(
         children: [

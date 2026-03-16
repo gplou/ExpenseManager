@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.parse-image-transaction]
 verify_jwt = false
+
+[functions.chat-transactions]
+verify_jwt = false

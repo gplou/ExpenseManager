@@ -12,6 +12,7 @@ import '../../features/transactions/domain/parsed_voice_transaction.dart';
 import '../../features/transactions/presentation/screens/add_transaction_screen.dart';
 import '../../features/transactions/presentation/screens/transactions_list_screen.dart';
 import '../../features/charts/presentation/screens/charts_screen.dart';
+import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/subscription/pro_screen.dart';
 
 part 'router.g.dart';
@@ -25,6 +26,7 @@ abstract class AppRoutes {
   static const addTransaction = '/transactions/add';
   static const charts = '/charts';
   static const pro = '/pro';
+  static const chat = '/chat';
 }
 
 /// Notifier que escucha el stream de auth y notifica a GoRouter para
@@ -98,6 +100,11 @@ GoRouter router(RouterRef ref) {
         path: AppRoutes.pro,
         name: 'pro',
         builder: (context, state) => const ProScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.chat,
+        name: 'chat',
+        builder: (context, state) => const ChatScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

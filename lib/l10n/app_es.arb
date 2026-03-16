@@ -355,5 +355,26 @@
   "allSubcategories": "Todas las subcategorías",
   "@allSubcategories": {},
   "noSubcategory": "Sin subcategoría",
-  "@noSubcategory": {}
+  "@noSubcategory": {},
+
+  "chatTitle": "Asesor Financiero",
+  "@chatTitle": {},
+  "chatPlaceholder": "Pregunta sobre tus finanzas...",
+  "@chatPlaceholder": {},
+  "chatWelcomeTitle": "Tu asesor financiero con IA",
+  "@chatWelcomeTitle": {},
+  "chatWelcomeSubtitle": "Pregunta sobre tus gastos, ingresos y obtén consejos personalizados",
+  "@chatWelcomeSubtitle": {},
+  "chatSuggestion1": "¿Cuánto gasté este mes?",
+  "@chatSuggestion1": {},
+  "chatSuggestion2": "¿Cuál es mi mayor gasto?",
+  "@chatSuggestion2": {},
+  "chatSuggestion3": "Consejos para ahorrar",
+  "@chatSuggestion3": {},
+  "chatError": "Error al enviar el mensaje",
+  "@chatError": {},
+  "chatRateLimit": "Has alcanzado el límite de mensajes. Espera un momento.",
+  "@chatRateLimit": {},
+  "chatProRequired": "Función exclusiva PRO",
+  "@chatProRequired": {}
 }

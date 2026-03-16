@@ -175,5 +175,16 @@
   "viewCharts": "Diagramme anzeigen",
   "allCategories": "Alle Kategorien",
   "allSubcategories": "Alle Unterkategorien",
-  "noSubcategory": "Ohne Unterkategorie"
+  "noSubcategory": "Ohne Unterkategorie",
+
+  "chatTitle": "Finanzberater",
+  "chatPlaceholder": "Fragen Sie zu Ihren Finanzen...",
+  "chatWelcomeTitle": "Ihr KI-Finanzberater",
+  "chatWelcomeSubtitle": "Fragen Sie zu Ihren Ausgaben, Einnahmen und erhalten Sie personalisierte Tipps",
+  "chatSuggestion1": "Wie viel habe ich diesen Monat ausgegeben?",
+  "chatSuggestion2": "Was ist meine größte Ausgabe?",
+  "chatSuggestion3": "Tipps zum Sparen",
+  "chatError": "Fehler beim Senden der Nachricht",
+  "chatRateLimit": "Sie haben das Nachrichtenlimit erreicht. Warten Sie einen Moment.",
+  "chatProRequired": "Exklusive PRO-Funktion"
 }

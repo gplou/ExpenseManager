@@ -1067,6 +1067,66 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sin subcategoría'**
   String get noSubcategory;
+
+  /// No description provided for @chatTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Asesor Financiero'**
+  String get chatTitle;
+
+  /// No description provided for @chatPlaceholder.
+  ///
+  /// In es, this message translates to:
+  /// **'Pregunta sobre tus finanzas...'**
+  String get chatPlaceholder;
+
+  /// No description provided for @chatWelcomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu asesor financiero con IA'**
+  String get chatWelcomeTitle;
+
+  /// No description provided for @chatWelcomeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pregunta sobre tus gastos, ingresos y obtén consejos personalizados'**
+  String get chatWelcomeSubtitle;
+
+  /// No description provided for @chatSuggestion1.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cuánto gasté este mes?'**
+  String get chatSuggestion1;
+
+  /// No description provided for @chatSuggestion2.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cuál es mi mayor gasto?'**
+  String get chatSuggestion2;
+
+  /// No description provided for @chatSuggestion3.
+  ///
+  /// In es, this message translates to:
+  /// **'Consejos para ahorrar'**
+  String get chatSuggestion3;
+
+  /// No description provided for @chatError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al enviar el mensaje'**
+  String get chatError;
+
+  /// No description provided for @chatRateLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Has alcanzado el límite de mensajes. Espera un momento.'**
+  String get chatRateLimit;
+
+  /// No description provided for @chatProRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Función exclusiva PRO'**
+  String get chatProRequired;
 }
 
 class _AppLocalizationsDelegate

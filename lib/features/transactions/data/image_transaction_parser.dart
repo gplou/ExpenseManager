@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/utils/ai_rate_limiter.dart';
 import '../domain/parsed_voice_transaction.dart';
 import '../domain/transaction_model.dart';
 
@@ -10,6 +11,11 @@ class ImageTransactionParser {
   static const String _function = 'parse-image-transaction';
 
   Future<ParsedVoiceTransaction?> parse(Uint8List imageBytes) async {
+    if (!AiRateLimiter.instance.tryConsume()) {
+      throw Exception(
+        'Límite alcanzado: máximo ${AiRateLimiter.maxPerMinute} usos por minuto. Espera un momento.',
+      );
+    }
     if (imageBytes.length > 4 * 1024 * 1024) return null;
     if (!_isValidImageMime(imageBytes)) return null;
 

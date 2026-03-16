@@ -515,4 +515,36 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get noSubcategory => 'Ohne Unterkategorie';
+
+  @override
+  String get chatTitle => 'Finanzberater';
+
+  @override
+  String get chatPlaceholder => 'Fragen Sie zu Ihren Finanzen...';
+
+  @override
+  String get chatWelcomeTitle => 'Ihr KI-Finanzberater';
+
+  @override
+  String get chatWelcomeSubtitle =>
+      'Fragen Sie zu Ihren Ausgaben, Einnahmen und erhalten Sie personalisierte Tipps';
+
+  @override
+  String get chatSuggestion1 => 'Wie viel habe ich diesen Monat ausgegeben?';
+
+  @override
+  String get chatSuggestion2 => 'Was ist meine größte Ausgabe?';
+
+  @override
+  String get chatSuggestion3 => 'Tipps zum Sparen';
+
+  @override
+  String get chatError => 'Fehler beim Senden der Nachricht';
+
+  @override
+  String get chatRateLimit =>
+      'Sie haben das Nachrichtenlimit erreicht. Warten Sie einen Moment.';
+
+  @override
+  String get chatProRequired => 'Exklusive PRO-Funktion';
 }

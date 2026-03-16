@@ -175,5 +175,16 @@
   "viewCharts": "View charts",
   "allCategories": "All categories",
   "allSubcategories": "All subcategories",
-  "noSubcategory": "No subcategory"
+  "noSubcategory": "No subcategory",
+
+  "chatTitle": "Financial Advisor",
+  "chatPlaceholder": "Ask about your finances...",
+  "chatWelcomeTitle": "Your AI Financial Advisor",
+  "chatWelcomeSubtitle": "Ask about your expenses, income, and get personalized tips",
+  "chatSuggestion1": "How much did I spend this month?",
+  "chatSuggestion2": "What is my biggest expense?",
+  "chatSuggestion3": "Tips to save money",
+  "chatError": "Error sending message",
+  "chatRateLimit": "You've reached the message limit. Wait a moment.",
+  "chatProRequired": "PRO exclusive feature"
 }

@@ -75,12 +75,12 @@ serve(async (req: Request) => {
     p_user_id: user.id,
     p_endpoint: 'parse-voice',
     p_window_start: windowStart.toISOString(),
-    p_limit: 25,
+    p_limit: 7,
   })
 
   if (rateLimitError || allowed === false) {
     return new Response(
-      JSON.stringify({ error: 'Rate limit exceeded. Maximum 25 requests per minute.' }),
+      JSON.stringify({ error: 'Rate limit exceeded. Maximum 7 requests per minute.' }),
       { status: 429, headers: { ...corsHeaders, 'content-type': 'application/json' } }
     )
   }
