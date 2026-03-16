@@ -22,7 +22,10 @@
       "Bash(xargs grep:*)",
       "Bash(find C:UsersguillDesktopExpenseManagerproductivity_app -type f \\\\\\(-name *.sql -o -name schema* -o -name *supabase* \\\\\\))",
       "Bash(xargs head:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(grep -E \"\\\\.\\(dart|yaml\\)$\")",
+      "Bash(grep -E \"\\\\.dart$\")",
+      "WebSearch"
     ]
   }
 }
