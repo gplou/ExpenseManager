@@ -29,7 +29,6 @@ import '../transactions/presentation/providers/recurring_transactions_provider.d
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
 import '../subscription/subscription_provider.dart';
-import '../onboarding/providers/onboarding_provider.dart';
 import '../tutorial/tutorial_keys.dart';
 import '../tutorial/tutorial_notifier.dart';
 import '../tutorial/tutorial_overlay.dart';
@@ -48,13 +47,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Show legacy onboarding first (if not seen).
-      final hasSeen = await ref.read(onboardingProvider.future);
-      if (!hasSeen && mounted) {
-        context.push(AppRoutes.onboarding);
-        return;
-      }
-      // Then, if the interactive spotlight tutorial hasn't been seen, start it.
+      // Start the interactive spotlight tutorial if the user hasn't seen it yet.
       if (!mounted) return;
       final tutSeen = await ref.read(tutorialProvider.notifier).hasSeen();
       if (!tutSeen && mounted) {
