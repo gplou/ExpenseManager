@@ -186,5 +186,62 @@
   "chatSuggestion3": "Conseils pour économiser",
   "chatError": "Erreur lors de l'envoi du message",
   "chatRateLimit": "Vous avez atteint la limite de messages. Patientez un moment.",
-  "chatProRequired": "Fonction exclusive PRO"
+  "chatProRequired": "Fonction exclusive PRO",
+  "@chatProRequired": {},
+
+  "tutorialTitle": "Tutoriel",
+  "@tutorialTitle": {},
+  "tutorialSkip": "Passer",
+  "@tutorialSkip": {},
+  "tutorialNext": "Suivant",
+  "@tutorialNext": {},
+  "tutorialStart": "Commencer !",
+  "@tutorialStart": {},
+
+  "onboardingWelcomeTitle": "Bienvenue dans ExpenseManager !",
+  "@onboardingWelcomeTitle": {},
+  "onboardingWelcomeBody": "Gérez vos finances intelligemment. Laissez-nous vous montrer comment tirer le meilleur parti de l'application.",
+  "@onboardingWelcomeBody": {},
+
+  "onboardingManualTitle": "Ajouter manuellement",
+  "@onboardingManualTitle": {},
+  "onboardingManualBody": "Appuyez sur le bouton + du tableau de bord et sélectionnez le crayon. Renseignez le montant, le type, la catégorie, la sous-catégorie et la description.",
+  "@onboardingManualBody": {},
+
+  "onboardingPhotoTitle": "Ajouter avec une photo",
+  "@onboardingPhotoTitle": {},
+  "onboardingPhotoBody": "Appuyez sur le bouton + et sélectionnez la caméra. Photographiez un ticket de caisse et l'IA extraira les données automatiquement.",
+  "@onboardingPhotoBody": {},
+
+  "onboardingVoiceTitle": "Ajouter par la voix (PRO)",
+  "@onboardingVoiceTitle": {},
+  "onboardingVoiceBody": "Appuyez sur le microphone et dictez votre transaction. Pour de meilleurs résultats, incluez toujours la catégorie, la sous-catégorie, le montant et la description.",
+  "@onboardingVoiceBody": {},
+  "onboardingVoiceImportant": "Important ! Incluez ces informations :",
+  "@onboardingVoiceImportant": {},
+  "onboardingVoiceBulletAmount": "Montant : « 25 euros »",
+  "@onboardingVoiceBulletAmount": {},
+  "onboardingVoiceBulletCategory": "Catégorie : « alimentation »",
+  "@onboardingVoiceBulletCategory": {},
+  "onboardingVoiceBulletSubcategory": "Sous-catégorie : « restaurant »",
+  "@onboardingVoiceBulletSubcategory": {},
+  "onboardingVoiceBulletDescription": "Description : « déjeuner avec des clients »",
+  "@onboardingVoiceBulletDescription": {},
+  "onboardingVoiceTip": "Exemple : « J'ai dépensé 25 euros en alimentation, restaurant, déjeuner avec l'équipe »",
+  "@onboardingVoiceTip": {},
+
+  "onboardingListTitle": "Voir vos transactions",
+  "@onboardingListTitle": {},
+  "onboardingListBody": "Appuyez sur l'icône de liste dans le tableau de bord pour voir, filtrer et exporter toutes vos transactions.",
+  "@onboardingListBody": {},
+
+  "onboardingChartsTitle": "Graphiques et analyses",
+  "@onboardingChartsTitle": {},
+  "onboardingChartsBody": "Accédez aux graphiques depuis le menu latéral pour analyser vos dépenses et revenus par catégorie, période ou sous-catégorie.",
+  "@onboardingChartsBody": {},
+
+  "onboardingDoneTitle": "Tout est prêt !",
+  "@onboardingDoneTitle": {},
+  "onboardingDoneBody": "Vous connaissez l'essentiel. Vous pouvez revoir ce tutoriel à tout moment depuis les Paramètres.",
+  "@onboardingDoneBody": {}
 }

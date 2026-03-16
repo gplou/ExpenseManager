@@ -186,5 +186,62 @@
   "chatSuggestion3": "Tipps zum Sparen",
   "chatError": "Fehler beim Senden der Nachricht",
   "chatRateLimit": "Sie haben das Nachrichtenlimit erreicht. Warten Sie einen Moment.",
-  "chatProRequired": "Exklusive PRO-Funktion"
+  "chatProRequired": "Exklusive PRO-Funktion",
+  "@chatProRequired": {},
+
+  "tutorialTitle": "Tutorial",
+  "@tutorialTitle": {},
+  "tutorialSkip": "Überspringen",
+  "@tutorialSkip": {},
+  "tutorialNext": "Weiter",
+  "@tutorialNext": {},
+  "tutorialStart": "Loslegen!",
+  "@tutorialStart": {},
+
+  "onboardingWelcomeTitle": "Willkommen bei ExpenseManager!",
+  "@onboardingWelcomeTitle": {},
+  "onboardingWelcomeBody": "Verwalten Sie Ihre Finanzen intelligent. Lassen Sie uns Ihnen zeigen, wie Sie das Beste aus der App herausholen.",
+  "@onboardingWelcomeBody": {},
+
+  "onboardingManualTitle": "Manuell hinzufügen",
+  "@onboardingManualTitle": {},
+  "onboardingManualBody": "Tippen Sie auf die +-Schaltfläche im Dashboard und wählen Sie den Stift. Füllen Sie Betrag, Typ, Kategorie, Unterkategorie und Beschreibung aus.",
+  "@onboardingManualBody": {},
+
+  "onboardingPhotoTitle": "Mit Foto hinzufügen",
+  "@onboardingPhotoTitle": {},
+  "onboardingPhotoBody": "Tippen Sie auf die +-Schaltfläche und wählen Sie die Kamera. Fotografieren Sie einen Kassenbon und die KI extrahiert die Daten automatisch.",
+  "@onboardingPhotoBody": {},
+
+  "onboardingVoiceTitle": "Per Sprache hinzufügen (PRO)",
+  "@onboardingVoiceTitle": {},
+  "onboardingVoiceBody": "Tippen Sie auf das Mikrofon und diktieren Sie Ihre Transaktion. Für beste Ergebnisse geben Sie immer Kategorie, Unterkategorie, Betrag und Beschreibung an.",
+  "@onboardingVoiceBody": {},
+  "onboardingVoiceImportant": "Wichtig! Geben Sie diese Informationen an:",
+  "@onboardingVoiceImportant": {},
+  "onboardingVoiceBulletAmount": "Betrag: '25 Euro'",
+  "@onboardingVoiceBulletAmount": {},
+  "onboardingVoiceBulletCategory": "Kategorie: 'Essen'",
+  "@onboardingVoiceBulletCategory": {},
+  "onboardingVoiceBulletSubcategory": "Unterkategorie: 'Restaurant'",
+  "@onboardingVoiceBulletSubcategory": {},
+  "onboardingVoiceBulletDescription": "Beschreibung: 'Mittagessen mit Kunden'",
+  "@onboardingVoiceBulletDescription": {},
+  "onboardingVoiceTip": "Beispiel: 'Ich habe 25 Euro für Essen ausgegeben, Restaurant, Mittagessen mit dem Team'",
+  "@onboardingVoiceTip": {},
+
+  "onboardingListTitle": "Ihre Transaktionen anzeigen",
+  "@onboardingListTitle": {},
+  "onboardingListBody": "Tippen Sie auf das Listensymbol im Dashboard, um alle Transaktionen anzuzeigen, zu filtern und zu exportieren.",
+  "@onboardingListBody": {},
+
+  "onboardingChartsTitle": "Diagramme & Analysen",
+  "@onboardingChartsTitle": {},
+  "onboardingChartsBody": "Rufen Sie Diagramme über das Seitenmenü auf, um Ausgaben und Einnahmen nach Kategorie, Zeitraum oder Unterkategorie zu analysieren.",
+  "@onboardingChartsBody": {},
+
+  "onboardingDoneTitle": "Alles bereit!",
+  "@onboardingDoneTitle": {},
+  "onboardingDoneBody": "Sie kennen das Wesentliche. Sie können dieses Tutorial jederzeit über die Einstellungen erneut aufrufen.",
+  "@onboardingDoneBody": {}
 }

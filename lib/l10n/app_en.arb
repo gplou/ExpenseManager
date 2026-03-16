@@ -186,5 +186,62 @@
   "chatSuggestion3": "Tips to save money",
   "chatError": "Error sending message",
   "chatRateLimit": "You've reached the message limit. Wait a moment.",
-  "chatProRequired": "PRO exclusive feature"
+  "chatProRequired": "PRO exclusive feature",
+  "@chatProRequired": {},
+
+  "tutorialTitle": "Tutorial",
+  "@tutorialTitle": {},
+  "tutorialSkip": "Skip",
+  "@tutorialSkip": {},
+  "tutorialNext": "Next",
+  "@tutorialNext": {},
+  "tutorialStart": "Get Started!",
+  "@tutorialStart": {},
+
+  "onboardingWelcomeTitle": "Welcome to ExpenseManager!",
+  "@onboardingWelcomeTitle": {},
+  "onboardingWelcomeBody": "Manage your finances smartly. Let us show you how to get the most out of the app.",
+  "@onboardingWelcomeBody": {},
+
+  "onboardingManualTitle": "Add manually",
+  "@onboardingManualTitle": {},
+  "onboardingManualBody": "Tap the + button on the dashboard and select the pencil. Fill in the amount, type, category, subcategory and description.",
+  "@onboardingManualBody": {},
+
+  "onboardingPhotoTitle": "Add with photo",
+  "@onboardingPhotoTitle": {},
+  "onboardingPhotoBody": "Tap the + button and select the camera. Take a photo of any receipt and the AI will extract the data automatically.",
+  "@onboardingPhotoBody": {},
+
+  "onboardingVoiceTitle": "Add with voice (PRO)",
+  "@onboardingVoiceTitle": {},
+  "onboardingVoiceBody": "Tap the microphone and dictate your transaction. For best results, always include category, subcategory, amount and description.",
+  "@onboardingVoiceBody": {},
+  "onboardingVoiceImportant": "Important! Include these details:",
+  "@onboardingVoiceImportant": {},
+  "onboardingVoiceBulletAmount": "Amount: \"25 euros\"",
+  "@onboardingVoiceBulletAmount": {},
+  "onboardingVoiceBulletCategory": "Category: \"food\"",
+  "@onboardingVoiceBulletCategory": {},
+  "onboardingVoiceBulletSubcategory": "Subcategory: \"restaurant\"",
+  "@onboardingVoiceBulletSubcategory": {},
+  "onboardingVoiceBulletDescription": "Description: \"lunch with clients\"",
+  "@onboardingVoiceBulletDescription": {},
+  "onboardingVoiceTip": "Example: \"I spent 25 euros on food, restaurant, lunch with the team\"",
+  "@onboardingVoiceTip": {},
+
+  "onboardingListTitle": "View your transactions",
+  "@onboardingListTitle": {},
+  "onboardingListBody": "Tap the list icon on the dashboard to view, filter and export all your transactions.",
+  "@onboardingListBody": {},
+
+  "onboardingChartsTitle": "Charts & analytics",
+  "@onboardingChartsTitle": {},
+  "onboardingChartsBody": "Access charts from the side menu to analyse your expenses and income by category, period or subcategory.",
+  "@onboardingChartsBody": {},
+
+  "onboardingDoneTitle": "All set!",
+  "@onboardingDoneTitle": {},
+  "onboardingDoneBody": "You know the essentials. You can revisit this tutorial anytime from Settings.",
+  "@onboardingDoneBody": {}
 }

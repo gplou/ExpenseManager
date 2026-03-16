@@ -1,0 +1,453 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
+
+import '../../core/theme/app_colors.dart';
+import 'tutorial_notifier.dart';
+import 'tutorial_step.dart';
+
+// ── Public overlay widget ─────────────────────────────────────────────────────
+
+/// Drop this widget as the **last child** of the top-level Stack that wraps the
+/// Scaffold so it can cover the AppBar and the entire screen.
+///
+/// It is a no-op while the tutorial is inactive, consuming zero pointer events.
+class TutorialOverlay extends ConsumerWidget {
+  const TutorialOverlay({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tut = ref.watch(tutorialProvider);
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 280),
+      child: tut.isActive
+          ? _TutorialOverlayContent(
+              key: ValueKey(tut.stepIndex),
+              step: kTutorialSteps[tut.stepIndex],
+              stepIndex: tut.stepIndex,
+              totalSteps: kTutorialSteps.length,
+              isLast: tut.isLastStep,
+              onNext: () => ref.read(tutorialProvider.notifier).next(),
+              onSkip: () => ref.read(tutorialProvider.notifier).skip(),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+}
+
+// ── Per-step overlay content ──────────────────────────────────────────────────
+
+class _TutorialOverlayContent extends StatefulWidget {
+  const _TutorialOverlayContent({
+    super.key,
+    required this.step,
+    required this.stepIndex,
+    required this.totalSteps,
+    required this.isLast,
+    required this.onNext,
+    required this.onSkip,
+  });
+
+  final TutorialStep step;
+  final int stepIndex;
+  final int totalSteps;
+  final bool isLast;
+  final VoidCallback onNext;
+  final VoidCallback onSkip;
+
+  @override
+  State<_TutorialOverlayContent> createState() =>
+      _TutorialOverlayContentState();
+}
+
+class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  Rect? _targetRect;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Start the fade-in immediately so the dark backdrop appears at once.
+      _ctrl.forward();
+
+      // Delay the spotlight measurement for widgets that animate into place
+      // (e.g. SpeedDial mini-buttons need ~300 ms to reach their final position).
+      if (widget.step.measureDelay == Duration.zero) {
+        _measureTarget();
+      } else {
+        Future.delayed(widget.step.measureDelay, () {
+          if (mounted) _measureTarget();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _measureTarget() {
+    final ctx = widget.step.targetKey.currentContext;
+    if (ctx == null) return;
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final pos = box.localToGlobal(Offset.zero);
+    if (mounted) {
+      setState(() {
+        _targetRect =
+            Rect.fromLTWH(pos.dx, pos.dy, box.size.width, box.size.height);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Retry measurement each build in case the widget wasn't laid out yet.
+    if (_targetRect == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measureTarget());
+    }
+
+    final screen = MediaQuery.of(context).size;
+    final rect = _targetRect;
+
+    if (rect == null) {
+      // Still measuring – show a semi-transparent backdrop without spotlight.
+      return FadeTransition(
+        opacity: _fade,
+        child: _Backdrop(onTap: widget.onSkip),
+      );
+    }
+
+    final spotlight = rect.inflate(widget.step.spotlightPadding);
+
+    // Decide whether to show the tooltip above or below the spotlight.
+    final spaceBelow = screen.height - spotlight.bottom;
+    final spaceAbove = spotlight.top;
+    final tooltipBelow = spaceBelow >= 220 && spaceBelow >= spaceAbove;
+
+    return FadeTransition(
+      opacity: _fade,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Dark backdrop (blocks all taps outside spotlight) ────────────
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {}, // absorb taps on backdrop
+            child: CustomPaint(
+              size: screen,
+              painter: _SpotlightPainter(
+                spotlightRect: spotlight,
+                radius: widget.step.spotlightRadius,
+              ),
+            ),
+          ),
+
+          // ── Tap-through on spotlight → advances step ─────────────────────
+          Positioned(
+            left: spotlight.left,
+            top: spotlight.top,
+            width: spotlight.width,
+            height: spotlight.height,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: widget.onNext,
+              child: const SizedBox.expand(),
+            ),
+          ),
+
+          // ── Step counter ─────────────────────────────────────────────────
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 14,
+            left: 20,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Text(
+                '${widget.stepIndex + 1} / ${widget.totalSteps}',
+                style: const TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+
+          // ── Skip button ──────────────────────────────────────────────────
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            right: 12,
+            child: TextButton(
+              onPressed: widget.onSkip,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                'Omitir',
+                style: TextStyle(
+                  fontFamily: 'Sora',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+
+          // ── Tooltip card ─────────────────────────────────────────────────
+          Positioned(
+            left: 16,
+            right: 16,
+            top: tooltipBelow ? spotlight.bottom + 14 : null,
+            bottom: tooltipBelow
+                ? null
+                : screen.height - spotlight.top + 14,
+            child: _TooltipCard(
+              step: widget.step,
+              stepIndex: widget.stepIndex,
+              totalSteps: widget.totalSteps,
+              isLast: widget.isLast,
+              onNext: widget.onNext,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Plain backdrop (shown while measuring) ────────────────────────────────────
+
+class _Backdrop extends StatelessWidget {
+  const _Backdrop({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(color: Colors.black.withValues(alpha: 0.72)),
+      );
+}
+
+// ── Spotlight CustomPainter ───────────────────────────────────────────────────
+
+class _SpotlightPainter extends CustomPainter {
+  const _SpotlightPainter({
+    required this.spotlightRect,
+    required this.radius,
+  });
+
+  final Rect spotlightRect;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fullScreen =
+        Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final hole = Path()
+      ..addRRect(
+          RRect.fromRectAndRadius(spotlightRect, Radius.circular(radius)));
+
+    // Dark overlay with cutout
+    final overlayPath =
+        Path.combine(PathOperation.difference, fullScreen, hole);
+    canvas.drawPath(
+      overlayPath,
+      Paint()..color = Colors.black.withValues(alpha: 0.72),
+    );
+
+    // Glowing halo
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(spotlightRect, Radius.circular(radius)),
+      Paint()
+        ..color = AppColors.dustyTeal.withValues(alpha: 0.50)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
+    );
+
+    // Solid teal border
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(spotlightRect, Radius.circular(radius)),
+      Paint()
+        ..color = AppColors.dustyTeal
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SpotlightPainter old) =>
+      old.spotlightRect != spotlightRect || old.radius != radius;
+}
+
+// ── Tooltip card ──────────────────────────────────────────────────────────────
+
+class _TooltipCard extends StatelessWidget {
+  const _TooltipCard({
+    required this.step,
+    required this.stepIndex,
+    required this.totalSteps,
+    required this.isLast,
+    required this.onNext,
+  });
+
+  final TutorialStep step;
+  final int stepIndex;
+  final int totalSteps;
+  final bool isLast;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF1E2530) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final subColor = isDark
+        ? Colors.white.withValues(alpha: 0.65)
+        : const Color(0xFF1A1A2E).withValues(alpha: 0.60);
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.22),
+              blurRadius: 28,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Title row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (step.icon != null) ...[
+                  Icon(step.icon, color: AppColors.dustyTeal, size: 20),
+                  const Gap(8),
+                ],
+                Expanded(
+                  child: Text(
+                    step.title,
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Gap(8),
+
+            // Body
+            Text(
+              step.body,
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 13,
+                height: 1.55,
+                color: subColor,
+              ),
+            ),
+            const Gap(16),
+
+            // Footer: dot indicators + next button
+            Row(
+              children: [
+                // Progress dots
+                Expanded(
+                  child: Wrap(
+                    spacing: 5,
+                    children: List.generate(totalSteps, (i) {
+                      final active = i == stepIndex;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: active ? 18 : 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: active
+                              ? AppColors.dustyTeal
+                              : AppColors.dustyTeal.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                const Gap(12),
+
+                // Next / Finish button
+                FilledButton(
+                  onPressed: onNext,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.dustyTeal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(isLast ? 'Finalizar' : 'Siguiente'),
+                      if (!isLast) ...[
+                        const Gap(4),
+                        const Icon(Icons.arrow_forward_rounded, size: 14),
+                      ] else ...[
+                        const Gap(4),
+                        const Icon(Icons.check_rounded, size: 14),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

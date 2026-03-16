@@ -547,4 +547,87 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatProRequired => 'Exklusive PRO-Funktion';
+
+  @override
+  String get tutorialTitle => 'Tutorial';
+
+  @override
+  String get tutorialSkip => 'Überspringen';
+
+  @override
+  String get tutorialNext => 'Weiter';
+
+  @override
+  String get tutorialStart => 'Loslegen!';
+
+  @override
+  String get onboardingWelcomeTitle => 'Willkommen bei ExpenseManager!';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Verwalten Sie Ihre Finanzen intelligent. Lassen Sie uns Ihnen zeigen, wie Sie das Beste aus der App herausholen.';
+
+  @override
+  String get onboardingManualTitle => 'Manuell hinzufügen';
+
+  @override
+  String get onboardingManualBody =>
+      'Tippen Sie auf die +-Schaltfläche im Dashboard und wählen Sie den Stift. Füllen Sie Betrag, Typ, Kategorie, Unterkategorie und Beschreibung aus.';
+
+  @override
+  String get onboardingPhotoTitle => 'Mit Foto hinzufügen';
+
+  @override
+  String get onboardingPhotoBody =>
+      'Tippen Sie auf die +-Schaltfläche und wählen Sie die Kamera. Fotografieren Sie einen Kassenbon und die KI extrahiert die Daten automatisch.';
+
+  @override
+  String get onboardingVoiceTitle => 'Per Sprache hinzufügen (PRO)';
+
+  @override
+  String get onboardingVoiceBody =>
+      'Tippen Sie auf das Mikrofon und diktieren Sie Ihre Transaktion. Für beste Ergebnisse geben Sie immer Kategorie, Unterkategorie, Betrag und Beschreibung an.';
+
+  @override
+  String get onboardingVoiceImportant =>
+      'Wichtig! Geben Sie diese Informationen an:';
+
+  @override
+  String get onboardingVoiceBulletAmount => 'Betrag: \'25 Euro\'';
+
+  @override
+  String get onboardingVoiceBulletCategory => 'Kategorie: \'Essen\'';
+
+  @override
+  String get onboardingVoiceBulletSubcategory =>
+      'Unterkategorie: \'Restaurant\'';
+
+  @override
+  String get onboardingVoiceBulletDescription =>
+      'Beschreibung: \'Mittagessen mit Kunden\'';
+
+  @override
+  String get onboardingVoiceTip =>
+      'Beispiel: \'Ich habe 25 Euro für Essen ausgegeben, Restaurant, Mittagessen mit dem Team\'';
+
+  @override
+  String get onboardingListTitle => 'Ihre Transaktionen anzeigen';
+
+  @override
+  String get onboardingListBody =>
+      'Tippen Sie auf das Listensymbol im Dashboard, um alle Transaktionen anzuzeigen, zu filtern und zu exportieren.';
+
+  @override
+  String get onboardingChartsTitle => 'Diagramme & Analysen';
+
+  @override
+  String get onboardingChartsBody =>
+      'Rufen Sie Diagramme über das Seitenmenü auf, um Ausgaben und Einnahmen nach Kategorie, Zeitraum oder Unterkategorie zu analysieren.';
+
+  @override
+  String get onboardingDoneTitle => 'Alles bereit!';
+
+  @override
+  String get onboardingDoneBody =>
+      'Sie kennen das Wesentliche. Sie können dieses Tutorial jederzeit über die Einstellungen erneut aufrufen.';
 }

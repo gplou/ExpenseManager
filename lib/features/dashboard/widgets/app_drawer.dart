@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/config/router.dart';
 import '../../../core/network/supabase_client.dart';
+import '../../tutorial/tutorial_notifier.dart';
 import '../../../core/providers/currency_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
@@ -76,6 +77,22 @@ class AppDrawer extends ConsumerWidget {
 
                   // ── Ajustes de la app ──────────────────────────────────────
                   _SectionLabel(l10n.appSettings),
+                  ListTile(
+                    leading: const Icon(Icons.help_outline_rounded),
+                    title: Text(l10n.tutorialTitle),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    onTap: () {
+                      // Capture the notifier BEFORE popping the drawer.
+                      // After pop() the drawer widget is unmounted and
+                      // ref becomes invalid in Riverpod 2.x.
+                      final tutNotifier = ref.read(tutorialProvider.notifier);
+                      Navigator.of(context).pop();
+                      Future<void>.delayed(
+                        const Duration(milliseconds: 350),
+                        tutNotifier.start,
+                      );
+                    },
+                  ),
                   SwitchListTile(
                     secondary: Icon(
                       isDark

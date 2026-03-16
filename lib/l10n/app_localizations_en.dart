@@ -539,4 +539,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatProRequired => 'PRO exclusive feature';
+
+  @override
+  String get tutorialTitle => 'Tutorial';
+
+  @override
+  String get tutorialSkip => 'Skip';
+
+  @override
+  String get tutorialNext => 'Next';
+
+  @override
+  String get tutorialStart => 'Get Started!';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to ExpenseManager!';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Manage your finances smartly. Let us show you how to get the most out of the app.';
+
+  @override
+  String get onboardingManualTitle => 'Add manually';
+
+  @override
+  String get onboardingManualBody =>
+      'Tap the + button on the dashboard and select the pencil. Fill in the amount, type, category, subcategory and description.';
+
+  @override
+  String get onboardingPhotoTitle => 'Add with photo';
+
+  @override
+  String get onboardingPhotoBody =>
+      'Tap the + button and select the camera. Take a photo of any receipt and the AI will extract the data automatically.';
+
+  @override
+  String get onboardingVoiceTitle => 'Add with voice (PRO)';
+
+  @override
+  String get onboardingVoiceBody =>
+      'Tap the microphone and dictate your transaction. For best results, always include category, subcategory, amount and description.';
+
+  @override
+  String get onboardingVoiceImportant => 'Important! Include these details:';
+
+  @override
+  String get onboardingVoiceBulletAmount => 'Amount: \"25 euros\"';
+
+  @override
+  String get onboardingVoiceBulletCategory => 'Category: \"food\"';
+
+  @override
+  String get onboardingVoiceBulletSubcategory => 'Subcategory: \"restaurant\"';
+
+  @override
+  String get onboardingVoiceBulletDescription =>
+      'Description: \"lunch with clients\"';
+
+  @override
+  String get onboardingVoiceTip =>
+      'Example: \"I spent 25 euros on food, restaurant, lunch with the team\"';
+
+  @override
+  String get onboardingListTitle => 'View your transactions';
+
+  @override
+  String get onboardingListBody =>
+      'Tap the list icon on the dashboard to view, filter and export all your transactions.';
+
+  @override
+  String get onboardingChartsTitle => 'Charts & analytics';
+
+  @override
+  String get onboardingChartsBody =>
+      'Access charts from the side menu to analyse your expenses and income by category, period or subcategory.';
+
+  @override
+  String get onboardingDoneTitle => 'All set!';
+
+  @override
+  String get onboardingDoneBody =>
+      'You know the essentials. You can revisit this tutorial anytime from Settings.';
 }

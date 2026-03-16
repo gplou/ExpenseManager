@@ -14,6 +14,7 @@ import '../../features/transactions/presentation/screens/transactions_list_scree
 import '../../features/charts/presentation/screens/charts_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/subscription/pro_screen.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 
 part 'router.g.dart';
 
@@ -27,6 +28,7 @@ abstract class AppRoutes {
   static const charts = '/charts';
   static const pro = '/pro';
   static const chat = '/chat';
+  static const onboarding = '/onboarding';
 }
 
 /// Notifier que escucha el stream de auth y notifica a GoRouter para
@@ -105,6 +107,11 @@ GoRouter router(RouterRef ref) {
         path: AppRoutes.chat,
         name: 'chat',
         builder: (context, state) => const ChatScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

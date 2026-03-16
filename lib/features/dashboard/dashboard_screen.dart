@@ -29,6 +29,10 @@ import '../transactions/presentation/providers/recurring_transactions_provider.d
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../transactions/presentation/screens/add_transaction_screen.dart';
 import '../subscription/subscription_provider.dart';
+import '../onboarding/providers/onboarding_provider.dart';
+import '../tutorial/tutorial_keys.dart';
+import '../tutorial/tutorial_notifier.dart';
+import '../tutorial/tutorial_overlay.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -43,6 +47,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Show legacy onboarding first (if not seen).
+      final hasSeen = await ref.read(onboardingProvider.future);
+      if (!hasSeen && mounted) {
+        context.push(AppRoutes.onboarding);
+        return;
+      }
+      // Then, if the interactive spotlight tutorial hasn't been seen, start it.
+      if (!mounted) return;
+      final tutSeen = await ref.read(tutorialProvider.notifier).hasSeen();
+      if (!tutSeen && mounted) {
+        // Small delay so the dashboard fully renders before the spotlight appears.
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        if (mounted) ref.read(tutorialProvider.notifier).start();
+      }
+    });
   }
 
   @override
@@ -71,10 +91,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final cs = context.colors;
     final cSymbol = currencySymbol(ref.watch(currencyProvider).value ?? 'EUR');
 
-    return Scaffold(
+    return Stack(
+      children: [
+      Scaffold(
       drawer: const AppDrawer(),
       bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
+        // Custom leading so we can attach a GlobalKey for the tutorial spotlight.
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            key: TutorialKeys.drawerBtnKey,
+            icon: const Icon(Icons.menu),
+            tooltip: MaterialLocalizations.of(ctx).openAppDrawerTooltip,
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -195,6 +226,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           ),
                         ),
                         GestureDetector(
+                          key: TutorialKeys.seeAllBtnKey,
                           onTap: () => context.push(AppRoutes.transactions),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -307,7 +339,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ],
       ),
-    );
+      ), // ── End Scaffold ──────────────────────────────────────────────────
+
+      // ── Interactive tutorial overlay (covers AppBar + body) ──────────────
+      const TutorialOverlay(),
+      ],
+    ); // ── End outer Stack ──────────────────────────────────────────────────
   }
 }
 
@@ -419,6 +456,7 @@ class _SummarySection extends StatelessWidget {
       children: [
         // Balance card unificada
         Container(
+          key: TutorialKeys.balanceCardKey,
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
           decoration: BoxDecoration(
@@ -644,6 +682,7 @@ class _SummarySection extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
+            key: TutorialKeys.chartsBtnKey,
             onPressed: () => context.push(AppRoutes.charts),
             icon: const Icon(Icons.pie_chart_outline, size: 18),
             label: Text(l10n.viewCharts),
@@ -1091,6 +1130,22 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
 
   @override
   Widget build(BuildContext context) {
+    // ── Tutorial: auto-open dial for steps 1-3 (voice/manual/camera) ─────────
+    final tutStep = ref.watch(
+      tutorialProvider.select((s) => s.isActive ? s.stepIndex : -1),
+    );
+    final tutNeedsDialOpen = tutStep >= 1 && tutStep <= 3;
+    if (tutNeedsDialOpen && !_open) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_open) setState(() => _open = true);
+      });
+    } else if (tutStep >= 4 && _open) {
+      // Tutorial has moved past the dial steps → close it.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _open) setState(() => _open = false);
+      });
+    }
+
     // Distance from the bottom of the body area to the FAB bottom edge,
     // matching Flutter's standard centerFloat margin.
     final fabBottom =
@@ -1147,6 +1202,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                   // Mini radial buttons (behind the FAB)
                   _radialButton(
                     context,
+                    tutorialKey: TutorialKeys.voiceBtnKey,
                     icon: Icons.mic_outlined,
                     label: 'Voz',
                     target: _micTarget,
@@ -1154,6 +1210,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                   ),
                   _radialButton(
                     context,
+                    tutorialKey: TutorialKeys.manualBtnKey,
                     icon: Icons.edit_outlined,
                     label: 'Manual',
                     target: _pencilTarget,
@@ -1164,6 +1221,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                   ),
                   _radialButton(
                     context,
+                    tutorialKey: TutorialKeys.cameraBtnKey,
                     icon: Icons.camera_alt_outlined,
                     label: 'Foto',
                     target: _cameraTarget,
@@ -1173,9 +1231,12 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                   Positioned(
                     left: (_stackW - _fabSize) / 2,
                     bottom: 0,
-                    child: NeoFab(
-                      icon: _open ? Icons.close : Icons.add,
-                      onTap: _toggle,
+                    child: KeyedSubtree(
+                      key: TutorialKeys.fabKey,
+                      child: NeoFab(
+                        icon: _open ? Icons.close : Icons.add,
+                        onTap: _toggle,
+                      ),
                     ),
                   ),
                 ],
@@ -1194,6 +1255,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
     required String label,
     required Offset target,
     required VoidCallback onTap,
+    GlobalKey? tutorialKey,
   }) {
     final centre = _open ? target : _closedPos;
     return AnimatedPositioned(
@@ -1206,7 +1268,12 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
         opacity: _open ? 1.0 : 0.0,
         child: IgnorePointer(
           ignoring: !_open,
-          child: _MiniDialButton(icon: icon, label: label, onTap: onTap),
+          child: _MiniDialButton(
+            key: tutorialKey,
+            icon: icon,
+            label: label,
+            onTap: onTap,
+          ),
         ),
       ),
     );
@@ -1256,7 +1323,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
 // ── Mini radial button ────────────────────────────────────────────────────────
 
 class _MiniDialButton extends StatelessWidget {
-  const _MiniDialButton({required this.icon, required this.label, required this.onTap});
+  const _MiniDialButton({super.key, required this.icon, required this.label, required this.onTap});
 
   final IconData icon;
   final String label;

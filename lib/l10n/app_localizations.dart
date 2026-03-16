@@ -1127,6 +1127,150 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Función exclusiva PRO'**
   String get chatProRequired;
+
+  /// No description provided for @tutorialTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tutorial'**
+  String get tutorialTitle;
+
+  /// No description provided for @tutorialSkip.
+  ///
+  /// In es, this message translates to:
+  /// **'Omitir'**
+  String get tutorialSkip;
+
+  /// No description provided for @tutorialNext.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiente'**
+  String get tutorialNext;
+
+  /// No description provided for @tutorialStart.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Empezar!'**
+  String get tutorialStart;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Bienvenido a ExpenseManager!'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestiona tus finanzas de forma inteligente. Vamos a mostrarte cómo sacarle el máximo partido.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingManualTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir manualmente'**
+  String get onboardingManualTitle;
+
+  /// No description provided for @onboardingManualBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca el botón + del dashboard y selecciona el lápiz. Rellena el importe, tipo, categoría, subcategoría y descripción.'**
+  String get onboardingManualBody;
+
+  /// No description provided for @onboardingPhotoTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir con foto'**
+  String get onboardingPhotoTitle;
+
+  /// No description provided for @onboardingPhotoBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca el botón + y selecciona la cámara. Fotografía cualquier ticket o recibo y la IA extraerá los datos automáticamente.'**
+  String get onboardingPhotoBody;
+
+  /// No description provided for @onboardingVoiceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir con voz (PRO)'**
+  String get onboardingVoiceTitle;
+
+  /// No description provided for @onboardingVoiceBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca el micrófono y dicta tu transacción. Para mejores resultados, incluye siempre categoría, subcategoría, importe y descripción.'**
+  String get onboardingVoiceBody;
+
+  /// No description provided for @onboardingVoiceImportant.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Importante! Incluye estos datos:'**
+  String get onboardingVoiceImportant;
+
+  /// No description provided for @onboardingVoiceBulletAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe: «25 euros»'**
+  String get onboardingVoiceBulletAmount;
+
+  /// No description provided for @onboardingVoiceBulletCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría: «comida»'**
+  String get onboardingVoiceBulletCategory;
+
+  /// No description provided for @onboardingVoiceBulletSubcategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Subcategoría: «restaurante»'**
+  String get onboardingVoiceBulletSubcategory;
+
+  /// No description provided for @onboardingVoiceBulletDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Descripción: «almuerzo con clientes»'**
+  String get onboardingVoiceBulletDescription;
+
+  /// No description provided for @onboardingVoiceTip.
+  ///
+  /// In es, this message translates to:
+  /// **'Ejemplo: «Gasté 25 euros en comida, restaurante, almuerzo con el equipo»'**
+  String get onboardingVoiceTip;
+
+  /// No description provided for @onboardingListTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver tus transacciones'**
+  String get onboardingListTitle;
+
+  /// No description provided for @onboardingListBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca el icono de lista en el dashboard para ver, filtrar y exportar todas tus transacciones.'**
+  String get onboardingListBody;
+
+  /// No description provided for @onboardingChartsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Gráficos y análisis'**
+  String get onboardingChartsTitle;
+
+  /// No description provided for @onboardingChartsBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Accede a los gráficos desde el menú lateral para analizar tus gastos e ingresos por categoría, período o subcategoría.'**
+  String get onboardingChartsBody;
+
+  /// No description provided for @onboardingDoneTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Todo listo!'**
+  String get onboardingDoneTitle;
+
+  /// No description provided for @onboardingDoneBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya conoces lo esencial. Puedes volver a ver este tutorial en cualquier momento desde Ajustes.'**
+  String get onboardingDoneBody;
 }
 
 class _AppLocalizationsDelegate

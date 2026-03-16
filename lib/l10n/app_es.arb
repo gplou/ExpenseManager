@@ -376,5 +376,61 @@
   "chatRateLimit": "Has alcanzado el límite de mensajes. Espera un momento.",
   "@chatRateLimit": {},
   "chatProRequired": "Función exclusiva PRO",
-  "@chatProRequired": {}
+  "@chatProRequired": {},
+
+  "tutorialTitle": "Tutorial",
+  "@tutorialTitle": {},
+  "tutorialSkip": "Omitir",
+  "@tutorialSkip": {},
+  "tutorialNext": "Siguiente",
+  "@tutorialNext": {},
+  "tutorialStart": "¡Empezar!",
+  "@tutorialStart": {},
+
+  "onboardingWelcomeTitle": "¡Bienvenido a ExpenseManager!",
+  "@onboardingWelcomeTitle": {},
+  "onboardingWelcomeBody": "Gestiona tus finanzas de forma inteligente. Vamos a mostrarte cómo sacarle el máximo partido.",
+  "@onboardingWelcomeBody": {},
+
+  "onboardingManualTitle": "Añadir manualmente",
+  "@onboardingManualTitle": {},
+  "onboardingManualBody": "Toca el botón + del dashboard y selecciona el lápiz. Rellena el importe, tipo, categoría, subcategoría y descripción.",
+  "@onboardingManualBody": {},
+
+  "onboardingPhotoTitle": "Añadir con foto",
+  "@onboardingPhotoTitle": {},
+  "onboardingPhotoBody": "Toca el botón + y selecciona la cámara. Fotografía cualquier ticket o recibo y la IA extraerá los datos automáticamente.",
+  "@onboardingPhotoBody": {},
+
+  "onboardingVoiceTitle": "Añadir con voz (PRO)",
+  "@onboardingVoiceTitle": {},
+  "onboardingVoiceBody": "Toca el micrófono y dicta tu transacción. Para mejores resultados, incluye siempre categoría, subcategoría, importe y descripción.",
+  "@onboardingVoiceBody": {},
+  "onboardingVoiceImportant": "¡Importante! Incluye estos datos:",
+  "@onboardingVoiceImportant": {},
+  "onboardingVoiceBulletAmount": "Importe: «25 euros»",
+  "@onboardingVoiceBulletAmount": {},
+  "onboardingVoiceBulletCategory": "Categoría: «comida»",
+  "@onboardingVoiceBulletCategory": {},
+  "onboardingVoiceBulletSubcategory": "Subcategoría: «restaurante»",
+  "@onboardingVoiceBulletSubcategory": {},
+  "onboardingVoiceBulletDescription": "Descripción: «almuerzo con clientes»",
+  "@onboardingVoiceBulletDescription": {},
+  "onboardingVoiceTip": "Ejemplo: «Gasté 25 euros en comida, restaurante, almuerzo con el equipo»",
+  "@onboardingVoiceTip": {},
+
+  "onboardingListTitle": "Ver tus transacciones",
+  "@onboardingListTitle": {},
+  "onboardingListBody": "Toca el icono de lista en el dashboard para ver, filtrar y exportar todas tus transacciones.",
+  "@onboardingListBody": {},
+
+  "onboardingChartsTitle": "Gráficos y análisis",
+  "@onboardingChartsTitle": {},
+  "onboardingChartsBody": "Accede a los gráficos desde el menú lateral para analizar tus gastos e ingresos por categoría, período o subcategoría.",
+  "@onboardingChartsBody": {},
+
+  "onboardingDoneTitle": "¡Todo listo!",
+  "@onboardingDoneTitle": {},
+  "onboardingDoneBody": "Ya conoces lo esencial. Puedes volver a ver este tutorial en cualquier momento desde Ajustes.",
+  "@onboardingDoneBody": {}
 }
