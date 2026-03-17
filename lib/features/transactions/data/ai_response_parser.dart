@@ -18,6 +18,7 @@ class AiResponseParser {
     if (raw == null || raw.isEmpty) return null;
 
     final cleaned = raw
+        .trim()
         .replaceFirst(_codeFenceStart, '')
         .replaceFirst(_codeFenceEnd, '')
         .trim();
