@@ -49,7 +49,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _controller.clear();
 
     final locale = Localizations.localeOf(context).languageCode;
-    await ref.read(chatMessagesProvider.notifier).sendMessage(text, locale, ref);
+    await ref.read(chatMessagesProvider.notifier).sendMessage(text, locale);
     _scrollToBottom();
   }
 

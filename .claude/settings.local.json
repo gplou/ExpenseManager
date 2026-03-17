@@ -29,7 +29,9 @@
       "Bash(grep -r \"rate\\\\|limit\\\\|throttle\\\\|quota\\\\|max.*photo\\\\|max.*audio\\\\|max.*image\\\\|per.*minute\\\\|4.*1024\\\\|const.*MAX\\\\|const.*LIMIT\" /c/Users/guill/Desktop/ExpenseManager/productivity_app/lib --include=*.dart)",
       "Bash(grep -r \"const.*=.*Duration\\\\|const.*=.*\\\\d\\\\+\" /c/Users/guill/Desktop/ExpenseManager/productivity_app/lib --include=*.dart)",
       "Bash(grep -r \"GOOGLE_AI_KEY\\\\|openai\\\\|claude\\\\|anthropic\" /c/Users/guill/Desktop/ExpenseManager/productivity_app --include=*.dart --include=*.ts --include=*.env*)",
-      "Bash(flutter pub:*)"
+      "Bash(flutter pub:*)",
+      "Bash(grep -r \"_SpeedDialFab\\\\|class _SpeedDial\" lib/ --include=*.dart)",
+      "Bash(grep -r tutorial lib/l10n/*.arb)"
     ]
   }
 }

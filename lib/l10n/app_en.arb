@@ -162,6 +162,8 @@
   "proProductUnavailable": "Product not available. Try again later.",
   "proPromoBadInput": "Enter a code",
   "proPromoSuccess": "Code applied! Enjoy PRO.",
+  "proPromoDiscountSuccess": "{percentage}% discount applied! Complete your purchase to activate PRO.",
+  "proDiscountBanner": "{percentage}% discount applied — {bonusDays} bonus days when you subscribe",
   "proPromoUnexpectedError": "Unexpected error. Please try again.",
 
   "subcategory": "Subcategory",

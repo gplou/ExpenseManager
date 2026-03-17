@@ -251,7 +251,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                 final isSubView = selectedCategory != null;
                 final displayDistribution = <String, double>{};
                 for (final e in distribution.entries) {
-                  final key = e.key == '_no_subcategory_'
+                  final key = e.key == '\x00_no_sub'
                       ? l10n.noSubcategory
                       : e.key;
                   displayDistribution[key] = e.value;

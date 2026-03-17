@@ -104,20 +104,18 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
     final box = ctx.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     final pos = box.localToGlobal(Offset.zero);
-    if (mounted) {
-      setState(() {
-        _targetRect =
-            Rect.fromLTWH(pos.dx, pos.dy, box.size.width, box.size.height);
-      });
+    final newRect = Rect.fromLTWH(pos.dx, pos.dy, box.size.width, box.size.height);
+    if (mounted && newRect != _targetRect) {
+      setState(() => _targetRect = newRect);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Retry measurement each build in case the widget wasn't laid out yet.
-    if (_targetRect == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _measureTarget());
-    }
+    // Re-measure every frame so the spotlight tracks the target even if a late
+    // layout change (async data load, keyboard dismissal, ad banner, etc.) shifts
+    // the widget after the initial measurement.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureTarget());
 
     final screen = MediaQuery.of(context).size;
     final rect = _targetRect;

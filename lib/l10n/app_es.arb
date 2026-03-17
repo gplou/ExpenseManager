@@ -329,6 +329,19 @@
   "@proPromoBadInput": {},
   "proPromoSuccess": "¡Código aplicado! Disfruta de PRO.",
   "@proPromoSuccess": {},
+  "proPromoDiscountSuccess": "¡Descuento del {percentage}% aplicado! Completa tu compra para activar PRO.",
+  "@proPromoDiscountSuccess": {
+    "placeholders": {
+      "percentage": { "type": "int" }
+    }
+  },
+  "proDiscountBanner": "Descuento {percentage}% aplicado — {bonusDays} días extra al suscribirte",
+  "@proDiscountBanner": {
+    "placeholders": {
+      "percentage": { "type": "int" },
+      "bonusDays": { "type": "int" }
+    }
+  },
   "proPromoUnexpectedError": "Error inesperado. Inténtalo de nuevo.",
   "@proPromoUnexpectedError": {},
 

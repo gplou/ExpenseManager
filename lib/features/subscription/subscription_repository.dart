@@ -53,16 +53,19 @@ class SubscriptionRepository {
 
   // ── Promo codes ───────────────────────────────────────────────────────────
 
-  /// Returns granted duration in days if valid.
+  /// Redeems a promo code and returns its details.
+  ///
+  /// For 'subscription' codes: [PromoResult.durationDays] contains the days granted.
+  /// For 'discount' codes: [PromoResult.discountPercentage] contains the discount.
   /// Throws [PromoCodeException] with user-facing message on any failure.
-  Future<int> redeemPromoCode(String code) async {
+  Future<PromoResult> redeemPromoCode(String code) async {
     final userId = _client.auth.currentUser!.id;
     final normalised = code.toUpperCase().trim();
 
     // 1. Fetch code record
     final codeRow = await _client
         .from('promo_codes')
-        .select('id, duration_days, max_uses, use_count, valid_until')
+        .select('id, type, duration_days, discount_percentage, max_uses, use_count, valid_until')
         .eq('code', normalised)
         .maybeSingle();
 
@@ -97,7 +100,12 @@ class SubscriptionRepository {
         .update({'use_count': useCount + 1})
         .eq('id', codeRow['id'] as String);
 
-    return codeRow['duration_days'] as int;
+    final type = (codeRow['type'] as String?) ?? 'subscription';
+    return PromoResult(
+      type: type,
+      durationDays: codeRow['duration_days'] as int,
+      discountPercentage: codeRow['discount_percentage'] as int?,
+    );
   }
 
   // ── IAP ───────────────────────────────────────────────────────────────────
@@ -116,6 +124,29 @@ class SubscriptionRepository {
 
   Stream<List<PurchaseDetails>> get purchaseStream =>
       InAppPurchase.instance.purchaseStream;
+}
+
+// ── Promo result ──────────────────────────────────────────────────────────────
+
+/// Result of a successful promo code redemption.
+class PromoResult {
+  const PromoResult({
+    required this.type,
+    required this.durationDays,
+    this.discountPercentage,
+  });
+
+  /// 'subscription' (direct PRO access) or 'discount' (requires store purchase).
+  final String type;
+
+  /// Days of PRO granted (only meaningful for 'subscription' type).
+  final int durationDays;
+
+  /// Discount percentage 1-100 (only meaningful for 'discount' type).
+  final int? discountPercentage;
+
+  bool get isSubscription => type == 'subscription';
+  bool get isDiscount => type == 'discount';
 }
 
 // ── Exception ─────────────────────────────────────────────────────────────────

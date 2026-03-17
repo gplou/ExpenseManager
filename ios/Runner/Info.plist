@@ -74,6 +74,8 @@
 		<string>Necesitamos acceso a la cámara para fotografiar recibos y añadir transacciones automáticamente.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Necesitamos acceso a tu galería para seleccionar fotos de recibos.</string>
+		<key>NSPhotoLibraryAddOnlyUsageDescription</key>
+		<string>Necesitamos permiso para guardar fotos en tu galería.</string>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
