@@ -50,5 +50,56 @@ void main() {
       expect(state.purchaseError, isNull);
       expect(state.source, isNull);
     });
+
+    // ── Discount promo fields ──────────────────────────────────────────────
+
+    test('default state has no pending discount', () {
+      const state = SubscriptionState();
+      expect(state.hasDiscount, isFalse);
+      expect(state.pendingDiscountPercentage, isNull);
+      expect(state.discountBonusDays, 0);
+    });
+
+    test('hasDiscount returns true when pendingDiscountPercentage is set', () {
+      const state = SubscriptionState(pendingDiscountPercentage: 50);
+      expect(state.hasDiscount, isTrue);
+    });
+
+    test('discountBonusDays calculates correctly for 50%', () {
+      const state = SubscriptionState(pendingDiscountPercentage: 50);
+      // 31 * 50 / 100 = 15.5 → rounds to 16
+      expect(state.discountBonusDays, 16);
+    });
+
+    test('discountBonusDays calculates correctly for 100%', () {
+      const state = SubscriptionState(pendingDiscountPercentage: 100);
+      // 31 * 100 / 100 = 31
+      expect(state.discountBonusDays, 31);
+    });
+
+    test('discountBonusDays calculates correctly for 10%', () {
+      const state = SubscriptionState(pendingDiscountPercentage: 10);
+      // 31 * 10 / 100 = 3.1 → rounds to 3
+      expect(state.discountBonusDays, 3);
+    });
+
+    test('copyWith preserves pendingDiscountPercentage', () {
+      const state = SubscriptionState(pendingDiscountPercentage: 30);
+      final updated = state.copyWith(isLoading: true);
+      expect(updated.pendingDiscountPercentage, 30);
+    });
+
+    test('copyWith with clearDiscount removes pendingDiscountPercentage', () {
+      const state = SubscriptionState(pendingDiscountPercentage: 30);
+      final updated = state.copyWith(clearDiscount: true);
+      expect(updated.pendingDiscountPercentage, isNull);
+      expect(updated.hasDiscount, isFalse);
+    });
+
+    test('discount state does not make user PRO', () {
+      const state = SubscriptionState(pendingDiscountPercentage: 50);
+      expect(state.isPro, isFalse);
+      expect(state.hasDiscount, isTrue);
+    });
   });
 }

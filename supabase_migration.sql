@@ -103,14 +103,25 @@ CREATE TABLE IF NOT EXISTS promo_codes (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   -- El código que el usuario escribe (siempre en mayúsculas)
   code          TEXT NOT NULL UNIQUE,
-  -- Días de PRO que otorga este código
+  -- Tipo: 'subscription' otorga PRO directamente, 'discount' aplica descuento en la compra por tienda
+  type          TEXT NOT NULL DEFAULT 'subscription',
+  -- Días de PRO que otorga este código (solo para type = 'subscription')
   duration_days INTEGER NOT NULL DEFAULT 30,
+  -- Porcentaje de descuento 1-100 (solo para type = 'discount').
+  -- Se traduce en días extra de bonificación al completar la compra por tienda.
+  discount_percentage INTEGER,
   -- NULL = usos ilimitados
   max_uses      INTEGER,
   use_count     INTEGER NOT NULL DEFAULT 0,
   -- NULL = no expira nunca
   valid_until   TIMESTAMPTZ,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- Validaciones de integridad
+  CONSTRAINT valid_promo_type CHECK (type IN ('subscription', 'discount')),
+  CONSTRAINT valid_discount CHECK (
+    (type = 'discount' AND discount_percentage BETWEEN 1 AND 100)
+    OR (type = 'subscription' AND discount_percentage IS NULL)
+  )
 );
 
 -- Registro de quién canjeó qué código (evita doble canje)

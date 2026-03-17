@@ -76,6 +76,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   }
 
   /// Redeems a promo code with client-side rate limiting.
+  ///
+  /// For 'subscription' promos: grants PRO access directly.
+  /// For 'discount' promos: stores the discount percentage — the user must
+  /// then complete a store purchase to activate PRO (bonus days are added
+  /// automatically when the purchase completes).
+  ///
   /// Throws [PromoCodeException] on failure so callers can display the message.
   Future<void> redeemPromoCode(String code) async {
     // ── Rate limiting ────────────────────────────────────────────────────────
@@ -90,23 +96,35 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     final repo = ref.read(subscriptionRepositoryProvider);
 
     try {
-      final days = await repo.redeemPromoCode(code);
+      final result = await repo.redeemPromoCode(code);
 
       // Reset counter on success
       _promoFailedAttempts = 0;
       _promoCooldownUntil = null;
 
-      final now = DateTime.now();
-      final current = state.valueOrNull;
-      final base = (current?.isPro == true) ? current!.expiresAt! : now;
-      final expiresAt = base.add(Duration(days: days));
+      if (result.isSubscription) {
+        // ── Direct subscription: grant PRO immediately ────────────────────
+        final now = DateTime.now();
+        final current = state.valueOrNull;
+        final base = (current?.isPro == true) ? current!.expiresAt! : now;
+        final expiresAt = base.add(Duration(days: result.durationDays));
 
-      await repo.upsertSubscription(expiresAt: expiresAt, source: 'promo_code');
-      await _persistCache(expiresAt: expiresAt, source: 'promo_code');
+        await repo.upsertSubscription(
+            expiresAt: expiresAt, source: 'promo_code');
+        await _persistCache(expiresAt: expiresAt, source: 'promo_code');
 
-      state = AsyncData(
-        SubscriptionState(expiresAt: expiresAt, source: 'promo_code'),
-      );
+        state = AsyncData(
+          SubscriptionState(expiresAt: expiresAt, source: 'promo_code'),
+        );
+      } else {
+        // ── Discount: store pending discount, user must purchase via store ─
+        final current = state.valueOrNull ?? const SubscriptionState();
+        state = AsyncData(
+          current.copyWith(
+            pendingDiscountPercentage: result.discountPercentage,
+          ),
+        );
+      }
     } on PromoCodeException {
       _promoFailedAttempts++;
       if (_promoFailedAttempts >= _kMaxPromoAttempts) {
@@ -238,7 +256,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
           if (purchase.pendingCompletePurchase) {
             await InAppPurchase.instance.completePurchase(purchase);
           }
-          final expiresAt = DateTime.now().add(const Duration(days: 31));
+          // Apply bonus days from pending discount promo code, if any.
+          final current = state.valueOrNull ?? const SubscriptionState();
+          final bonusDays = current.discountBonusDays;
+          final expiresAt = DateTime.now()
+              .add(Duration(days: 31 + bonusDays));
           final source = _detectSource(purchase);
           final repo = ref.read(subscriptionRepositoryProvider);
           await repo.upsertSubscription(

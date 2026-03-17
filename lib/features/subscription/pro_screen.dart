@@ -107,6 +107,37 @@ class _ProBody extends ConsumerWidget {
 
           // ── Price card (only when not PRO) ───────────────────────────
           if (!sub.isPro) ...[
+            // ── Discount banner (when a discount promo code has been redeemed)
+            if (sub.hasDiscount) ...[
+              NeoCard(
+                accentColor: AppColors.sageGreen,
+                padding: const EdgeInsets.symmetric(
+                    vertical: 12, horizontal: 16),
+                child: Row(
+                  children: [
+                    const Icon(Icons.local_offer_outlined,
+                        color: AppColors.sageGreen, size: 22),
+                    const Gap(10),
+                    Expanded(
+                      child: Text(
+                        l10n.proDiscountBanner(
+                          sub.pendingDiscountPercentage!,
+                          sub.discountBonusDays,
+                        ),
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.sageGreen,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Gap(16),
+            ],
+
             NeoCard(
               accentColor: AppColors.warmAmber,
               padding: const EdgeInsets.all(20),
