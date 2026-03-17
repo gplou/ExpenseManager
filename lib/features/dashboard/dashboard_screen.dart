@@ -155,6 +155,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         actions: [
           if (ref.watch(isProProvider))
             IconButton(
+              key: TutorialKeys.chatBtnKey,
               icon: const Icon(Icons.auto_awesome, color: AppColors.dustyTeal),
               tooltip: l10n.chatTitle,
               onPressed: () => context.push(AppRoutes.chat),
@@ -490,7 +491,7 @@ class _SummarySection extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: isDark
                   ? [
-                      AppColors.darkSurfaceHigh,
+                      accentLight.withValues(alpha: 0.18),
                       AppColors.darkSurface,
                     ]
                   : [
@@ -502,20 +503,19 @@ class _SummarySection extends StatelessWidget {
             border: isDark
                 ? Border.all(color: cs.outline, width: 1)
                 : null,
-            boxShadow: isDark
-                ? null
-                : [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.12),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                    const BoxShadow(
-                      color: Color(0x08000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
-                    ),
-                  ],
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: isDark ? 0.08 : 0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+              if (!isDark)
+                const BoxShadow(
+                  color: Color(0x08000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+            ],
           ),
           child: Column(
             children: [
@@ -1004,8 +1004,9 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
 
     if (!available) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Micrófono no disponible')),
+          SnackBar(content: Text(l10n.micUnavailable)),
         );
       }
       return;
@@ -1034,8 +1035,9 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       if (!mounted) return;
       setState(() => _voiceState = _VoiceInputState.idle);
       final info = e.toString().split('\n').first;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error IA voz [${e.runtimeType}]: $info')),
+        SnackBar(content: Text(l10n.voiceAiError(e.runtimeType.toString(), info))),
       );
       return;
     }
@@ -1043,8 +1045,8 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
     if (parsed == null) {
       setState(() => _voiceState = _VoiceInputState.idle);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo interpretar. Inténtalo de nuevo.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.voiceInterpretError),
         ),
       );
       return;
@@ -1065,26 +1067,29 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt_outlined),
-                title: const Text('Cámara'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Galería'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-              ),
-            ],
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt_outlined),
+                  title: Text(l10n.cameraOption),
+                  onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library_outlined),
+                  title: Text(l10n.galleryOption),
+                  onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
 
     if (source == null || !mounted) return;
@@ -1116,8 +1121,8 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
 
       if (parsed == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo detectar una transacción en la imagen.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.imageTransactionNotDetected),
           ),
         );
         return;
@@ -1127,8 +1132,9 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       if (mounted) {
         setState(() => _voiceState = _VoiceInputState.idle);
         final info = e.toString().split('\n').first;
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error IA imagen [${e.runtimeType}]: $info')),
+          SnackBar(content: Text(l10n.imageAiError(e.runtimeType.toString(), info))),
         );
       }
     } finally {
@@ -1205,6 +1211,8 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       });
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     // Distance from the bottom of the body area to the FAB bottom edge,
     // matching Flutter's standard centerFloat margin.
     final fabBottom =
@@ -1263,7 +1271,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                     context,
                     tutorialKey: TutorialKeys.voiceBtnKey,
                     icon: Icons.mic_outlined,
-                    label: 'Voz',
+                    label: l10n.labelVoice,
                     target: _micTarget,
                     onTap: _startVoice,
                   ),
@@ -1271,7 +1279,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                     context,
                     tutorialKey: TutorialKeys.manualBtnKey,
                     icon: Icons.edit_outlined,
-                    label: 'Manual',
+                    label: l10n.labelManual,
                     target: _pencilTarget,
                     onTap: () {
                       _closeDial();
@@ -1282,7 +1290,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                     context,
                     tutorialKey: TutorialKeys.cameraBtnKey,
                     icon: Icons.camera_alt_outlined,
-                    label: 'Foto',
+                    label: l10n.labelPhoto,
                     target: _cameraTarget,
                     onTap: _startCamera,
                   ),

@@ -12,7 +12,7 @@ class VoiceTransactionParser {
 
   Future<ParsedVoiceTransaction?> parse(String transcription) async {
     if (!AiRateLimiter.instance.tryConsume()) {
-      throw RateLimitFailure(
+      throw const RateLimitFailure(
         'Límite alcanzado: máximo ${AiRateLimiter.maxPerMinute} usos por minuto. Espera un momento.',
       );
     }

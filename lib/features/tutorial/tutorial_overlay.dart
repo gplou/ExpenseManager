@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -18,15 +19,17 @@ class TutorialOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tut = ref.watch(tutorialProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final steps = buildTutorialSteps(l10n);
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 280),
       child: tut.isActive
           ? _TutorialOverlayContent(
               key: ValueKey(tut.stepIndex),
-              step: kTutorialSteps[tut.stepIndex],
+              step: steps[tut.stepIndex],
               stepIndex: tut.stepIndex,
-              totalSteps: kTutorialSteps.length,
+              totalSteps: steps.length,
               isLast: tut.isLastStep,
               onNext: () => ref.read(tutorialProvider.notifier).next(),
               onSkip: () => ref.read(tutorialProvider.notifier).skip(),
@@ -77,6 +80,14 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // If the target widget is not in the tree and the step allows skipping,
+      // auto-advance without showing anything to the user.
+      if (widget.step.skipIfKeyMissing &&
+          widget.step.targetKey.currentContext == null) {
+        widget.onNext();
+        return;
+      }
+
       // Start the fade-in immediately so the dark backdrop appears at once.
       _ctrl.forward();
 
@@ -168,7 +179,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
 
           // ── Step counter ─────────────────────────────────────────────────
           Positioned(
-            top: MediaQuery.of(context).padding.top + 14,
+            bottom: MediaQuery.of(context).padding.bottom + 20,
             left: 20,
             child: Container(
               padding:
@@ -191,8 +202,8 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
 
           // ── Skip button ──────────────────────────────────────────────────
           Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            right: 12,
+            bottom: MediaQuery.of(context).padding.bottom + 20,
+            right: 20,
             child: TextButton(
               onPressed: widget.onSkip,
               style: TextButton.styleFrom(
@@ -205,9 +216,9 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
                 ),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
-                'Omitir',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)!.tutorialSkip,
+                style: const TextStyle(
                   fontFamily: 'Sora',
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
@@ -430,7 +441,9 @@ class _TooltipCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(isLast ? 'Finalizar' : 'Siguiente'),
+                      Text(isLast
+                          ? AppLocalizations.of(context)!.tutorialFinish
+                          : AppLocalizations.of(context)!.tutorialNext),
                       if (!isLast) ...[
                         const Gap(4),
                         const Icon(Icons.arrow_forward_rounded, size: 14),

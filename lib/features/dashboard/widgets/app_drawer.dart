@@ -164,7 +164,7 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   ListTile(
                     leading: const Icon(Icons.local_offer_outlined),
-                    title: const Text('Código promocional'),
+                    title: Text(AppLocalizations.of(context)!.promoCodeTitle),
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () => _showPromoCodeDialog(context),
                   ),
@@ -623,9 +623,10 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
       await ref.read(subscriptionProvider.notifier).redeemPromoCode(code);
       if (!mounted) return;
       Navigator.of(context).pop();
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Código aplicado! Disfruta de PRO.'),
+        SnackBar(
+          content: Text(l10n.proPromoSuccess),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -633,15 +634,17 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
       if (mounted) setState(() { _error = e.message; _loading = false; });
     } catch (_) {
       if (mounted) {
-        setState(() { _error = 'Error inesperado. Inténtalo de nuevo.'; _loading = false; });
+        final l10n = AppLocalizations.of(context)!;
+        setState(() { _error = l10n.proPromoUnexpectedError; _loading = false; });
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Código promocional'),
+      title: Text(l10n.promoCodeTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -651,9 +654,9 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
             maxLength: 20,
             textCapitalization: TextCapitalization.characters,
             enabled: !_loading,
-            decoration: const InputDecoration(
-              hintText: 'Introduce tu código',
-              prefixIcon: Icon(Icons.local_offer_outlined),
+            decoration: InputDecoration(
+              hintText: l10n.promoCodeHint,
+              prefixIcon: const Icon(Icons.local_offer_outlined),
             ),
             onSubmitted: (_) => _applyCode(),
           ),
@@ -674,7 +677,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: _loading ? null : _applyCode,
@@ -687,7 +690,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('Aplicar'),
+              : Text(l10n.apply),
         ),
       ],
     );

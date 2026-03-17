@@ -445,5 +445,89 @@
   "onboardingDoneTitle": "¡Todo listo!",
   "@onboardingDoneTitle": {},
   "onboardingDoneBody": "Ya conoces lo esencial. Puedes volver a ver este tutorial en cualquier momento desde Ajustes.",
-  "@onboardingDoneBody": {}
+  "@onboardingDoneBody": {},
+
+  "tutorialFinish": "Finalizar",
+  "@tutorialFinish": {},
+  "tutorialAddTitle": "Añade transacciones",
+  "@tutorialAddTitle": {},
+  "tutorialAddBody": "Toca el botón + para desplegar las opciones de registro. Puedes añadir con voz, manualmente o fotografiando un recibo.",
+  "@tutorialAddBody": {},
+  "tutorialVoiceStepTitle": "🎤 Añadir con voz",
+  "@tutorialVoiceStepTitle": {},
+  "tutorialVoiceStepBody": "Di en voz alta el importe, la categoría, la subcategoría y una descripción. Mencionar la palabra \"categoría\" o \"subcategoría\" antes del nombre (p. ej. \"categoría Comida, subcategoría restaurante\") ayuda a la IA a registrar la transacción correctamente.",
+  "@tutorialVoiceStepBody": {},
+  "tutorialManualStepTitle": "✏️ Añadir manualmente",
+  "@tutorialManualStepTitle": {},
+  "tutorialManualStepBody": "Rellena el formulario con todos los detalles: tipo (gasto/ingreso), categoría, importe, descripción, fecha e incluso recurrencia.",
+  "@tutorialManualStepBody": {},
+  "tutorialCameraStepTitle": "📷 Añadir con foto",
+  "@tutorialCameraStepTitle": {},
+  "tutorialCameraStepBody": "Fotografía un ticket o recibo y la IA lo interpretará automáticamente y lo añadirá como transacción lista para guardar.",
+  "@tutorialCameraStepBody": {},
+  "tutorialBalanceTitle": "Tu resumen financiero",
+  "@tutorialBalanceTitle": {},
+  "tutorialBalanceBody": "Aquí ves el balance total, los ingresos y los gastos del período seleccionado. La barra de color muestra la proporción entre ambos.",
+  "@tutorialBalanceBody": {},
+  "tutorialChartsStepTitle": "Gráficos de distribución",
+  "@tutorialChartsStepTitle": {},
+  "tutorialChartsStepBody": "Toca para ver gráficos de tarta y barras que muestran cómo se distribuyen tus ingresos y gastos por categoría.",
+  "@tutorialChartsStepBody": {},
+  "tutorialHistoryStepTitle": "Historial de transacciones",
+  "@tutorialHistoryStepTitle": {},
+  "tutorialHistoryStepBody": "Pulsa \"Ver todo\" para acceder al historial completo con filtros, búsqueda y orden personalizado.",
+  "@tutorialHistoryStepBody": {},
+  "tutorialChatStepTitle": "✨ Chat con IA",
+  "@tutorialChatStepTitle": {},
+  "tutorialChatStepBody": "Habla con tu asistente financiero personal. Puedes preguntarle sobre tus gastos, pedir análisis de tus finanzas o recibir consejos personalizados basados en tus transacciones.",
+  "@tutorialChatStepBody": {},
+  "tutorialDrawerTitle": "Menú de configuración",
+  "@tutorialDrawerTitle": {},
+  "tutorialDrawerBody": "Desde el menú lateral puedes cambiar el idioma, la moneda, el tema visual y gestionar tu suscripción PRO.",
+  "@tutorialDrawerBody": {},
+
+  "labelVoice": "Voz",
+  "@labelVoice": {},
+  "labelManual": "Manual",
+  "@labelManual": {},
+  "labelPhoto": "Foto",
+  "@labelPhoto": {},
+  "cameraOption": "Cámara",
+  "@cameraOption": {},
+  "galleryOption": "Galería",
+  "@galleryOption": {},
+  "micUnavailable": "Micrófono no disponible",
+  "@micUnavailable": {},
+  "voiceAiError": "Error IA voz [{type}]: {info}",
+  "@voiceAiError": {
+    "placeholders": {
+      "type": { "type": "String" },
+      "info": { "type": "String" }
+    }
+  },
+  "voiceInterpretError": "No se pudo interpretar. Inténtalo de nuevo.",
+  "@voiceInterpretError": {},
+  "imageTransactionNotDetected": "No se pudo detectar una transacción en la imagen.",
+  "@imageTransactionNotDetected": {},
+  "imageAiError": "Error IA imagen [{type}]: {info}",
+  "@imageAiError": {
+    "placeholders": {
+      "type": { "type": "String" },
+      "info": { "type": "String" }
+    }
+  },
+  "promoCodeTitle": "Código promocional",
+  "@promoCodeTitle": {},
+  "promoCodeHint": "Introduce tu código",
+  "@promoCodeHint": {},
+  "apply": "Aplicar",
+  "@apply": {},
+  "back": "Volver",
+  "@back": {},
+  "pageNotFound": "Página no encontrada: {error}",
+  "@pageNotFound": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  }
 }
