@@ -77,6 +77,14 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // If the target widget is not in the tree and the step allows skipping,
+      // auto-advance without showing anything to the user.
+      if (widget.step.skipIfKeyMissing &&
+          widget.step.targetKey.currentContext == null) {
+        widget.onNext();
+        return;
+      }
+
       // Start the fade-in immediately so the dark backdrop appears at once.
       _ctrl.forward();
 
@@ -168,7 +176,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
 
           // ── Step counter ─────────────────────────────────────────────────
           Positioned(
-            top: MediaQuery.of(context).padding.top + 14,
+            bottom: MediaQuery.of(context).padding.bottom + 20,
             left: 20,
             child: Container(
               padding:
@@ -191,8 +199,8 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
 
           // ── Skip button ──────────────────────────────────────────────────
           Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            right: 12,
+            bottom: MediaQuery.of(context).padding.bottom + 20,
+            right: 20,
             child: TextButton(
               onPressed: widget.onSkip,
               style: TextButton.styleFrom(

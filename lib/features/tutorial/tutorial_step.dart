@@ -12,6 +12,7 @@ class TutorialStep {
     this.spotlightPadding = 14.0,
     this.spotlightRadius = 18.0,
     this.measureDelay = Duration.zero,
+    this.skipIfKeyMissing = false,
   });
 
   /// Short bold heading shown in the tooltip card.
@@ -36,6 +37,11 @@ class TutorialStep {
   /// Use this for widgets that animate into place (e.g. SpeedDial mini buttons)
   /// so the spotlight is measured after the animation finishes.
   final Duration measureDelay;
+
+  /// When true, this step is automatically skipped if [targetKey] has no
+  /// context (i.e. the widget is not rendered). Useful for steps targeting
+  /// features that are only available to certain user types (e.g. PRO).
+  final bool skipIfKeyMissing;
 }
 
 /// The ordered list of all tutorial steps shown to the user.
@@ -133,7 +139,21 @@ final List<TutorialStep> kTutorialSteps = [
     spotlightRadius: 100,
   ),
 
-  // ── 7 · Drawer button ─────────────────────────────────────────────────────
+  // ── 7 · AI Chat (PRO) ─────────────────────────────────────────────────────
+  TutorialStep(
+    title: '✨ Chat con IA',
+    body:
+        'Habla con tu asistente financiero personal. Puedes preguntarle '
+        'sobre tus gastos, pedir análisis de tus finanzas o recibir '
+        'consejos personalizados basados en tus transacciones.',
+    targetKey: TutorialKeys.chatBtnKey,
+    icon: Icons.auto_awesome,
+    spotlightPadding: 6,
+    spotlightRadius: 12,
+    skipIfKeyMissing: true,
+  ),
+
+  // ── 8 · Drawer button ─────────────────────────────────────────────────────
   TutorialStep(
     title: 'Menú de configuración',
     body:

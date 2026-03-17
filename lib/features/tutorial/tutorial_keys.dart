@@ -31,4 +31,7 @@ class TutorialKeys {
   // ── App bar ────────────────────────────────────────────────────────────────
   /// Hamburger / drawer icon button.
   static final drawerBtnKey = GlobalKey(debugLabel: 'tutorial_drawer_btn');
+
+  /// ✨  AI chat icon button (only present for PRO users).
+  static final chatBtnKey = GlobalKey(debugLabel: 'tutorial_chat_btn');
 }
