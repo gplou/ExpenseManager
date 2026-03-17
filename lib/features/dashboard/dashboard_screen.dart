@@ -491,7 +491,7 @@ class _SummarySection extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: isDark
                   ? [
-                      AppColors.darkSurfaceHigh,
+                      accentLight.withValues(alpha: 0.18),
                       AppColors.darkSurface,
                     ]
                   : [
@@ -503,20 +503,19 @@ class _SummarySection extends StatelessWidget {
             border: isDark
                 ? Border.all(color: cs.outline, width: 1)
                 : null,
-            boxShadow: isDark
-                ? null
-                : [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.12),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                    const BoxShadow(
-                      color: Color(0x08000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
-                    ),
-                  ],
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: isDark ? 0.08 : 0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+              if (!isDark)
+                const BoxShadow(
+                  color: Color(0x08000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+            ],
           ),
           child: Column(
             children: [
