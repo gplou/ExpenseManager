@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/failures.dart';
 import '../../../core/network/supabase_client.dart';
+import '../../../core/utils/date_helpers.dart';
 import '../domain/transaction_model.dart';
 import '../domain/transactions_repository_contract.dart';
 
@@ -21,8 +22,8 @@ class TransactionsRepository implements TransactionsRepositoryContract {
           .from('transactions')
           .select()
           .eq('user_id', _client.auth.currentUser!.id)
-          .gte('date', _dateString(from))
-          .lte('date', _dateString(to))
+          .gte('date', dateToString(from))
+          .lte('date', dateToString(to))
           .order('date', ascending: false)
           .order('created_at', ascending: false);
 
@@ -44,7 +45,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
         'category': transaction.category,
         'subcategory': transaction.subcategory,
         'description': transaction.description,
-        'date': _dateString(transaction.date),
+        'date': dateToString(transaction.date),
         'currency': transaction.currency,
         if (transaction.recurringTransactionId != null)
           'recurring_transaction_id': transaction.recurringTransactionId,
@@ -69,7 +70,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
         'category': transaction.category,
         'subcategory': transaction.subcategory,
         'description': transaction.description,
-        'date': _dateString(transaction.date),
+        'date': dateToString(transaction.date),
         'currency': transaction.currency,
         'recurring_transaction_id': transaction.recurringTransactionId,
       };
@@ -77,6 +78,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
           .from('transactions')
           .update(data)
           .eq('id', transaction.id)
+          .eq('user_id', _client.auth.currentUser!.id)
           .select()
           .single();
       return _fromRow(response);
@@ -88,7 +90,11 @@ class TransactionsRepository implements TransactionsRepositoryContract {
   @override
   Future<void> deleteTransaction(String id) async {
     try {
-      await _client.from('transactions').delete().eq('id', id);
+      await _client
+          .from('transactions')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', _client.auth.currentUser!.id);
     } catch (e) {
       throw const NetworkFailure('No se pudo eliminar la transacción');
     }
@@ -113,9 +119,6 @@ class TransactionsRepository implements TransactionsRepositoryContract {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  String _dateString(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 
   TransactionModel _fromRow(Map<String, dynamic> row) => TransactionModel(
         id: row['id'] as String,

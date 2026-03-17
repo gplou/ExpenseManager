@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/errors/failures.dart';
 import '../../../core/utils/ai_rate_limiter.dart';
+import 'ai_response_parser.dart';
 import '../domain/parsed_voice_transaction.dart';
 import '../domain/transaction_model.dart';
 
@@ -12,7 +14,7 @@ class ImageTransactionParser {
 
   Future<ParsedVoiceTransaction?> parse(Uint8List imageBytes) async {
     if (!AiRateLimiter.instance.tryConsume()) {
-      throw Exception(
+      throw RateLimitFailure(
         'Límite alcanzado: máximo ${AiRateLimiter.maxPerMinute} usos por minuto. Espera un momento.',
       );
     }
@@ -34,16 +36,8 @@ class ImageTransactionParser {
       if (response.status != 200) return null;
 
       final data = response.data as Map<String, dynamic>;
-      var text = data['result'] as String?;
-      if (text == null || text.isEmpty) return null;
-
-      // Strip markdown code fences (```json ... ```) that the AI may include
-      text = text
-          .replaceFirst(RegExp(r'^```(?:json)?\s*', caseSensitive: false), '')
-          .replaceFirst(RegExp(r'\s*```\s*$'), '')
-          .trim();
-
-      final json = jsonDecode(text) as Map<String, dynamic>;
+      final json = AiResponseParser.parseJsonResponse(data['result'] as String?);
+      if (json == null) return null;
 
       final amount = (json['amount'] as num).toDouble();
       if (amount <= 0) return null;

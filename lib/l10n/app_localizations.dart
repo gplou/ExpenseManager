@@ -996,6 +996,18 @@ abstract class AppLocalizations {
   /// **'¡Código aplicado! Disfruta de PRO.'**
   String get proPromoSuccess;
 
+  /// No description provided for @proPromoDiscountSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Descuento del {percentage}% aplicado! Completa tu compra para activar PRO.'**
+  String proPromoDiscountSuccess(int percentage);
+
+  /// No description provided for @proDiscountBanner.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento {percentage}% aplicado — {bonusDays} días extra al suscribirte'**
+  String proDiscountBanner(int percentage, int bonusDays);
+
   /// No description provided for @proPromoUnexpectedError.
   ///
   /// In es, this message translates to:

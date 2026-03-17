@@ -71,6 +71,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.14.1
+  mocktail: ^1.0.4
 
   # Generación de código
   build_runner: 2.4.9

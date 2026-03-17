@@ -86,7 +86,18 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
     }
 
     setState(() => _state = _VoiceState.processing);
-    final ParsedVoiceTransaction? parsed = await _parser.parse(text);
+
+    ParsedVoiceTransaction? parsed;
+    try {
+      parsed = await _parser.parse(text);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _state = _VoiceState.idle);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+      return;
+    }
 
     if (!mounted) return;
     setState(() => _state = _VoiceState.idle);

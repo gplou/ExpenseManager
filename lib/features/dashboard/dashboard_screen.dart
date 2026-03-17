@@ -52,6 +52,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+<<<<<<< HEAD
 
     // Escuchar taps del widget mientras la app ya está en ejecución
     _widgetClickedSub = HomeWidget.widgetClicked.listen((uri) {
@@ -74,6 +75,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         if (mounted) ref.read(tutorialProvider.notifier).start();
       }
     });
+=======
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleTutorial());
+  }
+
+  // Waits frame-by-frame until the incoming route animation is complete before
+  // starting the tutorial, so the spotlight is measured on a fully-settled layout.
+  void _scheduleTutorial() {
+    if (!mounted) return;
+    final anim = ModalRoute.of(context)?.animation;
+    if (anim != null && !anim.isCompleted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleTutorial());
+      return;
+    }
+    _startTutorialIfNeeded();
+  }
+
+  Future<void> _startTutorialIfNeeded() async {
+    if (!mounted) return;
+    final tutSeen = await ref.read(tutorialProvider.notifier).hasSeen();
+    if (!tutSeen && mounted) {
+      // Extra delay so any pending async rebuilds (subscription, ads, etc.)
+      // settle before the spotlight position is first measured.
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (mounted) ref.read(tutorialProvider.notifier).start();
+    }
+>>>>>>> a2b8215a3e71fb2b143db52108e0041a62e939fc
   }
 
   @override
