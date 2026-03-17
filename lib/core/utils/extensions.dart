@@ -7,7 +7,7 @@ import '../../l10n/app_localizations.dart';
 
 extension StringExtensions on String {
   bool get isValidEmail => RegExp(
-    r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$",
   ).hasMatch(this);
 
   /// Password is valid when it has ≥ 8 characters, at least one letter and one digit.

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/network/supabase_client.dart';
+import '../../../core/utils/date_helpers.dart';
 import '../domain/recurring_transaction_model.dart';
 import '../domain/transaction_model.dart';
 
@@ -12,12 +13,9 @@ class RecurringTransactionsRepository {
 
   String get _userId => _client.auth.currentUser!.id;
 
-  String _dateStr(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
-
   /// Devuelve las recurrentes cuya [next_occurrence] ya ha llegado.
   Future<List<RecurringTransactionModel>> getDueRecurring() async {
-    final today = _dateStr(DateTime.now());
+    final today = dateToString(DateTime.now());
     final response = await _client
         .from('recurring_transactions')
         .select()
@@ -48,7 +46,7 @@ class RecurringTransactionsRepository {
           'subcategory': subcategory,
           'description': description,
           'recurrence_type': recurrenceType.name,
-          'next_occurrence': _dateStr(nextOccurrence),
+          'next_occurrence': dateToString(nextOccurrence),
         })
         .select('id')
         .single();
@@ -60,6 +58,7 @@ class RecurringTransactionsRepository {
         .from('recurring_transactions')
         .select()
         .eq('id', id)
+        .eq('user_id', _userId)
         .maybeSingle();
     if (response == null) return null;
     return RecurringTransactionModel.fromJson(response);
@@ -84,16 +83,18 @@ class RecurringTransactionsRepository {
           'subcategory': subcategory,
           'description': description,
           'recurrence_type': recurrenceType.name,
-          'next_occurrence': _dateStr(nextOccurrence),
+          'next_occurrence': dateToString(nextOccurrence),
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', _userId);
   }
 
   Future<void> updateNextOccurrence(String id, DateTime next) async {
     await _client
         .from('recurring_transactions')
-        .update({'next_occurrence': _dateStr(next)})
-        .eq('id', id);
+        .update({'next_occurrence': dateToString(next)})
+        .eq('id', id)
+        .eq('user_id', _userId);
   }
 
   Future<void> deleteRecurring(String id) async {
@@ -101,9 +102,14 @@ class RecurringTransactionsRepository {
       await _client
           .from('transactions')
           .update({'recurring_transaction_id': null})
-          .eq('recurring_transaction_id', id);
+          .eq('recurring_transaction_id', id)
+          .eq('user_id', _userId);
     } catch (_) {}
-    await _client.from('recurring_transactions').delete().eq('id', id);
+    await _client
+        .from('recurring_transactions')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', _userId);
   }
 }
 

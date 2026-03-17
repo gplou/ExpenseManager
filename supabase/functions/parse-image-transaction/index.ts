@@ -8,6 +8,13 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const MAX_BASE64_LENGTH = 5_600_000 // ~4 MB in base64
 
+function sanitizeInput(input: string): string {
+  return input
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '')
+    .replace(/```/g, '')
+    .trim()
+}
+
 function buildImagePrompt(subcatBlock: string): string {
   return `You are a transaction parser for a personal finance app.
 Analyze this image (receipt, invoice, price tag, or bill).
@@ -34,8 +41,19 @@ Rules:
 - If no transaction is visible, return: {"amount": 0, "type": "expense", "category": "Otros", "subcategory": null, "is_new_subcategory": false, "description": ""}`
 }
 
+const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') ?? ''
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') ?? ''
+  const allowOrigin = (ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN) ? origin : ''
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Headers': 'authorization, content-type',
+  }
+}
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN || '',
   'Access-Control-Allow-Headers': 'authorization, content-type',
 }
 
@@ -134,10 +152,10 @@ serve(async (req: Request) => {
   }
 
   const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GOOGLE_AI_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`,
     {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': GOOGLE_AI_KEY },
       body: JSON.stringify({
         contents: [
           {

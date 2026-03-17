@@ -5,10 +5,19 @@ const GOOGLE_AI_KEY = Deno.env.get('GOOGLE_AI_KEY') ?? ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 
+function sanitizeInput(input: string): string {
+  // Remove characters that could be used for prompt injection
+  return input
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '') // control chars
+    .replace(/```/g, '')  // code fences
+    .trim()
+}
+
 function buildPrompt(transcription: string, subcatBlock: string, todayDate: string): string {
+  const sanitized = sanitizeInput(transcription)
   return `You are a transaction parser for a personal finance app.
 Extract transaction details from this text (may be in Spanish or English):
-"${transcription}"
+"${sanitized}"
 
 Today's date is ${todayDate}.
 
@@ -36,8 +45,22 @@ Rules:
 - Example: "He salido a cenar mexicano" → category: "Comida", subcategory: "Cena", description: "Mexicano", date: null, is_recurring: false, recurrence_type: null`
 }
 
+// Mobile apps don't send Origin headers, so CORS is mainly for web clients.
+// Restrict to same-site only; adjust if you add a web frontend.
+const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') ?? ''
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') ?? ''
+  const allowOrigin = (ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN) ? origin : ''
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Headers': 'authorization, content-type',
+  }
+}
+
+// Legacy alias for non-preflight responses (uses empty origin when not matched)
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN || '',
   'Access-Control-Allow-Headers': 'authorization, content-type',
 }
 
@@ -138,10 +161,10 @@ serve(async (req: Request) => {
   const prompt = buildPrompt(transcription, subcatBlock, todayDate)
 
   const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GOOGLE_AI_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`,
     {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': GOOGLE_AI_KEY },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { maxOutputTokens: 400, temperature: 0 },

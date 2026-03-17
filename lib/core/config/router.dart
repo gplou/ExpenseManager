@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -53,7 +54,7 @@ GoRouter router(RouterRef ref) {
 
   return GoRouter(
     initialLocation: AppRoutes.dashboard,
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: kDebugMode,
     // Al cambiar el auth state, GoRouter re-evalúa redirect sin recrearse
     refreshListenable: _RouterRefreshNotifier(authRepo.authStateChanges),
     redirect: (context, state) {
@@ -90,7 +91,9 @@ GoRouter router(RouterRef ref) {
         path: AppRoutes.addTransaction,
         name: 'addTransaction',
         builder: (context, state) => AddTransactionScreen(
-          voiceData: state.extra as ParsedVoiceTransaction?,
+          voiceData: state.extra is ParsedVoiceTransaction
+              ? state.extra as ParsedVoiceTransaction
+              : null,
         ),
       ),
       GoRoute(

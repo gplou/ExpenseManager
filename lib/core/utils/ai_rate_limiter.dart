@@ -6,6 +6,9 @@ class AiRateLimiter {
   AiRateLimiter._();
   static final instance = AiRateLimiter._();
 
+  /// Creates an isolated instance for testing (avoids shared state).
+  factory AiRateLimiter.testInstance() => AiRateLimiter._();
+
   static const int maxPerMinute = 7;
   static const _window = Duration(minutes: 1);
 
