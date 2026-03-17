@@ -56,6 +56,9 @@ dependencies:
   share_plus: ^10.1.4
   path_provider: ^2.1.4
 
+  # Widgets de pantalla de inicio
+  home_widget: ^0.9.0
+
   # Utilidades
   intl: ^0.20.2
   equatable: ^2.0.5
