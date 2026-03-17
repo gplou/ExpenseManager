@@ -37,6 +37,11 @@ final class ValidationFailure extends AppFailure {
   const ValidationFailure(super.message, {this.fieldErrors});
 }
 
+/// Error de límite de uso (rate limit)
+final class RateLimitFailure extends AppFailure {
+  const RateLimitFailure(super.message);
+}
+
 /// Error inesperado
 final class UnexpectedFailure extends AppFailure {
   const UnexpectedFailure([super.message = 'Ha ocurrido un error inesperado']);
@@ -50,6 +55,7 @@ extension AppFailureExtension on AppFailure {
         ServerFailure() => 'El servidor no está disponible. Intenta más tarde.',
         CacheFailure() => 'Error al cargar datos locales.',
         ValidationFailure(message: final msg) => msg,
+        RateLimitFailure(message: final msg) => msg,
         UnexpectedFailure() => 'Algo salió mal. Intenta de nuevo.',
       };
 }

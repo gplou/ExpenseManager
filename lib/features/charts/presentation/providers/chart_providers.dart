@@ -31,7 +31,8 @@ final chartDistributionProvider =
   } else {
     // Group by subcategory within the selected category
     for (final t in filtered.where((t) => t.category == category)) {
-      final key = t.subcategory ?? '_no_subcategory_';
+      final key = t.subcategory ?? '\x00_no_sub';
+
       map[key] = (map[key] ?? 0) + t.amount;
     }
   }

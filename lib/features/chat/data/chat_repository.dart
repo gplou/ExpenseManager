@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/errors/failures.dart';
 import '../../../core/utils/ai_rate_limiter.dart';
 import '../domain/chat_message.dart';
 
@@ -13,8 +14,8 @@ class ChatRepository {
     required String locale,
   }) async {
     if (!AiRateLimiter.instance.tryConsume()) {
-      throw Exception(
-        'Limite alcanzado: maximo ${AiRateLimiter.maxPerMinute} usos por minuto. Espera un momento.',
+      throw RateLimitFailure(
+        'Límite alcanzado: máximo ${AiRateLimiter.maxPerMinute} usos por minuto. Espera un momento.',
       );
     }
 
