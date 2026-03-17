@@ -245,5 +245,89 @@
   "onboardingDoneTitle": "Alles bereit!",
   "@onboardingDoneTitle": {},
   "onboardingDoneBody": "Sie kennen das Wesentliche. Sie können dieses Tutorial jederzeit über die Einstellungen erneut aufrufen.",
-  "@onboardingDoneBody": {}
+  "@onboardingDoneBody": {},
+
+  "tutorialFinish": "Abschließen",
+  "@tutorialFinish": {},
+  "tutorialAddTitle": "Transaktionen hinzufügen",
+  "@tutorialAddTitle": {},
+  "tutorialAddBody": "Tippen Sie auf die +-Schaltfläche, um die Aufzeichnungsoptionen aufzuklappen. Sie können per Sprache, manuell oder durch Fotografieren eines Belegs hinzufügen.",
+  "@tutorialAddBody": {},
+  "tutorialVoiceStepTitle": "🎤 Per Sprache hinzufügen",
+  "@tutorialVoiceStepTitle": {},
+  "tutorialVoiceStepBody": "Sagen Sie den Betrag, die Kategorie, die Unterkategorie und eine Beschreibung laut. Das Erwähnen des Worts \"Kategorie\" oder \"Unterkategorie\" vor dem Namen (z. B. \"Kategorie Essen, Unterkategorie Restaurant\") hilft der KI, die Transaktion korrekt zu erfassen.",
+  "@tutorialVoiceStepBody": {},
+  "tutorialManualStepTitle": "✏️ Manuell hinzufügen",
+  "@tutorialManualStepTitle": {},
+  "tutorialManualStepBody": "Füllen Sie das Formular mit allen Details aus: Typ (Ausgabe/Einnahme), Kategorie, Betrag, Beschreibung, Datum und sogar Wiederholung.",
+  "@tutorialManualStepBody": {},
+  "tutorialCameraStepTitle": "📷 Mit Foto hinzufügen",
+  "@tutorialCameraStepTitle": {},
+  "tutorialCameraStepBody": "Fotografieren Sie einen Bon oder Beleg und die KI interpretiert ihn automatisch und fügt ihn als speicherbereite Transaktion hinzu.",
+  "@tutorialCameraStepBody": {},
+  "tutorialBalanceTitle": "Ihre Finanzübersicht",
+  "@tutorialBalanceTitle": {},
+  "tutorialBalanceBody": "Hier sehen Sie den Gesamtsaldo, Einnahmen und Ausgaben des ausgewählten Zeitraums. Der Farbbalken zeigt das Verhältnis zwischen beiden.",
+  "@tutorialBalanceBody": {},
+  "tutorialChartsStepTitle": "Verteilungsdiagramme",
+  "@tutorialChartsStepTitle": {},
+  "tutorialChartsStepBody": "Tippen Sie, um Kreis- und Balkendiagramme zu sehen, die zeigen, wie sich Ihre Einnahmen und Ausgaben nach Kategorie verteilen.",
+  "@tutorialChartsStepBody": {},
+  "tutorialHistoryStepTitle": "Transaktionsverlauf",
+  "@tutorialHistoryStepTitle": {},
+  "tutorialHistoryStepBody": "Tippen Sie auf \"Alle anzeigen\", um auf den vollständigen Verlauf mit Filtern, Suche und benutzerdefinierter Sortierung zuzugreifen.",
+  "@tutorialHistoryStepBody": {},
+  "tutorialChatStepTitle": "✨ KI-Chat",
+  "@tutorialChatStepTitle": {},
+  "tutorialChatStepBody": "Chatten Sie mit Ihrem persönlichen Finanzberater. Sie können Fragen zu Ihren Ausgaben stellen, Finanzanalysen anfordern oder personalisierte Tipps basierend auf Ihren Transaktionen erhalten.",
+  "@tutorialChatStepBody": {},
+  "tutorialDrawerTitle": "Einstellungsmenü",
+  "@tutorialDrawerTitle": {},
+  "tutorialDrawerBody": "Über das Seitenmenü können Sie Sprache, Währung, visuelles Thema ändern und Ihr PRO-Abonnement verwalten.",
+  "@tutorialDrawerBody": {},
+
+  "labelVoice": "Stimme",
+  "@labelVoice": {},
+  "labelManual": "Manuell",
+  "@labelManual": {},
+  "labelPhoto": "Foto",
+  "@labelPhoto": {},
+  "cameraOption": "Kamera",
+  "@cameraOption": {},
+  "galleryOption": "Galerie",
+  "@galleryOption": {},
+  "micUnavailable": "Mikrofon nicht verfügbar",
+  "@micUnavailable": {},
+  "voiceAiError": "Sprach-KI-Fehler [{type}]: {info}",
+  "@voiceAiError": {
+    "placeholders": {
+      "type": { "type": "String" },
+      "info": { "type": "String" }
+    }
+  },
+  "voiceInterpretError": "Konnte nicht interpretiert werden. Versuchen Sie es erneut.",
+  "@voiceInterpretError": {},
+  "imageTransactionNotDetected": "Es konnte keine Transaktion im Bild erkannt werden.",
+  "@imageTransactionNotDetected": {},
+  "imageAiError": "Bild-KI-Fehler [{type}]: {info}",
+  "@imageAiError": {
+    "placeholders": {
+      "type": { "type": "String" },
+      "info": { "type": "String" }
+    }
+  },
+  "promoCodeTitle": "Aktionscode",
+  "@promoCodeTitle": {},
+  "promoCodeHint": "Code eingeben",
+  "@promoCodeHint": {},
+  "apply": "Anwenden",
+  "@apply": {},
+  "back": "Zurück",
+  "@back": {},
+  "pageNotFound": "Seite nicht gefunden: {error}",
+  "@pageNotFound": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  }
 }

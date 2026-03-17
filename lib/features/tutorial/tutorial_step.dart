@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'tutorial_keys.dart';
 
@@ -44,17 +45,15 @@ class TutorialStep {
   final bool skipIfKeyMissing;
 }
 
+/// Total number of tutorial steps. Must match the list length in [buildTutorialSteps].
+const int kTutorialStepCount = 9;
+
 /// The ordered list of all tutorial steps shown to the user.
-///
-/// Note: cannot use `const` because [GlobalKey] instances are not
-/// compile-time constants.
-final List<TutorialStep> kTutorialSteps = [
+List<TutorialStep> buildTutorialSteps(AppLocalizations l10n) => [
   // ── 0 · Main FAB ──────────────────────────────────────────────────────────
   TutorialStep(
-    title: 'Añade transacciones',
-    body:
-        'Toca el botón + para desplegar las opciones de registro. '
-        'Puedes añadir con voz, manualmente o fotografiando un recibo.',
+    title: l10n.tutorialAddTitle,
+    body: l10n.tutorialAddBody,
     targetKey: TutorialKeys.fabKey,
     icon: Icons.add_circle_outline_rounded,
     spotlightPadding: 10,
@@ -63,12 +62,8 @@ final List<TutorialStep> kTutorialSteps = [
 
   // ── 1 · Voice ─────────────────────────────────────────────────────────────
   TutorialStep(
-    title: '🎤 Añadir con voz',
-    body:
-        'Di en voz alta el importe, la categoría, la subcategoría y una descripción. '
-        'Mencionar la palabra "categoría" o "subcategoría" antes del nombre '
-        '(p. ej. "categoría Comida, subcategoría restaurante") '
-        'ayuda a la IA a registrar la transacción correctamente.',
+    title: l10n.tutorialVoiceStepTitle,
+    body: l10n.tutorialVoiceStepBody,
     targetKey: TutorialKeys.voiceBtnKey,
     icon: Icons.mic_outlined,
     spotlightPadding: 12,
@@ -79,10 +74,8 @@ final List<TutorialStep> kTutorialSteps = [
 
   // ── 2 · Manual ────────────────────────────────────────────────────────────
   TutorialStep(
-    title: '✏️ Añadir manualmente',
-    body:
-        'Rellena el formulario con todos los detalles: tipo (gasto/ingreso), '
-        'categoría, importe, descripción, fecha e incluso recurrencia.',
+    title: l10n.tutorialManualStepTitle,
+    body: l10n.tutorialManualStepBody,
     targetKey: TutorialKeys.manualBtnKey,
     icon: Icons.edit_outlined,
     spotlightPadding: 12,
@@ -92,10 +85,8 @@ final List<TutorialStep> kTutorialSteps = [
 
   // ── 3 · Camera ────────────────────────────────────────────────────────────
   TutorialStep(
-    title: '📷 Añadir con foto',
-    body:
-        'Fotografía un ticket o recibo y la IA lo interpretará '
-        'automáticamente y lo añadirá como transacción lista para guardar.',
+    title: l10n.tutorialCameraStepTitle,
+    body: l10n.tutorialCameraStepBody,
     targetKey: TutorialKeys.cameraBtnKey,
     icon: Icons.camera_alt_outlined,
     spotlightPadding: 12,
@@ -105,10 +96,8 @@ final List<TutorialStep> kTutorialSteps = [
 
   // ── 4 · Balance card ──────────────────────────────────────────────────────
   TutorialStep(
-    title: 'Tu resumen financiero',
-    body:
-        'Aquí ves el balance total, los ingresos y los gastos del período '
-        'seleccionado. La barra de color muestra la proporción entre ambos.',
+    title: l10n.tutorialBalanceTitle,
+    body: l10n.tutorialBalanceBody,
     targetKey: TutorialKeys.balanceCardKey,
     icon: Icons.account_balance_wallet_outlined,
     spotlightPadding: 10,
@@ -117,10 +106,8 @@ final List<TutorialStep> kTutorialSteps = [
 
   // ── 5 · Charts button ─────────────────────────────────────────────────────
   TutorialStep(
-    title: 'Gráficos de distribución',
-    body:
-        'Toca para ver gráficos de tarta y barras que muestran cómo se '
-        'distribuyen tus ingresos y gastos por categoría.',
+    title: l10n.tutorialChartsStepTitle,
+    body: l10n.tutorialChartsStepBody,
     targetKey: TutorialKeys.chartsBtnKey,
     icon: Icons.pie_chart_outline_rounded,
     spotlightPadding: 8,
@@ -129,10 +116,8 @@ final List<TutorialStep> kTutorialSteps = [
 
   // ── 6 · See-all button ────────────────────────────────────────────────────
   TutorialStep(
-    title: 'Historial de transacciones',
-    body:
-        'Pulsa "Ver todo" para acceder al historial completo con filtros, '
-        'búsqueda y orden personalizado.',
+    title: l10n.tutorialHistoryStepTitle,
+    body: l10n.tutorialHistoryStepBody,
     targetKey: TutorialKeys.seeAllBtnKey,
     icon: Icons.list_alt_outlined,
     spotlightPadding: 8,
@@ -141,11 +126,8 @@ final List<TutorialStep> kTutorialSteps = [
 
   // ── 7 · AI Chat (PRO) ─────────────────────────────────────────────────────
   TutorialStep(
-    title: '✨ Chat con IA',
-    body:
-        'Habla con tu asistente financiero personal. Puedes preguntarle '
-        'sobre tus gastos, pedir análisis de tus finanzas o recibir '
-        'consejos personalizados basados en tus transacciones.',
+    title: l10n.tutorialChatStepTitle,
+    body: l10n.tutorialChatStepBody,
     targetKey: TutorialKeys.chatBtnKey,
     icon: Icons.auto_awesome,
     spotlightPadding: 6,
@@ -155,10 +137,8 @@ final List<TutorialStep> kTutorialSteps = [
 
   // ── 8 · Drawer button ─────────────────────────────────────────────────────
   TutorialStep(
-    title: 'Menú de configuración',
-    body:
-        'Desde el menú lateral puedes cambiar el idioma, la moneda, '
-        'el tema visual y gestionar tu suscripción PRO.',
+    title: l10n.tutorialDrawerTitle,
+    body: l10n.tutorialDrawerBody,
     targetKey: TutorialKeys.drawerBtnKey,
     icon: Icons.menu_rounded,
     spotlightPadding: 6,

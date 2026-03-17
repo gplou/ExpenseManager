@@ -14,11 +14,7 @@ class TutorialState {
   final bool isActive;
   final int stepIndex;
 
-  /// Convenience: returns the current step or null when tutorial is inactive.
-  TutorialStep? get currentStep =>
-      isActive ? kTutorialSteps[stepIndex] : null;
-
-  bool get isLastStep => stepIndex == kTutorialSteps.length - 1;
+  bool get isLastStep => stepIndex == kTutorialStepCount - 1;
 
   TutorialState copyWith({bool? isActive, int? stepIndex}) => TutorialState(
         isActive: isActive ?? this.isActive,

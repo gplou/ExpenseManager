@@ -245,5 +245,58 @@
   "onboardingDoneTitle": "All set!",
   "@onboardingDoneTitle": {},
   "onboardingDoneBody": "You know the essentials. You can revisit this tutorial anytime from Settings.",
-  "@onboardingDoneBody": {}
+  "@onboardingDoneBody": {},
+
+  "tutorialFinish": "Finish",
+  "tutorialAddTitle": "Add transactions",
+  "tutorialAddBody": "Tap the + button to expand the recording options. You can add by voice, manually, or by photographing a receipt.",
+  "tutorialVoiceStepTitle": "🎤 Add by voice",
+  "tutorialVoiceStepBody": "Say the amount, category, subcategory and a description aloud. Mentioning the word \"category\" or \"subcategory\" before the name (e.g. \"category Food, subcategory restaurant\") helps the AI record the transaction correctly.",
+  "tutorialManualStepTitle": "✏️ Add manually",
+  "tutorialManualStepBody": "Fill in the form with all the details: type (expense/income), category, amount, description, date and even recurrence.",
+  "tutorialCameraStepTitle": "📷 Add by photo",
+  "tutorialCameraStepBody": "Photograph a ticket or receipt and the AI will interpret it automatically and add it as a transaction ready to save.",
+  "tutorialBalanceTitle": "Your financial summary",
+  "tutorialBalanceBody": "Here you can see the total balance, income and expenses for the selected period. The colour bar shows the proportion between them.",
+  "tutorialChartsStepTitle": "Distribution charts",
+  "tutorialChartsStepBody": "Tap to see pie and bar charts showing how your income and expenses are distributed by category.",
+  "tutorialHistoryStepTitle": "Transaction history",
+  "tutorialHistoryStepBody": "Tap \"See all\" to access the full history with filters, search and custom sorting.",
+  "tutorialChatStepTitle": "✨ AI Chat",
+  "tutorialChatStepBody": "Chat with your personal financial advisor. You can ask about your expenses, request financial analysis or receive personalised tips based on your transactions.",
+  "tutorialDrawerTitle": "Settings menu",
+  "tutorialDrawerBody": "From the side menu you can change the language, currency, visual theme and manage your PRO subscription.",
+
+  "labelVoice": "Voice",
+  "labelManual": "Manual",
+  "labelPhoto": "Photo",
+  "cameraOption": "Camera",
+  "galleryOption": "Gallery",
+  "micUnavailable": "Microphone not available",
+  "voiceAiError": "Voice AI error [{type}]: {info}",
+  "@voiceAiError": {
+    "placeholders": {
+      "type": { "type": "String" },
+      "info": { "type": "String" }
+    }
+  },
+  "voiceInterpretError": "Could not interpret. Try again.",
+  "imageTransactionNotDetected": "Could not detect a transaction in the image.",
+  "imageAiError": "Image AI error [{type}]: {info}",
+  "@imageAiError": {
+    "placeholders": {
+      "type": { "type": "String" },
+      "info": { "type": "String" }
+    }
+  },
+  "promoCodeTitle": "Promo code",
+  "promoCodeHint": "Enter your code",
+  "apply": "Apply",
+  "back": "Back",
+  "pageNotFound": "Page not found: {error}",
+  "@pageNotFound": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  }
 }
