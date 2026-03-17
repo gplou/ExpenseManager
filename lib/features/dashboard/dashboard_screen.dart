@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/config/router.dart';
 import '../../core/providers/currency_provider.dart';
+import '../../core/providers/widget_action_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/ad_banner_footer.dart';
@@ -42,10 +46,24 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with WidgetsBindingObserver {
+  StreamSubscription<Uri?>? _widgetClickedSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Escuchar taps del widget mientras la app ya está en ejecución
+    _widgetClickedSub = HomeWidget.widgetClicked.listen((uri) {
+      if (uri == null || !mounted) return;
+      final segments = uri.pathSegments;
+      if (segments.isEmpty) return;
+      final action = segments.first;
+      if (action == 'voice' || action == 'add') {
+        ref.read(pendingWidgetActionProvider.notifier).state = action;
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Start the interactive spotlight tutorial if the user hasn't seen it yet.
       if (!mounted) return;
@@ -60,6 +78,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   @override
   void dispose() {
+    _widgetClickedSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -919,6 +938,7 @@ class _SpeedDialFab extends ConsumerStatefulWidget {
 class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
   bool _open = false;
   _VoiceInputState _voiceState = _VoiceInputState.idle;
+  bool _handledInitialWidgetAction = false;
 
   final _speech = SpeechToText();
   final _parser = VoiceTransactionParser();
@@ -926,9 +946,32 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
   final _imageParser = ImageTransactionParser();
 
   @override
+  void initState() {
+    super.initState();
+    // Acción de widget al lanzar la app por primera vez
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _handledInitialWidgetAction) return;
+      final action = ref.read(pendingWidgetActionProvider);
+      if (action != null) {
+        _handledInitialWidgetAction = true;
+        _handleWidgetAction(action);
+        ref.read(pendingWidgetActionProvider.notifier).state = null;
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _speech.stop();
     super.dispose();
+  }
+
+  void _handleWidgetAction(String action) {
+    if (action == 'voice') {
+      _startVoice();
+    } else if (action == 'add') {
+      context.push(AppRoutes.addTransaction);
+    }
   }
 
   void _toggle() => setState(() => _open = !_open);
@@ -1123,6 +1166,16 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
 
   @override
   Widget build(BuildContext context) {
+    // ── Acción de widget (app en background que vuelve al frente) ─────────────
+    ref.listen<String?>(pendingWidgetActionProvider, (_, action) {
+      if (action == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _handleWidgetAction(action);
+        ref.read(pendingWidgetActionProvider.notifier).state = null;
+      });
+    });
+
     // ── Tutorial: auto-open dial for steps 1-3 (voice/manual/camera) ─────────
     final tutStep = ref.watch(
       tutorialProvider.select((s) => s.isActive ? s.stepIndex : -1),

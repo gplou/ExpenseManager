@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,12 +10,18 @@ import 'core/config/app_config.dart';
 import 'core/config/router.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/providers/widget_action_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: binding);
+
+  // Detectar si la app fue lanzada desde un widget de pantalla de inicio
+  HomeWidget.setAppGroupId('group.com.tuempresa.productivity_app');
+  final widgetLaunchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+  final initialWidgetAction = _extractWidgetAction(widgetLaunchUri);
 
   // Pre-cargar tema y locale para evitar flash al inicio
   final prefs = await SharedPreferences.getInstance();
@@ -39,12 +46,29 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
+      overrides: [
+        if (initialWidgetAction != null)
+          pendingWidgetActionProvider.overrideWith(
+            (ref) => initialWidgetAction,
+          ),
+      ],
       child: MyApp(
         initialTheme: initialTheme,
         initialLocale: initialLocale,
       ),
     ),
   );
+}
+
+/// Extrae la acción ('voice' | 'add') de una URI de widget.
+/// URI esperada: expensemanager://widget/voice  o  expensemanager://widget/add
+String? _extractWidgetAction(Uri? uri) {
+  if (uri == null) return null;
+  final segments = uri.pathSegments;
+  if (segments.isEmpty) return null;
+  final action = segments.first;
+  if (action == 'voice' || action == 'add') return action;
+  return null;
 }
 
 class MyApp extends ConsumerStatefulWidget {
