@@ -473,12 +473,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proPromoSuccess => 'Code applied! Enjoy PRO.';
 
   @override
-  String proPromoDiscountSuccess(int percentage) =>
-      '$percentage% discount applied! Complete your purchase to activate PRO.';
+  String proPromoDiscountSuccess(int percentage) {
+    return '$percentage% discount applied! Complete your purchase to activate PRO.';
+  }
 
   @override
-  String proDiscountBanner(int percentage, int bonusDays) =>
-      '$percentage% discount applied — $bonusDays bonus days when you subscribe';
+  String proDiscountBanner(int percentage, int bonusDays) {
+    return '$percentage% discount applied — $bonusDays bonus days when you subscribe';
+  }
 
   @override
   String get proPromoUnexpectedError => 'Unexpected error. Please try again.';
