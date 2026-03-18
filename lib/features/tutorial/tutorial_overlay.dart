@@ -195,6 +195,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
+                  decoration: TextDecoration.none,
                 ),
               ),
             ),
@@ -398,24 +399,33 @@ class _TooltipCard extends StatelessWidget {
             // Footer: dot indicators + next button
             Row(
               children: [
-                // Progress dots
+                // Progress dots (single row, never wraps)
                 Expanded(
-                  child: Wrap(
-                    spacing: 5,
-                    children: List.generate(totalSteps, (i) {
-                      final active = i == stepIndex;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: active ? 18 : 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: active
-                              ? AppColors.dustyTeal
-                              : AppColors.dustyTeal.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                      );
-                    }),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: List.generate(totalSteps, (i) {
+                        final active = i == stepIndex;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: EdgeInsets.only(
+                              right: i < totalSteps - 1 ? 5 : 0),
+                          width: active ? 18 : 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: active
+                                ? (isDark
+                                    ? Colors.white
+                                    : AppColors.dustyTeal)
+                                : (isDark
+                                    ? Colors.white.withValues(alpha: 0.30)
+                                    : AppColors.dustyTeal
+                                        .withValues(alpha: 0.25)),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                        );
+                      }),
+                    ),
                   ),
                 ),
                 const Gap(12),
