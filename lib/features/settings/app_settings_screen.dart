@@ -96,152 +96,156 @@ class AppSettingsScreen extends ConsumerWidget {
   }
 
   void _showNumberFormatSheet(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final current = ref.read(numberFormatProvider).valueOrNull ??
-        NumberFormatStyle.dotDecimal;
-
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Text(l10n.numberFormat,
-                    style: ctx.textTheme.titleMedium),
-              ),
-              ListTile(
-                leading: const Icon(Icons.looks_one_outlined),
-                title: Text(l10n.numberFormatDotDecimal),
-                trailing: current == NumberFormatStyle.dotDecimal
-                    ? Icon(Icons.check, color: ctx.colors.primary)
-                    : null,
-                onTap: () {
-                  ref
-                      .read(numberFormatProvider.notifier)
-                      .setStyle(NumberFormatStyle.dotDecimal);
-                  Navigator.of(ctx).pop();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.looks_two_outlined),
-                title: Text(l10n.numberFormatCommaDecimal),
-                trailing: current == NumberFormatStyle.commaDecimal
-                    ? Icon(Icons.check, color: ctx.colors.primary)
-                    : null,
-                onTap: () {
-                  ref
-                      .read(numberFormatProvider.notifier)
-                      .setStyle(NumberFormatStyle.commaDecimal);
-                  Navigator.of(ctx).pop();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showLanguageSheet(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final currentLocale = ref.read(localeProvider).valueOrNull;
-
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Text(l10n.language, style: ctx.textTheme.titleMedium),
-              ),
-              ...supportedLocales.map((locale) {
-                final isSelected =
-                    currentLocale?.languageCode == locale.code;
-                return ListTile(
-                  leading: Text(
-                    locale.flag,
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                  title: Text(locale.name),
-                  trailing: isSelected
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
+        final current = ref.read(numberFormatProvider).valueOrNull ??
+            NumberFormatStyle.dotDecimal;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child: Text(l10n.numberFormat,
+                      style: ctx.textTheme.titleMedium),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.looks_one_outlined),
+                  title: Text(l10n.numberFormatDotDecimal),
+                  trailing: current == NumberFormatStyle.dotDecimal
                       ? Icon(Icons.check, color: ctx.colors.primary)
                       : null,
                   onTap: () {
                     ref
-                        .read(localeProvider.notifier)
-                        .setLocale(Locale(locale.code));
+                        .read(numberFormatProvider.notifier)
+                        .setStyle(NumberFormatStyle.dotDecimal);
                     Navigator.of(ctx).pop();
                   },
-                );
-              }),
-            ],
+                ),
+                ListTile(
+                  leading: const Icon(Icons.looks_two_outlined),
+                  title: Text(l10n.numberFormatCommaDecimal),
+                  trailing: current == NumberFormatStyle.commaDecimal
+                      ? Icon(Icons.check, color: ctx.colors.primary)
+                      : null,
+                  onTap: () {
+                    ref
+                        .read(numberFormatProvider.notifier)
+                        .setStyle(NumberFormatStyle.commaDecimal);
+                    Navigator.of(ctx).pop();
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  void _showCurrencySheet(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final currentCode = ref.read(currencyProvider).valueOrNull ?? 'EUR';
-
+  void _showLanguageSheet(BuildContext context, WidgetRef ref) {
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child:
-                    Text(l10n.currency, style: ctx.textTheme.titleMedium),
-              ),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: supportedCurrencies.map((c) {
-                    final isSelected = currentCode == c.code;
-                    return ListTile(
-                      leading:
-                          Text(c.flag, style: const TextStyle(fontSize: 24)),
-                      title: Text('${c.code} — ${c.name}'),
-                      subtitle: Text(c.symbol),
-                      trailing: isSelected
-                          ? Icon(Icons.check, color: ctx.colors.primary)
-                          : null,
-                      onTap: () {
-                        ref
-                            .read(currencyProvider.notifier)
-                            .setCurrency(c.code);
-                        Navigator.of(ctx).pop();
-                      },
-                    );
-                  }).toList(),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
+        final currentLocale = ref.read(localeProvider).valueOrNull;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child:
+                      Text(l10n.language, style: ctx.textTheme.titleMedium),
                 ),
-              ),
-            ],
+                ...supportedLocales.map((locale) {
+                  final isSelected =
+                      currentLocale?.languageCode == locale.code;
+                  return ListTile(
+                    leading: Text(
+                      locale.flag,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    title: Text(locale.name),
+                    trailing: isSelected
+                        ? Icon(Icons.check, color: ctx.colors.primary)
+                        : null,
+                    onTap: () {
+                      ref
+                          .read(localeProvider.notifier)
+                          .setLocale(Locale(locale.code));
+                      Navigator.of(ctx).pop();
+                    },
+                  );
+                }),
+              ],
+            ),
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  void _showCurrencySheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
+        final currentCode = ref.read(currencyProvider).valueOrNull ?? 'EUR';
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child:
+                      Text(l10n.currency, style: ctx.textTheme.titleMedium),
+                ),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: supportedCurrencies.map((c) {
+                      final isSelected = currentCode == c.code;
+                      return ListTile(
+                        leading: Text(c.flag,
+                            style: const TextStyle(fontSize: 24)),
+                        title: Text('${c.code} — ${c.name}'),
+                        subtitle: Text(c.symbol),
+                        trailing: isSelected
+                            ? Icon(Icons.check, color: ctx.colors.primary)
+                            : null,
+                        onTap: () {
+                          ref
+                              .read(currencyProvider.notifier)
+                              .setCurrency(c.code);
+                          Navigator.of(ctx).pop();
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
