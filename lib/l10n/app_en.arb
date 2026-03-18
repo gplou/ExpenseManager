@@ -292,6 +292,10 @@
   "promoCodeTitle": "Promo code",
   "promoCodeHint": "Enter your code",
   "apply": "Apply",
+  "numberFormat": "Number format",
+  "numberFormatDotDecimal": "1,234.56 — decimal: dot",
+  "numberFormatCommaDecimal": "1.234,56 — decimal: comma",
+
   "back": "Back",
   "pageNotFound": "Page not found: {error}",
   "@pageNotFound": {

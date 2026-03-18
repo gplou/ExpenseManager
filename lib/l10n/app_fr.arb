@@ -322,6 +322,13 @@
   "@promoCodeHint": {},
   "apply": "Appliquer",
   "@apply": {},
+  "numberFormat": "Format des nombres",
+  "@numberFormat": {},
+  "numberFormatDotDecimal": "1,234.56 — décimale : point",
+  "@numberFormatDotDecimal": {},
+  "numberFormatCommaDecimal": "1.234,56 — décimale : virgule",
+  "@numberFormatCommaDecimal": {},
+
   "back": "Retour",
   "@back": {},
   "pageNotFound": "Page non trouvée : {error}",

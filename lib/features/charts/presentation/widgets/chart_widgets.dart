@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
+import '../../../../core/providers/number_format_provider.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../transactions/domain/transaction_categories.dart';
@@ -93,6 +94,7 @@ class ChartBarSection extends StatelessWidget {
     this.extra = const [],
     this.isSubcategoryView = false,
     this.cSymbol = '€',
+    this.numFmtStyle = NumberFormatStyle.dotDecimal,
   });
 
   final List<MapEntry<String, double>> entries;
@@ -101,6 +103,7 @@ class ChartBarSection extends StatelessWidget {
   final List<TransactionCategory> extra;
   final bool isSubcategoryView;
   final String cSymbol;
+  final NumberFormatStyle numFmtStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +120,7 @@ class ChartBarSection extends StatelessWidget {
             touchTooltipData: BarTouchTooltipData(
               getTooltipItem: (group, groupIndex, rod, rodIndex) =>
                   BarTooltipItem(
-                '$cSymbol${rod.toY.toStringAsFixed(2)}',
+                '$cSymbol${formatAmount(rod.toY, numFmtStyle)}',
                 const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -170,7 +173,7 @@ class ChartBarSection extends StatelessWidget {
                   return SideTitleWidget(
                     axisSide: meta.axisSide,
                     child: Text(
-                      '$cSymbol${value.toStringAsFixed(0)}',
+                      '$cSymbol${formatAmount(value, numFmtStyle, decimals: 0)}',
                       style: context.textTheme.bodySmall?.copyWith(
                         fontSize: 10,
                         color:
@@ -227,6 +230,7 @@ class ChartLegend extends StatelessWidget {
     required this.type,
     this.isSubcategoryView = false,
     this.cSymbol = '€',
+    this.numFmtStyle = NumberFormatStyle.dotDecimal,
   });
 
   final List<MapEntry<String, double>> entries;
@@ -236,6 +240,7 @@ class ChartLegend extends StatelessWidget {
   final TransactionType type;
   final bool isSubcategoryView;
   final String cSymbol;
+  final NumberFormatStyle numFmtStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +277,7 @@ class ChartLegend extends StatelessWidget {
                 ),
                 const Gap(8),
                 Text(
-                  '$cSymbol${entry.value.toStringAsFixed(2)}',
+                  '$cSymbol${formatAmount(entry.value, numFmtStyle)}',
                   style: context.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

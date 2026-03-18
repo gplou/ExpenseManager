@@ -748,6 +748,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get apply => 'Appliquer';
 
   @override
+  String get numberFormat => 'Format des nombres';
+
+  @override
+  String get numberFormatDotDecimal => '1,234.56 — décimale : point';
+
+  @override
+  String get numberFormatCommaDecimal => '1.234,56 — décimale : virgule';
+
+  @override
   String get back => 'Retour';
 
   @override

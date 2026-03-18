@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../core/providers/currency_provider.dart';
+import '../../../../core/providers/number_format_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/ad_banner_footer.dart';
@@ -43,6 +44,8 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
     final customRange = ref.watch(customDateRangeProvider);
 
     final cSymbol = currencySymbol(ref.watch(currencyProvider).value ?? 'EUR');
+    final numFmt = ref.watch(numberFormatProvider).valueOrNull ??
+        NumberFormatStyle.dotDecimal;
     final accentColor =
         type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
     final accentLight =
@@ -184,7 +187,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                                         color: accentColor, fontSize: 12),
                                   ),
                                   data: (total) => Text(
-                                    '$cSymbol${total.toStringAsFixed(2)}',
+                                    '$cSymbol${formatAmount(total, numFmt)}',
                                     style: TextStyle(
                                       fontFamily: 'Sora',
                                       fontSize: 18,
@@ -286,6 +289,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                                 extra: customCats[type] ?? [],
                                 isSubcategoryView: isSubView,
                                 cSymbol: cSymbol,
+                                numFmtStyle: numFmt,
                               ),
                       ),
                       const Gap(16),
@@ -297,6 +301,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                         type: type,
                         isSubcategoryView: isSubView,
                         cSymbol: cSymbol,
+                        numFmtStyle: numFmt,
                       ),
                       const Gap(24),
                     ],

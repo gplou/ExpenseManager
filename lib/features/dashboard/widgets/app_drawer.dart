@@ -6,10 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/config/router.dart';
 import '../../../core/network/supabase_client.dart';
-import '../../tutorial/tutorial_notifier.dart';
-import '../../../core/providers/currency_provider.dart';
-import '../../../core/providers/locale_provider.dart';
-import '../../../core/providers/theme_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../l10n/app_localizations.dart';
@@ -25,22 +21,6 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);
-    final isDark = ref.watch(
-      themeModeProvider.select((v) => v.valueOrNull == ThemeMode.dark),
-    );
-    final currentLocale = ref.watch(localeProvider).valueOrNull;
-    final currentLocaleName = supportedLocales
-        .firstWhere(
-          (l) => l.code == (currentLocale?.languageCode ?? 'es'),
-          orElse: () => supportedLocales.first,
-        )
-        .name;
-    final currentCurrencyCode = ref.watch(currencyProvider).valueOrNull ?? 'EUR';
-    final currentCurrency = supportedCurrencies.firstWhere(
-      (c) => c.code == currentCurrencyCode,
-      orElse: () => supportedCurrencies.first,
-    );
-
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -76,48 +56,14 @@ class AppDrawer extends ConsumerWidget {
                   const Gap(8),
 
                   // ── Ajustes de la app ──────────────────────────────────────
-                  _SectionLabel(l10n.appSettings),
                   ListTile(
-                    leading: const Icon(Icons.help_outline_rounded),
-                    title: Text(l10n.tutorialTitle),
+                    leading: const Icon(Icons.settings_outlined),
+                    title: Text(l10n.appSettings),
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () {
-                      // Capture the notifier BEFORE popping the drawer.
-                      // After pop() the drawer widget is unmounted and
-                      // ref becomes invalid in Riverpod 2.x.
-                      final tutNotifier = ref.read(tutorialProvider.notifier);
                       Navigator.of(context).pop();
-                      Future<void>.delayed(
-                        const Duration(milliseconds: 350),
-                        tutNotifier.start,
-                      );
+                      context.push(AppRoutes.appSettings);
                     },
-                  ),
-                  SwitchListTile(
-                    secondary: Icon(
-                      isDark
-                          ? Icons.dark_mode_outlined
-                          : Icons.light_mode_outlined,
-                    ),
-                    title: Text(l10n.darkMode),
-                    value: isDark,
-                    onChanged: (_) =>
-                        ref.read(themeModeProvider.notifier).toggle(),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.language_outlined),
-                    title: Text(l10n.language),
-                    subtitle: Text(currentLocaleName),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
-                    onTap: () => _showLanguageSheet(context, ref),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.attach_money_outlined),
-                    title: Text(l10n.currency),
-                    subtitle: Text(
-                        '${currentCurrency.flag} ${currentCurrency.code} — ${currentCurrency.name}'),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
-                    onTap: () => _showCurrencySheet(context, ref),
                   ),
                   // ── Plan PRO ──────────────────────────────────────────
                   Consumer(
@@ -200,102 +146,6 @@ class AppDrawer extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => const _PromoCodeDialog(),
-    );
-  }
-
-  void _showLanguageSheet(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final currentLocale = ref.read(localeProvider).valueOrNull;
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Text(l10n.language,
-                    style: ctx.textTheme.titleMedium),
-              ),
-              ...supportedLocales.map((locale) {
-                final isSelected =
-                    currentLocale?.languageCode == locale.code;
-                return ListTile(
-                  leading: Text(
-                    locale.flag,
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                  title: Text(locale.name),
-                  trailing: isSelected
-                      ? Icon(Icons.check, color: ctx.colors.primary)
-                      : null,
-                  onTap: () {
-                    ref
-                        .read(localeProvider.notifier)
-                        .setLocale(Locale(locale.code));
-                    Navigator.of(ctx).pop();
-                  },
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showCurrencySheet(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final currentCode = ref.read(currencyProvider).valueOrNull ?? 'EUR';
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Text(l10n.currency, style: ctx.textTheme.titleMedium),
-              ),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: supportedCurrencies.map((c) {
-                    final isSelected = currentCode == c.code;
-                    return ListTile(
-                      leading: Text(c.flag,
-                          style: const TextStyle(fontSize: 24)),
-                      title: Text('${c.code} — ${c.name}'),
-                      subtitle: Text(c.symbol),
-                      trailing: isSelected
-                          ? Icon(Icons.check, color: ctx.colors.primary)
-                          : null,
-                      onTap: () {
-                        ref
-                            .read(currencyProvider.notifier)
-                            .setCurrency(c.code);
-                        Navigator.of(ctx).pop();
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

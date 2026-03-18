@@ -753,6 +753,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get apply => 'Anwenden';
 
   @override
+  String get numberFormat => 'Zahlenformat';
+
+  @override
+  String get numberFormatDotDecimal => '1,234.56 — Dezimal: Punkt';
+
+  @override
+  String get numberFormatCommaDecimal => '1.234,56 — Dezimal: Komma';
+
+  @override
   String get back => 'Zurück';
 
   @override

@@ -11,6 +11,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../core/config/router.dart';
 import '../../core/providers/currency_provider.dart';
+import '../../core/providers/number_format_provider.dart';
 import '../../core/providers/widget_action_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/extensions.dart';
@@ -115,6 +116,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final recentAsync = ref.watch(recentTransactionsProvider);
     final cs = context.colors;
     final cSymbol = currencySymbol(ref.watch(currencyProvider).value ?? 'EUR');
+    final numFmt = ref.watch(numberFormatProvider).valueOrNull ??
+        NumberFormatStyle.dotDecimal;
 
     return Stack(
       children: [
@@ -233,7 +236,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     summaryAsync.when(
                       loading: () => const _SummaryShimmer(),
                       error: (_, __) => const SizedBox.shrink(),
-                      data: (summary) => _SummarySection(summary: summary, cSymbol: cSymbol),
+                      data: (summary) => _SummarySection(summary: summary, cSymbol: cSymbol, numFmtStyle: numFmt),
                     ),
                     const Gap(12),
 
@@ -461,9 +464,14 @@ class _IconChip extends StatelessWidget {
 // ── Summary section ───────────────────────────────────────────────────────────
 
 class _SummarySection extends StatelessWidget {
-  const _SummarySection({required this.summary, required this.cSymbol});
+  const _SummarySection({
+    required this.summary,
+    required this.cSymbol,
+    required this.numFmtStyle,
+  });
   final TransactionsSummary summary;
   final String cSymbol;
+  final NumberFormatStyle numFmtStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -551,7 +559,7 @@ class _SummarySection extends StatelessWidget {
               const Gap(10),
               // Monto del balance
               Text(
-                '${isPositive ? '' : '-'}$cSymbol${balance.abs().toStringAsFixed(2)}',
+                '${isPositive ? '' : '-'}$cSymbol${formatAmount(balance.abs(), numFmtStyle)}',
                 style: context.textTheme.headlineLarge?.copyWith(
                   color: cs.onSurface,
                   fontWeight: FontWeight.w800,
@@ -626,7 +634,7 @@ class _SummarySection extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '$cSymbol${summary.income.toStringAsFixed(2)}',
+                                '$cSymbol${formatAmount(summary.income, numFmtStyle)}',
                                 style: const TextStyle(
                                   fontFamily: 'Sora',
                                   fontSize: 14,
@@ -682,7 +690,7 @@ class _SummarySection extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '$cSymbol${summary.expense.toStringAsFixed(2)}',
+                                '$cSymbol${formatAmount(summary.expense, numFmtStyle)}',
                                 style: const TextStyle(
                                   fontFamily: 'Sora',
                                   fontSize: 14,
@@ -889,7 +897,7 @@ class _RecentTransactionTile extends ConsumerWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')}${transaction.amount.toStringAsFixed(2)}',
+                                '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')}${formatAmount(transaction.amount, ref.watch(numberFormatProvider).valueOrNull ?? NumberFormatStyle.dotDecimal)}',
                                 style: TextStyle(
                                   fontFamily: 'Sora',
                                   fontSize: 15,

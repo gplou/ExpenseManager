@@ -1476,6 +1476,24 @@ abstract class AppLocalizations {
   /// **'Aplicar'**
   String get apply;
 
+  /// No description provided for @numberFormat.
+  ///
+  /// In es, this message translates to:
+  /// **'Formato de números'**
+  String get numberFormat;
+
+  /// No description provided for @numberFormatDotDecimal.
+  ///
+  /// In es, this message translates to:
+  /// **'1,234.56 — decimal: punto'**
+  String get numberFormatDotDecimal;
+
+  /// No description provided for @numberFormatCommaDecimal.
+  ///
+  /// In es, this message translates to:
+  /// **'1.234,56 — decimal: coma'**
+  String get numberFormatCommaDecimal;
+
   /// No description provided for @back.
   ///
   /// In es, this message translates to:

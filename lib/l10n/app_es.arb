@@ -522,6 +522,13 @@
   "@promoCodeHint": {},
   "apply": "Aplicar",
   "@apply": {},
+  "numberFormat": "Formato de números",
+  "@numberFormat": {},
+  "numberFormatDotDecimal": "1,234.56 — decimal: punto",
+  "@numberFormatDotDecimal": {},
+  "numberFormatCommaDecimal": "1.234,56 — decimal: coma",
+  "@numberFormatCommaDecimal": {},
+
   "back": "Volver",
   "@back": {},
   "pageNotFound": "Página no encontrada: {error}",
