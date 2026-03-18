@@ -630,4 +630,122 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingDoneBody =>
       'You know the essentials. You can revisit this tutorial anytime from Settings.';
+
+  @override
+  String get tutorialFinish => 'Finish';
+
+  @override
+  String get tutorialAddTitle => 'Add transactions';
+
+  @override
+  String get tutorialAddBody =>
+      'Tap the + button to expand the recording options. You can add by voice, manually, or by photographing a receipt.';
+
+  @override
+  String get tutorialVoiceStepTitle => '🎤 Add by voice';
+
+  @override
+  String get tutorialVoiceStepBody =>
+      'Say the amount, category, subcategory and a description aloud. Mentioning the word \"category\" or \"subcategory\" before the name (e.g. \"category Food, subcategory restaurant\") helps the AI record the transaction correctly.';
+
+  @override
+  String get tutorialManualStepTitle => '✏️ Add manually';
+
+  @override
+  String get tutorialManualStepBody =>
+      'Fill in the form with all the details: type (expense/income), category, amount, description, date and even recurrence.';
+
+  @override
+  String get tutorialCameraStepTitle => '📷 Add by photo';
+
+  @override
+  String get tutorialCameraStepBody =>
+      'Photograph a ticket or receipt and the AI will interpret it automatically and add it as a transaction ready to save.';
+
+  @override
+  String get tutorialBalanceTitle => 'Your financial summary';
+
+  @override
+  String get tutorialBalanceBody =>
+      'Here you can see the total balance, income and expenses for the selected period. The colour bar shows the proportion between them.';
+
+  @override
+  String get tutorialChartsStepTitle => 'Distribution charts';
+
+  @override
+  String get tutorialChartsStepBody =>
+      'Tap to see pie and bar charts showing how your income and expenses are distributed by category.';
+
+  @override
+  String get tutorialHistoryStepTitle => 'Transaction history';
+
+  @override
+  String get tutorialHistoryStepBody =>
+      'Tap \"See all\" to access the full history with filters, search and custom sorting.';
+
+  @override
+  String get tutorialChatStepTitle => '✨ AI Chat';
+
+  @override
+  String get tutorialChatStepBody =>
+      'Chat with your personal financial advisor. You can ask about your expenses, request financial analysis or receive personalised tips based on your transactions.';
+
+  @override
+  String get tutorialDrawerTitle => 'Settings menu';
+
+  @override
+  String get tutorialDrawerBody =>
+      'From the side menu you can change the language, currency, visual theme and manage your PRO subscription.';
+
+  @override
+  String get labelVoice => 'Voice';
+
+  @override
+  String get labelManual => 'Manual';
+
+  @override
+  String get labelPhoto => 'Photo';
+
+  @override
+  String get cameraOption => 'Camera';
+
+  @override
+  String get galleryOption => 'Gallery';
+
+  @override
+  String get micUnavailable => 'Microphone not available';
+
+  @override
+  String voiceAiError(String type, String info) {
+    return 'Voice AI error [$type]: $info';
+  }
+
+  @override
+  String get voiceInterpretError => 'Could not interpret. Try again.';
+
+  @override
+  String get imageTransactionNotDetected =>
+      'Could not detect a transaction in the image.';
+
+  @override
+  String imageAiError(String type, String info) {
+    return 'Image AI error [$type]: $info';
+  }
+
+  @override
+  String get promoCodeTitle => 'Promo code';
+
+  @override
+  String get promoCodeHint => 'Enter your code';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String pageNotFound(String error) {
+    return 'Page not found: $error';
+  }
 }

@@ -1283,6 +1283,210 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ya conoces lo esencial. Puedes volver a ver este tutorial en cualquier momento desde Ajustes.'**
   String get onboardingDoneBody;
+
+  /// No description provided for @tutorialFinish.
+  ///
+  /// In es, this message translates to:
+  /// **'Finalizar'**
+  String get tutorialFinish;
+
+  /// No description provided for @tutorialAddTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Añade transacciones'**
+  String get tutorialAddTitle;
+
+  /// No description provided for @tutorialAddBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca el botón + para desplegar las opciones de registro. Puedes añadir con voz, manualmente o fotografiando un recibo.'**
+  String get tutorialAddBody;
+
+  /// No description provided for @tutorialVoiceStepTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'🎤 Añadir con voz'**
+  String get tutorialVoiceStepTitle;
+
+  /// No description provided for @tutorialVoiceStepBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Di en voz alta el importe, la categoría, la subcategoría y una descripción. Mencionar la palabra \"categoría\" o \"subcategoría\" antes del nombre (p. ej. \"categoría Comida, subcategoría restaurante\") ayuda a la IA a registrar la transacción correctamente.'**
+  String get tutorialVoiceStepBody;
+
+  /// No description provided for @tutorialManualStepTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'✏️ Añadir manualmente'**
+  String get tutorialManualStepTitle;
+
+  /// No description provided for @tutorialManualStepBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Rellena el formulario con todos los detalles: tipo (gasto/ingreso), categoría, importe, descripción, fecha e incluso recurrencia.'**
+  String get tutorialManualStepBody;
+
+  /// No description provided for @tutorialCameraStepTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'📷 Añadir con foto'**
+  String get tutorialCameraStepTitle;
+
+  /// No description provided for @tutorialCameraStepBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Fotografía un ticket o recibo y la IA lo interpretará automáticamente y lo añadirá como transacción lista para guardar.'**
+  String get tutorialCameraStepBody;
+
+  /// No description provided for @tutorialBalanceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu resumen financiero'**
+  String get tutorialBalanceTitle;
+
+  /// No description provided for @tutorialBalanceBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí ves el balance total, los ingresos y los gastos del período seleccionado. La barra de color muestra la proporción entre ambos.'**
+  String get tutorialBalanceBody;
+
+  /// No description provided for @tutorialChartsStepTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Gráficos de distribución'**
+  String get tutorialChartsStepTitle;
+
+  /// No description provided for @tutorialChartsStepBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para ver gráficos de tarta y barras que muestran cómo se distribuyen tus ingresos y gastos por categoría.'**
+  String get tutorialChartsStepBody;
+
+  /// No description provided for @tutorialHistoryStepTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial de transacciones'**
+  String get tutorialHistoryStepTitle;
+
+  /// No description provided for @tutorialHistoryStepBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Pulsa \"Ver todo\" para acceder al historial completo con filtros, búsqueda y orden personalizado.'**
+  String get tutorialHistoryStepBody;
+
+  /// No description provided for @tutorialChatStepTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'✨ Chat con IA'**
+  String get tutorialChatStepTitle;
+
+  /// No description provided for @tutorialChatStepBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Habla con tu asistente financiero personal. Puedes preguntarle sobre tus gastos, pedir análisis de tus finanzas o recibir consejos personalizados basados en tus transacciones.'**
+  String get tutorialChatStepBody;
+
+  /// No description provided for @tutorialDrawerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Menú de configuración'**
+  String get tutorialDrawerTitle;
+
+  /// No description provided for @tutorialDrawerBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Desde el menú lateral puedes cambiar el idioma, la moneda, el tema visual y gestionar tu suscripción PRO.'**
+  String get tutorialDrawerBody;
+
+  /// No description provided for @labelVoice.
+  ///
+  /// In es, this message translates to:
+  /// **'Voz'**
+  String get labelVoice;
+
+  /// No description provided for @labelManual.
+  ///
+  /// In es, this message translates to:
+  /// **'Manual'**
+  String get labelManual;
+
+  /// No description provided for @labelPhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto'**
+  String get labelPhoto;
+
+  /// No description provided for @cameraOption.
+  ///
+  /// In es, this message translates to:
+  /// **'Cámara'**
+  String get cameraOption;
+
+  /// No description provided for @galleryOption.
+  ///
+  /// In es, this message translates to:
+  /// **'Galería'**
+  String get galleryOption;
+
+  /// No description provided for @micUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Micrófono no disponible'**
+  String get micUnavailable;
+
+  /// No description provided for @voiceAiError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error IA voz [{type}]: {info}'**
+  String voiceAiError(String type, String info);
+
+  /// No description provided for @voiceInterpretError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo interpretar. Inténtalo de nuevo.'**
+  String get voiceInterpretError;
+
+  /// No description provided for @imageTransactionNotDetected.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo detectar una transacción en la imagen.'**
+  String get imageTransactionNotDetected;
+
+  /// No description provided for @imageAiError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error IA imagen [{type}]: {info}'**
+  String imageAiError(String type, String info);
+
+  /// No description provided for @promoCodeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Código promocional'**
+  String get promoCodeTitle;
+
+  /// No description provided for @promoCodeHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce tu código'**
+  String get promoCodeHint;
+
+  /// No description provided for @apply.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar'**
+  String get apply;
+
+  /// No description provided for @back.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver'**
+  String get back;
+
+  /// No description provided for @pageNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Página no encontrada: {error}'**
+  String pageNotFound(String error);
 }
 
 class _AppLocalizationsDelegate

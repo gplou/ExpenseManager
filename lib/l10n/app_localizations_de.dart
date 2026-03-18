@@ -640,4 +640,123 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingDoneBody =>
       'Sie kennen das Wesentliche. Sie können dieses Tutorial jederzeit über die Einstellungen erneut aufrufen.';
+
+  @override
+  String get tutorialFinish => 'Abschließen';
+
+  @override
+  String get tutorialAddTitle => 'Transaktionen hinzufügen';
+
+  @override
+  String get tutorialAddBody =>
+      'Tippen Sie auf die +-Schaltfläche, um die Aufzeichnungsoptionen aufzuklappen. Sie können per Sprache, manuell oder durch Fotografieren eines Belegs hinzufügen.';
+
+  @override
+  String get tutorialVoiceStepTitle => '🎤 Per Sprache hinzufügen';
+
+  @override
+  String get tutorialVoiceStepBody =>
+      'Sagen Sie den Betrag, die Kategorie, die Unterkategorie und eine Beschreibung laut. Das Erwähnen des Worts \"Kategorie\" oder \"Unterkategorie\" vor dem Namen (z. B. \"Kategorie Essen, Unterkategorie Restaurant\") hilft der KI, die Transaktion korrekt zu erfassen.';
+
+  @override
+  String get tutorialManualStepTitle => '✏️ Manuell hinzufügen';
+
+  @override
+  String get tutorialManualStepBody =>
+      'Füllen Sie das Formular mit allen Details aus: Typ (Ausgabe/Einnahme), Kategorie, Betrag, Beschreibung, Datum und sogar Wiederholung.';
+
+  @override
+  String get tutorialCameraStepTitle => '📷 Mit Foto hinzufügen';
+
+  @override
+  String get tutorialCameraStepBody =>
+      'Fotografieren Sie einen Bon oder Beleg und die KI interpretiert ihn automatisch und fügt ihn als speicherbereite Transaktion hinzu.';
+
+  @override
+  String get tutorialBalanceTitle => 'Ihre Finanzübersicht';
+
+  @override
+  String get tutorialBalanceBody =>
+      'Hier sehen Sie den Gesamtsaldo, Einnahmen und Ausgaben des ausgewählten Zeitraums. Der Farbbalken zeigt das Verhältnis zwischen beiden.';
+
+  @override
+  String get tutorialChartsStepTitle => 'Verteilungsdiagramme';
+
+  @override
+  String get tutorialChartsStepBody =>
+      'Tippen Sie, um Kreis- und Balkendiagramme zu sehen, die zeigen, wie sich Ihre Einnahmen und Ausgaben nach Kategorie verteilen.';
+
+  @override
+  String get tutorialHistoryStepTitle => 'Transaktionsverlauf';
+
+  @override
+  String get tutorialHistoryStepBody =>
+      'Tippen Sie auf \"Alle anzeigen\", um auf den vollständigen Verlauf mit Filtern, Suche und benutzerdefinierter Sortierung zuzugreifen.';
+
+  @override
+  String get tutorialChatStepTitle => '✨ KI-Chat';
+
+  @override
+  String get tutorialChatStepBody =>
+      'Chatten Sie mit Ihrem persönlichen Finanzberater. Sie können Fragen zu Ihren Ausgaben stellen, Finanzanalysen anfordern oder personalisierte Tipps basierend auf Ihren Transaktionen erhalten.';
+
+  @override
+  String get tutorialDrawerTitle => 'Einstellungsmenü';
+
+  @override
+  String get tutorialDrawerBody =>
+      'Über das Seitenmenü können Sie Sprache, Währung, visuelles Thema ändern und Ihr PRO-Abonnement verwalten.';
+
+  @override
+  String get labelVoice => 'Stimme';
+
+  @override
+  String get labelManual => 'Manuell';
+
+  @override
+  String get labelPhoto => 'Foto';
+
+  @override
+  String get cameraOption => 'Kamera';
+
+  @override
+  String get galleryOption => 'Galerie';
+
+  @override
+  String get micUnavailable => 'Mikrofon nicht verfügbar';
+
+  @override
+  String voiceAiError(String type, String info) {
+    return 'Sprach-KI-Fehler [$type]: $info';
+  }
+
+  @override
+  String get voiceInterpretError =>
+      'Konnte nicht interpretiert werden. Versuchen Sie es erneut.';
+
+  @override
+  String get imageTransactionNotDetected =>
+      'Es konnte keine Transaktion im Bild erkannt werden.';
+
+  @override
+  String imageAiError(String type, String info) {
+    return 'Bild-KI-Fehler [$type]: $info';
+  }
+
+  @override
+  String get promoCodeTitle => 'Aktionscode';
+
+  @override
+  String get promoCodeHint => 'Code eingeben';
+
+  @override
+  String get apply => 'Anwenden';
+
+  @override
+  String get back => 'Zurück';
+
+  @override
+  String pageNotFound(String error) {
+    return 'Seite nicht gefunden: $error';
+  }
 }

@@ -636,4 +636,122 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get onboardingDoneBody =>
       'Vous connaissez l\'essentiel. Vous pouvez revoir ce tutoriel à tout moment depuis les Paramètres.';
+
+  @override
+  String get tutorialFinish => 'Terminer';
+
+  @override
+  String get tutorialAddTitle => 'Ajouter des transactions';
+
+  @override
+  String get tutorialAddBody =>
+      'Appuyez sur le bouton + pour afficher les options d\'enregistrement. Vous pouvez ajouter par la voix, manuellement ou en photographiant un reçu.';
+
+  @override
+  String get tutorialVoiceStepTitle => '🎤 Ajouter par la voix';
+
+  @override
+  String get tutorialVoiceStepBody =>
+      'Dites à voix haute le montant, la catégorie, la sous-catégorie et une description. Mentionner le mot \"catégorie\" ou \"sous-catégorie\" avant le nom (ex. \"catégorie Alimentation, sous-catégorie restaurant\") aide l\'IA à enregistrer correctement la transaction.';
+
+  @override
+  String get tutorialManualStepTitle => '✏️ Ajouter manuellement';
+
+  @override
+  String get tutorialManualStepBody =>
+      'Remplissez le formulaire avec tous les détails : type (dépense/revenu), catégorie, montant, description, date et même la récurrence.';
+
+  @override
+  String get tutorialCameraStepTitle => '📷 Ajouter par photo';
+
+  @override
+  String get tutorialCameraStepBody =>
+      'Photographiez un ticket ou reçu et l\'IA l\'interprétera automatiquement et l\'ajoutera comme transaction prête à être enregistrée.';
+
+  @override
+  String get tutorialBalanceTitle => 'Votre résumé financier';
+
+  @override
+  String get tutorialBalanceBody =>
+      'Ici vous voyez le solde total, les revenus et les dépenses de la période sélectionnée. La barre de couleur montre la proportion entre les deux.';
+
+  @override
+  String get tutorialChartsStepTitle => 'Graphiques de distribution';
+
+  @override
+  String get tutorialChartsStepBody =>
+      'Appuyez pour voir des graphiques en camembert et en barres montrant comment vos revenus et dépenses se répartissent par catégorie.';
+
+  @override
+  String get tutorialHistoryStepTitle => 'Historique des transactions';
+
+  @override
+  String get tutorialHistoryStepBody =>
+      'Appuyez sur \"Voir tout\" pour accéder à l\'historique complet avec filtres, recherche et tri personnalisé.';
+
+  @override
+  String get tutorialChatStepTitle => '✨ Chat IA';
+
+  @override
+  String get tutorialChatStepBody =>
+      'Discutez avec votre conseiller financier personnel. Vous pouvez lui poser des questions sur vos dépenses, demander des analyses financières ou recevoir des conseils personnalisés basés sur vos transactions.';
+
+  @override
+  String get tutorialDrawerTitle => 'Menu des paramètres';
+
+  @override
+  String get tutorialDrawerBody =>
+      'Depuis le menu latéral, vous pouvez changer la langue, la devise, le thème visuel et gérer votre abonnement PRO.';
+
+  @override
+  String get labelVoice => 'Voix';
+
+  @override
+  String get labelManual => 'Manuel';
+
+  @override
+  String get labelPhoto => 'Photo';
+
+  @override
+  String get cameraOption => 'Appareil photo';
+
+  @override
+  String get galleryOption => 'Galerie';
+
+  @override
+  String get micUnavailable => 'Microphone non disponible';
+
+  @override
+  String voiceAiError(String type, String info) {
+    return 'Erreur IA voix [$type] : $info';
+  }
+
+  @override
+  String get voiceInterpretError => 'Impossible d\'interpréter. Réessayez.';
+
+  @override
+  String get imageTransactionNotDetected =>
+      'Impossible de détecter une transaction dans l\'image.';
+
+  @override
+  String imageAiError(String type, String info) {
+    return 'Erreur IA image [$type] : $info';
+  }
+
+  @override
+  String get promoCodeTitle => 'Code promo';
+
+  @override
+  String get promoCodeHint => 'Entrez votre code';
+
+  @override
+  String get apply => 'Appliquer';
+
+  @override
+  String get back => 'Retour';
+
+  @override
+  String pageNotFound(String error) {
+    return 'Page non trouvée : $error';
+  }
 }

@@ -164,7 +164,7 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   ListTile(
                     leading: const Icon(Icons.local_offer_outlined),
-                    title: Text(AppLocalizations.of(context)!.promoCodeTitle),
+                    title: Text(AppLocalizations.of(context).promoCodeTitle),
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () => _showPromoCodeDialog(context),
                   ),
@@ -623,7 +623,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
       await ref.read(subscriptionProvider.notifier).redeemPromoCode(code);
       if (!mounted) return;
       Navigator.of(context).pop();
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.proPromoSuccess),
@@ -634,7 +634,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
       if (mounted) setState(() { _error = e.message; _loading = false; });
     } catch (_) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         setState(() { _error = l10n.proPromoUnexpectedError; _loading = false; });
       }
     }
@@ -642,7 +642,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(l10n.promoCodeTitle),
       content: Column(

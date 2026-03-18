@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:productivity_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -19,7 +19,7 @@ class TutorialOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tut = ref.watch(tutorialProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final steps = buildTutorialSteps(l10n);
 
     return AnimatedSwitcher(
@@ -217,7 +217,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text(
-                AppLocalizations.of(context)!.tutorialSkip,
+                AppLocalizations.of(context).tutorialSkip,
                 style: const TextStyle(
                   fontFamily: 'Sora',
                   fontWeight: FontWeight.w600,
@@ -442,8 +442,8 @@ class _TooltipCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(isLast
-                          ? AppLocalizations.of(context)!.tutorialFinish
-                          : AppLocalizations.of(context)!.tutorialNext),
+                          ? AppLocalizations.of(context).tutorialFinish
+                          : AppLocalizations.of(context).tutorialNext),
                       if (!isLast) ...[
                         const Gap(4),
                         const Icon(Icons.arrow_forward_rounded, size: 14),

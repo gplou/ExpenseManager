@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:productivity_app/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 /// Shows a custom date-range picker with:
@@ -196,7 +196,7 @@ class _CustomDateRangePickerDialogState
                     child: TextButton(
                       onPressed: () =>
                           setState(() => _mode = _PickerMode.calendar),
-                      child: Text(AppLocalizations.of(context)!.back),
+                      child: Text(AppLocalizations.of(context).back),
                     ),
                   ),
                 ],
@@ -425,11 +425,11 @@ class _CalendarActions extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(onPressed: onCancel, child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(onPressed: onCancel, child: Text(AppLocalizations.of(context).cancel)),
         const SizedBox(width: 8),
         FilledButton(
           onPressed: canConfirm ? onConfirm : null,
-          child: Text(AppLocalizations.of(context)!.apply),
+          child: Text(AppLocalizations.of(context).apply),
         ),
       ],
     );

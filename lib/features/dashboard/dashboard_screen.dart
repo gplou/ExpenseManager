@@ -1004,7 +1004,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
 
     if (!available) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.micUnavailable)),
         );
@@ -1035,7 +1035,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       if (!mounted) return;
       setState(() => _voiceState = _VoiceInputState.idle);
       final info = e.toString().split('\n').first;
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.voiceAiError(e.runtimeType.toString(), info))),
       );
@@ -1046,7 +1046,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       setState(() => _voiceState = _VoiceInputState.idle);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.voiceInterpretError),
+          content: Text(AppLocalizations.of(context).voiceInterpretError),
         ),
       );
       return;
@@ -1068,7 +1068,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        final l10n = AppLocalizations.of(ctx)!;
+        final l10n = AppLocalizations.of(ctx);
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1122,7 +1122,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       if (parsed == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.imageTransactionNotDetected),
+            content: Text(AppLocalizations.of(context).imageTransactionNotDetected),
           ),
         );
         return;
@@ -1132,7 +1132,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       if (mounted) {
         setState(() => _voiceState = _VoiceInputState.idle);
         final info = e.toString().split('\n').first;
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.imageAiError(e.runtimeType.toString(), info))),
         );
@@ -1211,7 +1211,7 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       });
     }
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // Distance from the bottom of the body area to the FAB bottom edge,
     // matching Flutter's standard centerFloat margin.
