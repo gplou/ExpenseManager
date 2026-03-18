@@ -1,7 +1,15 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'tutorial_step.dart';
+
+// ── FAB rect reporter (updated each frame by _SpeedDialFabState) ──────────────
+
+/// Screen-coordinate [Rect] of the main + FAB button.
+/// Set by [_SpeedDialFabState] after every build so the tutorial overlay can
+/// draw a perfectly-aligned spotlight without relying on GlobalKey measurement.
+final fabRectProvider = StateProvider<Rect?>((ref) => null);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 

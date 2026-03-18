@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../core/theme/app_colors.dart';
+import 'tutorial_keys.dart';
 import 'tutorial_notifier.dart';
 import 'tutorial_step.dart';
 
@@ -21,6 +22,7 @@ class TutorialOverlay extends ConsumerWidget {
     final tut = ref.watch(tutorialProvider);
     final l10n = AppLocalizations.of(context);
     final steps = buildTutorialSteps(l10n);
+    final fabRect = ref.watch(fabRectProvider);
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 280),
@@ -31,6 +33,7 @@ class TutorialOverlay extends ConsumerWidget {
               stepIndex: tut.stepIndex,
               totalSteps: steps.length,
               isLast: tut.isLastStep,
+              fabRect: fabRect,
               onNext: () => ref.read(tutorialProvider.notifier).next(),
               onSkip: () => ref.read(tutorialProvider.notifier).skip(),
             )
@@ -50,6 +53,7 @@ class _TutorialOverlayContent extends StatefulWidget {
     required this.isLast,
     required this.onNext,
     required this.onSkip,
+    this.fabRect,
   });
 
   final TutorialStep step;
@@ -58,6 +62,8 @@ class _TutorialOverlayContent extends StatefulWidget {
   final bool isLast;
   final VoidCallback onNext;
   final VoidCallback onSkip;
+  /// Pre-computed FAB screen rect (bypasses GlobalKey measurement for the FAB step).
+  final Rect? fabRect;
 
   @override
   State<_TutorialOverlayContent> createState() =>
@@ -104,12 +110,33 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
   }
 
   @override
+  void didUpdateWidget(_TutorialOverlayContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Re-measure when the pre-computed FAB rect arrives or changes.
+    if (widget.step.targetKey == TutorialKeys.fabKey &&
+        widget.fabRect != oldWidget.fabRect &&
+        widget.fabRect != null) {
+      _measureTarget();
+    }
+  }
+
+  @override
   void dispose() {
     _ctrl.dispose();
     super.dispose();
   }
 
   void _measureTarget() {
+    // For the FAB step the rect is computed directly by _SpeedDialFabState to
+    // avoid GlobalKey measurement inaccuracies inside nested Positioned/Stacks.
+    if (widget.step.targetKey == TutorialKeys.fabKey) {
+      final newRect = widget.fabRect;
+      if (newRect != null && mounted && newRect != _targetRect) {
+        setState(() => _targetRect = newRect);
+      }
+      return;
+    }
+
     final ctx = widget.step.targetKey.currentContext;
     if (ctx == null) return;
     final box = ctx.findRenderObject() as RenderBox?;

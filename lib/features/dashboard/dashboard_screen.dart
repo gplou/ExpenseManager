@@ -1226,6 +1226,21 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
     final fabBottom =
         MediaQuery.of(context).padding.bottom + 16.0;
 
+    // Report the FAB's exact screen rect to the tutorial overlay so it can
+    // draw a correctly-aligned spotlight (avoids GlobalKey measurement issues
+    // when the key is inside a nested Positioned/Stack).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final bodyBox = context.findRenderObject() as RenderBox?;
+      if (bodyBox == null || !bodyBox.hasSize) return;
+      final bodyOrigin = bodyBox.localToGlobal(Offset.zero);
+      final bodySize = bodyBox.size;
+      final fabX = bodyOrigin.dx + (bodySize.width - _fabSize) / 2;
+      final fabY = bodyOrigin.dy + bodySize.height - fabBottom - _fabSize;
+      ref.read(fabRectProvider.notifier).state =
+          Rect.fromLTWH(fabX, fabY, _fabSize, _fabSize);
+    });
+
     // ── Voice active: show mic state widget centred at FAB position ──────────
     if (_voiceState != _VoiceInputState.idle) {
       return Stack(
