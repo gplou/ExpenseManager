@@ -433,12 +433,13 @@ class _TooltipCard extends StatelessWidget {
                     child: Row(
                       children: List.generate(totalSteps, (i) {
                         final active = i == stepIndex;
+                        final size = active ? 10.0 : 7.0;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           margin: EdgeInsets.only(
-                              right: i < totalSteps - 1 ? 5 : 0),
-                          width: active ? 18 : 7,
-                          height: 7,
+                              right: i < totalSteps - 1 ? 6 : 0),
+                          width: size,
+                          height: size,
                           decoration: BoxDecoration(
                             color: active
                                 ? (isDark
@@ -448,7 +449,7 @@ class _TooltipCard extends StatelessWidget {
                                     ? Colors.white.withValues(alpha: 0.30)
                                     : AppColors.dustyTeal
                                         .withValues(alpha: 0.25)),
-                            borderRadius: BorderRadius.circular(100),
+                            shape: BoxShape.circle,
                           ),
                         );
                       }),
