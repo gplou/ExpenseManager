@@ -58,6 +58,7 @@ List<TutorialStep> buildTutorialSteps(AppLocalizations l10n) => [
     icon: Icons.add_circle_outline_rounded,
     spotlightPadding: 10,
     spotlightRadius: 32,
+    measureDelay: const Duration(milliseconds: 300),
   ),
 
   // ── 1 · Voice ─────────────────────────────────────────────────────────────
