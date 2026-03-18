@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:productivity_app/features/chat/data/chat_repository.dart';
-import 'package:productivity_app/features/chat/domain/chat_message.dart';
 import 'package:productivity_app/features/chat/presentation/providers/chat_provider.dart';
 
 // ── Mock ──────────────────────────────────────────────────────────────────────

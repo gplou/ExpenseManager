@@ -8,7 +8,6 @@ import 'package:productivity_app/features/transactions/domain/recurring_transact
 import 'package:productivity_app/features/transactions/domain/transaction_model.dart';
 import 'package:productivity_app/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:productivity_app/features/transactions/presentation/providers/recurring_transactions_provider.dart';
-import 'package:productivity_app/features/transactions/presentation/providers/transactions_provider.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
