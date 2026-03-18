@@ -61,6 +61,11 @@ GoRouter router(RouterRef ref) {
     // Al cambiar el auth state, GoRouter re-evalúa redirect sin recrearse
     refreshListenable: _RouterRefreshNotifier(authRepo.authStateChanges),
     redirect: (context, state) {
+      // Las URIs expensemanager://widget/* provienen del widget de pantalla de inicio.
+      // La acción ya fue capturada en main.dart via pendingWidgetActionProvider;
+      // aquí solo redirigimos al dashboard para que GoRouter no las trate como rutas.
+      if (state.uri.scheme == 'expensemanager') return AppRoutes.dashboard;
+
       final isLoggedIn = authRepo.currentUser != null;
       final isAuthRoute = state.matchedLocation == AppRoutes.login ||
           state.matchedLocation == AppRoutes.register;

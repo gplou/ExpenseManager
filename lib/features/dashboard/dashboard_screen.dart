@@ -61,7 +61,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       final segments = uri.pathSegments;
       if (segments.isEmpty) return;
       final action = segments.first;
-      if (action == 'voice' || action == 'add') {
+      if (action == 'voice' || action == 'add' || action == 'chat' || action == 'photo') {
         ref.read(pendingWidgetActionProvider.notifier).state = action;
       }
     });
@@ -992,6 +992,10 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
       _startVoice();
     } else if (action == 'add') {
       context.push(AppRoutes.addTransaction);
+    } else if (action == 'chat') {
+      context.push(AppRoutes.chat);
+    } else if (action == 'photo') {
+      _startCamera();
     }
   }
 

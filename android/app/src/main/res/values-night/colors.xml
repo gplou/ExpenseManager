@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget colors – dark mode -->
+    <color name="widget_bg">#1E2329</color>
+    <color name="widget_border">#3C4650</color>
+    <color name="widget_label">#E8E5DF</color>
+    <!-- Circle and icon stay the same in dark mode -->
+    <color name="widget_circle">#7A9A99</color>
+    <color name="widget_icon">#FFFFFF</color>
+</resources>

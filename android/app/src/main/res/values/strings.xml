@@ -3,6 +3,11 @@
     <string name="app_name">Expense Manager</string>
     <string name="widget_voice_label">Añadir por voz</string>
     <string name="widget_voice_desc">Widget para añadir transacciones por voz</string>
-    <string name="widget_add_label">Nueva transacción</string>
+    <string name="widget_add_label">Manual</string>
     <string name="widget_add_desc">Widget para añadir una transacción manual</string>
+    <string name="widget_chat_label">Chat IA</string>
+    <string name="widget_chat_desc">Widget para abrir el chat de inteligencia artificial</string>
+    <string name="widget_camera_label">Foto</string>
+    <string name="widget_camera_desc">Widget para añadir transacción por foto</string>
+    <string name="widget_quad_desc">Widget de acciones rápidas de transacciones</string>
 </resources>

@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#C8E6C9</color>
+
+    <!-- Widget colors – light mode -->
+    <color name="widget_bg">#F8F7F2</color>
+    <color name="widget_border">#E8E5DF</color>
+    <color name="widget_label">#333333</color>
+    <!-- Circle and icon are the same in both modes -->
+    <color name="widget_circle">#7A9A99</color>
+    <color name="widget_icon">#FFFFFF</color>
 </resources>

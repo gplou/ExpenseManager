@@ -38,28 +38,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- Widget de voz -->
+        <!-- Widget 2x2 con 4 acciones rápidas -->
         <receiver
-            android:name=".VoiceWidgetProvider"
+            android:name=".QuadWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/home_widget_voice_info" />
-        </receiver>
-
-        <!-- Widget de añadir transacción -->
-        <receiver
-            android:name=".AddWidgetProvider"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/home_widget_add_info" />
+                android:resource="@xml/home_widget_quad_info" />
         </receiver>
 
         <provider
