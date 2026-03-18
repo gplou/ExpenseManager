@@ -67,7 +67,7 @@ String? _extractWidgetAction(Uri? uri) {
   final segments = uri.pathSegments;
   if (segments.isEmpty) return null;
   final action = segments.first;
-  if (action == 'voice' || action == 'add') return action;
+  if (action == 'voice' || action == 'add' || action == 'chat' || action == 'photo') return action;
   return null;
 }
 

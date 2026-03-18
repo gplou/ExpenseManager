@@ -8,47 +8,56 @@ import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 
 /**
- * Widget de voz: al pulsarlo abre la app y arranca el micrófono directamente.
+ * Widget 2×2 con 4 botones circulares:
+ *   - Arriba izquierda : añadir transacción manual  → expensemanager://widget/add
+ *   - Arriba derecha   : chat IA                    → expensemanager://widget/chat
+ *   - Abajo izquierda  : transacción por voz        → expensemanager://widget/voice
+ *   - Abajo derecha    : transacción por foto        → expensemanager://widget/photo
  */
-class VoiceWidgetProvider : AppWidgetProvider() {
+class QuadWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
         for (appWidgetId in appWidgetIds) {
-            val views = RemoteViews(context.packageName, R.layout.home_widget_voice)
+            val views = RemoteViews(context.packageName, R.layout.home_widget_quad)
 
-            val pendingIntent = HomeWidgetLaunchIntent.getActivity(
-                context,
-                MainActivity::class.java,
-                Uri.parse("expensemanager://widget/voice"),
+            views.setOnClickPendingIntent(
+                R.id.btn_add,
+                HomeWidgetLaunchIntent.getActivity(
+                    context,
+                    MainActivity::class.java,
+                    Uri.parse("expensemanager://widget/add"),
+                ),
             )
-            views.setOnClickPendingIntent(R.id.widget_voice_root, pendingIntent)
 
-            appWidgetManager.updateAppWidget(appWidgetId, views)
-        }
-    }
-}
-
-/**
- * Widget de añadir transacción: al pulsarlo abre la pantalla de nueva transacción.
- */
-class AddWidgetProvider : AppWidgetProvider() {
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray,
-    ) {
-        for (appWidgetId in appWidgetIds) {
-            val views = RemoteViews(context.packageName, R.layout.home_widget_add)
-
-            val pendingIntent = HomeWidgetLaunchIntent.getActivity(
-                context,
-                MainActivity::class.java,
-                Uri.parse("expensemanager://widget/add"),
+            views.setOnClickPendingIntent(
+                R.id.btn_chat,
+                HomeWidgetLaunchIntent.getActivity(
+                    context,
+                    MainActivity::class.java,
+                    Uri.parse("expensemanager://widget/chat"),
+                ),
             )
-            views.setOnClickPendingIntent(R.id.widget_add_root, pendingIntent)
+
+            views.setOnClickPendingIntent(
+                R.id.btn_voice,
+                HomeWidgetLaunchIntent.getActivity(
+                    context,
+                    MainActivity::class.java,
+                    Uri.parse("expensemanager://widget/voice"),
+                ),
+            )
+
+            views.setOnClickPendingIntent(
+                R.id.btn_camera,
+                HomeWidgetLaunchIntent.getActivity(
+                    context,
+                    MainActivity::class.java,
+                    Uri.parse("expensemanager://widget/photo"),
+                ),
+            )
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
