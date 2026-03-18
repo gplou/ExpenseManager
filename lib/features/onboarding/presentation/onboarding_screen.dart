@@ -171,18 +171,19 @@ class _DotsIndicator extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(total, (i) {
         final isActive = i == current;
+        final size = isActive ? 12.0 : 8.0;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: isActive ? 20 : 8,
-          height: 8,
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          width: size,
+          height: size,
           decoration: BoxDecoration(
             color: isActive
                 ? AppColors.dustyTeal
                 : (isDark
                     ? AppColors.darkBorderColor
                     : AppColors.borderMedium),
-            borderRadius: BorderRadius.circular(4),
+            shape: BoxShape.circle,
           ),
         );
       }),
