@@ -85,6 +85,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (!mounted) return;
     final tutSeen = await ref.read(tutorialProvider.notifier).hasSeen();
     if (!tutSeen && mounted) {
+      // Esperar a que el estado de suscripción se resuelva antes de iniciar el
+      // tutorial. Esto evita que isProProvider cambie de false→true mientras el
+      // tutorial ya está activo, lo que desplazaría el layout (AdBannerFooter
+      // aparece/desaparece) y provocaría que el spotlight del botón + quede
+      // desencuadrado respecto al FAB real.
+      try {
+        await ref
+            .read(subscriptionProvider.future)
+            .timeout(const Duration(seconds: 4));
+      } catch (_) {
+        // Si la consulta falla o supera el timeout, continuamos igualmente.
+      }
+      if (!mounted) return;
       await Future<void>.delayed(const Duration(milliseconds: 400));
       if (mounted) ref.read(tutorialProvider.notifier).start();
     }
