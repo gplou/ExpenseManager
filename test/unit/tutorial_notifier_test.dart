@@ -19,7 +19,7 @@ void main() {
     });
 
     test('isLastStep is true when stepIndex == kTutorialStepCount - 1', () {
-      final lastStep = TutorialState(
+      const lastStep = TutorialState(
         isActive: true,
         stepIndex: kTutorialStepCount - 1,
       );

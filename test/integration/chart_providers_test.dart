@@ -5,7 +5,6 @@ import 'package:productivity_app/features/charts/presentation/providers/chart_pr
 import 'package:productivity_app/features/transactions/data/transactions_repository.dart';
 import 'package:productivity_app/features/transactions/domain/transaction_model.dart';
 import 'package:productivity_app/features/transactions/domain/transactions_repository_contract.dart';
-import 'package:productivity_app/features/transactions/presentation/providers/transactions_provider.dart';
 
 // ── Fake repository ───────────────────────────────────────────────────────────
 
