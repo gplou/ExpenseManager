@@ -165,6 +165,10 @@
   "proPromoDiscountSuccess": "Réduction de {percentage}% appliquée ! Finalisez votre achat pour activer PRO.",
   "proDiscountBanner": "Réduction de {percentage}% — {bonusDays} jours bonus en vous abonnant",
   "proPromoUnexpectedError": "Erreur inattendue. Réessayez.",
+  "proSourceFreeTrial": "Essai gratuit",
+  "proFreeTrialButton": "Essai gratuit de 3 jours",
+  "proFreeTrialActivated": "Essai activé ! Profitez de PRO pendant 3 jours.",
+  "proFreeTrialSubtitle": "Testez toutes les fonctionnalités premium sans engagement",
 
   "subcategory": "Sous-catégorie",
   "newSubcategory": "Nouvelle sous-catégorie",

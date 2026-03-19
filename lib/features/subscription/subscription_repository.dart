@@ -51,6 +51,51 @@ class SubscriptionRepository {
     );
   }
 
+  // ── Free trial ──────────────────────────────────────────────────────────
+
+  /// Returns true if the user has already used the free trial OR has ever
+  /// been PRO (any source). Only first-time users are eligible.
+  Future<bool> checkTrialUsed() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return true; // not logged in → not eligible
+
+    final row = await _client
+        .from('subscriptions')
+        .select('trial_used_at, source')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (row == null) return false; // no record → eligible
+    if (row['trial_used_at'] != null) return true; // already used trial
+    // If they ever had a paid/promo source, they're not eligible
+    final source = row['source'] as String?;
+    if (source != null && source != 'free_trial') return true;
+    return false;
+  }
+
+  /// Activates the 3-day free trial. Expires at midnight (00:00) of
+  /// the 4th full day after today (3 complete calendar days).
+  /// Also stamps trial_used_at so it can never be used again.
+  Future<DateTime> startFreeTrial() async {
+    final userId = _client.auth.currentUser!.id;
+    final now = DateTime.now();
+    // 3 full days: today (partial) + 3 complete days → midnight of day+4
+    final expiresAt = DateTime(now.year, now.month, now.day).add(const Duration(days: 4));
+
+    await _client.from('subscriptions').upsert(
+      {
+        'user_id': userId,
+        'expires_at': expiresAt.toUtc().toIso8601String(),
+        'source': 'free_trial',
+        'trial_used_at': now.toUtc().toIso8601String(),
+        'cancelled': false,
+      },
+      onConflict: 'user_id',
+    );
+
+    return expiresAt;
+  }
+
   // ── Promo codes ───────────────────────────────────────────────────────────
 
   /// Redeems a promo code and returns its details.

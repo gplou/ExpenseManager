@@ -486,6 +486,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proPromoUnexpectedError => 'Unexpected error. Please try again.';
 
   @override
+  String get proSourceFreeTrial => 'Free trial';
+
+  @override
+  String get proFreeTrialButton => 'Try free for 3 days';
+
+  @override
+  String get proFreeTrialActivated => 'Trial activated! Enjoy PRO for 3 days.';
+
+  @override
+  String get proFreeTrialSubtitle =>
+      'Try all premium features with no commitment';
+
+  @override
   String get subcategory => 'Subcategory';
 
   @override

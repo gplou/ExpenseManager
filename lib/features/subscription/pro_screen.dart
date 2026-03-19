@@ -105,6 +105,12 @@ class _ProBody extends ConsumerWidget {
           ),
           const Gap(28),
 
+          // ── Free trial card (only when eligible) ─────────────────────
+          if (sub.canStartTrial) ...[
+            _FreeTrialCard(sub: sub),
+            const Gap(20),
+          ],
+
           // ── Price card (only when not PRO) ───────────────────────────
           if (!sub.isPro) ...[
             // ── Discount banner (when a discount promo code has been redeemed)
@@ -302,6 +308,7 @@ class _ActiveProCard extends StatelessWidget {
       'google_play' => l10n.proSourceGooglePlay,
       'app_store' => l10n.proSourceAppStore,
       'promo_code' => l10n.proSourcePromoCode,
+      'free_trial' => l10n.proSourceFreeTrial,
       _ => '',
     };
 
@@ -405,6 +412,70 @@ class _BenefitRow extends StatelessWidget {
             Icons.check_circle_outline,
             color: AppColors.sageGreen,
             size: 18,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Free trial card ──────────────────────────────────────────────────────────
+
+class _FreeTrialCard extends ConsumerWidget {
+  const _FreeTrialCard({required this.sub});
+  final SubscriptionState sub;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
+    return NeoCard(
+      accentColor: AppColors.dustyTeal,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.rocket_launch_outlined,
+            color: AppColors.dustyTeal,
+            size: 32,
+          ),
+          const Gap(12),
+          Text(
+            l10n.proFreeTrialButton,
+            style: context.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.dustyTeal,
+            ),
+          ),
+          const Gap(4),
+          Text(
+            l10n.proFreeTrialSubtitle,
+            style: const TextStyle(
+              fontFamily: 'Sora',
+              fontSize: 13,
+              color: AppColors.textMuted,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const Gap(16),
+          NeoBrutalButton(
+            label: l10n.proFreeTrialButton,
+            isLoading: sub.isLoading,
+            onTap: sub.isLoading
+                ? null
+                : () async {
+                    await ref
+                        .read(subscriptionProvider.notifier)
+                        .startFreeTrial();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.proFreeTrialActivated),
+                          backgroundColor: AppColors.sageGreen,
+                        ),
+                      );
+                    }
+                  },
           ),
         ],
       ),

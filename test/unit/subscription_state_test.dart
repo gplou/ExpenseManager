@@ -102,4 +102,58 @@ void main() {
       expect(state.hasDiscount, isTrue);
     });
   });
+
+  // ── Free trial fields ────────────────────────────────────────────────────
+
+  group('Free trial', () {
+    test('default state has trialUsed = false', () {
+      const state = SubscriptionState();
+      expect(state.trialUsed, isFalse);
+    });
+
+    test('canStartTrial is true for fresh user (not PRO, trial not used)', () {
+      const state = SubscriptionState();
+      expect(state.canStartTrial, isTrue);
+    });
+
+    test('canStartTrial is false when already PRO', () {
+      final state = SubscriptionState(
+        expiresAt: DateTime.now().add(const Duration(days: 3)),
+        source: 'free_trial',
+        trialUsed: true,
+      );
+      expect(state.isPro, isTrue);
+      expect(state.canStartTrial, isFalse);
+    });
+
+    test('canStartTrial is false when trial already used (even if expired)', () {
+      final state = SubscriptionState(
+        expiresAt: DateTime.now().subtract(const Duration(days: 1)),
+        source: 'free_trial',
+        trialUsed: true,
+      );
+      expect(state.isPro, isFalse);
+      expect(state.canStartTrial, isFalse);
+    });
+
+    test('canStartTrial is false when PRO via purchase (trial never used)', () {
+      final state = SubscriptionState(
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+        source: 'google_play',
+      );
+      expect(state.canStartTrial, isFalse); // isPro is true
+    });
+
+    test('copyWith preserves trialUsed', () {
+      const state = SubscriptionState(trialUsed: true);
+      final updated = state.copyWith(isLoading: true);
+      expect(updated.trialUsed, isTrue);
+    });
+
+    test('copyWith can change trialUsed', () {
+      const state = SubscriptionState();
+      final updated = state.copyWith(trialUsed: true);
+      expect(updated.trialUsed, isTrue);
+    });
+  });
 }

@@ -1014,6 +1014,30 @@ abstract class AppLocalizations {
   /// **'Error inesperado. Inténtalo de nuevo.'**
   String get proPromoUnexpectedError;
 
+  /// No description provided for @proSourceFreeTrial.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba gratuita'**
+  String get proSourceFreeTrial;
+
+  /// No description provided for @proFreeTrialButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba gratis 3 días'**
+  String get proFreeTrialButton;
+
+  /// No description provided for @proFreeTrialActivated.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Prueba activada! Disfruta de PRO durante 3 días.'**
+  String get proFreeTrialActivated;
+
+  /// No description provided for @proFreeTrialSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba todas las funciones premium sin compromiso'**
+  String get proFreeTrialSubtitle;
+
   /// No description provided for @subcategory.
   ///
   /// In es, this message translates to:

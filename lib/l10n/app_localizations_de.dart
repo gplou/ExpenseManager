@@ -494,6 +494,20 @@ class AppLocalizationsDe extends AppLocalizations {
       'Unerwarteter Fehler. Bitte erneut versuchen.';
 
   @override
+  String get proSourceFreeTrial => 'Kostenlose Testversion';
+
+  @override
+  String get proFreeTrialButton => '3 Tage kostenlos testen';
+
+  @override
+  String get proFreeTrialActivated =>
+      'Testversion aktiviert! Genieße PRO für 3 Tage.';
+
+  @override
+  String get proFreeTrialSubtitle =>
+      'Teste alle Premium-Funktionen unverbindlich';
+
+  @override
   String get subcategory => 'Unterkategorie';
 
   @override

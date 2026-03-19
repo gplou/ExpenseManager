@@ -165,6 +165,10 @@
   "proPromoDiscountSuccess": "{percentage}% Rabatt angewendet! Schließe deinen Kauf ab, um PRO zu aktivieren.",
   "proDiscountBanner": "{percentage}% Rabatt angewendet — {bonusDays} Bonustage beim Abonnieren",
   "proPromoUnexpectedError": "Unerwarteter Fehler. Bitte erneut versuchen.",
+  "proSourceFreeTrial": "Kostenlose Testversion",
+  "proFreeTrialButton": "3 Tage kostenlos testen",
+  "proFreeTrialActivated": "Testversion aktiviert! Genieße PRO für 3 Tage.",
+  "proFreeTrialSubtitle": "Teste alle Premium-Funktionen unverbindlich",
 
   "subcategory": "Unterkategorie",
   "newSubcategory": "Neue Unterkategorie",

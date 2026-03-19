@@ -238,6 +238,94 @@ void main() {
     });
   });
 
+  // ── Free trial flow: free → trial → expiry → purchase ────────────────────
+
+  group('Free trial flow', () {
+    test('new user is eligible for trial', () {
+      const state = SubscriptionState();
+      expect(state.canStartTrial, isTrue);
+      expect(state.isPro, isFalse);
+      expect(state.trialUsed, isFalse);
+    });
+
+    test('activating trial grants PRO with free_trial source', () {
+      final now = DateTime.now();
+      final expiresAt = DateTime(now.year, now.month, now.day)
+          .add(const Duration(days: 4));
+      final state = SubscriptionState(
+        expiresAt: expiresAt,
+        source: 'free_trial',
+        trialUsed: true,
+      );
+      expect(state.isPro, isTrue);
+      expect(state.source, 'free_trial');
+      expect(state.trialUsed, isTrue);
+      expect(state.canStartTrial, isFalse);
+    });
+
+    test('trial expires at midnight of day+4 (3 full calendar days)', () {
+      final now = DateTime.now();
+      final expiresAt = DateTime(now.year, now.month, now.day)
+          .add(const Duration(days: 4));
+      // Verify it's exactly midnight (00:00:00)
+      expect(expiresAt.hour, 0);
+      expect(expiresAt.minute, 0);
+      expect(expiresAt.second, 0);
+      // Verify it's 4 calendar days from start of today
+      final startOfToday = DateTime(now.year, now.month, now.day);
+      expect(expiresAt.difference(startOfToday).inDays, 4);
+    });
+
+    test('after trial expires, user is no longer PRO but trial is still used', () {
+      final state = SubscriptionState(
+        expiresAt: DateTime.now().subtract(const Duration(hours: 1)),
+        source: 'free_trial',
+        trialUsed: true,
+      );
+      expect(state.isPro, isFalse);
+      expect(state.trialUsed, isTrue);
+      expect(state.canStartTrial, isFalse);
+    });
+
+    test('user can purchase PRO after trial expires', () {
+      // Trial expired
+      final trialExpired = SubscriptionState(
+        expiresAt: DateTime.now().subtract(const Duration(days: 1)),
+        source: 'free_trial',
+        trialUsed: true,
+      );
+      expect(trialExpired.isPro, isFalse);
+      expect(trialExpired.canStartTrial, isFalse);
+
+      // User purchases — state is replaced
+      final purchased = SubscriptionState(
+        expiresAt: DateTime.now().add(const Duration(days: 31)),
+        source: 'google_play',
+        trialUsed: true,
+      );
+      expect(purchased.isPro, isTrue);
+      expect(purchased.source, 'google_play');
+    });
+
+    test('user who already purchased cannot start trial', () {
+      final state = SubscriptionState(
+        expiresAt: DateTime.now().subtract(const Duration(days: 1)),
+        source: 'google_play',
+        trialUsed: true,
+      );
+      expect(state.canStartTrial, isFalse);
+    });
+
+    test('user with active promo code PRO cannot start trial', () {
+      final state = SubscriptionState(
+        expiresAt: DateTime.now().add(const Duration(days: 15)),
+        source: 'promo_code',
+        trialUsed: true,
+      );
+      expect(state.canStartTrial, isFalse);
+    });
+  });
+
   // ── PromoResult ───────────────────────────────────────────────────────────
 
   group('PromoResult', () {

@@ -8,13 +8,14 @@ class SubscriptionState {
     this.purchaseError,
     this.source,
     this.pendingDiscountPercentage,
+    this.trialUsed = false,
   });
 
   final DateTime? expiresAt;
   final bool isLoading;
   final String? purchaseError;
 
-  /// 'google_play' | 'app_store' | 'promo_code'
+  /// 'google_play' | 'app_store' | 'promo_code' | 'free_trial'
   final String? source;
 
   /// Discount percentage (1-100) from a redeemed 'discount' promo code.
@@ -22,8 +23,14 @@ class SubscriptionState {
   /// Bonus days = (31 * discountPercentage / 100) are added after purchase.
   final int? pendingDiscountPercentage;
 
+  /// Whether this user has already used their one-time free trial.
+  final bool trialUsed;
+
   bool get isPro =>
       expiresAt != null && expiresAt!.isAfter(DateTime.now());
+
+  /// Whether the user can start a free trial (never been PRO and never used trial).
+  bool get canStartTrial => !isPro && !trialUsed;
 
   /// Whether the user has a pending discount that requires a store purchase.
   bool get hasDiscount => pendingDiscountPercentage != null;
@@ -43,6 +50,7 @@ class SubscriptionState {
     String? source,
     int? pendingDiscountPercentage,
     bool clearDiscount = false,
+    bool? trialUsed,
   }) {
     return SubscriptionState(
       expiresAt: clearExpiry ? null : (expiresAt ?? this.expiresAt),
@@ -52,6 +60,7 @@ class SubscriptionState {
       pendingDiscountPercentage: clearDiscount
           ? null
           : (pendingDiscountPercentage ?? this.pendingDiscountPercentage),
+      trialUsed: trialUsed ?? this.trialUsed,
     );
   }
 }

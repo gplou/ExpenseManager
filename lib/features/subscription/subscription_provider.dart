@@ -15,6 +15,7 @@ const _kCacheExpiresAtKey = 'sub_expires_at';
 const _kCacheCheckedAtKey = 'sub_checked_at';
 const _kCacheSourceKey = 'sub_source';
 const _kCacheUserIdKey = 'sub_user_id';
+const _kCacheTrialUsedKey = 'sub_trial_used';
 
 /// Re-check the store/Supabase at most once every 24 hours.
 const _kCacheTtl = Duration(hours: 24);
@@ -135,6 +136,29 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     }
   }
 
+  /// Activates the one-time 3-day free trial.
+  Future<void> startFreeTrial() async {
+    _setLoading(true);
+    try {
+      final repo = ref.read(subscriptionRepositoryProvider);
+      final expiresAt = await repo.startFreeTrial();
+      await _persistCache(
+        expiresAt: expiresAt,
+        source: 'free_trial',
+        trialUsed: true,
+      );
+      state = AsyncData(
+        SubscriptionState(
+          expiresAt: expiresAt,
+          source: 'free_trial',
+          trialUsed: true,
+        ),
+      );
+    } catch (e) {
+      _setError('Error al activar la prueba gratuita');
+    }
+  }
+
   /// Forces a re-check against Supabase, ignoring the 24 h cache.
   Future<void> forceRefresh() async {
     _setLoading(true);
@@ -158,6 +182,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     final cachedExpiry = await storage.read(_kCacheExpiresAtKey);
     final cachedCheckedAt = await storage.read(_kCacheCheckedAtKey);
     final cachedSource = await storage.read(_kCacheSourceKey);
+    final cachedTrialUsed = await storage.read(_kCacheTrialUsedKey);
 
     // Build the fast cached state (may be null / expired).
     SubscriptionState fast = const SubscriptionState();
@@ -165,7 +190,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       fast = SubscriptionState(
         expiresAt: DateTime.parse(cachedExpiry).toLocal(),
         source: cachedSource,
+        trialUsed: cachedTrialUsed == 'true',
       );
+    } else if (cachedTrialUsed == 'true') {
+      fast = const SubscriptionState(trialUsed: true);
     }
 
     // Determine whether the cache is stale (> 24 h old).
@@ -198,11 +226,20 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   Future<SubscriptionState> _fetchRemote() async {
     final repo = ref.read(subscriptionRepositoryProvider);
     final remote = await repo.fetchRemoteSubscription();
-    await _persistCache(expiresAt: remote.expiresAt, source: remote.source);
-    return SubscriptionState(expiresAt: remote.expiresAt, source: remote.source);
+    final trialUsed = await repo.checkTrialUsed();
+    await _persistCache(
+      expiresAt: remote.expiresAt,
+      source: remote.source,
+      trialUsed: trialUsed,
+    );
+    return SubscriptionState(
+      expiresAt: remote.expiresAt,
+      source: remote.source,
+      trialUsed: trialUsed,
+    );
   }
 
-  Future<void> _persistCache({DateTime? expiresAt, String? source}) async {
+  Future<void> _persistCache({DateTime? expiresAt, String? source, bool? trialUsed}) async {
     final storage = SecureStorageService.instance;
     if (expiresAt != null) {
       await storage.write(
@@ -217,6 +254,9 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     } else {
       await storage.delete(_kCacheSourceKey);
     }
+    if (trialUsed != null) {
+      await storage.write(_kCacheTrialUsedKey, trialUsed.toString());
+    }
     final currentUserId = ref.read(currentUserProvider)?.id;
     if (currentUserId != null) {
       await storage.write(_kCacheUserIdKey, currentUserId);
@@ -230,6 +270,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     await storage.delete(_kCacheCheckedAtKey);
     await storage.delete(_kCacheSourceKey);
     await storage.delete(_kCacheUserIdKey);
+    await storage.delete(_kCacheTrialUsedKey);
   }
 
   void _setLoading(bool loading) {

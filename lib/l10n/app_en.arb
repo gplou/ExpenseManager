@@ -165,6 +165,10 @@
   "proPromoDiscountSuccess": "{percentage}% discount applied! Complete your purchase to activate PRO.",
   "proDiscountBanner": "{percentage}% discount applied — {bonusDays} bonus days when you subscribe",
   "proPromoUnexpectedError": "Unexpected error. Please try again.",
+  "proSourceFreeTrial": "Free trial",
+  "proFreeTrialButton": "Try free for 3 days",
+  "proFreeTrialActivated": "Trial activated! Enjoy PRO for 3 days.",
+  "proFreeTrialSubtitle": "Try all premium features with no commitment",
 
   "subcategory": "Subcategory",
   "newSubcategory": "New subcategory",
