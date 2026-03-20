@@ -406,16 +406,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Saubere Erfahrung, keine Unterbrechungen';
 
   @override
-  String get proVoiceAI => 'KI-Spracheingabe';
+  String get proVoiceImage => 'Sprache & Bild mit KI';
 
   @override
-  String get proVoiceAISubtitle => 'Transaktionen per Sprache erfassen';
+  String get proVoiceImageSubtitle =>
+      'Transaktionen per Sprache oder Foto hinzufügen';
 
   @override
-  String get proFutureFeatures => 'Zukünftige Funktionen';
+  String get proAIChat => 'KI-Finanzchat';
 
   @override
-  String get proFutureFeaturesSubtitle => 'Frühzeitiger Zugang zu Neuheiten';
+  String get proAIChatSubtitle =>
+      'Fragen Sie Ihre Finanzen mit einem intelligenten Assistenten';
 
   @override
   String get proPrice => '4,99 € / Monat';

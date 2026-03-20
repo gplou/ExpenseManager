@@ -858,29 +858,29 @@ abstract class AppLocalizations {
   /// **'Experiencia limpia, sin interrupciones'**
   String get proNoBannerAdsSubtitle;
 
-  /// No description provided for @proVoiceAI.
+  /// No description provided for @proVoiceImage.
   ///
   /// In es, this message translates to:
-  /// **'Entrada por voz con IA'**
-  String get proVoiceAI;
+  /// **'Voz e imagen con IA'**
+  String get proVoiceImage;
 
-  /// No description provided for @proVoiceAISubtitle.
+  /// No description provided for @proVoiceImageSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Registra transacciones hablando'**
-  String get proVoiceAISubtitle;
+  /// **'Añade transacciones hablando o con una foto'**
+  String get proVoiceImageSubtitle;
 
-  /// No description provided for @proFutureFeatures.
+  /// No description provided for @proAIChat.
   ///
   /// In es, this message translates to:
-  /// **'Funciones futuras'**
-  String get proFutureFeatures;
+  /// **'Chat financiero con IA'**
+  String get proAIChat;
 
-  /// No description provided for @proFutureFeaturesSubtitle.
+  /// No description provided for @proAIChatSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Acceso anticipado a novedades'**
-  String get proFutureFeaturesSubtitle;
+  /// **'Consulta tus finanzas con un asistente inteligente'**
+  String get proAIChatSubtitle;
 
   /// No description provided for @proPrice.
   ///

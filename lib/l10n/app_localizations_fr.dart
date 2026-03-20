@@ -403,16 +403,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get proNoBannerAdsSubtitle => 'Expérience propre, sans interruptions';
 
   @override
-  String get proVoiceAI => 'Saisie vocale avec IA';
+  String get proVoiceImage => 'Voix et image avec IA';
 
   @override
-  String get proVoiceAISubtitle => 'Enregistrez des transactions en parlant';
+  String get proVoiceImageSubtitle =>
+      'Ajoutez des transactions en parlant ou avec une photo';
 
   @override
-  String get proFutureFeatures => 'Fonctionnalités futures';
+  String get proAIChat => 'Chat financier avec IA';
 
   @override
-  String get proFutureFeaturesSubtitle => 'Accès anticipé aux nouveautés';
+  String get proAIChatSubtitle =>
+      'Consultez vos finances avec un assistant intelligent';
 
   @override
   String get proPrice => '4,99 € / mois';

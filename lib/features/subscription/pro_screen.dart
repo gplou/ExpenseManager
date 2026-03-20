@@ -86,22 +86,22 @@ class _ProBody extends ConsumerWidget {
           ),
           const Gap(14),
           _BenefitRow(
+            icon: Icons.mic_outlined,
+            iconColor: AppColors.dustyTeal,
+            title: l10n.proVoiceImage,
+            subtitle: l10n.proVoiceImageSubtitle,
+          ),
+          _BenefitRow(
+            icon: Icons.smart_toy_outlined,
+            iconColor: AppColors.warmAmber,
+            title: l10n.proAIChat,
+            subtitle: l10n.proAIChatSubtitle,
+          ),
+          _BenefitRow(
             icon: Icons.block_outlined,
             iconColor: AppColors.sageGreen,
             title: l10n.proNoBannerAds,
             subtitle: l10n.proNoBannerAdsSubtitle,
-          ),
-          _BenefitRow(
-            icon: Icons.mic_outlined,
-            iconColor: AppColors.dustyTeal,
-            title: l10n.proVoiceAI,
-            subtitle: l10n.proVoiceAISubtitle,
-          ),
-          _BenefitRow(
-            icon: Icons.auto_awesome_outlined,
-            iconColor: AppColors.warmAmber,
-            title: l10n.proFutureFeatures,
-            subtitle: l10n.proFutureFeaturesSubtitle,
           ),
           const Gap(28),
 
