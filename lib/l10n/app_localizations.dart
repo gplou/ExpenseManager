@@ -858,29 +858,29 @@ abstract class AppLocalizations {
   /// **'Experiencia limpia, sin interrupciones'**
   String get proNoBannerAdsSubtitle;
 
-  /// No description provided for @proVoiceAI.
+  /// No description provided for @proVoiceImage.
   ///
   /// In es, this message translates to:
-  /// **'Entrada por voz con IA'**
-  String get proVoiceAI;
+  /// **'Voz e imagen con IA'**
+  String get proVoiceImage;
 
-  /// No description provided for @proVoiceAISubtitle.
+  /// No description provided for @proVoiceImageSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Registra transacciones hablando'**
-  String get proVoiceAISubtitle;
+  /// **'Añade transacciones hablando o con una foto'**
+  String get proVoiceImageSubtitle;
 
-  /// No description provided for @proFutureFeatures.
+  /// No description provided for @proAIChat.
   ///
   /// In es, this message translates to:
-  /// **'Funciones futuras'**
-  String get proFutureFeatures;
+  /// **'Chat financiero con IA'**
+  String get proAIChat;
 
-  /// No description provided for @proFutureFeaturesSubtitle.
+  /// No description provided for @proAIChatSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Acceso anticipado a novedades'**
-  String get proFutureFeaturesSubtitle;
+  /// **'Consulta tus finanzas con un asistente inteligente'**
+  String get proAIChatSubtitle;
 
   /// No description provided for @proPrice.
   ///
@@ -1013,6 +1013,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Error inesperado. Inténtalo de nuevo.'**
   String get proPromoUnexpectedError;
+
+  /// No description provided for @proSourceFreeTrial.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba gratuita'**
+  String get proSourceFreeTrial;
+
+  /// No description provided for @proFreeTrialButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba gratis 3 días'**
+  String get proFreeTrialButton;
+
+  /// No description provided for @proFreeTrialActivated.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Prueba activada! Disfruta de PRO durante 3 días.'**
+  String get proFreeTrialActivated;
+
+  /// No description provided for @proFreeTrialSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Prueba todas las funciones premium sin compromiso'**
+  String get proFreeTrialSubtitle;
 
   /// No description provided for @subcategory.
   ///

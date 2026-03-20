@@ -406,16 +406,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Saubere Erfahrung, keine Unterbrechungen';
 
   @override
-  String get proVoiceAI => 'KI-Spracheingabe';
+  String get proVoiceImage => 'Sprache & Bild mit KI';
 
   @override
-  String get proVoiceAISubtitle => 'Transaktionen per Sprache erfassen';
+  String get proVoiceImageSubtitle =>
+      'Transaktionen per Sprache oder Foto hinzufügen';
 
   @override
-  String get proFutureFeatures => 'Zukünftige Funktionen';
+  String get proAIChat => 'KI-Finanzchat';
 
   @override
-  String get proFutureFeaturesSubtitle => 'Frühzeitiger Zugang zu Neuheiten';
+  String get proAIChatSubtitle =>
+      'Fragen Sie Ihre Finanzen mit einem intelligenten Assistenten';
 
   @override
   String get proPrice => '4,99 € / Monat';
@@ -492,6 +494,20 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get proPromoUnexpectedError =>
       'Unerwarteter Fehler. Bitte erneut versuchen.';
+
+  @override
+  String get proSourceFreeTrial => 'Kostenlose Testversion';
+
+  @override
+  String get proFreeTrialButton => '3 Tage kostenlos testen';
+
+  @override
+  String get proFreeTrialActivated =>
+      'Testversion aktiviert! Genieße PRO für 3 Tage.';
+
+  @override
+  String get proFreeTrialSubtitle =>
+      'Teste alle Premium-Funktionen unverbindlich';
 
   @override
   String get subcategory => 'Unterkategorie';

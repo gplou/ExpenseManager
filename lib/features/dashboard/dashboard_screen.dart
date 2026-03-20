@@ -1000,14 +1000,24 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
     super.dispose();
   }
 
+  bool _requirePro() {
+    if (ref.read(isProProvider)) return true;
+    _closeDial();
+    context.push(AppRoutes.pro);
+    return false;
+  }
+
   void _handleWidgetAction(String action) {
     if (action == 'voice') {
+      if (!_requirePro()) return;
       _startVoice();
     } else if (action == 'add') {
       context.push(AppRoutes.addTransaction);
     } else if (action == 'chat') {
+      if (!_requirePro()) return;
       context.push(AppRoutes.chat);
     } else if (action == 'photo') {
+      if (!_requirePro()) return;
       _startCamera();
     }
   }
@@ -1313,7 +1323,10 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                     icon: Icons.mic_outlined,
                     label: l10n.labelVoice,
                     target: _micTarget,
-                    onTap: _startVoice,
+                    onTap: () {
+                      if (!_requirePro()) return;
+                      _startVoice();
+                    },
                   ),
                   _radialButton(
                     context,
@@ -1332,7 +1345,10 @@ class _SpeedDialFabState extends ConsumerState<_SpeedDialFab> {
                     icon: Icons.camera_alt_outlined,
                     label: l10n.labelPhoto,
                     target: _cameraTarget,
-                    onTap: _startCamera,
+                    onTap: () {
+                      if (!_requirePro()) return;
+                      _startCamera();
+                    },
                   ),
                   // Main FAB (always on top)
                   Positioned(

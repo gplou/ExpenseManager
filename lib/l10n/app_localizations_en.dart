@@ -401,16 +401,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proNoBannerAdsSubtitle => 'Clean experience, no interruptions';
 
   @override
-  String get proVoiceAI => 'AI voice input';
+  String get proVoiceImage => 'Voice & image with AI';
 
   @override
-  String get proVoiceAISubtitle => 'Log transactions by speaking';
+  String get proVoiceImageSubtitle =>
+      'Add transactions by speaking or with a photo';
 
   @override
-  String get proFutureFeatures => 'Future features';
+  String get proAIChat => 'AI financial chat';
 
   @override
-  String get proFutureFeaturesSubtitle => 'Early access to new features';
+  String get proAIChatSubtitle =>
+      'Ask about your finances with a smart assistant';
 
   @override
   String get proPrice => '€4.99 / month';
@@ -484,6 +486,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proPromoUnexpectedError => 'Unexpected error. Please try again.';
+
+  @override
+  String get proSourceFreeTrial => 'Free trial';
+
+  @override
+  String get proFreeTrialButton => 'Try free for 3 days';
+
+  @override
+  String get proFreeTrialActivated => 'Trial activated! Enjoy PRO for 3 days.';
+
+  @override
+  String get proFreeTrialSubtitle =>
+      'Try all premium features with no commitment';
 
   @override
   String get subcategory => 'Subcategory';
