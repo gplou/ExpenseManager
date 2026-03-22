@@ -306,5 +306,10 @@
     "placeholders": {
       "error": { "type": "String" }
     }
-  }
+  },
+
+  "moreOptions": "More options",
+  "@moreOptions": {},
+  "selectCategoryPrompt": "Select category",
+  "@selectCategoryPrompt": {}
 }

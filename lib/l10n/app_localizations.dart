@@ -1529,6 +1529,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Página no encontrada: {error}'**
   String pageNotFound(String error);
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In es, this message translates to:
+  /// **'Más opciones'**
+  String get moreOptions;
+
+  /// No description provided for @selectCategoryPrompt.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar categoría'**
+  String get selectCategoryPrompt;
 }
 
 class _AppLocalizationsDelegate

@@ -544,5 +544,10 @@
     "placeholders": {
       "error": { "type": "String" }
     }
-  }
+  },
+
+  "moreOptions": "Más opciones",
+  "@moreOptions": {},
+  "selectCategoryPrompt": "Seleccionar categoría",
+  "@selectCategoryPrompt": {}
 }
