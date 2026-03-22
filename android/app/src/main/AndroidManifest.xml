@@ -31,6 +31,11 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="expensemanager"/>
             </intent-filter>
         </activity>
@@ -39,7 +44,8 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- Widget 2x2 con 4 acciones rápidas -->
+        <!-- TODO: Widget 2x2 — descomentar cuando se implemente QuadWidgetProvider.kt -->
+        <!--
         <receiver
             android:name=".QuadWidgetProvider"
             android:exported="true">
@@ -50,6 +56,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/home_widget_quad_info" />
         </receiver>
+        -->
 
         <provider
             android:name="androidx.core.content.FileProvider"
