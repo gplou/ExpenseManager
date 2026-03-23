@@ -179,56 +179,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         _selectedCategory = selected;
         _selectedSubcategory = null;
       });
-      // Run smart details flow after category selection
-      await _runDetailsFlow();
-    }
-  }
-
-  /// Sequential bottom sheets: subcategory → description
-  Future<void> _runDetailsFlow() async {
-    if (_selectedCategory == null || !mounted) return;
-    final accentColor =
-        _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
-    final accentLight =
-        _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
-
-    // Step 1: Subcategory (always show — user can create new ones)
-    if (mounted) {
-      final sub = await showModalBottomSheet<String>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (_) => _SubcategoryPickerSheet(
-          selected: _selectedSubcategory,
-          category: _selectedCategory!,
-          type: _type,
-          accentColor: accentColor,
-          accentLight: accentLight,
-        ),
-      );
-      if (mounted && sub != null) {
-        setState(() => _selectedSubcategory = sub);
-      }
-    }
-
-    // Step 2: Description
-    if (!mounted) return;
-    final desc = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => _DescriptionInputSheet(
-        initialValue: _descriptionController.text,
-      ),
-    );
-    if (mounted && desc != null) {
-      setState(() => _descriptionController.text = desc);
     }
   }
 
@@ -629,6 +579,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     emoji: _selectedSubcategory != null ? '🏷' : null,
                     label: _selectedSubcategory ?? l10n.subcategory,
                     hasValue: _selectedSubcategory != null,
+                    disabled: _selectedCategory == null,
                     accentColor: accentColor,
                     accentLight: accentLight,
                     onTap: _selectedCategory != null
@@ -703,41 +654,42 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
               ),
             ),
-            // ── Detail chips (description) ──────────────────────────────
-            if (_descriptionController.text.trim().isNotEmpty) ...[
-              const Gap(8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                    _DetailChip(
-                      emoji: '📝',
-                      label: _descriptionController.text.trim(),
-                      accentColor: accentColor,
-                      onTap: () async {
-                        final desc = await showModalBottomSheet<String>(
-                          context: context,
-                          isScrollControlled: true,
-                          useSafeArea: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(20)),
-                          ),
-                          builder: (_) => _DescriptionInputSheet(
-                            initialValue: _descriptionController.text,
-                          ),
-                        );
-                        if (mounted && desc != null) {
-                          setState(
-                              () => _descriptionController.text = desc);
-                        }
-                      },
-                      onClear: () =>
-                          setState(() => _descriptionController.clear()),
-                    ),
-                ],
+            const Gap(10),
+
+            // ── Description field ───────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                border: Border.all(color: AppColors.borderLight, width: 1.5),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppColors.softShadowSm,
               ),
-            ],
+              child: TextFormField(
+                controller: _descriptionController,
+                maxLines: 1,
+                maxLength: 50,
+                style: TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: cs.onSurface,
+                ),
+                decoration: InputDecoration(
+                  icon: const Text('📝', style: TextStyle(fontSize: 18)),
+                  hintText: l10n.descriptionOptional,
+                  hintStyle: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: cs.onSurface.withValues(alpha: 0.3),
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                ),
+              ),
+            ),
             const Gap(16),
 
             // ── Recurring ─────────────────────────────────────────────────
@@ -852,67 +804,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
 // ── Detail chip (summary) ─────────────────────────────────────────────────────
 
-class _DetailChip extends StatelessWidget {
-  const _DetailChip({
-    required this.emoji,
-    required this.label,
-    required this.accentColor,
-    required this.onTap,
-    required this.onClear,
-  });
-
-  final String emoji;
-  final String label;
-  final Color accentColor;
-  final VoidCallback onTap;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 200),
-        padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
-        decoration: BoxDecoration(
-          color: accentColor.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: accentColor.withValues(alpha: 0.25),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 12)),
-            const Gap(6),
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: 'Sora',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: accentColor,
-                ),
-              ),
-            ),
-            const Gap(4),
-            GestureDetector(
-              onTap: onClear,
-              child: Icon(Icons.close_rounded,
-                  size: 14, color: accentColor.withValues(alpha: 0.5)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ── Compact card (category / subcategory) ─────────────────────────────────────
 
 class _CompactCard extends StatelessWidget {
@@ -923,6 +814,7 @@ class _CompactCard extends StatelessWidget {
     required this.accentLight,
     required this.onTap,
     this.emoji,
+    this.disabled = false,
   });
 
   final String? emoji;
@@ -931,28 +823,40 @@ class _CompactCard extends StatelessWidget {
   final Color accentColor;
   final Color accentLight;
   final VoidCallback? onTap;
+  final bool disabled;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return GestureDetector(
-      onTap: onTap,
+      onTap: disabled ? null : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: hasValue ? accentLight : cs.surface,
+          color: disabled
+              ? cs.onSurface.withValues(alpha: 0.04)
+              : hasValue
+                  ? accentLight
+                  : cs.surface,
           border: Border.all(
-            color: hasValue ? accentColor : AppColors.borderLight,
+            color: disabled
+                ? cs.onSurface.withValues(alpha: 0.08)
+                : hasValue
+                    ? accentColor
+                    : AppColors.borderLight,
             width: 1.5,
           ),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: hasValue ? null : AppColors.softShadowSm,
+          boxShadow: (hasValue || disabled) ? null : AppColors.softShadowSm,
         ),
         child: Row(
           children: [
             if (emoji != null) ...[
-              Text(emoji!, style: const TextStyle(fontSize: 16)),
+              Opacity(
+                opacity: disabled ? 0.3 : 1.0,
+                child: Text(emoji!, style: const TextStyle(fontSize: 16)),
+              ),
               const Gap(8),
             ],
             Expanded(
@@ -964,14 +868,22 @@ class _CompactCard extends StatelessWidget {
                   fontFamily: 'Sora',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: hasValue ? accentColor : AppColors.textMuted,
+                  color: disabled
+                      ? cs.onSurface.withValues(alpha: 0.2)
+                      : hasValue
+                          ? accentColor
+                          : AppColors.textMuted,
                 ),
               ),
             ),
             Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: hasValue ? accentColor : AppColors.textSubtle,
+              color: disabled
+                  ? cs.onSurface.withValues(alpha: 0.12)
+                  : hasValue
+                      ? accentColor
+                      : AppColors.textSubtle,
             ),
           ],
         ),
@@ -1215,127 +1127,6 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
 }
 
 // ── Description input sheet ───────────────────────────────────────────────────
-
-class _DescriptionInputSheet extends StatefulWidget {
-  const _DescriptionInputSheet({required this.initialValue});
-  final String initialValue;
-
-  @override
-  State<_DescriptionInputSheet> createState() => _DescriptionInputSheetState();
-}
-
-class _DescriptionInputSheetState extends State<_DescriptionInputSheet> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final cs = context.colors;
-
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Gap(16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Text(
-                  l10n.descriptionOptional.toUpperCase(),
-                  style: const TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Text(
-                    l10n.tutorialSkip,
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.dustyTeal,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Gap(12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextFormField(
-              controller: _controller,
-              autofocus: true,
-              maxLength: 30,
-              textCapitalization: TextCapitalization.sentences,
-              style: TextStyle(
-                fontFamily: 'Sora',
-                color: cs.onSurface,
-                fontSize: 15,
-                height: 1.5,
-              ),
-              decoration: InputDecoration(
-                hintText: l10n.descriptionHint,
-              ),
-              onFieldSubmitted: (_) =>
-                  Navigator.pop(context, _controller.text.trim()),
-            ),
-          ),
-          const Gap(16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () =>
-                    Navigator.pop(context, _controller.text.trim()),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.dustyTeal,
-                  foregroundColor: AppColors.pureWhite,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: Text(
-                  l10n.save,
-                  style: const TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const Gap(24),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Decimal limit formatter ───────────────────────────────────────────────────
 
