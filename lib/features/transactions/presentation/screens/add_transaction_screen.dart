@@ -18,6 +18,7 @@ import '../providers/custom_categories_provider.dart';
 import '../providers/subcategories_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../widgets/category_picker_sheet.dart';
+import '../../../../core/widgets/ad_banner_footer.dart';
 import '../widgets/create_subcategory_dialog.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
@@ -391,6 +392,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final accentLight = _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
 
     return Scaffold(
+      bottomNavigationBar: const AdBannerFooter(),
       appBar: AppBar(
         title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
         actions: [
