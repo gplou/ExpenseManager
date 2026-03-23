@@ -784,4 +784,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String pageNotFound(String error) {
     return 'Seite nicht gefunden: $error';
   }
+
+  @override
+  String get moreOptions => 'Mehr Optionen';
+
+  @override
+  String get selectCategoryPrompt => 'Kategorie wählen';
 }

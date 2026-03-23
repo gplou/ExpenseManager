@@ -340,5 +340,10 @@
     "placeholders": {
       "error": { "type": "String" }
     }
-  }
+  },
+
+  "moreOptions": "Plus d'options",
+  "@moreOptions": {},
+  "selectCategoryPrompt": "Choisir une catégorie",
+  "@selectCategoryPrompt": {}
 }

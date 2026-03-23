@@ -15,10 +15,9 @@ import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/custom_categories_provider.dart';
-import '../providers/hidden_builtin_categories_provider.dart';
 import '../providers/subcategories_provider.dart';
 import '../providers/transactions_provider.dart';
-import '../widgets/create_category_dialog.dart';
+import '../widgets/category_picker_sheet.dart';
 import '../widgets/create_subcategory_dialog.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
@@ -162,61 +161,94 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     super.dispose();
   }
 
-  Future<void> _openCreateCategoryDialog() async {
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (_) => CreateCategoryDialog(type: _type),
+  Future<void> _openCategoryPicker() async {
+    final accentColor =
+        _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
+    final accentLight =
+        _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+    final selected = await showCategoryPickerSheet(
+      context,
+      ref,
+      type: _type,
+      selectedCategory: _selectedCategory,
+      accentColor: accentColor,
+      accentLight: accentLight,
     );
-    if (newName != null) setState(() => _selectedCategory = newName);
+    if (selected != null && mounted) {
+      setState(() {
+        _selectedCategory = selected;
+        _selectedSubcategory = null;
+      });
+      // Run smart details flow after category selection
+      await _runDetailsFlow();
+    }
   }
 
-  Future<void> _confirmDeleteCategory(
-    String name, {
-    required bool isCustom,
-  }) async {
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+  /// Sequential bottom sheets: subcategory → description
+  Future<void> _runDetailsFlow() async {
+    if (_selectedCategory == null || !mounted) return;
+    final accentColor =
+        _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
+    final accentLight =
+        _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+
+    // Step 1: Subcategory (always show — user can create new ones)
+    if (mounted) {
+      final sub = await showModalBottomSheet<String>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => _SubcategoryPickerSheet(
+          selected: _selectedSubcategory,
+          category: _selectedCategory!,
+          type: _type,
+          accentColor: accentColor,
+          accentLight: accentLight,
+        ),
+      );
+      if (mounted && sub != null) {
+        setState(() => _selectedSubcategory = sub);
+      }
+    }
+
+    // Step 2: Description
+    if (!mounted) return;
+    final desc = await showModalBottomSheet<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.delete),
-        content: Text('"$name"'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              l10n.delete,
-              style: const TextStyle(color: AppColors.mutedTerra),
-            ),
-          ),
-        ],
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _DescriptionInputSheet(
+        initialValue: _descriptionController.text,
       ),
     );
-    if (confirmed != true || !mounted) return;
-    if (isCustom) {
-      await ref.read(customCategoriesProvider.notifier).remove(_type, name);
-    } else {
-      await ref
-          .read(hiddenBuiltInCategoriesProvider.notifier)
-          .hide(_type, name);
+    if (mounted && desc != null) {
+      setState(() => _descriptionController.text = desc);
     }
-    if (_selectedCategory == name) setState(() => _selectedCategory = null);
+  }
+
+  String _resolveCategoryEmoji(
+      String category, bool isIncome, List<TransactionCategory> customCats) {
+    // Check custom categories first (emoji stored as codePoint without fontFamily)
+    final custom = customCats.where((c) => c.name == category).firstOrNull;
+    if (custom != null && custom.icon.fontFamily == null) {
+      return String.fromCharCode(custom.icon.codePoint);
+    }
+    return TransactionCategories.emojiFor(category, isIncome: isIncome);
   }
 
   Future<void> _pickDate() async {
     final cs = context.colors;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    // Clamp initialDate so it's never after lastDate (voice AI can return future dates)
-    final initialDate = _selectedDate.isAfter(today) ? today : _selectedDate;
     final picked = await showDatePicker(
       context: context,
-      initialDate: initialDate,
+      initialDate: _selectedDate,
       firstDate: DateTime(2000),
-      lastDate: today,
+      lastDate: DateTime(2100),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: cs.copyWith(
@@ -404,14 +436,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
     final customCats = ref.watch(customCategoriesSyncProvider);
-    final hiddenBuiltIns = ref.watch(hiddenBuiltInCategoriesProvider);
-    final builtInCategories = TransactionCategories.forType(_type)
-        .where((c) => !(hiddenBuiltIns[_type]?.contains(c.name) ?? false))
-        .toList();
-    final allCategories = [
-      ...builtInCategories,
-      ...(customCats[_type] ?? []),
-    ];
 
     final accentColor = _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
     final accentLight = _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
@@ -506,168 +530,141 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 }).toList(),
               ),
             ),
-            const Gap(28),
+            const Gap(16),
 
-            // ── Amount ────────────────────────────────────────────────────
+            // ── Amount (compact) ────────────────────────────────────────
             NeoCard(
               accentColor: accentColor,
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-              child: Column(
+              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l10n.amount.toUpperCase(),
-                        style: const TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.5,
-                          color: AppColors.textSubtle,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(
-                              color: accentColor.withValues(alpha: 0.3),
-                              width: 1),
-                        ),
-                        child: Text(
-                          ref.watch(currencyProvider).valueOrNull ?? 'EUR',
-                          style: TextStyle(
-                            fontFamily: 'Sora',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: accentColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  TextFormField(
-                    controller: _amountController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-                    ],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 52,
-                      fontWeight: FontWeight.w800,
-                      color: accentColor,
-                      letterSpacing: -1,
-                    ),
-                    decoration: InputDecoration(
-                      prefixText: '${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')} ',
-                      prefixStyle: TextStyle(
+                  Expanded(
+                    child: TextFormField(
+                      controller: _amountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+                        _DecimalLimitFormatter(3),
+                      ],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
                         fontFamily: 'Sora',
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                        color: accentColor.withValues(alpha: 0.35),
-                      ),
-                      hintText: '0.00',
-                      hintStyle: TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 52,
+                        fontSize: 32,
                         fontWeight: FontWeight.w800,
-                        color: cs.onSurface.withValues(alpha: 0.08),
+                        color: accentColor,
+                        letterSpacing: -1,
                       ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      fillColor: Colors.transparent,
+                      decoration: InputDecoration(
+                        prefixText:
+                            '${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')} ',
+                        prefixStyle: TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: accentColor.withValues(alpha: 0.35),
+                        ),
+                        hintText: l10n.amountHint,
+                        hintStyle: TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface.withValues(alpha: 0.08),
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        fillColor: Colors.transparent,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                          color: accentColor.withValues(alpha: 0.3),
+                          width: 1),
+                    ),
+                    child: Text(
+                      ref.watch(currencyProvider).valueOrNull ?? 'EUR',
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: accentColor,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const Gap(28),
+            const Gap(16),
 
-            // ── Category ──────────────────────────────────────────────────
-            _SectionLabel(label: l10n.category),
-            const Gap(12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            // ── Category + Subcategory row ────────────────────────────────
+            Row(
               children: [
-                ...allCategories.map((cat) {
-                  final isSelected = _selectedCategory == cat.name;
-                  final isCustom = !TransactionCategories.forType(_type)
-                      .any((c) => c.name == cat.name);
-                  final catEmoji = _emojiForCategory(cat.name, _type.isIncome);
-                  return _CategoryChip(
-                    label: TransactionCategories.localizedName(cat.name, l10n),
-                    emoji: catEmoji,
-                    iconOverride: isCustom ? cat.icon : null,
-                    isSelected: isSelected,
+                Expanded(
+                  child: _CompactCard(
+                    emoji: _selectedCategory != null
+                        ? _resolveCategoryEmoji(
+                            _selectedCategory!, _type.isIncome, customCats[_type] ?? [])
+                        : null,
+                    label: _selectedCategory != null
+                        ? TransactionCategories.localizedName(
+                            _selectedCategory!, l10n)
+                        : l10n.category,
+                    hasValue: _selectedCategory != null,
                     accentColor: accentColor,
                     accentLight: accentLight,
-                    onTap: () => setState(() {
-                      _selectedCategory = cat.name;
-                      _selectedSubcategory = null;
-                    }),
-                    onDelete: () =>
-                        _confirmDeleteCategory(cat.name, isCustom: isCustom),
-                  );
-                }),
-                _AddCategoryChip(
-                  label: l10n.newCategory,
-                  onTap: _openCreateCategoryDialog,
+                    onTap: _openCategoryPicker,
+                  ),
+                ),
+                const Gap(10),
+                Expanded(
+                  child: _CompactCard(
+                    emoji: _selectedSubcategory != null ? '🏷' : null,
+                    label: _selectedSubcategory ?? l10n.subcategory,
+                    hasValue: _selectedSubcategory != null,
+                    accentColor: accentColor,
+                    accentLight: accentLight,
+                    onTap: _selectedCategory != null
+                        ? () async {
+                            final sub = await showModalBottomSheet<String>(
+                              context: context,
+                              isScrollControlled: true,
+                              useSafeArea: true,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(20)),
+                              ),
+                              builder: (_) => _SubcategoryPickerSheet(
+                                selected: _selectedSubcategory,
+                                category: _selectedCategory!,
+                                type: _type,
+                                accentColor: accentColor,
+                                accentLight: accentLight,
+                              ),
+                            );
+                            if (mounted && sub != null) {
+                              setState(() => _selectedSubcategory = sub);
+                            }
+                          }
+                        : null,
+                  ),
                 ),
               ],
             ),
-            const Gap(28),
-
-            // ── Subcategory ───────────────────────────────────────────────
-            if (_selectedCategory != null) ...[
-              _SectionLabel(label: l10n.subcategory),
-              const Gap(8),
-              _SubcategorySelector(
-                category: _selectedCategory!,
-                type: _type,
-                selectedSubcategory: _selectedSubcategory,
-                accentColor: accentColor,
-                accentLight: accentLight,
-                onSelected: (name) =>
-                    setState(() => _selectedSubcategory = name),
-              ),
-              const Gap(28),
-            ],
-
-            // ── Description ───────────────────────────────────────────────
-            _SectionLabel(label: l10n.descriptionOptional),
-            const Gap(8),
-            TextFormField(
-              controller: _descriptionController,
-              textCapitalization: TextCapitalization.sentences,
-              style: TextStyle(
-                fontFamily: 'Sora',
-                color: cs.onSurface,
-                fontSize: 15,
-                height: 1.5,
-              ),
-              decoration: InputDecoration(
-                hintText: l10n.descriptionHint,
-              ),
-            ),
-            const Gap(28),
+            const Gap(16),
 
             // ── Date ──────────────────────────────────────────────────────
-            _SectionLabel(label: l10n.date),
-            const Gap(8),
             GestureDetector(
               onTap: _pickDate,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
                   color: cs.surface,
                   border: Border.all(color: AppColors.borderLight, width: 1.5),
@@ -706,86 +703,126 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
               ),
             ),
-            const Gap(28),
-
-            // ── Recurring ────────────────────────────────────────────────
-            Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  border: Border.all(color: AppColors.borderLight, width: 1.5),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: AppColors.softShadowSm,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.dustyTealLight,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Center(
-                        child: Text('🔁', style: TextStyle(fontSize: 18)),
-                      ),
+            // ── Detail chips (description) ──────────────────────────────
+            if (_descriptionController.text.trim().isNotEmpty) ...[
+              const Gap(8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                    _DetailChip(
+                      emoji: '📝',
+                      label: _descriptionController.text.trim(),
+                      accentColor: accentColor,
+                      onTap: () async {
+                        final desc = await showModalBottomSheet<String>(
+                          context: context,
+                          isScrollControlled: true,
+                          useSafeArea: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20)),
+                          ),
+                          builder: (_) => _DescriptionInputSheet(
+                            initialValue: _descriptionController.text,
+                          ),
+                        );
+                        if (mounted && desc != null) {
+                          setState(
+                              () => _descriptionController.text = desc);
+                        }
+                      },
+                      onClear: () =>
+                          setState(() => _descriptionController.clear()),
                     ),
-                    const Gap(12),
-                    Expanded(
-                      child: Text(
-                        l10n.recurringTransaction,
-                        style: TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onSurface,
-                        ),
-                      ),
-                    ),
-                    Switch(
-                      value: _isRecurring,
-                      onChanged: (v) => setState(() {
-                        _isRecurring = v;
-                        _recurrenceType = v ? RecurrenceType.monthly : null;
-                      }),
-                    ),
-                  ],
-                ),
+                ],
               ),
-              if (_isRecurring) ...[
-                const Gap(12),
-                SegmentedButton<RecurrenceType>(
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(
-                      value: RecurrenceType.weekly,
-                      label: Text(l10n.weekly),
-                      icon: const Icon(Icons.calendar_view_week_outlined, size: 16),
+            ],
+            const Gap(16),
+
+            // ── Recurring ─────────────────────────────────────────────────
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                border:
+                    Border.all(color: AppColors.borderLight, width: 1.5),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppColors.softShadowSm,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.dustyTealLight,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    ButtonSegment(
-                      value: RecurrenceType.monthly,
-                      label: Text(l10n.monthly),
-                      icon: const Icon(Icons.calendar_month_outlined, size: 16),
+                    child: const Center(
+                      child: Text('🔁', style: TextStyle(fontSize: 18)),
                     ),
-                    ButtonSegment(
-                      value: RecurrenceType.annual,
-                      label: Text(l10n.yearly),
-                      icon: const Icon(Icons.event_repeat_outlined, size: 16),
-                    ),
-                  ],
-                  selected: {_recurrenceType ?? RecurrenceType.monthly},
-                  onSelectionChanged: (s) =>
-                      setState(() => _recurrenceType = s.first),
-                ),
-                if (_recurrenceType != null) ...[
+                  ),
                   const Gap(12),
-                  _RecurrenceInfoBanner(
-                    date: _selectedDate,
-                    type: _recurrenceType!,
+                  Expanded(
+                    child: Text(
+                      l10n.recurringTransaction,
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                  ),
+                  Switch(
+                    value: _isRecurring,
+                    onChanged: (v) => setState(() {
+                      _isRecurring = v;
+                      _recurrenceType = v ? RecurrenceType.monthly : null;
+                    }),
                   ),
                 ],
+              ),
+            ),
+            if (_isRecurring) ...[
+              const Gap(12),
+              SegmentedButton<RecurrenceType>(
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: RecurrenceType.weekly,
+                    label: Text(l10n.weekly),
+                    icon: const Icon(Icons.calendar_view_week_outlined,
+                        size: 16),
+                  ),
+                  ButtonSegment(
+                    value: RecurrenceType.monthly,
+                    label: Text(l10n.monthly),
+                    icon: const Icon(Icons.calendar_month_outlined,
+                        size: 16),
+                  ),
+                  ButtonSegment(
+                    value: RecurrenceType.annual,
+                    label: Text(l10n.yearly),
+                    icon: const Icon(Icons.event_repeat_outlined,
+                        size: 16),
+                  ),
+                ],
+                selected: {_recurrenceType ?? RecurrenceType.monthly},
+                onSelectionChanged: (s) =>
+                    setState(() => _recurrenceType = s.first),
+              ),
+              if (_recurrenceType != null) ...[
+                const Gap(12),
+                _RecurrenceInfoBanner(
+                  date: _selectedDate,
+                  type: _recurrenceType!,
+                ),
               ],
-            const Gap(28),
+            ],
+            const Gap(16),
 
             // ── Save button ───────────────────────────────────────────────
             NeoBrutalButton(
@@ -807,168 +844,67 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
   }
 
-  String _emojiForCategory(String category, bool isIncome) => switch (category) {
-    'Salario'    => '💼',
-    'Freelance'  => '💻',
-    'Inversión'  => '📈',
-    'Regalo'     => '🎁',
-    'Comida'     => '🍕',
-    'Transporte' => '🚗',
-    'Vivienda'   => '🏠',
-    'Ocio'       => '🎮',
-    'Salud'      => '💊',
-    'Educación'  => '📚',
-    'Ropa'       => '👕',
-    'Tecnología' => '⚡',
-    _            => isIncome ? '💰' : '💸',
-  };
 }
 
-// ── Section label ─────────────────────────────────────────────────────────────
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label});
-  final String label;
 
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label.toUpperCase(),
-      style: const TextStyle(
-        fontFamily: 'Sora',
-        fontSize: 10,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.5,
-        color: AppColors.textMuted,
-      ),
-    );
-  }
-}
 
-// ── Category chips ────────────────────────────────────────────────────────────
 
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
+// ── Detail chip (summary) ─────────────────────────────────────────────────────
+
+class _DetailChip extends StatelessWidget {
+  const _DetailChip({
     required this.emoji,
-    this.iconOverride,
-    required this.isSelected,
+    required this.label,
     required this.accentColor,
-    required this.accentLight,
     required this.onTap,
-    required this.onDelete,
+    required this.onClear,
   });
 
-  final String label;
   final String emoji;
-  final IconData? iconOverride;
-  final bool isSelected;
-  final Color accentColor;
-  final Color accentLight;
-  final VoidCallback onTap;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.colors;
-    final deleteColor = isSelected
-        ? accentColor.withValues(alpha: 0.55)
-        : AppColors.textSubtle;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: isSelected ? accentLight : cs.surface,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(
-          color: isSelected ? accentColor : AppColors.borderLight,
-          width: 1.5,
-        ),
-        boxShadow: isSelected ? null : AppColors.softShadowSm,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Selection area
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onTap();
-            },
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (iconOverride != null)
-                    Icon(iconOverride, size: 14,
-                        color: isSelected ? accentColor : AppColors.textMuted)
-                  else
-                    Text(emoji, style: const TextStyle(fontSize: 14)),
-                  const Gap(6),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? accentColor : AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Delete button
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onDelete();
-            },
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(2, 8, 10, 8),
-              child: Icon(Icons.close_rounded, size: 13, color: deleteColor),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddCategoryChip extends StatelessWidget {
-  const _AddCategoryChip({required this.label, required this.onTap});
   final String label;
+  final Color accentColor;
   final VoidCallback onTap;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        constraints: const BoxConstraints(maxWidth: 200),
+        padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
         decoration: BoxDecoration(
-          color: Colors.transparent,
+          color: accentColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
-            color: AppColors.dustyTeal,
-            width: 1.5,
+            color: accentColor.withValues(alpha: 0.25),
+            width: 1,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.add_rounded, size: 14, color: AppColors.dustyTeal),
-            const Gap(4),
-            Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.dustyTeal,
+            Text(emoji, style: const TextStyle(fontSize: 12)),
+            const Gap(6),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: accentColor,
+                ),
               ),
+            ),
+            const Gap(4),
+            GestureDetector(
+              onTap: onClear,
+              child: Icon(Icons.close_rounded,
+                  size: 14, color: accentColor.withValues(alpha: 0.5)),
             ),
           ],
         ),
@@ -977,98 +913,282 @@ class _AddCategoryChip extends StatelessWidget {
   }
 }
 
-// ── Subcategory selector ──────────────────────────────────────────────────────
+// ── Compact card (category / subcategory) ─────────────────────────────────────
 
-class _SubcategorySelector extends ConsumerWidget {
-  const _SubcategorySelector({
-    required this.category,
-    required this.type,
-    required this.selectedSubcategory,
+class _CompactCard extends StatelessWidget {
+  const _CompactCard({
+    required this.label,
+    required this.hasValue,
     required this.accentColor,
     required this.accentLight,
-    required this.onSelected,
+    required this.onTap,
+    this.emoji,
   });
 
-  final String category;
-  final TransactionType type;
-  final String? selectedSubcategory;
+  final String? emoji;
+  final String label;
+  final bool hasValue;
   final Color accentColor;
   final Color accentLight;
-  final ValueChanged<String?> onSelected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: hasValue ? accentLight : cs.surface,
+          border: Border.all(
+            color: hasValue ? accentColor : AppColors.borderLight,
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: hasValue ? null : AppColors.softShadowSm,
+        ),
+        child: Row(
+          children: [
+            if (emoji != null) ...[
+              Text(emoji!, style: const TextStyle(fontSize: 16)),
+              const Gap(8),
+            ],
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: hasValue ? accentColor : AppColors.textMuted,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: hasValue ? accentColor : AppColors.textSubtle,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Subcategory picker sheet ──────────────────────────────────────────────────
+
+class _SubcategoryPickerSheet extends ConsumerWidget {
+  const _SubcategoryPickerSheet({
+    required this.selected,
+    required this.category,
+    required this.type,
+    required this.accentColor,
+    required this.accentLight,
+  });
+
+  final String? selected;
+  final String category;
+  final TransactionType type;
+  final Color accentColor;
+  final Color accentLight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final cs = context.colors;
     final asyncSubs = ref.watch(
       subcategoriesProvider((category: category, type: type)),
     );
+    final subcategories = asyncSubs.valueOrNull ?? [];
 
-    return asyncSubs.when(
-      loading: () => const SizedBox(
-        height: 36,
-        child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      error: (_, __) => Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _AddCategoryChip(
-            label: l10n.newSubcategory,
-            onTap: () => _openCreateSubcategoryDialog(context, ref),
+          const Gap(16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
+                  l10n.subcategory.toUpperCase(),
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Text(
+                    l10n.tutorialSkip,
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          const Gap(16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ...subcategories.map((name) {
+                  final isSelected = selected == name;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.only(
+                        left: 14, top: 4, bottom: 4, right: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected ? accentLight : cs.surface,
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                        color: isSelected
+                            ? accentColor
+                            : AppColors.borderLight,
+                        width: 1.5,
+                      ),
+                      boxShadow:
+                          isSelected ? null : AppColors.softShadowSm,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(context, name);
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                fontFamily: 'Sora',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? accentColor
+                                    : AppColors.textMuted,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Gap(6),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.heavyImpact();
+                            _confirmDeleteSubcategory(
+                              context, ref, name,
+                            );
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: (isSelected
+                                      ? accentColor
+                                      : AppColors.textMuted)
+                                  .withValues(alpha: 0.12),
+                            ),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 12,
+                              color: isSelected
+                                  ? accentColor
+                                  : AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                // New subcategory button
+                GestureDetector(
+                  onTap: () async {
+                    final newName = await showDialog<String>(
+                      context: context,
+                      builder: (_) => CreateSubcategoryDialog(
+                        category: category,
+                        type: type,
+                      ),
+                    );
+                    if (newName != null && context.mounted) {
+                      Navigator.pop(context, newName);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                        color: AppColors.dustyTeal,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add_rounded,
+                            size: 14, color: AppColors.dustyTeal),
+                        const Gap(4),
+                        Text(
+                          l10n.newSubcategory,
+                          style: const TextStyle(
+                            fontFamily: 'Sora',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.dustyTeal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Gap(24),
         ],
       ),
-      data: (subcategories) {
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            ...subcategories.map((name) {
-              final isSelected = selectedSubcategory == name;
-              return _SubcategoryChip(
-                label: name,
-                isSelected: isSelected,
-                accentColor: accentColor,
-                accentLight: accentLight,
-                onTap: () => onSelected(isSelected ? null : name),
-                onDelete: () => _confirmDeleteSubcategory(context, ref, name),
-              );
-            }),
-            _AddCategoryChip(
-              label: l10n.newSubcategory,
-              onTap: () => _openCreateSubcategoryDialog(context, ref),
-            ),
-          ],
-        );
-      },
     );
-  }
-
-  Future<void> _openCreateSubcategoryDialog(
-      BuildContext context, WidgetRef ref) async {
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (_) => CreateSubcategoryDialog(
-        category: category,
-        type: type,
-      ),
-    );
-    if (newName != null) {
-      ref.invalidate(
-        subcategoriesProvider((category: category, type: type)),
-      );
-      onSelected(newName);
-    }
   }
 
   Future<void> _confirmDeleteSubcategory(
-      BuildContext context, WidgetRef ref, String name) async {
+    BuildContext context,
+    WidgetRef ref,
+    String name,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.delete),
-        content: Text('"$name"'),
+        content: Text(l10n.deleteSubcategoryConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -1084,86 +1204,157 @@ class _SubcategorySelector extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !context.mounted) return;
     await ref
         .read(subcategoriesRepositoryProvider)
         .remove(category, type, name);
     ref.invalidate(
       subcategoriesProvider((category: category, type: type)),
     );
-    if (selectedSubcategory == name) onSelected(null);
   }
 }
 
-class _SubcategoryChip extends StatelessWidget {
-  const _SubcategoryChip({
-    required this.label,
-    required this.isSelected,
-    required this.accentColor,
-    required this.accentLight,
-    required this.onTap,
-    required this.onDelete,
-  });
+// ── Description input sheet ───────────────────────────────────────────────────
 
-  final String label;
-  final bool isSelected;
-  final Color accentColor;
-  final Color accentLight;
-  final VoidCallback onTap;
-  final VoidCallback onDelete;
+class _DescriptionInputSheet extends StatefulWidget {
+  const _DescriptionInputSheet({required this.initialValue});
+  final String initialValue;
+
+  @override
+  State<_DescriptionInputSheet> createState() => _DescriptionInputSheetState();
+}
+
+class _DescriptionInputSheetState extends State<_DescriptionInputSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final cs = context.colors;
-    final deleteColor = isSelected
-        ? accentColor.withValues(alpha: 0.55)
-        : AppColors.textSubtle;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: isSelected ? accentLight : cs.surface,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(
-          color: isSelected ? accentColor : AppColors.borderLight,
-          width: 1.5,
-        ),
-        boxShadow: isSelected ? null : AppColors.softShadowSm,
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onTap();
-            },
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Sora',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? accentColor : AppColors.textMuted,
+          const Gap(16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
+                  l10n.descriptionOptional.toUpperCase(),
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Text(
+                    l10n.tutorialSkip,
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.dustyTeal,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Gap(12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextFormField(
+              controller: _controller,
+              autofocus: true,
+              maxLength: 30,
+              textCapitalization: TextCapitalization.sentences,
+              style: TextStyle(
+                fontFamily: 'Sora',
+                color: cs.onSurface,
+                fontSize: 15,
+                height: 1.5,
+              ),
+              decoration: InputDecoration(
+                hintText: l10n.descriptionHint,
+              ),
+              onFieldSubmitted: (_) =>
+                  Navigator.pop(context, _controller.text.trim()),
+            ),
+          ),
+          const Gap(16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () =>
+                    Navigator.pop(context, _controller.text.trim()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.dustyTeal,
+                  foregroundColor: AppColors.pureWhite,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: Text(
+                  l10n.save,
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onDelete();
-            },
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(2, 8, 10, 8),
-              child: Icon(Icons.close_rounded, size: 13, color: deleteColor),
-            ),
-          ),
+          const Gap(24),
         ],
       ),
     );
+  }
+}
+
+// ── Decimal limit formatter ───────────────────────────────────────────────────
+
+class _DecimalLimitFormatter extends TextInputFormatter {
+  _DecimalLimitFormatter(this.maxDecimals);
+  final int maxDecimals;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    final dotIndex = text.lastIndexOf('.');
+    final commaIndex = text.lastIndexOf(',');
+    final sepIndex = dotIndex > commaIndex ? dotIndex : commaIndex;
+    if (sepIndex < 0) return newValue;
+    final decimals = text.length - sepIndex - 1;
+    if (decimals > maxDecimals) return oldValue;
+    return newValue;
   }
 }

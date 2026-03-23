@@ -772,4 +772,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String pageNotFound(String error) {
     return 'Page not found: $error';
   }
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get selectCategoryPrompt => 'Select category';
 }

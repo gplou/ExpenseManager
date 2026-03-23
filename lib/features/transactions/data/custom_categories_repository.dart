@@ -21,10 +21,11 @@ class CustomCategoriesRepository {
         .order('created_at');
     return (response as List).map((e) {
       final cp = e['icon_code'] as int;
-      final icon = TransactionCategories.pickableIcons.firstWhere(
-        (i) => i.codePoint == cp,
-        orElse: () => Icons.label_outlined,
-      );
+      // Check if this codePoint belongs to a Material icon (pickableIcons)
+      final materialIcon = TransactionCategories.pickableIcons
+          .where((i) => i.codePoint == cp)
+          .firstOrNull;
+      final icon = materialIcon ?? IconData(cp);
       return TransactionCategory(name: e['name'] as String, icon: icon);
     }).toList();
   }
