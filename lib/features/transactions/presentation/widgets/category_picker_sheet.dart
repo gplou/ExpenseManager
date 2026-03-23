@@ -161,12 +161,16 @@ class _CategoryPickerContent extends ConsumerWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (isCustom)
+                              if (isCustom && cat.icon.fontFamily != null)
                                 Icon(cat.icon,
                                     size: 24,
                                     color: isSelected
                                         ? accentColor
                                         : AppColors.textMuted)
+                              else if (isCustom)
+                                Text(
+                                    String.fromCharCode(cat.icon.codePoint),
+                                    style: const TextStyle(fontSize: 24))
                               else
                                 Text(emoji,
                                     style: const TextStyle(fontSize: 24)),
@@ -269,19 +273,5 @@ class _CategoryPickerContent extends ConsumerWidget {
   }
 
   String _emojiForCategory(String category, bool isIncome) =>
-      switch (category) {
-        'Salario' => '💼',
-        'Freelance' => '💻',
-        'Inversión' => '📈',
-        'Regalo' => '🎁',
-        'Comida' => '🍕',
-        'Transporte' => '🚗',
-        'Vivienda' => '🏠',
-        'Ocio' => '🎮',
-        'Salud' => '💊',
-        'Educación' => '📚',
-        'Ropa' => '👕',
-        'Tecnología' => '⚡',
-        _ => isIncome ? '💰' : '💸',
-      };
+      TransactionCategories.emojiFor(category, isIncome: isIncome);
 }

@@ -21,21 +21,45 @@ class CreateCategoryDialog extends ConsumerStatefulWidget {
 
 class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
   final _nameController = TextEditingController();
-  IconData? _selectedIcon;
+  final _emojiController = TextEditingController();
+  String? _selectedEmoji;
 
   @override
   void dispose() {
     _nameController.dispose();
+    _emojiController.dispose();
     super.dispose();
+  }
+
+  void _onEmojiChanged(String value) {
+    // Extract only the first grapheme cluster (emoji)
+    final characters = value.characters;
+    if (characters.isEmpty) {
+      setState(() {
+        _selectedEmoji = null;
+        _emojiController.clear();
+      });
+      return;
+    }
+    final firstEmoji = characters.first;
+    setState(() => _selectedEmoji = firstEmoji);
+    // Keep only the first emoji in the field
+    if (characters.length > 1) {
+      _emojiController.text = firstEmoji;
+      _emojiController.selection = TextSelection.fromPosition(
+        TextPosition(offset: firstEmoji.length),
+      );
+    }
   }
 
   Future<void> _save() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty || _selectedIcon == null) return;
+    if (name.isEmpty || _selectedEmoji == null) return;
 
+    final codePoint = _selectedEmoji!.runes.first;
     await ref.read(customCategoriesProvider.notifier).add(
           widget.type,
-          TransactionCategory(name: name, icon: _selectedIcon!),
+          TransactionCategory(name: name, icon: IconData(codePoint)),
         );
     if (mounted) Navigator.of(context).pop(name);
   }
@@ -44,59 +68,51 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final canSave =
-        _nameController.text.trim().isNotEmpty && _selectedIcon != null;
+        _nameController.text.trim().isNotEmpty && _selectedEmoji != null;
 
     return AlertDialog(
       title: Text(l10n.newCategory),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _nameController,
-              textCapitalization: TextCapitalization.sentences,
-              autofocus: true,
-              decoration: InputDecoration(labelText: l10n.categoryName),
-              onChanged: (_) => setState(() {}),
-              onSubmitted: (_) => _save(),
-            ),
-            const Gap(16),
-            Text(l10n.chooseIcon, style: context.textTheme.labelMedium),
-            const Gap(8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: TransactionCategories.pickableIcons.map((icon) {
-                final isSelected = _selectedIcon == icon;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedIcon = icon),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? context.colors.primaryContainer
-                          : context.colors.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(10),
-                      border: isSelected
-                          ? Border.all(color: context.colors.primary, width: 2)
-                          : null,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Emoji field
+              SizedBox(
+                width: 56,
+                child: TextField(
+                  controller: _emojiController,
+                  onChanged: _onEmojiChanged,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 28),
+                  decoration: InputDecoration(
+                    hintText: '😀',
+                    hintStyle: TextStyle(
+                      fontSize: 28,
+                      color: context.colors.onSurface.withValues(alpha: 0.3),
                     ),
-                    child: Icon(
-                      icon,
-                      size: 22,
-                      color: isSelected
-                          ? context.colors.primary
-                          : context.colors.onSurface.withValues(alpha: 0.6),
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
                   ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
+                ),
+              ),
+              const Gap(12),
+              // Name field
+              Expanded(
+                child: TextField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.sentences,
+                  autofocus: true,
+                  maxLength: 15,
+                  decoration: InputDecoration(labelText: l10n.categoryName),
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: (_) => _save(),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       actions: [
         TextButton(

@@ -51,6 +51,7 @@ class _CreateSubcategoryDialogState
         controller: _nameController,
         textCapitalization: TextCapitalization.sentences,
         autofocus: true,
+        maxLength: 15,
         decoration: InputDecoration(labelText: l10n.subcategoryName),
         onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _save(),

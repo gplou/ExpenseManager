@@ -99,4 +99,23 @@ class TransactionCategories {
         'Tecnología' => l10n.categoryTechnology,
         _ => dbKey,
       };
+
+  /// Returns the emoji for a built-in DB category key.
+  static String emojiFor(String dbKey, {bool isIncome = false}) =>
+      switch (dbKey) {
+        'Salario' => '💼',
+        'Freelance' => '💻',
+        'Inversión' => '📈',
+        'Regalo' => '🎁',
+        'Comida' => '🍕',
+        'Transporte' => '🚗',
+        'Vivienda' => '🏠',
+        'Ocio' => '🎮',
+        'Salud' => '💊',
+        'Educación' => '📚',
+        'Ropa' => '👕',
+        'Tecnología' => '⚡',
+        'Otros' => isIncome ? '💰' : '💸',
+        _ => isIncome ? '💰' : '💸',
+      };
 }

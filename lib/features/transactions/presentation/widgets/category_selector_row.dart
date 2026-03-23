@@ -74,9 +74,16 @@ class CategorySelectorRow extends StatelessWidget {
               ),
               child: Center(
                 child: isCustom && iconOverride != null
-                    ? Icon(iconOverride,
-                        size: 18,
-                        color: hasSelection ? accentColor : AppColors.textMuted)
+                    ? iconOverride.fontFamily != null
+                        ? Icon(iconOverride,
+                            size: 18,
+                            color: hasSelection
+                                ? accentColor
+                                : AppColors.textMuted)
+                        : Text(
+                            String.fromCharCode(iconOverride.codePoint),
+                            style: const TextStyle(fontSize: 18),
+                          )
                     : Text(
                         emoji ?? '📂',
                         style: const TextStyle(fontSize: 18),
@@ -109,19 +116,5 @@ class CategorySelectorRow extends StatelessWidget {
   }
 
   String _emojiForCategory(String category, bool isIncome) =>
-      switch (category) {
-        'Salario' => '💼',
-        'Freelance' => '💻',
-        'Inversión' => '📈',
-        'Regalo' => '🎁',
-        'Comida' => '🍕',
-        'Transporte' => '🚗',
-        'Vivienda' => '🏠',
-        'Ocio' => '🎮',
-        'Salud' => '💊',
-        'Educación' => '📚',
-        'Ropa' => '👕',
-        'Tecnología' => '⚡',
-        _ => isIncome ? '💰' : '💸',
-      };
+      TransactionCategories.emojiFor(category, isIncome: isIncome);
 }

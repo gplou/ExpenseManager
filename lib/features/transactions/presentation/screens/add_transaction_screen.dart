@@ -12,12 +12,12 @@ import '../../data/recurring_transactions_repository.dart';
 import '../../data/subcategories_repository.dart';
 import '../../domain/parsed_voice_transaction.dart';
 import '../../domain/recurring_transaction_model.dart';
+import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/custom_categories_provider.dart';
 import '../providers/subcategories_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../widgets/category_picker_sheet.dart';
-import '../widgets/category_selector_row.dart';
 import '../widgets/create_subcategory_dialog.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
@@ -232,17 +232,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
   }
 
+  String _resolveCategoryEmoji(
+      String category, bool isIncome, List<TransactionCategory> customCats) {
+    // Check custom categories first (emoji stored as codePoint without fontFamily)
+    final custom = customCats.where((c) => c.name == category).firstOrNull;
+    if (custom != null && custom.icon.fontFamily == null) {
+      return String.fromCharCode(custom.icon.codePoint);
+    }
+    return TransactionCategories.emojiFor(category, isIncome: isIncome);
+  }
+
   Future<void> _pickDate() async {
     final cs = context.colors;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    // Clamp initialDate so it's never after lastDate (voice AI can return future dates)
-    final initialDate = _selectedDate.isAfter(today) ? today : _selectedDate;
     final picked = await showDatePicker(
       context: context,
-      initialDate: initialDate,
+      initialDate: _selectedDate,
       firstDate: DateTime(2000),
-      lastDate: today,
+      lastDate: DateTime(2100),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: cs.copyWith(
@@ -540,6 +546,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+                        _DecimalLimitFormatter(3),
                       ],
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -558,7 +565,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           fontWeight: FontWeight.w600,
                           color: accentColor.withValues(alpha: 0.35),
                         ),
-                        hintText: '0.00',
+                        hintText: l10n.amountHint,
                         hintStyle: TextStyle(
                           fontFamily: 'Sora',
                           fontSize: 32,
@@ -597,14 +604,59 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
             const Gap(16),
 
-            // ── Category selector ─────────────────────────────────────────
-            CategorySelectorRow(
-              selectedCategory: _selectedCategory,
-              type: _type,
-              accentColor: accentColor,
-              accentLight: accentLight,
-              customCategories: customCats[_type] ?? [],
-              onTap: _openCategoryPicker,
+            // ── Category + Subcategory row ────────────────────────────────
+            Row(
+              children: [
+                Expanded(
+                  child: _CompactCard(
+                    emoji: _selectedCategory != null
+                        ? _resolveCategoryEmoji(
+                            _selectedCategory!, _type.isIncome, customCats[_type] ?? [])
+                        : null,
+                    label: _selectedCategory != null
+                        ? TransactionCategories.localizedName(
+                            _selectedCategory!, l10n)
+                        : l10n.category,
+                    hasValue: _selectedCategory != null,
+                    accentColor: accentColor,
+                    accentLight: accentLight,
+                    onTap: _openCategoryPicker,
+                  ),
+                ),
+                const Gap(10),
+                Expanded(
+                  child: _CompactCard(
+                    emoji: _selectedSubcategory != null ? '🏷' : null,
+                    label: _selectedSubcategory ?? l10n.subcategory,
+                    hasValue: _selectedSubcategory != null,
+                    accentColor: accentColor,
+                    accentLight: accentLight,
+                    onTap: _selectedCategory != null
+                        ? () async {
+                            final sub = await showModalBottomSheet<String>(
+                              context: context,
+                              isScrollControlled: true,
+                              useSafeArea: true,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(20)),
+                              ),
+                              builder: (_) => _SubcategoryPickerSheet(
+                                selected: _selectedSubcategory,
+                                category: _selectedCategory!,
+                                type: _type,
+                                accentColor: accentColor,
+                                accentLight: accentLight,
+                              ),
+                            );
+                            if (mounted && sub != null) {
+                              setState(() => _selectedSubcategory = sub);
+                            }
+                          }
+                        : null,
+                  ),
+                ),
+              ],
             ),
             const Gap(16),
 
@@ -651,44 +703,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
               ),
             ),
-            // ── Detail chips (subcategory + description) ─────────────────
-            if (_selectedSubcategory != null ||
-                _descriptionController.text.trim().isNotEmpty) ...[
+            // ── Detail chips (description) ──────────────────────────────
+            if (_descriptionController.text.trim().isNotEmpty) ...[
               const Gap(8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  if (_selectedSubcategory != null)
-                    _DetailChip(
-                      emoji: '🏷',
-                      label: _selectedSubcategory!,
-                      accentColor: accentColor,
-                      onTap: () async {
-                        final sub = await showModalBottomSheet<String>(
-                          context: context,
-                          isScrollControlled: true,
-                          useSafeArea: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(20)),
-                          ),
-                          builder: (_) => _SubcategoryPickerSheet(
-                            selected: _selectedSubcategory,
-                            category: _selectedCategory!,
-                            type: _type,
-                            accentColor: accentColor,
-                            accentLight: accentLight,
-                          ),
-                        );
-                        if (mounted && sub != null) {
-                          setState(() => _selectedSubcategory = sub);
-                        }
-                      },
-                      onClear: () =>
-                          setState(() => _selectedSubcategory = null),
-                    ),
-                  if (_descriptionController.text.trim().isNotEmpty)
                     _DetailChip(
                       emoji: '📝',
                       label: _descriptionController.text.trim(),
@@ -884,6 +905,73 @@ class _DetailChip extends StatelessWidget {
               onTap: onClear,
               child: Icon(Icons.close_rounded,
                   size: 14, color: accentColor.withValues(alpha: 0.5)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Compact card (category / subcategory) ─────────────────────────────────────
+
+class _CompactCard extends StatelessWidget {
+  const _CompactCard({
+    required this.label,
+    required this.hasValue,
+    required this.accentColor,
+    required this.accentLight,
+    required this.onTap,
+    this.emoji,
+  });
+
+  final String? emoji;
+  final String label;
+  final bool hasValue;
+  final Color accentColor;
+  final Color accentLight;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: hasValue ? accentLight : cs.surface,
+          border: Border.all(
+            color: hasValue ? accentColor : AppColors.borderLight,
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: hasValue ? null : AppColors.softShadowSm,
+        ),
+        child: Row(
+          children: [
+            if (emoji != null) ...[
+              Text(emoji!, style: const TextStyle(fontSize: 16)),
+              const Gap(8),
+            ],
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: hasValue ? accentColor : AppColors.textMuted,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: hasValue ? accentColor : AppColors.textSubtle,
             ),
           ],
         ),
@@ -1200,6 +1288,7 @@ class _DescriptionInputSheetState extends State<_DescriptionInputSheet> {
             child: TextFormField(
               controller: _controller,
               autofocus: true,
+              maxLength: 30,
               textCapitalization: TextCapitalization.sentences,
               style: TextStyle(
                 fontFamily: 'Sora',
@@ -1245,5 +1334,27 @@ class _DescriptionInputSheetState extends State<_DescriptionInputSheet> {
         ],
       ),
     );
+  }
+}
+
+// ── Decimal limit formatter ───────────────────────────────────────────────────
+
+class _DecimalLimitFormatter extends TextInputFormatter {
+  _DecimalLimitFormatter(this.maxDecimals);
+  final int maxDecimals;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    final dotIndex = text.lastIndexOf('.');
+    final commaIndex = text.lastIndexOf(',');
+    final sepIndex = dotIndex > commaIndex ? dotIndex : commaIndex;
+    if (sepIndex < 0) return newValue;
+    final decimals = text.length - sepIndex - 1;
+    if (decimals > maxDecimals) return oldValue;
+    return newValue;
   }
 }

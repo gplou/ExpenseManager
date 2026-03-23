@@ -580,19 +580,6 @@ class _TransactionTile extends ConsumerWidget {
     );
   }
 
-  String _emojiForCategory(String category, bool isIncome) => switch (category) {
-    'Salario'    => '💼',
-    'Freelance'  => '💻',
-    'Inversión'  => '📈',
-    'Regalo'     => '🎁',
-    'Comida'     => '🍕',
-    'Transporte' => '🚗',
-    'Vivienda'   => '🏠',
-    'Ocio'       => '🎮',
-    'Salud'      => '💊',
-    'Educación'  => '📚',
-    'Ropa'       => '👕',
-    'Tecnología' => '⚡',
-    _            => isIncome ? '💰' : '💸',
-  };
+  String _emojiForCategory(String category, bool isIncome) =>
+      TransactionCategories.emojiFor(category, isIncome: isIncome);
 }
