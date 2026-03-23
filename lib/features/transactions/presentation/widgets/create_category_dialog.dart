@@ -54,9 +54,11 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
 
   Future<void> _save() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty || _selectedEmoji == null) return;
+    if (name.isEmpty) return;
 
-    final codePoint = _selectedEmoji!.runes.first;
+    const defaultEmoji = '💸';
+    final emoji = _selectedEmoji ?? defaultEmoji;
+    final codePoint = emoji.runes.first;
     await ref.read(customCategoriesProvider.notifier).add(
           widget.type,
           TransactionCategory(name: name, icon: IconData(codePoint)),
@@ -68,7 +70,7 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final canSave =
-        _nameController.text.trim().isNotEmpty && _selectedEmoji != null;
+        _nameController.text.trim().isNotEmpty;
 
     return AlertDialog(
       title: Text(l10n.newCategory),
@@ -77,7 +79,7 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Emoji field
               SizedBox(
@@ -86,14 +88,13 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
                   controller: _emojiController,
                   onChanged: _onEmojiChanged,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 28),
+                  style: const TextStyle(fontSize: 24),
                   decoration: InputDecoration(
                     hintText: '😀',
                     hintStyle: TextStyle(
-                      fontSize: 28,
+                      fontSize: 24,
                       color: context.colors.onSurface.withValues(alpha: 0.3),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
               ),
