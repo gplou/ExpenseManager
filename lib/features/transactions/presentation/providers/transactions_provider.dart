@@ -12,17 +12,6 @@ import '../../domain/transactions_repository_contract.dart';
 enum TransactionPeriod { week, month, year }
 
 extension TransactionPeriodX on TransactionPeriod {
-  String get label {
-    switch (this) {
-      case TransactionPeriod.week:
-        return 'Semana';
-      case TransactionPeriod.month:
-        return 'Mes';
-      case TransactionPeriod.year:
-        return 'Año';
-    }
-  }
-
   String l10nLabel(AppLocalizations l10n) {
     switch (this) {
       case TransactionPeriod.week:
@@ -65,32 +54,38 @@ final effectiveDateRangeProvider =
   return ref.watch(selectedPeriodProvider).dateRange;
 });
 
-// ── Summary ───────────────────────────────────────────────────────────────────
-
-final transactionsSummaryProvider =
-    FutureProvider.autoDispose<TransactionsSummary>((ref) {
-  final range = ref.watch(effectiveDateRangeProvider);
-  final repo = ref.watch(transactionsRepositoryProvider);
-  return repo.getSummary(from: range.from, to: range.to);
-});
-
-// ── Recent transactions (last 3) ──────────────────────────────────────────────
-
-final recentTransactionsProvider =
-    FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
-  final range = ref.watch(effectiveDateRangeProvider);
-  final repo = ref.watch(transactionsRepositoryProvider);
-  final all = await repo.getTransactions(from: range.from, to: range.to);
-  return all.take(3).toList();
-});
-
-// ── All transactions ──────────────────────────────────────────────────────────
+// ── All transactions (single source of truth) ────────────────────────────────
 
 final allTransactionsProvider =
     FutureProvider.autoDispose<List<TransactionModel>>((ref) {
   final range = ref.watch(effectiveDateRangeProvider);
   final repo = ref.watch(transactionsRepositoryProvider);
   return repo.getTransactions(from: range.from, to: range.to);
+});
+
+// ── Summary (derived from allTransactionsProvider, no extra DB query) ─────────
+
+final transactionsSummaryProvider =
+    FutureProvider.autoDispose<TransactionsSummary>((ref) async {
+  final transactions = await ref.watch(allTransactionsProvider.future);
+  double income = 0;
+  double expense = 0;
+  for (final t in transactions) {
+    if (t.type.isIncome) {
+      income += t.amount;
+    } else {
+      expense += t.amount;
+    }
+  }
+  return TransactionsSummary(income: income, expense: expense);
+});
+
+// ── Recent transactions (derived from allTransactionsProvider) ────────────────
+
+final recentTransactionsProvider =
+    FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
+  final all = await ref.watch(allTransactionsProvider.future);
+  return all.take(3).toList();
 });
 
 // ── Category distribution (for pie/bar charts) ───────────────────────────────
@@ -113,15 +108,13 @@ class TransactionsNotifier extends Notifier<void> {
 
   Future<void> create(TransactionModel transaction) async {
     await ref.read(transactionsRepositoryProvider).createTransaction(transaction);
-    ref.invalidate(transactionsSummaryProvider);
-    ref.invalidate(recentTransactionsProvider);
+    // Only invalidate the single source of truth; derived providers
+    // (summary, recent, distribution) rebuild automatically.
     ref.invalidate(allTransactionsProvider);
   }
 
   Future<void> update(TransactionModel transaction) async {
     await ref.read(transactionsRepositoryProvider).updateTransaction(transaction);
-    ref.invalidate(transactionsSummaryProvider);
-    ref.invalidate(recentTransactionsProvider);
     ref.invalidate(allTransactionsProvider);
   }
 
@@ -132,8 +125,6 @@ class TransactionsNotifier extends Notifier<void> {
           .read(recurringTransactionsRepositoryProvider)
           .deleteRecurring(recurringTransactionId);
     }
-    ref.invalidate(transactionsSummaryProvider);
-    ref.invalidate(recentTransactionsProvider);
     ref.invalidate(allTransactionsProvider);
   }
 }

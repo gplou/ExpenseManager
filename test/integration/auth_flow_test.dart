@@ -4,7 +4,7 @@ import 'package:productivity_app/features/auth/domain/user_model.dart';
 import 'package:productivity_app/features/auth/domain/auth_repository_contract.dart';
 
 /// A fake implementation of AuthRepositoryContract for testing the auth flow.
-class FakeAuthRepository implements AuthRepositoryContract {
+class FakeAuthRepository implements AuthRepositoryContract, SocialAuthContract {
   UserModel? _currentUser;
   bool shouldFailSignIn = false;
   bool shouldFailSignUp = false;

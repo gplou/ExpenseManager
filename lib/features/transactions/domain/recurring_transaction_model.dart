@@ -1,15 +1,10 @@
+import 'transaction_base.dart';
 import 'transaction_model.dart';
 
 enum RecurrenceType {
   weekly,
   monthly,
   annual;
-
-  String get label => switch (this) {
-        RecurrenceType.weekly => 'Semanal',
-        RecurrenceType.monthly => 'Mensual',
-        RecurrenceType.annual => 'Anual',
-      };
 }
 
 /// Calcula la siguiente fecha de recurrencia a partir de [date].
@@ -34,7 +29,7 @@ DateTime nextRecurrenceDate(DateTime date, RecurrenceType type) {
   return DateTime(nextYear, nextMonth, date.day.clamp(1, lastDayOfNextMonth));
 }
 
-class RecurringTransactionModel {
+class RecurringTransactionModel implements TransactionBase {
   const RecurringTransactionModel({
     required this.id,
     required this.userId,
@@ -50,10 +45,15 @@ class RecurringTransactionModel {
 
   final String id;
   final String userId;
+  @override
   final double amount;
+  @override
   final TransactionType type;
+  @override
   final String category;
+  @override
   final String? subcategory;
+  @override
   final String? description;
   final RecurrenceType recurrenceType;
   final DateTime nextOccurrence;

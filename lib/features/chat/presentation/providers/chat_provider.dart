@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/chat_repository.dart';
 import '../../domain/chat_message.dart';
 
-final chatRepositoryProvider = Provider((ref) => ChatRepository());
-
 final chatMessagesProvider =
     StateNotifierProvider.autoDispose<ChatNotifier, List<ChatMessage>>(
   (ref) => ChatNotifier(

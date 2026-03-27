@@ -48,10 +48,11 @@ void main() {
   });
 
   group('RecurrenceType', () {
-    test('has correct labels', () {
-      expect(RecurrenceType.weekly.label, 'Semanal');
-      expect(RecurrenceType.monthly.label, 'Mensual');
-      expect(RecurrenceType.annual.label, 'Anual');
+    test('contains all expected values', () {
+      expect(RecurrenceType.values.length, 3);
+      expect(RecurrenceType.values, contains(RecurrenceType.weekly));
+      expect(RecurrenceType.values, contains(RecurrenceType.monthly));
+      expect(RecurrenceType.values, contains(RecurrenceType.annual));
     });
   });
 

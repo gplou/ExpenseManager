@@ -549,5 +549,9 @@
   "moreOptions": "Más opciones",
   "@moreOptions": {},
   "selectCategoryPrompt": "Seleccionar categoría",
-  "@selectCategoryPrompt": {}
+  "@selectCategoryPrompt": {},
+  "privacyPolicy": "Política de privacidad",
+  "@privacyPolicy": {},
+  "termsOfService": "Términos de servicio",
+  "@termsOfService": {}
 }

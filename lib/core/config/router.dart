@@ -18,6 +18,8 @@ import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/subscription/pro_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/settings/app_settings_screen.dart';
+import '../../features/settings/legal_screen.dart';
+import 'legal_content.dart';
 
 part 'router.g.dart';
 
@@ -33,6 +35,8 @@ abstract class AppRoutes {
   static const chat = '/chat';
   static const onboarding = '/onboarding';
   static const appSettings = '/settings';
+  static const privacyPolicy = '/privacy-policy';
+  static const termsOfService = '/terms-of-service';
 }
 
 /// Notifier que escucha el stream de auth y notifica a GoRouter para
@@ -128,6 +132,22 @@ GoRouter router(RouterRef ref) {
         path: AppRoutes.appSettings,
         name: 'appSettings',
         builder: (context, state) => const AppSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyPolicy,
+        name: 'privacyPolicy',
+        builder: (context, state) => LegalScreen(
+          title: AppLocalizations.of(context).privacyPolicy,
+          content: privacyPolicyContent,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.termsOfService,
+        name: 'termsOfService',
+        builder: (context, state) => LegalScreen(
+          title: AppLocalizations.of(context).termsOfService,
+          content: termsOfServiceContent,
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

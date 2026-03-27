@@ -778,4 +778,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectCategoryPrompt => 'Select category';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get termsOfService => 'Terms of Service';
 }

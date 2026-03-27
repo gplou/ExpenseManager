@@ -311,5 +311,9 @@
   "moreOptions": "More options",
   "@moreOptions": {},
   "selectCategoryPrompt": "Select category",
-  "@selectCategoryPrompt": {}
+  "@selectCategoryPrompt": {},
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {},
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {}
 }

@@ -345,5 +345,9 @@
   "moreOptions": "Mehr Optionen",
   "@moreOptions": {},
   "selectCategoryPrompt": "Kategorie wählen",
-  "@selectCategoryPrompt": {}
+  "@selectCategoryPrompt": {},
+  "privacyPolicy": "Datenschutzrichtlinie",
+  "@privacyPolicy": {},
+  "termsOfService": "Nutzungsbedingungen",
+  "@termsOfService": {}
 }

@@ -3,18 +3,20 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/network/supabase_client.dart';
+import 'domain/subscription_repository_contract.dart';
 
 // ── Repository ────────────────────────────────────────────────────────────────
 
 /// Raw data access: Supabase reads/writes and IAP store interactions.
 /// Business logic lives in SubscriptionNotifier, not here.
-class SubscriptionRepository {
+class SubscriptionRepository implements SubscriptionRepositoryContract {
   SubscriptionRepository(this._client);
   final SupabaseClient _client;
 
   // ── Supabase ─────────────────────────────────────────────────────────────
 
   /// Returns expires_at + source for the current user, or nulls if no record.
+  @override
   Future<({DateTime? expiresAt, String? source})> fetchRemoteSubscription() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return (expiresAt: null, source: null);
@@ -33,6 +35,7 @@ class SubscriptionRepository {
   }
 
   /// Upsert subscription row. Called after a successful IAP purchase or promo code.
+  @override
   Future<void> upsertSubscription({
     required DateTime expiresAt,
     required String source,
@@ -55,6 +58,7 @@ class SubscriptionRepository {
 
   /// Returns true if the user has already used the free trial OR has ever
   /// been PRO (any source). Only first-time users are eligible.
+  @override
   Future<bool> checkTrialUsed() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return true; // not logged in → not eligible
@@ -76,6 +80,7 @@ class SubscriptionRepository {
   /// Activates the 3-day free trial. Expires at midnight (00:00) of
   /// the 4th full day after today (3 complete calendar days).
   /// Also stamps trial_used_at so it can never be used again.
+  @override
   Future<DateTime> startFreeTrial() async {
     final userId = _client.auth.currentUser!.id;
     final now = DateTime.now();
@@ -103,6 +108,7 @@ class SubscriptionRepository {
   /// For 'subscription' codes: [PromoResult.durationDays] contains the days granted.
   /// For 'discount' codes: [PromoResult.discountPercentage] contains the discount.
   /// Throws [PromoCodeException] with user-facing message on any failure.
+  @override
   Future<PromoResult> redeemPromoCode(String code) async {
     final userId = _client.auth.currentUser!.id;
     final normalised = code.toUpperCase().trim();
@@ -157,6 +163,7 @@ class SubscriptionRepository {
 
   /// Loads store product details. Returns null if store unavailable or product
   /// not found (e.g. not configured in Google Play / App Store yet).
+  @override
   Future<ProductDetails?> loadProduct(String productId) async {
     final iap = InAppPurchase.instance;
     final available = await iap.isAvailable();
@@ -167,6 +174,7 @@ class SubscriptionRepository {
     return response.productDetails.first;
   }
 
+  @override
   Stream<List<PurchaseDetails>> get purchaseStream =>
       InAppPurchase.instance.purchaseStream;
 }
@@ -203,6 +211,7 @@ class PromoCodeException implements Exception {
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
+final subscriptionRepositoryProvider =
+    Provider<SubscriptionRepositoryContract>((ref) {
   return SubscriptionRepository(ref.watch(supabaseClientProvider));
 });

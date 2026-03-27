@@ -17,7 +17,7 @@ void main() {
 
     test('ServerFailure has default message', () {
       const failure = ServerFailure();
-      expect(failure.message, 'Error interno del servidor');
+      expect(failure.message, 'Internal server error');
     });
 
     test('CacheFailure has default message', () {
@@ -42,19 +42,19 @@ void main() {
       expect(failure.userMessage, 'credentials error');
     });
 
-    test('NetworkFailure returns generic network message', () {
-      const failure = NetworkFailure('some error');
-      expect(failure.userMessage, contains('conexión'));
+    test('NetworkFailure returns its message', () {
+      const failure = NetworkFailure('connection failed');
+      expect(failure.userMessage, 'connection failed');
     });
 
-    test('ServerFailure returns server unavailable message', () {
+    test('ServerFailure returns its default message', () {
       const failure = ServerFailure();
-      expect(failure.userMessage, contains('servidor'));
+      expect(failure.userMessage, contains('server'));
     });
 
-    test('CacheFailure returns local data message', () {
+    test('CacheFailure returns its default message', () {
       const failure = CacheFailure();
-      expect(failure.userMessage, contains('datos locales'));
+      expect(failure.userMessage, contains('storage'));
     });
 
     test('ValidationFailure returns its message', () {
@@ -62,9 +62,9 @@ void main() {
       expect(failure.userMessage, 'field invalid');
     });
 
-    test('UnexpectedFailure returns generic message', () {
+    test('UnexpectedFailure returns its default message', () {
       const failure = UnexpectedFailure();
-      expect(failure.userMessage, contains('mal'));
+      expect(failure.userMessage, contains('unexpected'));
     });
   });
 }

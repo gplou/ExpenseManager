@@ -1,11 +1,16 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/failures.dart';
+import '../../../core/network/supabase_client.dart';
 import '../../../core/utils/ai_rate_limiter.dart';
 import '../domain/chat_message.dart';
 
 class ChatRepository {
+  ChatRepository(this._client);
+  final SupabaseClient _client;
+
   static const String _function = 'chat-transactions';
 
   Future<String> sendMessage({
@@ -15,7 +20,7 @@ class ChatRepository {
   }) async {
     if (!AiRateLimiter.instance.tryConsume()) {
       throw const RateLimitFailure(
-        'Límite alcanzado: máximo ${AiRateLimiter.maxPerMinute} usos por minuto. Espera un momento.',
+        'Rate limit reached: max ${AiRateLimiter.maxPerMinute} uses per minute. Please wait.',
       );
     }
 
@@ -27,7 +32,7 @@ class ChatRepository {
         };
       }).toList();
 
-      final response = await Supabase.instance.client.functions.invoke(
+      final response = await _client.functions.invoke(
         _function,
         body: {
           'message': message,
@@ -38,20 +43,28 @@ class ChatRepository {
 
       if (response.status != 200) {
         final data = response.data as Map<String, dynamic>?;
-        final error = data?['error'] as String? ?? 'Error desconocido';
-        throw Exception(error);
+        final error = data?['error'] as String? ?? 'Unknown error';
+        throw ServerFailure(error);
       }
 
       final data = response.data as Map<String, dynamic>;
       final reply = data['reply'] as String?;
       if (reply == null || reply.isEmpty) {
-        throw Exception('No se recibio respuesta de la IA');
+        throw const ServerFailure('No response received from AI');
       }
 
       return reply;
+    } on AppFailure {
+      rethrow;
     } catch (e, st) {
       debugPrint('ChatRepository error: $e\n$st');
-      rethrow;
+      throw const NetworkFailure('Failed to communicate with AI');
     }
   }
 }
+
+// ── Provider ─────────────────────────────────────────────────────────────────
+
+final chatRepositoryProvider = Provider<ChatRepository>((ref) {
+  return ChatRepository(ref.watch(supabaseClientProvider));
+});

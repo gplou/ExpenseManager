@@ -19,7 +19,7 @@ Future<void> main() async {
   FlutterNativeSplash.preserve(widgetsBinding: binding);
 
   // Detectar si la app fue lanzada desde un widget de pantalla de inicio
-  HomeWidget.setAppGroupId('group.com.tuempresa.productivity_app');
+  HomeWidget.setAppGroupId('group.com.gpm.expensemanager_app');
   final widgetLaunchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
   final initialWidgetAction = _extractWidgetAction(widgetLaunchUri);
 

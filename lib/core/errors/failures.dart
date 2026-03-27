@@ -23,12 +23,12 @@ final class NetworkFailure extends AppFailure {
 
 /// Error de servidor (5xx)
 final class ServerFailure extends AppFailure {
-  const ServerFailure([super.message = 'Error interno del servidor']);
+  const ServerFailure([super.message = 'Internal server error']);
 }
 
 /// Error de caché / almacenamiento local
 final class CacheFailure extends AppFailure {
-  const CacheFailure([super.message = 'Error al acceder al almacenamiento local']);
+  const CacheFailure([super.message = 'Failed to access local storage']);
 }
 
 /// Error de validación de datos
@@ -44,18 +44,21 @@ final class RateLimitFailure extends AppFailure {
 
 /// Error inesperado
 final class UnexpectedFailure extends AppFailure {
-  const UnexpectedFailure([super.message = 'Ha ocurrido un error inesperado']);
+  const UnexpectedFailure([super.message = 'An unexpected error occurred']);
 }
 
-/// Extensión para obtener mensajes amigables para el usuario
+/// Extension to get user-friendly error messages.
+/// Uses error codes internally; presentation layer maps to localized strings.
 extension AppFailureExtension on AppFailure {
+  /// Returns a user-friendly message. Falls back to the raw message
+  /// when localization is not available.
   String get userMessage => switch (this) {
         AuthFailure(message: final msg) => msg,
-        NetworkFailure() => 'Sin conexión a internet. Revisa tu red.',
-        ServerFailure() => 'El servidor no está disponible. Intenta más tarde.',
-        CacheFailure() => 'Error al cargar datos locales.',
+        NetworkFailure() => message,
+        ServerFailure() => message,
+        CacheFailure() => message,
         ValidationFailure(message: final msg) => msg,
         RateLimitFailure(message: final msg) => msg,
-        UnexpectedFailure() => 'Algo salió mal. Intenta de nuevo.',
+        UnexpectedFailure() => message,
       };
 }

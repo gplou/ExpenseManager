@@ -21,7 +21,7 @@ class VoiceTransactionButton extends ConsumerStatefulWidget {
 class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
     with SingleTickerProviderStateMixin {
   final _speech = SpeechToText();
-  final _parser = VoiceTransactionParser();
+  late final VoiceTransactionParser _parser;
   _VoiceState _state = _VoiceState.idle;
 
   late final AnimationController _pulseController;
@@ -30,6 +30,7 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
   @override
   void initState() {
     super.initState();
+    _parser = ref.read(voiceTransactionParserProvider);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
