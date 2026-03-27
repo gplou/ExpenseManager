@@ -58,10 +58,13 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
 
     const defaultEmoji = '💸';
     final emoji = _selectedEmoji ?? defaultEmoji;
-    final codePoint = emoji.runes.first;
     await ref.read(customCategoriesProvider.notifier).add(
           widget.type,
-          TransactionCategory(name: name, icon: IconData(codePoint)),
+          TransactionCategory(
+            name: name,
+            icon: Icons.label_outlined,
+            emojiOverride: emoji,
+          ),
         );
     if (mounted) Navigator.of(context).pop(name);
   }

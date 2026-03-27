@@ -31,18 +31,27 @@ class CustomCategoriesRepository
       final materialIcon = TransactionCategories.pickableIcons
           .where((i) => i.codePoint == cp)
           .firstOrNull;
-      final icon = materialIcon ?? IconData(cp);
-      return TransactionCategory(name: e['name'] as String, icon: icon);
+      if (materialIcon != null) {
+        return TransactionCategory(name: e['name'] as String, icon: materialIcon);
+      }
+      return TransactionCategory(
+        name: e['name'] as String,
+        icon: Icons.label_outlined,
+        emojiOverride: String.fromCharCode(cp),
+      );
     }).toList();
   }
 
   @override
   Future<void> add(TransactionType type, TransactionCategory cat) async {
+    final iconCode = cat.emojiOverride != null
+        ? cat.emojiOverride!.runes.first
+        : cat.icon.codePoint;
     await _client.from('custom_categories').insert({
       'user_id': userId,
       'name': cat.name,
       'type': type.name,
-      'icon_code': cat.icon.codePoint,
+      'icon_code': iconCode,
     });
   }
 

@@ -38,13 +38,12 @@ class CategorySelectorRow extends StatelessWidget {
 
     // Resolve icon/emoji
     final emoji = hasSelection ? _emojiForCategory(selectedCategory!, type.isIncome) : null;
-    IconData? iconOverride;
+    TransactionCategory? customCat;
     if (isCustom) {
-      final custom = customCategories.firstWhere(
+      customCat = customCategories.firstWhere(
         (c) => c.name == selectedCategory,
         orElse: () => const TransactionCategory(name: '', icon: Icons.label_outlined),
       );
-      iconOverride = custom.icon;
     }
 
     return GestureDetector(
@@ -73,17 +72,17 @@ class CategorySelectorRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
-                child: isCustom && iconOverride != null
-                    ? iconOverride.fontFamily != null
-                        ? Icon(iconOverride,
+                child: isCustom && customCat != null
+                    ? customCat.emojiOverride != null
+                        ? Text(
+                            customCat.emojiOverride!,
+                            style: const TextStyle(fontSize: 18),
+                          )
+                        : Icon(customCat.icon,
                             size: 18,
                             color: hasSelection
                                 ? accentColor
                                 : AppColors.textMuted)
-                        : Text(
-                            String.fromCharCode(iconOverride.codePoint),
-                            style: const TextStyle(fontSize: 18),
-                          )
                     : Text(
                         emoji ?? '📂',
                         style: const TextStyle(fontSize: 18),

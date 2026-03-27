@@ -7,10 +7,13 @@ class TransactionCategory {
   const TransactionCategory({
     required this.name,
     required this.icon,
+    this.emojiOverride,
   });
 
   final String name;
   final IconData icon;
+  /// Set for emoji-based custom categories; null for built-in Material icon categories.
+  final String? emojiOverride;
 }
 
 class TransactionCategories {

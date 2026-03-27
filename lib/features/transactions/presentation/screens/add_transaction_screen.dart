@@ -185,10 +185,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   String _resolveCategoryEmoji(
       String category, bool isIncome, List<TransactionCategory> customCats) {
-    // Check custom categories first (emoji stored as codePoint without fontFamily)
+    // Check custom categories first (emoji stored in emojiOverride)
     final custom = customCats.where((c) => c.name == category).firstOrNull;
-    if (custom != null && custom.icon.fontFamily == null) {
-      return String.fromCharCode(custom.icon.codePoint);
+    if (custom != null && custom.emojiOverride != null) {
+      return custom.emojiOverride!;
     }
     return TransactionCategories.emojiFor(category, isIncome: isIncome);
   }

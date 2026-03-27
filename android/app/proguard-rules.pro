@@ -39,3 +39,42 @@
 # Kotlin
 -keep class kotlin.** { *; }
 -dontwarn kotlin.**
+
+# Stripe (flutter_stripe)
+-keep class com.stripe.android.** { *; }
+-dontwarn com.stripe.android.**
+-keep class com.reactnativestripesdk.** { *; }
+-dontwarn com.reactnativestripesdk.**
+
+# Kotlin Coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+-dontwarn kotlinx.coroutines.**
+
+# Kotlinx Serialization
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class kotlinx.serialization.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# Ktor (used by Supabase)
+-keep class io.ktor.** { *; }
+-dontwarn io.ktor.**
+
+# home_widget
+-keep class es.antonborri.home_widget.** { *; }
+-dontwarn es.antonborri.home_widget.**
+
+# speech_to_text
+-keep class com.csdcorp.speech_to_text.** { *; }
+-dontwarn com.csdcorp.speech_to_text.**
+
+# Suppress R8 warnings for missing Play Store classes
+-dontwarn com.google.android.play.**

@@ -161,16 +161,15 @@ class _CategoryPickerContent extends ConsumerWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (isCustom && cat.icon.fontFamily != null)
+                              if (isCustom && cat.emojiOverride != null)
+                                Text(cat.emojiOverride!,
+                                    style: const TextStyle(fontSize: 24))
+                              else if (isCustom)
                                 Icon(cat.icon,
                                     size: 24,
                                     color: isSelected
                                         ? accentColor
                                         : AppColors.textMuted)
-                              else if (isCustom)
-                                Text(
-                                    String.fromCharCode(cat.icon.codePoint),
-                                    style: const TextStyle(fontSize: 24))
                               else
                                 Text(emoji,
                                     style: const TextStyle(fontSize: 24)),

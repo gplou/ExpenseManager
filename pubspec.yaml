@@ -33,9 +33,6 @@ dependencies:
   # In-App Purchases
   in_app_purchase: ^3.2.0
 
-  # Pagos con tarjeta
-  flutter_stripe: ^11.5.0
-
   # Charts
   fl_chart: ^0.69.0
 
