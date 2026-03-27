@@ -114,16 +114,21 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     final normalised = code.toUpperCase().trim();
 
     // 1. Fetch code record
-    final codeRow = await _client
-        .from('promo_codes')
-        .select('id, type, duration_days, discount_percentage, max_uses, use_count, valid_until')
-        .eq('code', normalised)
-        .maybeSingle();
+    final Map<String, dynamic>? codeRow;
+    try {
+      codeRow = await _client
+          .from('promo_codes')
+          .select()
+          .eq('code', normalised)
+          .maybeSingle();
+    } on PostgrestException catch (e) {
+      throw PromoCodeException('Error al verificar el código: ${e.message}');
+    }
 
     if (codeRow == null) throw const PromoCodeException('Código no válido');
 
     final maxUses = codeRow['max_uses'] as int?;
-    final useCount = codeRow['use_count'] as int;
+    final useCount = (codeRow['use_count'] as int?) ?? 0;
     final validUntil = codeRow['valid_until'] != null
         ? DateTime.parse(codeRow['valid_until'] as String)
         : null;
@@ -141,8 +146,12 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
         'promo_code_id': codeRow['id'] as String,
         'user_id': userId,
       });
-    } on PostgrestException {
-      throw const PromoCodeException('Ya has utilizado este código');
+    } on PostgrestException catch (e) {
+      // Unique constraint violation (code 23505) means already redeemed
+      if (e.code == '23505') {
+        throw const PromoCodeException('Ya has utilizado este código');
+      }
+      throw PromoCodeException('Error al canjear el código: ${e.message}');
     }
 
     // 3. Increment use_count
@@ -154,7 +163,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     final type = (codeRow['type'] as String?) ?? 'subscription';
     return PromoResult(
       type: type,
-      durationDays: codeRow['duration_days'] as int,
+      durationDays: (codeRow['duration_days'] as int?) ?? 30,
       discountPercentage: codeRow['discount_percentage'] as int?,
     );
   }
