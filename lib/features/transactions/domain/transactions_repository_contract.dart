@@ -11,20 +11,28 @@ class TransactionsSummary {
   double get balance => income - expense;
 }
 
-abstract class TransactionsRepositoryContract {
+/// Read-only operations for transactions.
+abstract class TransactionReader {
   Future<List<TransactionModel>> getTransactions({
     required DateTime from,
     required DateTime to,
   });
-
-  Future<TransactionModel> createTransaction(TransactionModel transaction);
-
-  Future<TransactionModel> updateTransaction(TransactionModel transaction);
-
-  Future<void> deleteTransaction(String id);
 
   Future<TransactionsSummary> getSummary({
     required DateTime from,
     required DateTime to,
   });
 }
+
+/// Write operations for transactions.
+abstract class TransactionWriter {
+  Future<TransactionModel> createTransaction(TransactionModel transaction);
+
+  Future<TransactionModel> updateTransaction(TransactionModel transaction);
+
+  Future<void> deleteTransaction(String id);
+}
+
+/// Full contract combining read and write operations.
+abstract class TransactionsRepositoryContract
+    implements TransactionReader, TransactionWriter {}

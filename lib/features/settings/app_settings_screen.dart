@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/providers/currency_provider.dart';
 import '../../core/providers/locale_provider.dart';
@@ -89,6 +90,19 @@ class AppSettingsScreen extends ConsumerWidget {
             subtitle: Text(numFmtLabel),
             trailing: const Icon(Icons.chevron_right, size: 18),
             onTap: () => _showNumberFormatSheet(context, ref),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: Text(l10n.privacyPolicy),
+            trailing: const Icon(Icons.chevron_right, size: 18),
+            onTap: () => context.push('/privacy-policy'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.description_outlined),
+            title: Text(l10n.termsOfService),
+            trailing: const Icon(Icons.chevron_right, size: 18),
+            onTap: () => context.push('/terms-of-service'),
           ),
         ],
       ),

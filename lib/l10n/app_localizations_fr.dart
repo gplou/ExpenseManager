@@ -785,4 +785,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get selectCategoryPrompt => 'Choisir une catégorie';
+
+  @override
+  String get privacyPolicy => 'Politique de confidentialité';
+
+  @override
+  String get termsOfService => 'Conditions d\'utilisation';
 }

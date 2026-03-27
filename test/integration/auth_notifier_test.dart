@@ -9,7 +9,7 @@ import 'package:productivity_app/features/auth/presentation/providers/auth_provi
 
 // ── Fake repository ───────────────────────────────────────────────────────────
 
-class _FakeAuthRepo implements AuthRepositoryContract {
+class _FakeAuthRepo implements AuthRepositoryContract, SocialAuthContract {
   UserModel? _user;
   bool failSignIn = false;
   bool failSignUp = false;
@@ -76,6 +76,7 @@ ProviderContainer _makeContainer(_FakeAuthRepo repo) {
   return ProviderContainer(
     overrides: [
       authRepositoryProvider.overrideWith((ref) => repo),
+      socialAuthProvider.overrideWith((ref) => repo),
     ],
   );
 }

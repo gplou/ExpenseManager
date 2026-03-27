@@ -19,9 +19,9 @@ void main() {
       expect(TransactionType.income.isExpense, isFalse);
     });
 
-    test('label returns expected strings', () {
-      expect(TransactionType.income.label, 'Ingreso');
-      expect(TransactionType.expense.label, 'Gasto');
+    test('name returns expected strings', () {
+      expect(TransactionType.income.name, 'income');
+      expect(TransactionType.expense.name, 'expense');
     });
   });
 

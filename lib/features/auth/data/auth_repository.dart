@@ -15,7 +15,7 @@ import '../../../core/network/supabase_client.dart';
 import '../domain/auth_repository_contract.dart';
 import '../domain/user_model.dart';
 
-class AuthRepository implements AuthRepositoryContract {
+class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
   final SupabaseClient _client;
 
   AuthRepository(this._client);
@@ -237,8 +237,17 @@ class AuthRepository implements AuthRepositoryContract {
   }
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
+// ── Providers ─────────────────────────────────────────────────────────────────
+
+/// Single shared instance — avoids creating two AuthRepository objects.
+final _authRepositoryInstance = Provider<AuthRepository>((ref) {
+  return AuthRepository(ref.watch(supabaseClientProvider));
+});
 
 final authRepositoryProvider = Provider<AuthRepositoryContract>((ref) {
-  return AuthRepository(ref.watch(supabaseClientProvider));
+  return ref.watch(_authRepositoryInstance);
+});
+
+final socialAuthProvider = Provider<SocialAuthContract>((ref) {
+  return ref.watch(_authRepositoryInstance);
 });

@@ -19,16 +19,29 @@ Future<void> main() async {
   FlutterNativeSplash.preserve(widgetsBinding: binding);
 
   // Detectar si la app fue lanzada desde un widget de pantalla de inicio
-  HomeWidget.setAppGroupId('group.com.tuempresa.productivity_app');
+  HomeWidget.setAppGroupId('group.com.gpm.expensemanager_app');
   final widgetLaunchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
   final initialWidgetAction = _extractWidgetAction(widgetLaunchUri);
 
   // Pre-cargar tema y locale para evitar flash al inicio
   final prefs = await SharedPreferences.getInstance();
   final savedTheme = prefs.getString('theme_mode');
-  final initialTheme = savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light;
+  final systemBrightness =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness;
+  final initialTheme = savedTheme == 'dark'
+      ? ThemeMode.dark
+      : savedTheme == 'light'
+          ? ThemeMode.light
+          : systemBrightness == Brightness.dark
+              ? ThemeMode.dark
+              : ThemeMode.light;
   final savedLocale = prefs.getString('locale_code');
-  final initialLocale = Locale(savedLocale ?? 'es');
+  final deviceCode =
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+  const supportedCodes = {'es', 'en', 'fr', 'de'};
+  final resolvedDevice =
+      supportedCodes.contains(deviceCode) ? deviceCode : 'en';
+  final initialLocale = Locale(savedLocale ?? resolvedDevice);
 
   await Future.wait([
     initializeDateFormatting('es'),

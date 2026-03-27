@@ -2,15 +2,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/failures.dart';
+import '../../../core/network/authenticated_repository.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/utils/date_helpers.dart';
 import '../domain/transaction_model.dart';
 import '../domain/transactions_repository_contract.dart';
 
-class TransactionsRepository implements TransactionsRepositoryContract {
+class TransactionsRepository
+    with AuthenticatedRepository
+    implements TransactionsRepositoryContract {
+  TransactionsRepository(this._client);
   final SupabaseClient _client;
 
-  TransactionsRepository(this._client);
+  @override
+  SupabaseClient get client => _client;
 
   @override
   Future<List<TransactionModel>> getTransactions({
@@ -21,7 +26,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
       final response = await _client
           .from('transactions')
           .select()
-          .eq('user_id', _client.auth.currentUser!.id)
+          .eq('user_id', userId)
           .gte('date', dateToString(from))
           .lte('date', dateToString(to))
           .order('date', ascending: false)
@@ -31,7 +36,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
           .map((e) => _fromRow(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw const NetworkFailure('No se pudieron cargar las transacciones');
+      throw const NetworkFailure('Failed to load transactions');
     }
   }
 
@@ -39,7 +44,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
   Future<TransactionModel> createTransaction(TransactionModel transaction) async {
     try {
       final data = {
-        'user_id': _client.auth.currentUser!.id,
+        'user_id': userId,
         'amount': transaction.amount,
         'type': transaction.type.name,
         'category': transaction.category,
@@ -57,7 +62,7 @@ class TransactionsRepository implements TransactionsRepositoryContract {
           .single();
       return _fromRow(response);
     } catch (e) {
-      throw const NetworkFailure('No se pudo guardar la transacción');
+      throw const NetworkFailure('Failed to save transaction');
     }
   }
 
@@ -78,12 +83,12 @@ class TransactionsRepository implements TransactionsRepositoryContract {
           .from('transactions')
           .update(data)
           .eq('id', transaction.id)
-          .eq('user_id', _client.auth.currentUser!.id)
+          .eq('user_id', userId)
           .select()
           .single();
       return _fromRow(response);
     } catch (e) {
-      throw const NetworkFailure('No se pudo actualizar la transacción');
+      throw const NetworkFailure('Failed to update transaction');
     }
   }
 
@@ -94,9 +99,9 @@ class TransactionsRepository implements TransactionsRepositoryContract {
           .from('transactions')
           .delete()
           .eq('id', id)
-          .eq('user_id', _client.auth.currentUser!.id);
+          .eq('user_id', userId);
     } catch (e) {
-      throw const NetworkFailure('No se pudo eliminar la transacción');
+      throw const NetworkFailure('Failed to delete transaction');
     }
   }
 

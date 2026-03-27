@@ -68,54 +68,68 @@ class TransactionCategories {
   static List<TransactionCategory> forType(TransactionType type) =>
       type.isIncome ? income : expense;
 
+  /// Cached icon maps for O(1) lookup instead of O(n) firstWhere.
+  static Map<String, IconData>? _incomeIconCache;
+  static Map<String, IconData>? _expenseIconCache;
+
+  static Map<String, IconData> _buildIconMap(List<TransactionCategory> cats) =>
+      {for (final c in cats) c.name: c.icon};
+
   static IconData iconFor(String categoryName, TransactionType type,
       {List<TransactionCategory> extra = const []}) {
+    if (extra.isEmpty) {
+      // Use cached map for built-in categories
+      final cache = type.isIncome
+          ? (_incomeIconCache ??= _buildIconMap(income))
+          : (_expenseIconCache ??= _buildIconMap(expense));
+      return cache[categoryName] ?? Icons.label_outlined;
+    }
+    // With extra categories, build a merged map
     final categories = [...forType(type), ...extra];
-    return categories
-        .firstWhere(
-          (c) => c.name == categoryName,
-          orElse: () =>
-              const TransactionCategory(name: '', icon: Icons.label_outlined),
-        )
-        .icon;
+    final map = _buildIconMap(categories);
+    return map[categoryName] ?? Icons.label_outlined;
   }
+
+  /// Map of DB keys to localization functions.
+  /// Adding a new built-in category only requires adding an entry here.
+  static final _localizers = <String, String Function(AppLocalizations)>{
+    'Salario': (l) => l.categorySalary,
+    'Freelance': (l) => l.categoryFreelance,
+    'Inversión': (l) => l.categoryInvestment,
+    'Regalo': (l) => l.categoryGift,
+    'Comida': (l) => l.categoryFood,
+    'Transporte': (l) => l.categoryTransport,
+    'Vivienda': (l) => l.categoryHousing,
+    'Ocio': (l) => l.categoryLeisure,
+    'Salud': (l) => l.categoryHealth,
+    'Educación': (l) => l.categoryEducation,
+    'Ropa': (l) => l.categoryClothing,
+    'Tecnología': (l) => l.categoryTechnology,
+  };
 
   /// Returns the localized display name for a DB category key.
   /// DB keys stay in Spanish; only the UI label is translated.
   /// Custom categories (unknown keys) are returned as-is.
   static String localizedName(String dbKey, AppLocalizations l10n) =>
-      switch (dbKey) {
-        'Salario' => l10n.categorySalary,
-        'Freelance' => l10n.categoryFreelance,
-        'Inversión' => l10n.categoryInvestment,
-        'Regalo' => l10n.categoryGift,
-        'Comida' => l10n.categoryFood,
-        'Transporte' => l10n.categoryTransport,
-        'Vivienda' => l10n.categoryHousing,
-        'Ocio' => l10n.categoryLeisure,
-        'Salud' => l10n.categoryHealth,
-        'Educación' => l10n.categoryEducation,
-        'Ropa' => l10n.categoryClothing,
-        'Tecnología' => l10n.categoryTechnology,
-        _ => dbKey,
-      };
+      _localizers[dbKey]?.call(l10n) ?? dbKey;
+
+  /// Map of DB keys to emoji representations.
+  static const _emojis = <String, String>{
+    'Salario': '💼',
+    'Freelance': '💻',
+    'Inversión': '📈',
+    'Regalo': '🎁',
+    'Comida': '🍕',
+    'Transporte': '🚗',
+    'Vivienda': '🏠',
+    'Ocio': '🎮',
+    'Salud': '💊',
+    'Educación': '📚',
+    'Ropa': '👕',
+    'Tecnología': '⚡',
+  };
 
   /// Returns the emoji for a built-in DB category key.
   static String emojiFor(String dbKey, {bool isIncome = false}) =>
-      switch (dbKey) {
-        'Salario' => '💼',
-        'Freelance' => '💻',
-        'Inversión' => '📈',
-        'Regalo' => '🎁',
-        'Comida' => '🍕',
-        'Transporte' => '🚗',
-        'Vivienda' => '🏠',
-        'Ocio' => '🎮',
-        'Salud' => '💊',
-        'Educación' => '📚',
-        'Ropa' => '👕',
-        'Tecnología' => '⚡',
-        'Otros' => isIncome ? '💰' : '💸',
-        _ => isIncome ? '💰' : '💸',
-      };
+      _emojis[dbKey] ?? (isIncome ? '💰' : '💸');
 }

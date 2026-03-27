@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/custom_categories_repository.dart';
+import '../../domain/custom_categories_repository_contract.dart';
 import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 
@@ -29,7 +30,7 @@ class CustomCategoriesNotifier extends AsyncNotifier<
     };
   }
 
-  Future<void> _migrateIfNeeded(CustomCategoriesRepository repo) async {
+  Future<void> _migrateIfNeeded(CustomCategoriesRepositoryContract repo) async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_migratedKey) == true) return;
 

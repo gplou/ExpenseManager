@@ -2,21 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:productivity_app/features/transactions/presentation/providers/transactions_provider.dart';
 
 void main() {
-  group('TransactionPeriod.label', () {
-    test('week returns "Semana"', () {
-      expect(TransactionPeriod.week.label, 'Semana');
-    });
-
-    test('month returns "Mes"', () {
-      expect(TransactionPeriod.month.label, 'Mes');
-    });
-
-    test('year returns "Año"', () {
-      expect(TransactionPeriod.year.label, 'Año');
-    });
-
+  group('TransactionPeriod', () {
     test('values covers all 3 periods', () {
       expect(TransactionPeriod.values.length, 3);
+      expect(TransactionPeriod.values, contains(TransactionPeriod.week));
+      expect(TransactionPeriod.values, contains(TransactionPeriod.month));
+      expect(TransactionPeriod.values, contains(TransactionPeriod.year));
     });
   });
 

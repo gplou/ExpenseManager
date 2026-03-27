@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:productivity_app/features/transactions/data/recurring_transactions_repository.dart';
 import 'package:productivity_app/features/transactions/data/transactions_repository.dart';
+import 'package:productivity_app/features/transactions/domain/recurring_transactions_repository_contract.dart';
 import 'package:productivity_app/features/transactions/domain/transaction_model.dart';
 import 'package:productivity_app/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:productivity_app/features/transactions/presentation/providers/transactions_provider.dart';
@@ -65,7 +66,7 @@ class _FakeTransactionsRepo implements TransactionsRepositoryContract {
 }
 
 class _MockRecurringRepo extends Mock
-    implements RecurringTransactionsRepository {}
+    implements RecurringTransactionsRepositoryContract {}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

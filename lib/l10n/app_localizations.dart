@@ -1541,6 +1541,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Seleccionar categoría'**
   String get selectCategoryPrompt;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In es, this message translates to:
+  /// **'Política de privacidad'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos de servicio'**
+  String get termsOfService;
 }
 
 class _AppLocalizationsDelegate

@@ -1,38 +1,38 @@
 import '../domain/user_model.dart';
 
-/// Contrato del repositorio de autenticación.
-/// 
-/// La capa de presentación depende SOLO de esta abstracción,
-/// nunca de la implementación concreta. Esto facilita el testeo.
+/// Core authentication operations.
 abstract interface class AuthRepositoryContract {
-  /// Stream del usuario actual. Emite null cuando no hay sesión activa.
+  /// Stream of the current user. Emits null when no session is active.
   Stream<UserModel?> get authStateChanges;
 
-  /// Usuario actualmente autenticado (puede ser null).
+  /// Currently authenticated user (may be null).
   UserModel? get currentUser;
 
-  /// Inicia sesión con email y contraseña.
+  /// Sign in with email and password.
   Future<UserModel> signInWithEmail({
     required String email,
     required String password,
   });
 
-  /// Registra un nuevo usuario.
+  /// Register a new user.
   Future<UserModel> signUpWithEmail({
     required String email,
     required String password,
     String? name,
   });
 
-  /// Cierra la sesión actual.
+  /// Sign out.
   Future<void> signOut();
 
-  /// Inicia sesión (o registra) con Google.
+  /// Send password reset email.
+  Future<void> sendPasswordReset({required String email});
+}
+
+/// Social authentication operations (platform-dependent).
+abstract interface class SocialAuthContract {
+  /// Sign in (or register) with Google.
   Future<UserModel> signInWithGoogle();
 
-  /// Inicia sesión (o registra) con Apple. Solo iOS/macOS.
+  /// Sign in (or register) with Apple. iOS/macOS only.
   Future<UserModel> signInWithApple();
-
-  /// Envía email para resetear contraseña.
-  Future<void> sendPasswordReset({required String email});
 }
