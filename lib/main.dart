@@ -36,7 +36,12 @@ Future<void> main() async {
               ? ThemeMode.dark
               : ThemeMode.light;
   final savedLocale = prefs.getString('locale_code');
-  final initialLocale = Locale(savedLocale ?? 'es');
+  final deviceCode =
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+  const supportedCodes = {'es', 'en', 'fr', 'de'};
+  final resolvedDevice =
+      supportedCodes.contains(deviceCode) ? deviceCode : 'en';
+  final initialLocale = Locale(savedLocale ?? resolvedDevice);
 
   await Future.wait([
     initializeDateFormatting('es'),

@@ -12,12 +12,21 @@ const supportedLocales = [
   (code: 'de', flag: '🇩🇪', name: 'Deutsch'),
 ];
 
+Locale _resolveDeviceLocale() {
+  final deviceCode =
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+  final supported = supportedLocales.map((e) => e.code).toSet();
+  return supported.contains(deviceCode)
+      ? Locale(deviceCode)
+      : const Locale('en');
+}
+
 class LocaleNotifier extends AsyncNotifier<Locale> {
   @override
   Future<Locale> build() async {
     final prefs = await SharedPreferences.getInstance();
     final code = prefs.getString(_kLocaleKey);
-    final locale = code != null ? Locale(code) : const Locale('es');
+    final locale = code != null ? Locale(code) : _resolveDeviceLocale();
     Intl.defaultLocale = locale.languageCode;
     return locale;
   }
