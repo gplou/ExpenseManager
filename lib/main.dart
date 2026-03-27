@@ -26,7 +26,15 @@ Future<void> main() async {
   // Pre-cargar tema y locale para evitar flash al inicio
   final prefs = await SharedPreferences.getInstance();
   final savedTheme = prefs.getString('theme_mode');
-  final initialTheme = savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light;
+  final systemBrightness =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness;
+  final initialTheme = savedTheme == 'dark'
+      ? ThemeMode.dark
+      : savedTheme == 'light'
+          ? ThemeMode.light
+          : systemBrightness == Brightness.dark
+              ? ThemeMode.dark
+              : ThemeMode.light;
   final savedLocale = prefs.getString('locale_code');
   final initialLocale = Locale(savedLocale ?? 'es');
 

@@ -8,11 +8,13 @@ class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
   @override
   Future<ThemeMode> build() async {
     final prefs = await SharedPreferences.getInstance();
-    return switch (prefs.getString(_kThemeModeKey)) {
-      'light' => ThemeMode.light,
-      'dark' => ThemeMode.dark,
-      _ => ThemeMode.light,
-    };
+    final saved = prefs.getString(_kThemeModeKey);
+    if (saved == 'dark') return ThemeMode.dark;
+    if (saved == 'light') return ThemeMode.light;
+    // Primera vez: detectar brillo del sistema
+    final brightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    return brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
   }
 
   Future<void> toggle() async {
