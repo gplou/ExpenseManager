@@ -1038,6 +1038,18 @@ abstract class AppLocalizations {
   /// **'Prueba todas las funciones premium sin compromiso'**
   String get proFreeTrialSubtitle;
 
+  /// No description provided for @proCloudSync.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronización en la nube'**
+  String get proCloudSync;
+
+  /// No description provided for @proCloudSyncSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus datos guardados de forma segura y accesibles en todos tus dispositivos'**
+  String get proCloudSyncSubtitle;
+
   /// No description provided for @subcategory.
   ///
   /// In es, this message translates to:

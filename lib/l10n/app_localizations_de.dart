@@ -510,6 +510,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Teste alle Premium-Funktionen unverbindlich';
 
   @override
+  String get proCloudSync => 'Cloud-Synchronisation';
+
+  @override
+  String get proCloudSyncSubtitle =>
+      'Ihre Daten sicher gesichert und auf allen Geräten zugänglich';
+
+  @override
   String get subcategory => 'Unterkategorie';
 
   @override

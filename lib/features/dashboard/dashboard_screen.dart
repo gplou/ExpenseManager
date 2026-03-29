@@ -22,6 +22,7 @@ import 'widgets/recent_transaction_tile.dart';
 import 'widgets/summary_section.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../transactions/presentation/providers/recurring_transactions_provider.dart';
+import '../transactions/presentation/providers/sync_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../subscription/subscription_provider.dart';
 import '../tutorial/tutorial_keys.dart';
@@ -99,6 +100,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   Widget build(BuildContext context) {
     ref.watch(processRecurringTransactionsProvider);
+    ref.watch(syncProvider);
 
     final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);

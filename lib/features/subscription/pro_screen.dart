@@ -86,6 +86,12 @@ class _ProBody extends ConsumerWidget {
           ),
           const Gap(14),
           _BenefitRow(
+            icon: Icons.cloud_sync_outlined,
+            iconColor: AppColors.dustyTeal,
+            title: l10n.proCloudSync,
+            subtitle: l10n.proCloudSyncSubtitle,
+          ),
+          _BenefitRow(
             icon: Icons.mic_outlined,
             iconColor: AppColors.dustyTeal,
             title: l10n.proVoiceImage,

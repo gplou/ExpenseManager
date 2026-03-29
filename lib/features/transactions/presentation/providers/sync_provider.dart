@@ -1,0 +1,80 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/network/supabase_client.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../subscription/subscription_provider.dart';
+import '../../data/local_recurring_transactions_repository.dart';
+import '../../data/local_transactions_repository.dart';
+import '../../data/recurring_transactions_repository.dart';
+import '../../data/transaction_sync_service.dart';
+import '../../data/transactions_repository.dart';
+import 'transactions_provider.dart';
+
+enum SyncStatus { idle, syncing, done, error }
+
+class SyncState {
+  const SyncState({this.status = SyncStatus.idle, this.error});
+  final SyncStatus status;
+  final String? error;
+
+  bool get isSyncing => status == SyncStatus.syncing;
+}
+
+class SyncNotifier extends AsyncNotifier<SyncState> {
+  bool? _previousIsPro;
+
+  @override
+  Future<SyncState> build() async {
+    final isPro = ref.watch(isProProvider);
+    final user = ref.watch(currentUserProvider);
+
+    if (user == null) {
+      _previousIsPro = null;
+      return const SyncState();
+    }
+
+    final previous = _previousIsPro;
+    _previousIsPro = isPro;
+
+    if (previous != null && previous != isPro) {
+      // Subscription status changed — run migration in the background.
+      // Return syncing state immediately so the repository providers keep
+      // pointing at the source store while data is being transferred.
+      _runMigration(wasPro: previous, userId: user.id);
+      return const SyncState(status: SyncStatus.syncing);
+    }
+
+    return const SyncState();
+  }
+
+  void _runMigration({required bool wasPro, required String userId}) {
+    Future(() async {
+      try {
+        final supabase = ref.read(supabaseClientProvider);
+        final service = TransactionSyncService(
+          localTx: LocalTransactionsRepository(userId: userId),
+          cloudTx: TransactionsRepository(supabase),
+          localRecurring: LocalRecurringTransactionsRepository(userId: userId),
+          cloudRecurring: RecurringTransactionsRepository(supabase),
+        );
+
+        if (wasPro) {
+          // PRO expired: download cloud data to local
+          await service.migrateToLocal();
+        } else {
+          // Upgraded to PRO: upload local data to cloud
+          await service.migrateToCloud();
+        }
+
+        // Force UI to re-fetch from the now-correct store
+        ref.invalidate(allTransactionsProvider);
+        state = const AsyncData(SyncState(status: SyncStatus.done));
+      } catch (e) {
+        state = AsyncData(SyncState(status: SyncStatus.error, error: e.toString()));
+      }
+    });
+  }
+}
+
+final syncProvider =
+    AsyncNotifierProvider<SyncNotifier, SyncState>(SyncNotifier.new);

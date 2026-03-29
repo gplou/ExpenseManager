@@ -506,6 +506,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Testez toutes les fonctionnalités premium sans engagement';
 
   @override
+  String get proCloudSync => 'Synchronisation cloud';
+
+  @override
+  String get proCloudSyncSubtitle =>
+      'Vos données sauvegardées en toute sécurité et accessibles sur tous vos appareils';
+
+  @override
   String get subcategory => 'Sous-catégorie';
 
   @override

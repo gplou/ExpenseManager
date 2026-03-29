@@ -7,6 +7,10 @@ import '../../../core/network/supabase_client.dart';
 import '../../../core/utils/date_helpers.dart';
 import '../domain/transaction_model.dart';
 import '../domain/transactions_repository_contract.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
+import '../../subscription/subscription_provider.dart';
+import '../presentation/providers/sync_provider.dart';
+import 'local_transactions_repository.dart';
 
 class TransactionsRepository
     with AuthenticatedRepository
@@ -144,5 +148,14 @@ class TransactionsRepository
 
 final transactionsRepositoryProvider =
     Provider<TransactionsRepositoryContract>((ref) {
-  return TransactionsRepository(ref.watch(supabaseClientProvider));
+  final isPro = ref.watch(isProProvider);
+  final user = ref.watch(currentUserProvider);
+  final isSyncing = ref.watch(syncProvider).valueOrNull?.isSyncing ?? false;
+
+  // Use Supabase when: PRO, not authenticated, or migration in progress
+  // (keep cloud alive during PRO→free download so the user never sees an empty list)
+  if (isPro || user == null || isSyncing) {
+    return TransactionsRepository(ref.watch(supabaseClientProvider));
+  }
+  return LocalTransactionsRepository(userId: user.id);
 });
