@@ -169,6 +169,8 @@
   "proFreeTrialButton": "Essai gratuit de 3 jours",
   "proFreeTrialActivated": "Essai activé ! Profitez de PRO pendant 3 jours.",
   "proFreeTrialSubtitle": "Testez toutes les fonctionnalités premium sans engagement",
+  "proCloudSync": "Synchronisation cloud",
+  "proCloudSyncSubtitle": "Vos données sauvegardées en toute sécurité et accessibles sur tous vos appareils",
 
   "subcategory": "Sous-catégorie",
   "newSubcategory": "Nouvelle sous-catégorie",

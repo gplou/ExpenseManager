@@ -7,6 +7,10 @@ import '../../../core/utils/date_helpers.dart';
 import '../domain/recurring_transaction_model.dart';
 import '../domain/recurring_transactions_repository_contract.dart';
 import '../domain/transaction_model.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
+import '../../subscription/subscription_provider.dart';
+import '../presentation/providers/sync_provider.dart';
+import 'local_recurring_transactions_repository.dart';
 
 class RecurringTransactionsRepository
     with AuthenticatedRepository
@@ -121,9 +125,27 @@ class RecurringTransactionsRepository
         .eq('id', id)
         .eq('user_id', userId);
   }
+
+  @override
+  Future<List<RecurringTransactionModel>> getAllForUser() async {
+    final response = await _client
+        .from('recurring_transactions')
+        .select()
+        .eq('user_id', userId);
+    return (response as List)
+        .map((e) => RecurringTransactionModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
 }
 
 final recurringTransactionsRepositoryProvider =
     Provider<RecurringTransactionsRepositoryContract>((ref) {
-  return RecurringTransactionsRepository(ref.watch(supabaseClientProvider));
+  final isPro = ref.watch(isProProvider);
+  final user = ref.watch(currentUserProvider);
+  final isSyncing = ref.watch(syncProvider).valueOrNull?.isSyncing ?? false;
+
+  if (isPro || user == null || isSyncing) {
+    return RecurringTransactionsRepository(ref.watch(supabaseClientProvider));
+  }
+  return LocalRecurringTransactionsRepository(userId: user.id);
 });

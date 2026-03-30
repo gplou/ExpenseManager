@@ -5,6 +5,10 @@ import 'transaction_model.dart';
 abstract class RecurringTransactionsRepositoryContract {
   Future<List<RecurringTransactionModel>> getDueRecurring();
 
+  /// Returns all recurring transactions for the authenticated user.
+  /// Used by [TransactionSyncService] when migrating data between stores.
+  Future<List<RecurringTransactionModel>> getAllForUser();
+
   Future<String> createRecurring({
     required double amount,
     required TransactionType type,

@@ -352,6 +352,10 @@
   "@proFreeTrialActivated": {},
   "proFreeTrialSubtitle": "Prueba todas las funciones premium sin compromiso",
   "@proFreeTrialSubtitle": {},
+  "proCloudSync": "Sincronización en la nube",
+  "@proCloudSync": {},
+  "proCloudSyncSubtitle": "Tus datos guardados de forma segura y accesibles en todos tus dispositivos",
+  "@proCloudSyncSubtitle": {},
 
   "subcategory": "Subcategoría",
   "@subcategory": {},
