@@ -150,7 +150,9 @@ final transactionsRepositoryProvider =
     Provider<TransactionsRepositoryContract>((ref) {
   final isPro = ref.watch(isProProvider);
   final user = ref.watch(currentUserProvider);
-  final isSyncing = ref.watch(syncProvider).valueOrNull?.isSyncing ?? false;
+  final isSyncing = ref.watch(
+    syncProvider.select((s) => s.valueOrNull?.isSyncing ?? false),
+  );
 
   // Use Supabase when: PRO, not authenticated, or migration in progress
   // (keep cloud alive during PRO→free download so the user never sees an empty list)

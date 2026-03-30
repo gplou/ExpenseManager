@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
 import 'core/config/router.dart';
+import 'core/local_db/local_database.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/providers/widget_action_provider.dart';
@@ -51,6 +52,10 @@ Future<void> main() async {
   ]);
 
   AppConfig.validate();
+
+  // Pre-warm the local SQLite database in the background so the first
+  // non-PRO data fetch has no cold-start penalty.
+  LocalDatabase.instance.db.ignore();
 
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,

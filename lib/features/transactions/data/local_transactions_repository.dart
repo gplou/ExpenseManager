@@ -55,7 +55,7 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
       final db = await _db;
       final id = transaction.id.isNotEmpty
           ? transaction.id
-          : '${DateTime.now().microsecondsSinceEpoch}_${userId.substring(0, 8)}';
+          : '${DateTime.now().microsecondsSinceEpoch}_${userId.length >= 8 ? userId.substring(0, 8) : userId}';
       final model = transaction.copyWith(
         id: id,
         userId: userId,

@@ -331,15 +331,12 @@ void main() {
       // Seed cloud
       cloudTx._data.add(_tx(id: 'keep-cloud', amount: 99));
 
-      // Poison the local tx repo so insertAll throws
-      final poisonedLocalDb =
-          await databaseFactoryFfi.openDatabase(':memory:');
-      // Don't create schema → insertAll will fail with "no such table"
-      final badLocalTx = LocalTransactionsRepository(userId: 'user-1');
-      LocalDatabase.instance.setTestDb(poisonedLocalDb);
-
+      // Use a local tx repo that always throws on insertAll to simulate
+      // a write failure (e.g. disk full, schema mismatch). sqflite_ffi
+      // does not reliably propagate "no such table" errors through batch
+      // commits on all platforms, so we use an explicit throwing fake.
       final badService = TransactionSyncService(
-        localTx: badLocalTx,
+        localTx: _ThrowingLocalTxRepo(userId: 'user-1'),
         cloudTx: cloudTx,
         localRecurring: localRecurring,
         cloudRecurring: cloudRecurring,
@@ -347,11 +344,113 @@ void main() {
 
       await expectLater(badService.migrateToLocal(), throwsA(anything));
 
-      // Cloud data must still be there
+      // Cloud data must still be there — local failure must not trigger deletion.
       expect(cloudTx.all.map((t) => t.id), contains('keep-cloud'));
+    });
+  });
 
-      // Restore good DB for tearDown
-      LocalDatabase.instance.setTestDb(localDb);
+  // ── Multi-user isolation ───────────────────────────────────────────────────
+  //
+  // The SQLite database is shared on the device. These tests verify that a
+  // migration for one user never reads, writes, or deletes another user's rows.
+
+  group('multi-user isolation', () {
+    late LocalTransactionsRepository user2Tx;
+    late LocalRecurringTransactionsRepository user2Recurring;
+
+    // A transaction owned by user-2.
+    TransactionModel _tx2({required String id, double amount = 50}) =>
+        TransactionModel(
+          id: id,
+          userId: 'user-2',
+          amount: amount,
+          type: TransactionType.expense,
+          category: 'Comida',
+          date: DateTime(2024, 3, 15),
+          createdAt: DateTime(2024, 3, 15),
+        );
+
+    RecurringTransactionModel _rec2({required String id}) =>
+        RecurringTransactionModel(
+          id: id,
+          userId: 'user-2',
+          amount: 30,
+          type: TransactionType.expense,
+          category: 'Transporte',
+          recurrenceType: RecurrenceType.monthly,
+          nextOccurrence: DateTime(2024, 5, 1),
+          createdAt: DateTime(2024, 1, 1),
+        );
+
+    setUp(() {
+      user2Tx = LocalTransactionsRepository(userId: 'user-2');
+      user2Recurring = LocalRecurringTransactionsRepository(userId: 'user-2');
+    });
+
+    test('migrateToCloud only uploads and clears data for the target user', () async {
+      // Both users have local transactions.
+      await localTx.insertAll([_tx(id: 'u1-t1', amount: 100)]);
+      await user2Tx.insertAll([_tx2(id: 'u2-t1', amount: 200)]);
+
+      // Migrate user-1 to cloud.
+      await service.migrateToCloud();
+
+      // Cloud received user-1's data only.
+      expect(cloudTx.all.map((t) => t.id), contains('u1-t1'));
+      expect(cloudTx.all.map((t) => t.id), isNot(contains('u2-t1')));
+
+      // user-1 local cleared; user-2 local untouched.
+      expect(await localTx.getAllForUser(), isEmpty);
+      final u2Data = await user2Tx.getAllForUser();
+      expect(u2Data.map((t) => t.id), contains('u2-t1'));
+    });
+
+    test('migrateToCloud only clears recurring transactions for the target user',
+        () async {
+      await localRecurring.insertAll([
+        RecurringTransactionModel(
+          id: 'u1-rec',
+          userId: 'user-1',
+          amount: 80,
+          type: TransactionType.expense,
+          category: 'Transporte',
+          recurrenceType: RecurrenceType.monthly,
+          nextOccurrence: DateTime(2024, 5, 1),
+          createdAt: DateTime(2024, 1, 1),
+        ),
+      ]);
+      await user2Recurring.insertAll([_rec2(id: 'u2-rec')]);
+
+      await service.migrateToCloud();
+
+      // user-1 recurring cleared.
+      expect(await localRecurring.getAllForUser(), isEmpty);
+      // user-2 recurring untouched.
+      final u2Recs = await user2Recurring.getAllForUser();
+      expect(u2Recs.map((r) => r.id), contains('u2-rec'));
+    });
+
+    test('migrateToLocal does not disturb other users local data', () async {
+      // user-2 already has local data.
+      await user2Tx.insertAll([_tx2(id: 'u2-existing')]);
+      await user2Recurring.insertAll([_rec2(id: 'u2-rec-existing')]);
+
+      // Cloud has user-1 data to download.
+      cloudTx._data.add(_tx(id: 'u1-cloud', amount: 300));
+
+      await service.migrateToLocal();
+
+      // user-1 data is now local.
+      final u1Data = await localTx.getAllForUser();
+      expect(u1Data.map((t) => t.id), contains('u1-cloud'));
+
+      // user-2 data completely untouched.
+      final u2Data = await user2Tx.getAllForUser();
+      expect(u2Data.length, 1);
+      expect(u2Data.first.id, 'u2-existing');
+      final u2Recs = await user2Recurring.getAllForUser();
+      expect(u2Recs.length, 1);
+      expect(u2Recs.first.id, 'u2-rec-existing');
     });
   });
 }
@@ -381,4 +480,15 @@ class _ThrowingCloudTxRepo implements TransactionsRepositoryContract {
 
   @override
   Future<void> deleteTransaction(String id) async {}
+}
+
+// ── Helper: local tx repo whose insertAll always throws ───────────────────────
+
+class _ThrowingLocalTxRepo extends LocalTransactionsRepository {
+  _ThrowingLocalTxRepo({required super.userId});
+
+  @override
+  Future<void> insertAll(List<TransactionModel> transactions) {
+    throw Exception('local write failed');
+  }
 }
