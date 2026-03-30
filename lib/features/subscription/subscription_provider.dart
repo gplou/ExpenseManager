@@ -203,7 +203,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       cacheStale = DateTime.now().difference(checkedAt) > _kCacheTtl;
     }
 
-    final shouldRefresh = cacheStale || !fast.isPro;
+    // Only refresh when the cache is stale (>24 h). For non-PRO users with a
+    // fresh cache we already know the status — no need to hit Supabase on
+    // every startup. If the user purchases PRO, the purchase flow updates
+    // state directly; to restore on a different device they use the restore
+    // button.
+    final shouldRefresh = cacheStale;
 
     if (!shouldRefresh) return fast;
 

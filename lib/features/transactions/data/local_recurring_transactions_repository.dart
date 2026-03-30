@@ -42,7 +42,8 @@ class LocalRecurringTransactionsRepository
   }) async {
     try {
       final db = await _db;
-      final id = '${DateTime.now().microsecondsSinceEpoch}_${userId.substring(0, 8)}';
+      final uid = userId.length >= 8 ? userId.substring(0, 8) : userId;
+      final id = '${DateTime.now().microsecondsSinceEpoch}_$uid';
       await db.insert(
         'recurring_transactions',
         {

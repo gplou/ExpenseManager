@@ -142,7 +142,9 @@ final recurringTransactionsRepositoryProvider =
     Provider<RecurringTransactionsRepositoryContract>((ref) {
   final isPro = ref.watch(isProProvider);
   final user = ref.watch(currentUserProvider);
-  final isSyncing = ref.watch(syncProvider).valueOrNull?.isSyncing ?? false;
+  final isSyncing = ref.watch(
+    syncProvider.select((s) => s.valueOrNull?.isSyncing ?? false),
+  );
 
   if (isPro || user == null || isSyncing) {
     return RecurringTransactionsRepository(ref.watch(supabaseClientProvider));

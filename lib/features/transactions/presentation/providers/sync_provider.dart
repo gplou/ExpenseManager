@@ -22,6 +22,7 @@ class SyncState {
 
 class SyncNotifier extends AsyncNotifier<SyncState> {
   bool? _previousIsPro;
+  String? _previousUserId;
 
   @override
   Future<SyncState> build() async {
@@ -30,14 +31,25 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
 
     if (user == null) {
       _previousIsPro = null;
+      _previousUserId = null;
       return const SyncState();
     }
 
     final previous = _previousIsPro;
+    final previousUserId = _previousUserId;
+
     _previousIsPro = isPro;
+    _previousUserId = user.id;
+
+    // If the user changed (account switch) do NOT migrate — the isPro change
+    // reflects the new account's subscription, not an upgrade/downgrade of the
+    // previous one. Each account's local data is already isolated by user_id.
+    if (previousUserId != null && previousUserId != user.id) {
+      return const SyncState();
+    }
 
     if (previous != null && previous != isPro) {
-      // Subscription status changed — run migration in the background.
+      // Subscription status changed for the same user — run migration.
       // Return syncing state immediately so the repository providers keep
       // pointing at the source store while data is being transferred.
       _runMigration(wasPro: previous, userId: user.id);
