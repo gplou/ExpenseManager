@@ -72,12 +72,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (!mounted) return;
     final tutSeen = await ref.read(tutorialProvider.notifier).hasSeen();
     if (!tutSeen && mounted) {
-      try {
-        await ref
-            .read(subscriptionProvider.future)
-            .timeout(const Duration(seconds: 4));
-      } catch (_) {}
-      if (!mounted) return;
       await Future<void>.delayed(const Duration(milliseconds: 400));
       if (mounted) ref.read(tutorialProvider.notifier).start();
     }
