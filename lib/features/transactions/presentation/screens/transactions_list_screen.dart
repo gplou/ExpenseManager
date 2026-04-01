@@ -143,6 +143,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         ],
       ),
       body: transactionsAsync.when(
+        skipLoadingOnReload: true,
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.dustyTeal),
         ),

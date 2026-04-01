@@ -94,8 +94,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(processRecurringTransactionsProvider);
-    ref.watch(syncProvider);
+    ref.listen(processRecurringTransactionsProvider, (_, __) {});
+    ref.listen(syncProvider, (_, __) {});
 
     final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);
@@ -223,6 +223,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
                     // ── Summary ──────────────────────────────────────────────
                     summaryAsync.when(
+                      skipLoadingOnReload: true,
                       loading: () => const SummaryShimmer(),
                       error: (_, __) => const SizedBox.shrink(),
                       data: (summary) => SummarySection(
@@ -272,6 +273,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ),
                     const Gap(8),
                     recentAsync.when(
+                      skipLoadingOnReload: true,
                       loading: () => const _RecentTransactionsShimmer(),
                       error: (e, _) => Text(e.toString()),
                       data: (transactions) {
