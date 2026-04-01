@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../core/config/router.dart';
 import '../../core/providers/currency_provider.dart';
@@ -158,9 +159,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         color: AppColors.dustyTeal,
         backgroundColor: cs.surface,
         onRefresh: () async {
+          // Invalida la fuente de verdad → los providers derivados
+          // (summary, recent, distribution) se reconstruyen en cascada.
+          ref.invalidate(allTransactionsProvider);
           ref.invalidate(processRecurringTransactionsProvider);
-          ref.invalidate(transactionsSummaryProvider);
-          ref.invalidate(recentTransactionsProvider);
           await ref.read(subscriptionProvider.notifier).forceRefresh();
         },
         child: LayoutBuilder(
@@ -270,9 +272,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ),
                     const Gap(8),
                     recentAsync.when(
-                      loading: () => const Center(
-                        child: CircularProgressIndicator(color: AppColors.dustyTeal),
-                      ),
+                      loading: () => const _RecentTransactionsShimmer(),
                       error: (e, _) => Text(e.toString()),
                       data: (transactions) {
                         if (transactions.isEmpty) {
@@ -307,6 +307,94 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
       const TutorialOverlay(),
       ],
+    );
+  }
+}
+
+// ── Shimmer de transacciones recientes (estado de carga) ─────────────────────
+
+class _RecentTransactionsShimmer extends StatelessWidget {
+  const _RecentTransactionsShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    final base = cs.onSurface.withValues(alpha: 0.06);
+    final highlight = cs.onSurface.withValues(alpha: 0.13);
+
+    return Shimmer.fromColors(
+      baseColor: base,
+      highlightColor: highlight,
+      child: Column(
+        children: List.generate(3, (_) => _ShimmerTile()),
+      ),
+    );
+  }
+}
+
+class _ShimmerTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            // Icono
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            const Gap(12),
+            // Texto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 12,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  const Gap(6),
+                  Container(
+                    height: 10,
+                    width: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Importe
+            Container(
+              height: 12,
+              width: 55,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

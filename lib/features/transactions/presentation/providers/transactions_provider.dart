@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../subscription/subscription_provider.dart';
+import '../../data/local_transactions_repository.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../data/transactions_repository.dart';
 import '../../domain/transaction_model.dart';
@@ -54,14 +57,110 @@ final effectiveDateRangeProvider =
   return ref.watch(selectedPeriodProvider).dateRange;
 });
 
-// ── All transactions (single source of truth) ────────────────────────────────
+// ── All transactions (single source of truth) — cache-then-network ───────────
+//
+// Para usuarios PRO (Supabase):
+//   1. Devuelve datos de SQLite inmediatamente (<100ms) si hay caché.
+//   2. Lanza un refresh de Supabase en segundo plano.
+//   3. Actualiza la UI silenciosamente cuando llegan datos frescos (sin spinner).
+//
+// Para usuarios free (SQLite local):
+//   Consulta directa a SQLite, ya es rápida por naturaleza.
 
-final allTransactionsProvider =
-    FutureProvider.autoDispose<List<TransactionModel>>((ref) {
-  final range = ref.watch(effectiveDateRangeProvider);
-  final repo = ref.watch(transactionsRepositoryProvider);
-  return repo.getTransactions(from: range.from, to: range.to);
-});
+class AllTransactionsNotifier
+    extends AutoDisposeAsyncNotifier<List<TransactionModel>> {
+  // Generación actual del build. Incrementa en cada rebuild para cancelar
+  // refreshes de fondo que quedaron obsoletos.
+  int _generation = 0;
+
+  @override
+  Future<List<TransactionModel>> build() async {
+    _generation++;
+    final generation = _generation;
+
+    final range = ref.watch(effectiveDateRangeProvider);
+    final isPro = ref.watch(isProProvider);
+    final user = ref.watch(currentUserProvider);
+    final repo = ref.watch(transactionsRepositoryProvider);
+
+    // ── Usuarios PRO: caché SQLite primero ───────────────────────────────────
+    if (isPro && user != null) {
+      final localRepo = LocalTransactionsRepository(userId: user.id);
+      final cached = await localRepo.getTransactions(
+        from: range.from,
+        to: range.to,
+      );
+
+      if (cached.isNotEmpty) {
+        // Muestra la caché de forma instantánea y refresca Supabase en fondo.
+        _refreshInBackground(repo, localRepo, range, generation);
+        return cached;
+      }
+
+      // Sin caché (primer arranque o rango nuevo): fetch normal de Supabase.
+      final fresh = await repo.getTransactions(from: range.from, to: range.to);
+
+      // Guarda en SQLite para que el próximo arranque sea instantáneo.
+      _saveToCache(localRepo, fresh);
+      return fresh;
+    }
+
+    // ── Usuarios free: SQLite local, ya es rápida ─────────────────────────────
+    return repo.getTransactions(from: range.from, to: range.to);
+  }
+
+  // Refresca Supabase en segundo plano y actualiza la UI sin spinner.
+  void _refreshInBackground(
+    TransactionsRepositoryContract repo,
+    LocalTransactionsRepository localRepo,
+    ({DateTime from, DateTime to}) range,
+    int generation,
+  ) {
+    // Mantiene el provider vivo mientras dura el refresh de fondo.
+    final keepAlive = ref.keepAlive();
+
+    Future(() async {
+      try {
+        final fresh = await repo.getTransactions(
+          from: range.from,
+          to: range.to,
+        );
+
+        // Si entre tanto hubo un rebuild (cambio de periodo, CRUD, etc.),
+        // descartamos este resultado para no sobreescribir el estado nuevo.
+        if (_generation != generation) return;
+
+        // Sincroniza la caché: elimina el rango y reinserta datos frescos
+        // para gestionar correctamente las transacciones borradas en la nube.
+        await localRepo.deleteByDateRange(range.from, range.to);
+        await localRepo.insertAll(fresh);
+
+        if (_generation != generation) return;
+
+        // Actualización silenciosa: la UI recibe los datos frescos sin mostrar
+        // ningún indicador de carga.
+        state = AsyncData(fresh);
+      } catch (_) {
+        // El refresh de fondo falla silenciosamente; el usuario sigue viendo
+        // la caché sin ninguna interrupción.
+      } finally {
+        keepAlive.close();
+      }
+    });
+  }
+
+  void _saveToCache(
+    LocalTransactionsRepository localRepo,
+    List<TransactionModel> transactions,
+  ) {
+    Future(() => localRepo.insertAll(transactions));
+  }
+}
+
+final allTransactionsProvider = AsyncNotifierProvider.autoDispose<
+    AllTransactionsNotifier, List<TransactionModel>>(
+  AllTransactionsNotifier.new,
+);
 
 // ── Summary (derived from allTransactionsProvider, no extra DB query) ─────────
 

@@ -136,6 +136,18 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
     );
   }
 
+  /// Elimina las transacciones del usuario dentro de un rango de fechas.
+  /// Se usa para sincronizar la caché local con los datos frescos de Supabase
+  /// (gestiona correctamente los registros eliminados en la nube).
+  Future<void> deleteByDateRange(DateTime from, DateTime to) async {
+    final db = await _db;
+    await db.delete(
+      'transactions',
+      where: 'user_id = ? AND date >= ? AND date <= ?',
+      whereArgs: [userId, dateToString(from), dateToString(to)],
+    );
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────
 
   Map<String, dynamic> _toRow(TransactionModel t) => {
