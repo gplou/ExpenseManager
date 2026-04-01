@@ -73,5 +73,17 @@ class AppConfig {
         'Las compras in-app no funcionarán en iOS.',
       );
     }
+    if (googleWebClientId.isEmpty) {
+      debugPrint(
+        '[AppConfig] GOOGLE_WEB_CLIENT_ID está vacío. '
+        'El inicio de sesión con Google no funcionará.',
+      );
+    }
+    if (claudeApiKey.isEmpty) {
+      debugPrint(
+        '[AppConfig] CLAUDE_API_KEY está vacío. '
+        'Las funciones de voz, imagen y chat IA no funcionarán.',
+      );
+    }
   }
 }

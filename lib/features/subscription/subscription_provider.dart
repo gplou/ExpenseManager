@@ -323,7 +323,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     final current = state.valueOrNull ?? const SubscriptionState();
     final bonusDays = current.discountBonusDays;
     final expiresAt = result.expiresAt ??
-        DateTime.now().add(Duration(days: 31 + bonusDays));
+        DateTime.now().add(Duration(days: kSubscriptionDays + bonusDays));
 
     final repo = ref.read(subscriptionRepositoryProvider);
     await repo.upsertSubscription(

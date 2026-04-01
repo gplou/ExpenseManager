@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _kLocaleKey = 'locale_code';
+const kLocaleKey = 'locale_code';
 
 const supportedLocales = [
   (code: 'es', flag: '🇪🇸', name: 'Español'),
@@ -16,7 +16,7 @@ class LocaleNotifier extends AsyncNotifier<Locale> {
   @override
   Future<Locale> build() async {
     final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString(_kLocaleKey);
+    final code = prefs.getString(kLocaleKey);
     final locale = code != null ? Locale(code) : const Locale('es');
     Intl.defaultLocale = locale.languageCode;
     return locale;
@@ -26,7 +26,7 @@ class LocaleNotifier extends AsyncNotifier<Locale> {
     Intl.defaultLocale = locale.languageCode;
     state = AsyncData(locale);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kLocaleKey, locale.languageCode);
+    await prefs.setString(kLocaleKey, locale.languageCode);
   }
 }
 

@@ -164,17 +164,17 @@ void main() {
 
     test('discount promo sets bonus days based on percentage', () {
       const state = SubscriptionState(pendingDiscountPercentage: 50);
-      // 31 * 50 / 100 = 15.5 → 16 bonus days
-      expect(state.discountBonusDays, 16);
+      // 30 * 50 / 100 = 15.0 → 15 bonus days
+      expect(state.discountBonusDays, 15);
     });
 
     test('purchase after discount promo adds bonus days', () {
       // User has redeemed a 50% discount promo code
       const discountState = SubscriptionState(pendingDiscountPercentage: 50);
-      final bonusDays = discountState.discountBonusDays; // 16
+      final bonusDays = discountState.discountBonusDays; // 15
 
-      // User then purchases via store → 31 base days + 16 bonus days = 47
-      final expiresAt = DateTime.now().add(Duration(days: 31 + bonusDays));
+      // User then purchases via store → 30 base days + 15 bonus days = 45
+      final expiresAt = DateTime.now().add(Duration(days: 30 + bonusDays));
       final proState = SubscriptionState(
         expiresAt: expiresAt,
         source: 'google_play',
@@ -182,10 +182,10 @@ void main() {
       );
       expect(proState.isPro, isTrue);
       expect(proState.hasDiscount, isFalse);
-      // Total days should be ~47
+      // Total days should be ~45
       expect(
         proState.expiresAt!.difference(DateTime.now()).inDays,
-        greaterThanOrEqualTo(46),
+        greaterThanOrEqualTo(44),
       );
     });
 
@@ -222,18 +222,18 @@ void main() {
 
     test('100% discount promo doubles subscription length on purchase', () {
       const state = SubscriptionState(pendingDiscountPercentage: 100);
-      // 31 * 100 / 100 = 31 bonus days → total 62 days
-      expect(state.discountBonusDays, 31);
+      // 30 * 100 / 100 = 30 bonus days → total 60 days
+      expect(state.discountBonusDays, 30);
 
       final expiresAt = DateTime.now()
-          .add(Duration(days: 31 + state.discountBonusDays));
+          .add(Duration(days: 30 + state.discountBonusDays));
       final proState = SubscriptionState(
         expiresAt: expiresAt,
         source: 'app_store',
       );
       expect(
         proState.expiresAt!.difference(DateTime.now()).inDays,
-        greaterThanOrEqualTo(61),
+        greaterThanOrEqualTo(59),
       );
     });
   });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/analytics_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../subscription/subscription_provider.dart';
@@ -210,6 +211,11 @@ class TransactionsNotifier extends Notifier<void> {
     // Only invalidate the single source of truth; derived providers
     // (summary, recent, distribution) rebuild automatically.
     ref.invalidate(allTransactionsProvider);
+    AnalyticsService.track(AnalyticsService.transactionCreated, {
+      'type': transaction.type.name,
+      'category': transaction.category,
+      'is_recurring': transaction.recurringTransactionId != null,
+    });
   }
 
   Future<void> update(TransactionModel transaction) async {
@@ -225,6 +231,7 @@ class TransactionsNotifier extends Notifier<void> {
           .deleteRecurring(recurringTransactionId);
     }
     ref.invalidate(allTransactionsProvider);
+    AnalyticsService.track(AnalyticsService.transactionDeleted);
   }
 }
 

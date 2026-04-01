@@ -16,6 +16,15 @@ class AnalyticsService {
   static const String purchaseCancelled = 'purchase_cancelled';
   static const String appOpened = 'app_opened';
 
+  static const String transactionCreated = 'transaction_created';
+  static const String transactionDeleted = 'transaction_deleted';
+  static const String periodChanged = 'period_changed';
+  static const String categoryFilterApplied = 'category_filter_applied';
+  static const String voiceUsed = 'voice_used';
+  static const String photoUsed = 'photo_used';
+  static const String exportExcel = 'export_excel';
+  static const String onboardingCompleted = 'onboarding_completed';
+
   // ── Identity ───────────────────────────────────────────────────────────────
 
   /// Call after login. Sets `is_pro` as a live property so it is always

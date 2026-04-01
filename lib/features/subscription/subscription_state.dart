@@ -1,3 +1,5 @@
+import 'subscription_repository.dart' show kSubscriptionDays;
+
 /// Immutable state for the PRO subscription.
 ///
 /// [isPro] is a derived getter: true when [expiresAt] is in the future.
@@ -38,7 +40,7 @@ class SubscriptionState {
   /// Bonus days granted when completing a purchase with a pending discount.
   int get discountBonusDays =>
       pendingDiscountPercentage != null
-          ? (31 * pendingDiscountPercentage! / 100).round()
+          ? (kSubscriptionDays * pendingDiscountPercentage! / 100).round()
           : 0;
 
   SubscriptionState copyWith({

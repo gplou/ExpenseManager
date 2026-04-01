@@ -151,10 +151,10 @@ void main() {
       // Simulates _applyRCResult when a discount promo is pending.
       // RC returns an expiresAt; the notifier should add discountBonusDays on top.
       const pendingState = SubscriptionState(pendingDiscountPercentage: 100);
-      // 100% discount → bonusDays = 31
-      expect(pendingState.discountBonusDays, 31);
+      // 100% discount → bonusDays = kSubscriptionDays (30)
+      expect(pendingState.discountBonusDays, 30);
 
-      final rcExpiry = DateTime.now().add(const Duration(days: 31));
+      final rcExpiry = DateTime.now().add(const Duration(days: 30));
       final bonusDays = pendingState.discountBonusDays;
       final effectiveExpiry = rcExpiry.add(Duration(days: bonusDays));
 

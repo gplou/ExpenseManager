@@ -67,19 +67,19 @@ void main() {
 
     test('discountBonusDays calculates correctly for 50%', () {
       const state = SubscriptionState(pendingDiscountPercentage: 50);
-      // 31 * 50 / 100 = 15.5 → rounds to 16
-      expect(state.discountBonusDays, 16);
+      // 30 * 50 / 100 = 15.0 → 15
+      expect(state.discountBonusDays, 15);
     });
 
     test('discountBonusDays calculates correctly for 100%', () {
       const state = SubscriptionState(pendingDiscountPercentage: 100);
-      // 31 * 100 / 100 = 31
-      expect(state.discountBonusDays, 31);
+      // 30 * 100 / 100 = 30
+      expect(state.discountBonusDays, 30);
     });
 
     test('discountBonusDays calculates correctly for 10%', () {
       const state = SubscriptionState(pendingDiscountPercentage: 10);
-      // 31 * 10 / 100 = 3.1 → rounds to 3
+      // 30 * 10 / 100 = 3.0 → 3
       expect(state.discountBonusDays, 3);
     });
 

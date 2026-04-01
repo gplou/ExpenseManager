@@ -5,6 +5,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../data/auth_repository.dart';
 import '../../domain/user_model.dart';
+import '../../../subscription/subscription_provider.dart';
 
 part 'auth_provider.g.dart';
 
@@ -115,7 +116,8 @@ class AuthNotifier extends _$AuthNotifier {
   void _identifyCurrentUser() {
     final user = ref.read(authRepositoryProvider).currentUser;
     if (user != null) {
-      AnalyticsService.identify(user.id);
+      Purchases.logIn(user.id).ignore();
+      AnalyticsService.identify(user.id, isPro: ref.read(isProProvider));
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/analytics_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/onboarding_provider.dart';
@@ -25,6 +26,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
+    AnalyticsService.track(AnalyticsService.onboardingCompleted);
     await ref.read(onboardingProvider.notifier).markSeen();
     if (mounted) Navigator.of(context).pop();
   }

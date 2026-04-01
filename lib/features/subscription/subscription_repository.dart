@@ -10,6 +10,12 @@ import 'domain/subscription_repository_contract.dart';
 /// RevenueCat entitlement identifier — must match the RC dashboard.
 const kRCEntitlementId = 'pro';
 
+/// Duration of the one-time free trial in days.
+const kFreeTrialDays = 4;
+
+/// Nominal subscription period in days (used for fallback expiry and bonus calculation).
+const kSubscriptionDays = 30;
+
 // ── Repository ────────────────────────────────────────────────────────────────
 
 /// Raw data access: Supabase reads/writes and RevenueCat store interactions.
@@ -91,7 +97,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     final userId = _client.auth.currentUser!.id;
     final now = DateTime.now();
     final expiresAt =
-        DateTime(now.year, now.month, now.day).add(const Duration(days: 4));
+        DateTime(now.year, now.month, now.day).add(const Duration(days: kFreeTrialDays));
 
     await _client.from('subscriptions').upsert(
       {

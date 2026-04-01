@@ -26,6 +26,7 @@ import '../transactions/presentation/providers/recurring_transactions_provider.d
 import '../transactions/presentation/providers/sync_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../subscription/subscription_provider.dart';
+import '../../core/services/analytics_service.dart';
 import '../tutorial/tutorial_keys.dart';
 import '../tutorial/tutorial_notifier.dart';
 import '../tutorial/tutorial_overlay.dart';
@@ -193,6 +194,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 onTap: () {
                                   ref.read(selectedPeriodProvider.notifier).state = p;
                                   ref.read(customDateRangeProvider.notifier).state = null;
+                                  AnalyticsService.track(AnalyticsService.periodChanged, {'period': p.name});
                                 },
                               ),
                             );
