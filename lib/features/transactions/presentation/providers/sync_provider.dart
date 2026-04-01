@@ -28,10 +28,21 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
   Future<SyncState> build() async {
     final isPro = ref.watch(isProProvider);
     final user = ref.watch(currentUserProvider);
+    // Watch the raw subscription state to know if it has actually loaded.
+    // While loading, isProProvider returns false by default, which would
+    // otherwise be mistaken for a genuine free→PRO transition every app start.
+    final subscriptionLoaded = ref.watch(
+      subscriptionProvider.select((s) => s.hasValue),
+    );
 
     if (user == null) {
       _previousIsPro = null;
       _previousUserId = null;
+      return const SyncState();
+    }
+
+    // Don't evaluate subscription transitions while still loading.
+    if (!subscriptionLoaded) {
       return const SyncState();
     }
 
