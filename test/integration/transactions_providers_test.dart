@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:productivity_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:productivity_app/features/subscription/subscription_provider.dart';
 import 'package:productivity_app/features/transactions/data/recurring_transactions_repository.dart';
 import 'package:productivity_app/features/transactions/data/transactions_repository.dart';
 import 'package:productivity_app/features/transactions/domain/recurring_transactions_repository_contract.dart';
@@ -92,6 +94,8 @@ ProviderContainer _makeContainer(
 }) {
   return ProviderContainer(
     overrides: [
+      isProProvider.overrideWith((ref) => false),
+      currentUserProvider.overrideWith((ref) => null),
       transactionsRepositoryProvider.overrideWith((ref) => txRepo),
       if (recurringRepo != null)
         recurringTransactionsRepositoryProvider
