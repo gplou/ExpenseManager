@@ -1,6 +1,8 @@
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/analytics_service.dart';
 import '../../data/auth_repository.dart';
 import '../../domain/user_model.dart';
 
@@ -45,6 +47,7 @@ class AuthNotifier extends _$AuthNotifier {
             email: email,
             password: password,
           );
+      _identifyCurrentUser();
       state = Success();
       return true;
     } on AppFailure catch (e) {
@@ -65,6 +68,7 @@ class AuthNotifier extends _$AuthNotifier {
             password: password,
             name: name,
           );
+      _identifyCurrentUser();
       state = Success();
       return true;
     } on AppFailure catch (e) {
@@ -77,6 +81,7 @@ class AuthNotifier extends _$AuthNotifier {
     state = Loading();
     try {
       await ref.read(socialAuthProvider).signInWithGoogle();
+      _identifyCurrentUser();
       state = Success();
       return true;
     } on AppFailure catch (e) {
@@ -89,6 +94,7 @@ class AuthNotifier extends _$AuthNotifier {
     state = Loading();
     try {
       await ref.read(socialAuthProvider).signInWithApple();
+      _identifyCurrentUser();
       state = Success();
       return true;
     } on AppFailure catch (e) {
@@ -98,9 +104,18 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   Future<void> signOut() async {
+    Purchases.logOut().ignore();
+    AnalyticsService.reset();
     await ref.read(authRepositoryProvider).signOut();
     state = Idle();
   }
 
   void reset() => state = Idle();
+
+  void _identifyCurrentUser() {
+    final user = ref.read(authRepositoryProvider).currentUser;
+    if (user != null) {
+      AnalyticsService.identify(user.id);
+    }
+  }
 }

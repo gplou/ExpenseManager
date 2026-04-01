@@ -359,7 +359,7 @@ void main() {
     late LocalRecurringTransactionsRepository user2Recurring;
 
     // A transaction owned by user-2.
-    TransactionModel _tx2({required String id, double amount = 50}) =>
+    TransactionModel tx2({required String id, double amount = 50}) =>
         TransactionModel(
           id: id,
           userId: 'user-2',
@@ -370,7 +370,7 @@ void main() {
           createdAt: DateTime(2024, 3, 15),
         );
 
-    RecurringTransactionModel _rec2({required String id}) =>
+    RecurringTransactionModel rec2({required String id}) =>
         RecurringTransactionModel(
           id: id,
           userId: 'user-2',
@@ -390,7 +390,7 @@ void main() {
     test('migrateToCloud only uploads and clears data for the target user', () async {
       // Both users have local transactions.
       await localTx.insertAll([_tx(id: 'u1-t1', amount: 100)]);
-      await user2Tx.insertAll([_tx2(id: 'u2-t1', amount: 200)]);
+      await user2Tx.insertAll([tx2(id: 'u2-t1', amount: 200)]);
 
       // Migrate user-1 to cloud.
       await service.migrateToCloud();
@@ -419,7 +419,7 @@ void main() {
           createdAt: DateTime(2024, 1, 1),
         ),
       ]);
-      await user2Recurring.insertAll([_rec2(id: 'u2-rec')]);
+      await user2Recurring.insertAll([rec2(id: 'u2-rec')]);
 
       await service.migrateToCloud();
 
@@ -432,8 +432,8 @@ void main() {
 
     test('migrateToLocal does not disturb other users local data', () async {
       // user-2 already has local data.
-      await user2Tx.insertAll([_tx2(id: 'u2-existing')]);
-      await user2Recurring.insertAll([_rec2(id: 'u2-rec-existing')]);
+      await user2Tx.insertAll([tx2(id: 'u2-existing')]);
+      await user2Recurring.insertAll([rec2(id: 'u2-rec-existing')]);
 
       // Cloud has user-1 data to download.
       cloudTx._data.add(_tx(id: 'u1-cloud', amount: 300));

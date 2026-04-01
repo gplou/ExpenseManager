@@ -17,6 +17,10 @@
 # In-App Billing
 -keep class com.android.vending.billing.** { *; }
 
+# RevenueCat
+-keep class com.revenuecat.purchases.** { *; }
+-dontwarn com.revenuecat.purchases.**
+
 # Google Play Core (deferred components referenced by Flutter engine)
 -dontwarn com.google.android.play.core.**
 

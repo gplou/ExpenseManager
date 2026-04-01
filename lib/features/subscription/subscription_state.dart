@@ -15,7 +15,7 @@ class SubscriptionState {
   final bool isLoading;
   final String? purchaseError;
 
-  /// 'google_play' | 'app_store' | 'promo_code' | 'free_trial'
+  /// 'play_store' | 'app_store' | 'promo_code' | 'free_trial'
   final String? source;
 
   /// Discount percentage (1-100) from a redeemed 'discount' promo code.

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../features/auth/data/auth_repository.dart';
+import '../services/analytics_route_observer.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
@@ -62,6 +63,7 @@ GoRouter router(RouterRef ref) {
   return GoRouter(
     initialLocation: AppRoutes.dashboard,
     debugLogDiagnostics: kDebugMode,
+    observers: [AnalyticsRouteObserver()],
     // Al cambiar el auth state, GoRouter re-evalúa redirect sin recrearse
     refreshListenable: _RouterRefreshNotifier(authRepo.authStateChanges),
     redirect: (context, state) {

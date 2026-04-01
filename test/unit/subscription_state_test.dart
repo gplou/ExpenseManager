@@ -155,5 +155,35 @@ void main() {
       final updated = state.copyWith(trialUsed: true);
       expect(updated.trialUsed, isTrue);
     });
+
+    test('copyWith does not mutate the original instance', () {
+      final original = SubscriptionState(
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+        isLoading: false,
+        source: 'google_play',
+        trialUsed: false,
+        pendingDiscountPercentage: 20,
+      );
+      final originalExpires = original.expiresAt;
+      final copy = original.copyWith(
+        isLoading: true,
+        source: 'app_store',
+        trialUsed: true,
+        clearDiscount: true,
+      );
+
+      // Original unchanged
+      expect(original.isLoading, isFalse);
+      expect(original.source, 'google_play');
+      expect(original.trialUsed, isFalse);
+      expect(original.pendingDiscountPercentage, 20);
+      expect(original.expiresAt, originalExpires);
+
+      // Copy has new values
+      expect(copy.isLoading, isTrue);
+      expect(copy.source, 'app_store');
+      expect(copy.trialUsed, isTrue);
+      expect(copy.pendingDiscountPercentage, isNull);
+    });
   });
 }

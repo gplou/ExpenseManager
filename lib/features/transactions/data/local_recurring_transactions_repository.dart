@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/errors/failures.dart';
@@ -43,7 +45,7 @@ class LocalRecurringTransactionsRepository
     try {
       final db = await _db;
       final uid = userId.length >= 8 ? userId.substring(0, 8) : userId;
-      final id = '${DateTime.now().microsecondsSinceEpoch}_$uid';
+      final id = '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(0x7FFFFFFF)}_$uid';
       await db.insert(
         'recurring_transactions',
         {

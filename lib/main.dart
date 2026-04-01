@@ -1,12 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
+import 'core/services/analytics_service.dart';
 import 'core/config/router.dart';
 import 'core/local_db/local_database.dart';
 import 'core/providers/locale_provider.dart';
@@ -62,6 +66,10 @@ Future<void> main() async {
     anonKey: AppConfig.supabaseAnonKey,
   );
 
+  await _initRevenueCat();
+  await _initPostHog();
+  AnalyticsService.track(AnalyticsService.appOpened, {'version': '1.0.0'});
+
   runApp(
     ProviderScope(
       overrides: [
@@ -76,6 +84,29 @@ Future<void> main() async {
       ),
     ),
   );
+}
+
+Future<void> _initRevenueCat() async {
+  // SECURITY: Use verbose logging only in development. Debug level can leak
+  // receipt data, user IDs, and entitlement details into device logs.
+  await Purchases.setLogLevel(
+    AppConfig.isDevelopment ? LogLevel.debug : LogLevel.warn,
+  );
+  final config = PurchasesConfiguration(
+    defaultTargetPlatform == TargetPlatform.android
+        ? AppConfig.revenueCatAndroidKey
+        : AppConfig.revenueCatIosKey,
+  );
+  await Purchases.configure(config);
+}
+
+Future<void> _initPostHog() async {
+  if (AppConfig.postHogApiKey.isEmpty) return;
+  final posthogConfig = PostHogConfig(AppConfig.postHogApiKey)
+    ..host = AppConfig.postHogHost
+    ..debug = AppConfig.isDevelopment
+    ..captureApplicationLifecycleEvents = true;
+  await Posthog().setup(posthogConfig);
 }
 
 /// Extrae la acción ('voice' | 'add') de una URI de widget.

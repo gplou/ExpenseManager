@@ -1,13 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/network/supabase_client.dart';
 import 'domain/subscription_repository_contract.dart';
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+/// RevenueCat entitlement identifier — must match the RC dashboard.
+const kRCEntitlementId = 'pro';
+
 // ── Repository ────────────────────────────────────────────────────────────────
 
-/// Raw data access: Supabase reads/writes and IAP store interactions.
+/// Raw data access: Supabase reads/writes and RevenueCat store interactions.
 /// Business logic lives in SubscriptionNotifier, not here.
 class SubscriptionRepository implements SubscriptionRepositoryContract {
   SubscriptionRepository(this._client);
@@ -34,7 +39,14 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     );
   }
 
-  /// Upsert subscription row. Called after a successful IAP purchase or promo code.
+  /// Upsert subscription row. Called after a successful RC purchase or promo code.
+  ///
+  // SECURITY: Receipt validation for store purchases is handled server-side by
+  // RevenueCat — this client-side upsert only mirrors the state into Supabase
+  // for fast reads. The `subscriptions` table MUST have Row Level Security (RLS)
+  // enabled so that each user can only INSERT/UPDATE their own row
+  // (e.g. `auth.uid() = user_id`). Without RLS, a malicious client could
+  // overwrite another user's subscription status.
   @override
   Future<void> upsertSubscription({
     required DateTime expiresAt,
@@ -56,12 +68,10 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
 
   // ── Free trial ──────────────────────────────────────────────────────────
 
-  /// Returns true if the user has already used the free trial OR has ever
-  /// been PRO (any source). Only first-time users are eligible.
   @override
   Future<bool> checkTrialUsed() async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) return true; // not logged in → not eligible
+    if (userId == null) return true;
 
     final row = await _client
         .from('subscriptions')
@@ -69,23 +79,19 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
         .eq('user_id', userId)
         .maybeSingle();
 
-    if (row == null) return false; // no record → eligible
-    if (row['trial_used_at'] != null) return true; // already used trial
-    // If they ever had a paid/promo source, they're not eligible
+    if (row == null) return false;
+    if (row['trial_used_at'] != null) return true;
     final source = row['source'] as String?;
     if (source != null && source != 'free_trial') return true;
     return false;
   }
 
-  /// Activates the 3-day free trial. Expires at midnight (00:00) of
-  /// the 4th full day after today (3 complete calendar days).
-  /// Also stamps trial_used_at so it can never be used again.
   @override
   Future<DateTime> startFreeTrial() async {
     final userId = _client.auth.currentUser!.id;
     final now = DateTime.now();
-    // 3 full days: today (partial) + 3 complete days → midnight of day+4
-    final expiresAt = DateTime(now.year, now.month, now.day).add(const Duration(days: 4));
+    final expiresAt =
+        DateTime(now.year, now.month, now.day).add(const Duration(days: 4));
 
     await _client.from('subscriptions').upsert(
       {
@@ -101,19 +107,13 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     return expiresAt;
   }
 
-  // ── Promo codes ───────────────────────────────────────────────────────────
+  // ── Promo codes ──────────────────────────────────────────────────────────
 
-  /// Redeems a promo code and returns its details.
-  ///
-  /// For 'subscription' codes: [PromoResult.durationDays] contains the days granted.
-  /// For 'discount' codes: [PromoResult.discountPercentage] contains the discount.
-  /// Throws [PromoCodeException] with user-facing message on any failure.
   @override
   Future<PromoResult> redeemPromoCode(String code) async {
     final userId = _client.auth.currentUser!.id;
     final normalised = code.toUpperCase().trim();
 
-    // 1. Fetch code record
     final Map<String, dynamic>? codeRow;
     try {
       codeRow = await _client
@@ -140,21 +140,23 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
       throw const PromoCodeException('Este código ha expirado');
     }
 
-    // 2. Record redemption — unique constraint prevents double use per user
     try {
       await _client.from('promo_code_redemptions').insert({
         'promo_code_id': codeRow['id'] as String,
         'user_id': userId,
       });
     } on PostgrestException catch (e) {
-      // Unique constraint violation (code 23505) means already redeemed
       if (e.code == '23505') {
         throw const PromoCodeException('Ya has utilizado este código');
       }
       throw PromoCodeException('Error al canjear el código: ${e.message}');
     }
 
-    // 3. Increment use_count
+    // SECURITY: Incrementing use_count from the client is vulnerable to race
+    // conditions (two concurrent redemptions can both read the same count) and
+    // client-side manipulation (a modified client could skip this call). This
+    // should be moved to a Supabase Edge Function or a Postgres trigger/RPC
+    // that atomically increments the counter server-side.
     await _client
         .from('promo_codes')
         .update({'use_count': useCount + 1})
@@ -168,29 +170,107 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     );
   }
 
-  // ── IAP ───────────────────────────────────────────────────────────────────
+  // ── RevenueCat ────────────────────────────────────────────────────────────
 
-  /// Loads store product details. Returns null if store unavailable or product
-  /// not found (e.g. not configured in Google Play / App Store yet).
   @override
-  Future<ProductDetails?> loadProduct(String productId) async {
-    final iap = InAppPurchase.instance;
-    final available = await iap.isAvailable();
-    if (!available) return null;
+  Future<RCPurchaseResult> purchaseProPlan() async {
+    final offerings = await Purchases.getOfferings();
+    // Prefer the monthly package; fall back to the first available package.
+    final package = offerings.current?.monthly ??
+        offerings.current?.availablePackages.firstOrNull;
 
-    final response = await iap.queryProductDetails({productId});
-    if (response.productDetails.isEmpty) return null;
-    return response.productDetails.first;
+    if (package == null) {
+      throw const RCPurchaseException(
+          'Producto no disponible. Inténtalo más tarde.');
+    }
+
+    try {
+      final customerInfo = await Purchases.purchasePackage(package);
+      return _toResult(customerInfo);
+    } on PurchasesError catch (e) {
+      if (e.code == PurchasesErrorCode.purchaseCancelledError) {
+        throw const RCPurchaseCancelledException();
+      }
+      throw RCPurchaseException(e.message);
+    }
   }
 
   @override
-  Stream<List<PurchaseDetails>> get purchaseStream =>
-      InAppPurchase.instance.purchaseStream;
+  Future<RCPurchaseResult> restoreProPlan() async {
+    try {
+      final customerInfo = await Purchases.restorePurchases();
+      return _toResult(customerInfo);
+    } on PurchasesError catch (e) {
+      throw RCPurchaseException(e.message);
+    }
+  }
+
+  @override
+  Future<RCPurchaseResult?> getCurrentRCStatus() async {
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      return _toResult(customerInfo);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  static RCPurchaseResult _toResult(CustomerInfo info) {
+    final entitlement = info.entitlements.active[kRCEntitlementId];
+    if (entitlement == null) {
+      return const RCPurchaseResult(isPro: false, source: 'unknown');
+    }
+    final source = switch (entitlement.store) {
+      Store.appStore || Store.macAppStore => 'app_store',
+      Store.playStore => 'play_store',
+      Store.amazon => 'amazon',
+      Store.stripe || Store.rcBilling => 'stripe',
+      Store.promotional => 'promotional',
+      _ => 'unknown',
+    };
+    return RCPurchaseResult(
+      isPro: true,
+      source: source,
+      expiresAt: entitlement.expirationDate != null
+          ? DateTime.tryParse(entitlement.expirationDate!)?.toLocal()
+          : null,
+      storeTxId: info.originalAppUserId,
+    );
+  }
 }
 
-// ── Promo result ──────────────────────────────────────────────────────────────
+// ── RC result & exceptions ────────────────────────────────────────────────────
 
-/// Result of a successful promo code redemption.
+class RCPurchaseResult {
+  const RCPurchaseResult({
+    required this.isPro,
+    required this.source,
+    this.expiresAt,
+    this.storeTxId,
+  });
+
+  final bool isPro;
+
+  /// 'play_store' | 'app_store' | 'unknown'
+  final String source;
+
+  final DateTime? expiresAt;
+  final String? storeTxId;
+}
+
+class RCPurchaseException implements Exception {
+  const RCPurchaseException(this.message);
+  final String message;
+}
+
+class RCPurchaseCancelledException implements Exception {
+  const RCPurchaseCancelledException();
+}
+
+// ── Promo result & exception ──────────────────────────────────────────────────
+
 class PromoResult {
   const PromoResult({
     required this.type,
@@ -198,20 +278,13 @@ class PromoResult {
     this.discountPercentage,
   });
 
-  /// 'subscription' (direct PRO access) or 'discount' (requires store purchase).
   final String type;
-
-  /// Days of PRO granted (only meaningful for 'subscription' type).
   final int durationDays;
-
-  /// Discount percentage 1-100 (only meaningful for 'discount' type).
   final int? discountPercentage;
 
   bool get isSubscription => type == 'subscription';
   bool get isDiscount => type == 'discount';
 }
-
-// ── Exception ─────────────────────────────────────────────────────────────────
 
 class PromoCodeException implements Exception {
   const PromoCodeException(this.message);
