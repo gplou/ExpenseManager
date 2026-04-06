@@ -7,6 +7,7 @@ import '../../core/utils/extensions.dart';
 import '../../core/widgets/neo_card.dart';
 import '../../l10n/app_localizations.dart';
 import 'subscription_provider.dart';
+import 'subscription_repository.dart';
 import 'subscription_state.dart';
 
 class ProScreen extends ConsumerStatefulWidget {
@@ -216,6 +217,24 @@ class _ProBody extends ConsumerWidget {
                 ),
               ),
             ),
+
+            // Promo code
+            TextButton(
+              onPressed: sub.isLoading
+                  ? null
+                  : () => showDialog<void>(
+                        context: context,
+                        builder: (_) => const _PromoCodeDialog(),
+                      ),
+              child: Text(
+                l10n.promoCodeTitle,
+                style: const TextStyle(
+                  fontFamily: 'Sora',
+                  color: AppColors.textMuted,
+                  fontSize: 13,
+                ),
+              ),
+            ),
           ],
 
           // ── Already PRO: refresh button ───────────────────────────────
@@ -311,7 +330,7 @@ class _ActiveProCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final remaining = expiresAt.difference(DateTime.now()).inDays;
     final sourceLabel = switch (source) {
-      'google_play' => l10n.proSourceGooglePlay,
+      'play_store' => l10n.proSourceGooglePlay,
       'app_store' => l10n.proSourceAppStore,
       'promo_code' => l10n.proSourcePromoCode,
       'free_trial' => l10n.proSourceFreeTrial,
@@ -485,6 +504,119 @@ class _FreeTrialCard extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Promo code dialog ─────────────────────────────────────────────────────────
+
+class _PromoCodeDialog extends ConsumerStatefulWidget {
+  const _PromoCodeDialog();
+
+  @override
+  ConsumerState<_PromoCodeDialog> createState() => _PromoCodeDialogState();
+}
+
+class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
+  final _controller = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _apply() async {
+    final code = _controller.text.trim();
+    if (code.isEmpty) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(subscriptionProvider.notifier)
+          .redeemPromoCode(code);
+      if (mounted) Navigator.of(context).pop();
+    } on PromoCodeException catch (e) {
+      setState(() {
+        _loading = false;
+        _error = e.message;
+      });
+    } catch (_) {
+      setState(() {
+        _loading = false;
+        _error = AppLocalizations.of(context).proPromoUnexpectedError;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return AlertDialog(
+      title: Text(
+        l10n.promoCodeTitle,
+        style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              hintText: l10n.promoCodeHint,
+              hintStyle: const TextStyle(fontFamily: 'Sora'),
+            ),
+            onSubmitted: (_) => _apply(),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _error!,
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _loading ? null : () => Navigator.of(context).pop(),
+          child: Text(
+            l10n.cancel,
+            style: const TextStyle(fontFamily: 'Sora', color: AppColors.textMuted),
+          ),
+        ),
+        TextButton(
+          onPressed: _loading ? null : _apply,
+          child: _loading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.dustyTeal,
+                  ),
+                )
+              : Text(
+                  l10n.apply,
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.dustyTeal,
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }

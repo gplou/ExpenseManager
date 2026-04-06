@@ -13,6 +13,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/neo_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../subscription/subscription_provider.dart';
+import '../../../core/providers/locale_provider.dart';
+import '../../../core/services/analytics_service.dart';
 import '../../transactions/data/image_transaction_parser.dart';
 import '../../transactions/data/voice_transaction_parser.dart';
 import '../../transactions/domain/parsed_voice_transaction.dart';
@@ -59,6 +61,14 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     _speech.stop();
     super.dispose();
   }
+
+  static String _speechLocaleId(String langCode) => switch (langCode) {
+    'es' => 'es_ES',
+    'en' => 'en_US',
+    'fr' => 'fr_FR',
+    'de' => 'de_DE',
+    _ => 'en_US',
+  };
 
   bool _requirePro() {
     if (ref.read(isProProvider)) return true;
@@ -108,9 +118,11 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     }
 
     setState(() => _voiceState = VoiceInputState.listening);
+    AnalyticsService.track(AnalyticsService.voiceUsed);
 
+    final langCode = ref.read(localeProvider).valueOrNull?.languageCode ?? 'es';
     await _speech.listen(
-      localeId: 'es_ES',
+      localeId: _speechLocaleId(langCode),
       onResult: (result) {
         if (result.finalResult) _processVoice(result.recognizedWords);
       },
@@ -195,6 +207,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     );
 
     if (picked == null || !mounted) return;
+    AnalyticsService.track(AnalyticsService.photoUsed, {'source': source.name});
     await _processImage(picked);
   }
 

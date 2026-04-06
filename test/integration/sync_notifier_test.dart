@@ -18,9 +18,18 @@ import 'package:productivity_app/core/network/supabase_client.dart';
 import 'package:productivity_app/features/auth/domain/user_model.dart';
 import 'package:productivity_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:productivity_app/features/subscription/subscription_provider.dart';
+import 'package:productivity_app/features/subscription/subscription_state.dart';
 import 'package:productivity_app/features/transactions/presentation/providers/sync_provider.dart';
 
 import '../helpers/mocks.dart';
+
+// ── Fake subscription notifier ────────────────────────────────────────────────
+// Returns an immediately-loaded empty state so SyncNotifier's
+// `subscriptionLoaded` guard doesn't bail out early during tests.
+class _FakeSubscriptionNotifier extends SubscriptionNotifier {
+  @override
+  Future<SubscriptionState> build() async => const SubscriptionState();
+}
 
 // ── Test fixtures ──────────────────────────────────────────────────────────────
 
@@ -58,6 +67,7 @@ ProviderContainer _makeContainer() {
     overrides: [
       isProProvider.overrideWith((ref) => ref.watch(_isProLever)),
       currentUserProvider.overrideWith((ref) => ref.watch(_userLever)),
+      subscriptionProvider.overrideWith(_FakeSubscriptionNotifier.new),
       supabaseClientProvider.overrideWith((ref) => mockSupabase),
     ],
   );
@@ -73,6 +83,11 @@ Future<SyncState> _setAndRead(
 }) async {
   container.read(_userLever.notifier).state = user;
   container.read(_isProLever.notifier).state = isPro;
+  // Ensure subscriptionProvider has resolved before reading syncProvider.
+  // SyncNotifier.build() guards on subscriptionLoaded (hasValue); if we read
+  // syncProvider while subscription is still AsyncLoading the guard fires an
+  // early return and the test sees the wrong state.
+  await container.read(subscriptionProvider.future);
   return container.read(syncProvider.future);
 }
 

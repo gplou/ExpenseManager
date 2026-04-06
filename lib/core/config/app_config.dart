@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Configuración global de la aplicación.
 ///
 /// Los valores se inyectan en tiempo de compilación via --dart-define-from-file:
@@ -24,6 +26,20 @@ class AppConfig {
   static const String claudeApiKey =
       String.fromEnvironment('CLAUDE_API_KEY');
 
+  // RevenueCat
+  static const String revenueCatAndroidKey =
+      String.fromEnvironment('REVENUECAT_ANDROID_KEY');
+  static const String revenueCatIosKey =
+      String.fromEnvironment('REVENUECAT_IOS_KEY');
+
+  // PostHog
+  static const String postHogApiKey =
+      String.fromEnvironment('POSTHOG_API_KEY');
+  static const String postHogHost = String.fromEnvironment(
+    'POSTHOG_HOST',
+    defaultValue: 'https://eu.i.posthog.com',
+  );
+
   // Entorno
   static const bool isProduction = bool.fromEnvironment('dart.vm.product');
   static const bool isDevelopment = !isProduction;
@@ -41,6 +57,32 @@ class AppConfig {
       throw StateError(
         'SUPABASE_ANON_KEY no está configurado.\n'
         'Ejecuta con: flutter run --dart-define-from-file=dart_defines.json',
+      );
+    }
+
+    // RevenueCat keys — warn only (may be empty during early development).
+    if (revenueCatAndroidKey.isEmpty) {
+      debugPrint(
+        '[AppConfig] REVENUECAT_ANDROID_KEY está vacío. '
+        'Las compras in-app no funcionarán en Android.',
+      );
+    }
+    if (revenueCatIosKey.isEmpty) {
+      debugPrint(
+        '[AppConfig] REVENUECAT_IOS_KEY está vacío. '
+        'Las compras in-app no funcionarán en iOS.',
+      );
+    }
+    if (googleWebClientId.isEmpty) {
+      debugPrint(
+        '[AppConfig] GOOGLE_WEB_CLIENT_ID está vacío. '
+        'El inicio de sesión con Google no funcionará.',
+      );
+    }
+    if (claudeApiKey.isEmpty) {
+      debugPrint(
+        '[AppConfig] CLAUDE_API_KEY está vacío. '
+        'Las funciones de voz, imagen y chat IA no funcionarán.',
       );
     }
   }

@@ -1,24 +1,25 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../core/security/secure_storage.dart';
+import '../../core/services/analytics_service.dart';
 import '../auth/presentation/providers/auth_provider.dart';
+import 'data/revenue_cat_adapter.dart';
 import 'subscription_repository.dart';
 import 'subscription_state.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const kProProductId = 'pro_monthly_subscription';
 const _kCacheExpiresAtKey = 'sub_expires_at';
 const _kCacheCheckedAtKey = 'sub_checked_at';
 const _kCacheSourceKey = 'sub_source';
 const _kCacheUserIdKey = 'sub_user_id';
 const _kCacheTrialUsedKey = 'sub_trial_used';
 
-/// Re-check the store/Supabase at most once every 24 hours.
-const _kCacheTtl = Duration(hours: 24);
+/// Re-check the store/Supabase at most once every 4 hours.
+/// Keeping this short limits the window where a tampered cache (e.g. on a
+/// rooted device) could grant offline PRO access beyond the real expiry.
+const _kCacheTtl = Duration(hours: 4);
 
 /// Max failed promo-code attempts before triggering a cooldown.
 const _kMaxPromoAttempts = 3;
@@ -29,63 +30,78 @@ const _kPromoCooldown = Duration(seconds: 30);
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
 class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
-  StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
-
   // ── Promo-code rate-limiting (in-memory, per session) ─────────────────────
+  // SECURITY: This rate limit lives in Dart memory and resets when the app
+  // restarts or the notifier is rebuilt. A determined attacker can bypass it by
+  // force-closing the app. For production hardening, enforce rate limits
+  // server-side (e.g. Supabase Edge Function with a per-user cooldown window).
   int _promoFailedAttempts = 0;
   DateTime? _promoCooldownUntil;
 
   @override
   Future<SubscriptionState> build() async {
     // Rebuild when the logged-in user changes so stale cache is never reused.
-    ref.watch(currentUserProvider);
+    final user = ref.watch(currentUserProvider);
 
-    // Listen to IAP purchase stream for the lifetime of this notifier.
-    _purchaseSub = ref
-        .read(subscriptionRepositoryProvider)
-        .purchaseStream
-        .listen(_handlePurchaseUpdate);
+    // Sync RC user identity so RevenueCat can attribute purchases correctly.
+    if (user != null) {
+      Purchases.logIn(user.id).ignore();
+      AnalyticsService.identify(
+        user.id,
+        isPro: state.valueOrNull?.isPro ?? false,
+      );
+    }
 
-    ref.onDispose(() => _purchaseSub?.cancel());
+    // Listen to RC CustomerInfo updates (background renewals, cancellations).
+    void onRCUpdate(CustomerInfo info) => _handleRCUpdate(info);
+    Purchases.addCustomerInfoUpdateListener(onRCUpdate);
+    ref.onDispose(() {
+      Purchases.removeCustomerInfoUpdateListener(onRCUpdate);
+      if (user == null) Purchases.logOut().ignore();
+    });
 
     return _loadInitialState();
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  /// Initiates the native purchase flow. UI watches [state] for result.
+  /// Initiates the native purchase flow via RevenueCat.
   Future<void> purchase() async {
-    final repo = ref.read(subscriptionRepositoryProvider);
     _setLoading(true);
-
-    final product = await repo.loadProduct(kProProductId);
-    if (product == null) {
-      _setError('Producto no disponible. Inténtalo más tarde.');
-      return;
+    try {
+      final result =
+          await ref.read(subscriptionRepositoryProvider).purchaseProPlan();
+      await _applyRCResult(result, isRestore: false);
+    } on RCPurchaseCancelledException {
+      final current = state.valueOrNull ?? const SubscriptionState();
+      state = AsyncData(current.copyWith(isLoading: false, clearError: true));
+      AnalyticsService.track(AnalyticsService.purchaseCancelled);
+    } on RCPurchaseException catch (e) {
+      _setError(e.message);
+      AnalyticsService.track(AnalyticsService.purchaseError, {
+        'error': e.message,
+      });
     }
-
-    final purchaseParam = PurchaseParam(productDetails: product);
-    await InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
-    // Result arrives via _handlePurchaseUpdate
   }
 
-  /// Restores previous purchases (required for App Store compliance).
+  /// Restores previous purchases via RevenueCat.
   Future<void> restorePurchases() async {
     _setLoading(true);
-    await InAppPurchase.instance.restorePurchases();
-    // Result arrives via _handlePurchaseUpdate
+    try {
+      final result =
+          await ref.read(subscriptionRepositoryProvider).restoreProPlan();
+      await _applyRCResult(result, isRestore: true);
+    } on RCPurchaseException catch (e) {
+      _setError(e.message);
+      AnalyticsService.track(AnalyticsService.purchaseError, {
+        'error': e.message,
+        'flow': 'restore',
+      });
+    }
   }
 
   /// Redeems a promo code with client-side rate limiting.
-  ///
-  /// For 'subscription' promos: grants PRO access directly.
-  /// For 'discount' promos: stores the discount percentage — the user must
-  /// then complete a store purchase to activate PRO (bonus days are added
-  /// automatically when the purchase completes).
-  ///
-  /// Throws [PromoCodeException] on failure so callers can display the message.
   Future<void> redeemPromoCode(String code) async {
-    // ── Rate limiting ────────────────────────────────────────────────────────
     if (_promoCooldownUntil != null &&
         DateTime.now().isBefore(_promoCooldownUntil!)) {
       final remaining =
@@ -99,12 +115,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     try {
       final result = await repo.redeemPromoCode(code);
 
-      // Reset counter on success
       _promoFailedAttempts = 0;
       _promoCooldownUntil = null;
 
       if (result.isSubscription) {
-        // ── Direct subscription: grant PRO immediately ────────────────────
         final now = DateTime.now();
         final current = state.valueOrNull;
         final base = (current?.isPro == true) ? current!.expiresAt! : now;
@@ -117,14 +131,24 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
         state = AsyncData(
           SubscriptionState(expiresAt: expiresAt, source: 'promo_code'),
         );
+
+        AnalyticsService.track(AnalyticsService.promoCodeRedeemed, {
+          'type': 'subscription',
+          'duration_days': result.durationDays,
+        });
       } else {
-        // ── Discount: store pending discount, user must purchase via store ─
         final current = state.valueOrNull ?? const SubscriptionState();
         state = AsyncData(
           current.copyWith(
             pendingDiscountPercentage: result.discountPercentage,
           ),
         );
+
+        AnalyticsService.track(AnalyticsService.promoCodeRedeemed, <String, Object>{
+          'type': 'discount',
+          if (result.discountPercentage != null)
+            'discount_percentage': result.discountPercentage!,
+        });
       }
     } on PromoCodeException {
       _promoFailedAttempts++;
@@ -154,12 +178,16 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
           trialUsed: true,
         ),
       );
+
+      AnalyticsService.track(AnalyticsService.freeTrialStarted, {
+        'expires_at': expiresAt.toIso8601String(),
+      });
     } catch (e) {
       _setError('Error al activar la prueba gratuita');
     }
   }
 
-  /// Forces a re-check against Supabase, ignoring the 24 h cache.
+  /// Forces a re-check against Supabase + RevenueCat, ignoring the 24 h cache.
   Future<void> forceRefresh() async {
     _setLoading(true);
     final fresh = await _fetchRemote();
@@ -171,7 +199,6 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   Future<SubscriptionState> _loadInitialState() async {
     final storage = SecureStorageService.instance;
 
-    // If the user changed (e.g. switched accounts), discard the old cache.
     final cachedUserId = await storage.read(_kCacheUserIdKey);
     final currentUserId = ref.read(currentUserProvider)?.id;
     if (cachedUserId != currentUserId) {
@@ -184,7 +211,6 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     final cachedSource = await storage.read(_kCacheSourceKey);
     final cachedTrialUsed = await storage.read(_kCacheTrialUsedKey);
 
-    // Build the fast cached state (may be null / expired).
     SubscriptionState fast = const SubscriptionState();
     if (cachedExpiry != null) {
       fast = SubscriptionState(
@@ -196,23 +222,14 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       fast = const SubscriptionState(trialUsed: true);
     }
 
-    // Determine whether the cache is stale (> 24 h old).
     bool cacheStale = true;
     if (cachedCheckedAt != null) {
       final checkedAt = DateTime.parse(cachedCheckedAt);
       cacheStale = DateTime.now().difference(checkedAt) > _kCacheTtl;
     }
 
-    // Only refresh when the cache is stale (>24 h). For non-PRO users with a
-    // fresh cache we already know the status — no need to hit Supabase on
-    // every startup. If the user purchases PRO, the purchase flow updates
-    // state directly; to restore on a different device they use the restore
-    // button.
-    final shouldRefresh = cacheStale;
+    if (!cacheStale) return fast;
 
-    if (!shouldRefresh) return fast;
-
-    // Return cached state immediately for fast startup, then update.
     _refreshInBackground();
     return fast;
   }
@@ -228,23 +245,123 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     });
   }
 
+  /// Checks Supabase (covers promo/trial) and RC (covers store subscriptions).
+  /// If RC shows a later active entitlement it is synced back to Supabase.
   Future<SubscriptionState> _fetchRemote() async {
     final repo = ref.read(subscriptionRepositoryProvider);
     final remote = await repo.fetchRemoteSubscription();
     final trialUsed = await repo.checkTrialUsed();
+
+    DateTime? expiresAt = remote.expiresAt;
+    String? source = remote.source;
+
+    // Reconcile with RC: if RC has an active entitlement with a later expiry,
+    // sync it to Supabase so all sources stay consistent.
+    final rcStatus = await repo.getCurrentRCStatus();
+    if (rcStatus != null && rcStatus.isPro && rcStatus.expiresAt != null) {
+      final rcExpiry = rcStatus.expiresAt!;
+      if (expiresAt == null || rcExpiry.isAfter(expiresAt)) {
+        expiresAt = rcExpiry;
+        source = rcStatus.source;
+        await repo.upsertSubscription(
+          expiresAt: expiresAt,
+          source: source,
+          storeTxId: rcStatus.storeTxId,
+        );
+      }
+    }
+
     await _persistCache(
-      expiresAt: remote.expiresAt,
-      source: remote.source,
-      trialUsed: trialUsed,
-    );
+        expiresAt: expiresAt, source: source, trialUsed: trialUsed);
     return SubscriptionState(
-      expiresAt: remote.expiresAt,
-      source: remote.source,
-      trialUsed: trialUsed,
+        expiresAt: expiresAt, source: source, trialUsed: trialUsed);
+  }
+
+  /// Handles a RevenueCat CustomerInfo update pushed by the SDK
+  /// (e.g. subscription renewed or cancelled by the store).
+  Future<void> _handleRCUpdate(CustomerInfo info) async {
+    final result = RevenueCatAdapter.fromCustomerInfo(info);
+    // not PRO or no expiry — let the next cache-TTL check handle the expiry
+    if (!result.isPro || result.expiresAt == null) return;
+
+    final expiresAt = result.expiresAt!;
+    final source = result.source;
+
+    final repo = ref.read(subscriptionRepositoryProvider);
+    await repo.upsertSubscription(expiresAt: expiresAt, source: source);
+    await _persistCache(expiresAt: expiresAt, source: source);
+
+    state = AsyncData(
+      SubscriptionState(
+        expiresAt: expiresAt,
+        source: source,
+        trialUsed: state.valueOrNull?.trialUsed ?? false,
+      ),
     );
   }
 
-  Future<void> _persistCache({DateTime? expiresAt, String? source, bool? trialUsed}) async {
+  /// Applies a successful purchase/restore result: upserts Supabase, updates
+  /// cache and state, and fires the appropriate PostHog event.
+  Future<void> _applyRCResult(
+    RCPurchaseResult result, {
+    required bool isRestore,
+  }) async {
+    if (!result.isPro) {
+      // Restore found nothing — show a neutral state.
+      final current = state.valueOrNull ?? const SubscriptionState();
+      state = AsyncData(current.copyWith(isLoading: false, clearError: true));
+      return;
+    }
+
+    // Apply bonus days from a pending discount promo code, if any.
+    final current = state.valueOrNull ?? const SubscriptionState();
+    final bonusDays = current.discountBonusDays;
+    final expiresAt = result.expiresAt ??
+        DateTime.now().add(Duration(days: kSubscriptionDays + bonusDays));
+
+    final repo = ref.read(subscriptionRepositoryProvider);
+    await repo.upsertSubscription(
+      expiresAt: expiresAt,
+      source: result.source,
+      storeTxId: result.storeTxId,
+    );
+    await _persistCache(expiresAt: expiresAt, source: result.source);
+
+    state = AsyncData(
+      SubscriptionState(
+        expiresAt: expiresAt,
+        source: result.source,
+        trialUsed: current.trialUsed,
+      ),
+    );
+
+    final eventName = isRestore
+        ? AnalyticsService.subscriptionRestored
+        : AnalyticsService.subscriptionStarted;
+    AnalyticsService.track(eventName, {
+      'source': result.source,
+      'expires_at': expiresAt.toIso8601String(),
+    });
+
+    // Update PostHog person property.
+    final userId = ref.read(currentUserProvider)?.id;
+    if (userId != null) {
+      AnalyticsService.identify(userId, isPro: true);
+    }
+  }
+
+  // SECURITY: The subscription cache (including expiresAt) is stored in
+  // flutter_secure_storage (Android EncryptedSharedPreferences / iOS Keychain).
+  // On a rooted/jailbroken device the stored values could be tampered with to
+  // extend a subscription locally. This is mitigated by the 24-hour TTL that
+  // forces a server re-check, but a user in airplane mode could exploit the
+  // stale cache. Consider adding a server-signed expiry token if this becomes
+  // a significant abuse vector.
+  Future<void> _persistCache({
+    DateTime? expiresAt,
+    String? source,
+    bool? trialUsed,
+  }) async {
     final storage = SecureStorageService.instance;
     if (expiresAt != null) {
       await storage.write(
@@ -285,60 +402,8 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
   void _setError(String message) {
     final current = state.valueOrNull ?? const SubscriptionState();
-    state = AsyncData(
-        current.copyWith(isLoading: false, purchaseError: message));
-  }
-
-  Future<void> _handlePurchaseUpdate(List<PurchaseDetails> purchases) async {
-    for (final purchase in purchases) {
-      if (purchase.productID != kProProductId) continue;
-
-      switch (purchase.status) {
-        case PurchaseStatus.pending:
-          _setLoading(true);
-
-        case PurchaseStatus.purchased:
-        case PurchaseStatus.restored:
-          if (purchase.pendingCompletePurchase) {
-            await InAppPurchase.instance.completePurchase(purchase);
-          }
-          // Apply bonus days from pending discount promo code, if any.
-          final current = state.valueOrNull ?? const SubscriptionState();
-          final bonusDays = current.discountBonusDays;
-          final expiresAt = DateTime.now()
-              .add(Duration(days: 31 + bonusDays));
-          final source = _detectSource(purchase);
-          final repo = ref.read(subscriptionRepositoryProvider);
-          await repo.upsertSubscription(
-            expiresAt: expiresAt,
-            source: source,
-            storeTxId: purchase.purchaseID,
-          );
-          await _persistCache(expiresAt: expiresAt, source: source);
-          state = AsyncData(
-            SubscriptionState(expiresAt: expiresAt, source: source),
-          );
-
-        case PurchaseStatus.error:
-          if (purchase.pendingCompletePurchase) {
-            await InAppPurchase.instance.completePurchase(purchase);
-          }
-          _setError(
-            purchase.error?.message ?? 'Error al procesar la compra',
-          );
-
-        case PurchaseStatus.canceled:
-          final current = state.valueOrNull ?? const SubscriptionState();
-          state = AsyncData(
-              current.copyWith(isLoading: false, clearError: true));
-      }
-    }
-  }
-
-  String _detectSource(PurchaseDetails purchase) {
-    return purchase.verificationData.source == 'google_play'
-        ? 'google_play'
-        : 'app_store';
+    state =
+        AsyncData(current.copyWith(isLoading: false, purchaseError: message));
   }
 }
 
@@ -351,7 +416,6 @@ final subscriptionProvider =
 );
 
 /// Derived bool provider for widgets that only need to know "is user PRO?".
-/// Using .select() prevents rebuilds when only isLoading/purchaseError changes.
 final isProProvider = Provider<bool>((ref) {
   return ref.watch(
     subscriptionProvider.select((s) => s.valueOrNull?.isPro ?? false),

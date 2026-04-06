@@ -196,7 +196,7 @@ void main() {
   group('repository stability — no rebuild when isSyncing is unchanged', () {
     /// A [_FakeSyncNotifier] subclass whose state can be updated after build,
     /// simulating the AsyncLoading → AsyncData(idle) transition.
-    ProviderContainer _makeContainerWithLiveSyncNotifier({
+    ProviderContainer makeContainerWithLiveSyncNotifier({
       required bool isPro,
       required UserModel user,
     }) {
@@ -217,7 +217,7 @@ void main() {
     test(
         'transactionsRepositoryProvider returns same instance '
         'when syncProvider state changes but isSyncing stays false', () {
-      final container = _makeContainerWithLiveSyncNotifier(
+      final container = makeContainerWithLiveSyncNotifier(
         isPro: false,
         user: _fakeUser,
       );
@@ -241,7 +241,7 @@ void main() {
     test(
         'recurringTransactionsRepositoryProvider returns same instance '
         'when syncProvider state changes but isSyncing stays false', () {
-      final container = _makeContainerWithLiveSyncNotifier(
+      final container = makeContainerWithLiveSyncNotifier(
         isPro: false,
         user: _fakeUser,
       );
@@ -261,7 +261,7 @@ void main() {
     test(
         'transactionsRepositoryProvider DOES return new instance '
         'when isSyncing changes true → false (sync completes)', () {
-      final container = _makeContainerWithLiveSyncNotifier(
+      final container = makeContainerWithLiveSyncNotifier(
         isPro: false,
         user: _fakeUser,
       );

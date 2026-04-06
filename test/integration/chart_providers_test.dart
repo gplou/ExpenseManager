@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:productivity_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:productivity_app/features/charts/presentation/providers/chart_providers.dart';
+import 'package:productivity_app/features/subscription/subscription_provider.dart';
 import 'package:productivity_app/features/transactions/data/transactions_repository.dart';
 import 'package:productivity_app/features/transactions/domain/transaction_model.dart';
 import 'package:productivity_app/features/transactions/domain/transactions_repository_contract.dart';
@@ -68,6 +70,8 @@ TransactionModel _tx({
 ProviderContainer _makeContainer(_FakeTransactionsRepo repo) {
   return ProviderContainer(
     overrides: [
+      isProProvider.overrideWith((ref) => false),
+      currentUserProvider.overrideWith((ref) => null),
       transactionsRepositoryProvider.overrideWith((ref) => repo),
     ],
   );

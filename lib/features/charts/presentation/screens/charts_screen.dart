@@ -244,6 +244,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
           // ── Chart + Legend ─────────────────────────────────────────────
           Expanded(
             child: asyncDistribution.when(
+              skipLoadingOnReload: true,
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, __) => Center(child: Text(l10n.errorLoading)),
               data: (distribution) {

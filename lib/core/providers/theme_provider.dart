@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _kThemeModeKey = 'theme_mode';
+const kThemeModeKey = 'theme_mode';
 
 class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
   @override
   Future<ThemeMode> build() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_kThemeModeKey);
+    final saved = prefs.getString(kThemeModeKey);
     if (saved == 'dark') return ThemeMode.dark;
     if (saved == 'light') return ThemeMode.light;
     // Primera vez: detectar brillo del sistema
@@ -23,7 +23,7 @@ class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
         : ThemeMode.dark;
     state = AsyncData(next);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kThemeModeKey, next == ThemeMode.dark ? 'dark' : 'light');
+    await prefs.setString(kThemeModeKey, next == ThemeMode.dark ? 'dark' : 'light');
   }
 }
 

@@ -16,7 +16,7 @@ if (keyPropertiesFile.exists()) {
 
 android {
     namespace = "com.gpm.expensemanager_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = maxOf(flutter.compileSdkVersion, 34)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -30,7 +30,7 @@ android {
 
     defaultConfig {
         applicationId = "com.gpm.expensemanager_app"
-        minSdk = flutter.minSdkVersion
+        minSdk = maxOf(flutter.minSdkVersion, 21)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

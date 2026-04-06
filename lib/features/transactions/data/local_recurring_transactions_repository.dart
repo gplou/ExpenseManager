@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/errors/failures.dart';
 import '../../../core/local_db/local_database.dart';
 import '../../../core/utils/date_helpers.dart';
+import '../../../core/utils/transaction_id_generator.dart';
 import '../domain/recurring_transaction_model.dart';
 import '../domain/recurring_transactions_repository_contract.dart';
 import '../domain/transaction_model.dart';
@@ -25,7 +27,8 @@ class LocalRecurringTransactionsRepository
         whereArgs: [userId, today],
       );
       return rows.map(_fromRow).toList();
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalRecurringTransactionsRepository.getDueRecurring error: $e\n$st');
       throw const CacheFailure('Failed to load recurring transactions');
     }
   }
@@ -42,8 +45,7 @@ class LocalRecurringTransactionsRepository
   }) async {
     try {
       final db = await _db;
-      final uid = userId.length >= 8 ? userId.substring(0, 8) : userId;
-      final id = '${DateTime.now().microsecondsSinceEpoch}_$uid';
+      final id = TransactionIdGenerator.generate(userId);
       await db.insert(
         'recurring_transactions',
         {
@@ -61,7 +63,8 @@ class LocalRecurringTransactionsRepository
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
       return id;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalRecurringTransactionsRepository.createRecurring error: $e\n$st');
       throw const CacheFailure('Failed to save recurring transaction');
     }
   }
@@ -78,7 +81,8 @@ class LocalRecurringTransactionsRepository
       );
       if (rows.isEmpty) return null;
       return _fromRow(rows.first);
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalRecurringTransactionsRepository.getById error: $e\n$st');
       throw const CacheFailure('Failed to get recurring transaction');
     }
   }
@@ -110,7 +114,8 @@ class LocalRecurringTransactionsRepository
         where: 'id = ? AND user_id = ?',
         whereArgs: [id, userId],
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalRecurringTransactionsRepository.updateRecurring error: $e\n$st');
       throw const CacheFailure('Failed to update recurring transaction');
     }
   }
@@ -125,7 +130,8 @@ class LocalRecurringTransactionsRepository
         where: 'id = ? AND user_id = ?',
         whereArgs: [id, userId],
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalRecurringTransactionsRepository.updateNextOccurrence error: $e\n$st');
       throw const CacheFailure('Failed to update next occurrence');
     }
   }
@@ -146,7 +152,8 @@ class LocalRecurringTransactionsRepository
         where: 'id = ? AND user_id = ?',
         whereArgs: [id, userId],
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalRecurringTransactionsRepository.deleteRecurring error: $e\n$st');
       throw const CacheFailure('Failed to delete recurring transaction');
     }
   }

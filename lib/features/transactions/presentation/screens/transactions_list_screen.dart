@@ -15,6 +15,7 @@ import '../../domain/transaction_categories.dart';
 import '../../domain/transaction_model.dart';
 import '../providers/custom_categories_provider.dart';
 import '../providers/transactions_provider.dart';
+import '../../../../core/services/analytics_service.dart';
 import '../../../subscription/subscription_provider.dart';
 import 'add_transaction_screen.dart';
 
@@ -34,6 +35,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     setState(() => _exporting = true);
     try {
       await ExportExcelService.exportTransactions(transactions, l10n);
+      AnalyticsService.track(AnalyticsService.exportExcel, {'count': transactions.length});
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -77,6 +79,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 onSelected: (value) {
                   HapticFeedback.selectionClick();
                   setState(() => _selectedCategory = value);
+                  if (value != null) {
+                    AnalyticsService.track(AnalyticsService.categoryFilterApplied, {'category': value});
+                  }
                 },
                 itemBuilder: (_) => [
                   PopupMenuItem<String?>(
@@ -143,6 +148,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         ],
       ),
       body: transactionsAsync.when(
+        skipLoadingOnReload: true,
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.dustyTeal),
         ),
