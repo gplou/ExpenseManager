@@ -2,6 +2,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../core/network/supabase_client.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../data/auth_repository.dart';
 import '../../domain/user_model.dart';
@@ -17,9 +18,24 @@ Stream<UserModel?> authState(AuthStateRef ref) {
 }
 
 /// Usuario actual (sincrónico, puede ser null).
+/// Escucha [authStateProvider] para reconstruirse en cada cambio de auth
+/// (login, logout, token refresh, restauración de sesión).
 @riverpod
 UserModel? currentUser(CurrentUserRef ref) {
-  return ref.watch(authRepositoryProvider).currentUser;
+  return ref.watch(authStateProvider).valueOrNull
+      ?? ref.watch(authRepositoryProvider).currentUser;
+}
+
+/// Devuelve true si el usuario inició sesión con email y contraseña.
+/// Los usuarios de Google/Apple tienen provider distinto a 'email'.
+@riverpod
+bool isEmailPasswordUser(IsEmailPasswordUserRef ref) {
+  // Re-ejecutar cuando cambie el estado de auth
+  ref.watch(authStateProvider);
+  final user = ref.watch(supabaseClientProvider).auth.currentUser;
+  if (user == null) return false;
+  final provider = user.appMetadata['provider'] as String?;
+  return provider == 'email';
 }
 
 // ── Notifier para acciones de Auth ───────────────────────────────────────────

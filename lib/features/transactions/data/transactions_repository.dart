@@ -3,18 +3,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/failures.dart';
 import '../../../core/network/authenticated_repository.dart';
+import '../../../core/network/connectivity_service.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/utils/date_helpers.dart';
+import '../domain/cloud_transaction_sync_contract.dart';
 import '../domain/transaction_model.dart';
 import '../domain/transactions_repository_contract.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 import '../../subscription/subscription_provider.dart';
 import '../presentation/providers/sync_provider.dart';
 import 'local_transactions_repository.dart';
+import 'offline_aware_transactions_repository.dart';
+import 'sync_queue_repository.dart';
 
 class TransactionsRepository
     with AuthenticatedRepository
-    implements TransactionsRepositoryContract {
+    implements TransactionsRepositoryContract, CloudTransactionSyncContract {
   TransactionsRepository(this._client);
   final SupabaseClient _client;
 
@@ -109,6 +113,29 @@ class TransactionsRepository
     }
   }
 
+  /// Upsert con ID explícito — usado por el sync offline para subir
+  /// transacciones creadas localmente con un ID ya asignado.
+  @override
+  Future<void> upsertTransaction(TransactionModel transaction) async {
+    try {
+      final data = {
+        'id': transaction.id,
+        'user_id': userId,
+        'amount': transaction.amount,
+        'type': transaction.type.name,
+        'category': transaction.category,
+        'subcategory': transaction.subcategory,
+        'description': transaction.description,
+        'date': dateToString(transaction.date),
+        'currency': transaction.currency,
+        'recurring_transaction_id': transaction.recurringTransactionId,
+      };
+      await _client.from('transactions').upsert(data, onConflict: 'id');
+    } catch (e) {
+      throw const NetworkFailure('Failed to upsert transaction');
+    }
+  }
+
   @override
   Future<TransactionsSummary> getSummary({
     required DateTime from,
@@ -154,10 +181,22 @@ final transactionsRepositoryProvider =
     syncProvider.select((s) => s.valueOrNull?.isSyncing ?? false),
   );
 
-  // Use Supabase when: PRO, not authenticated, or migration in progress
-  // (keep cloud alive during PRO→free download so the user never sees an empty list)
-  if (isPro || user == null || isSyncing) {
+  // Not authenticated or migration in progress → cloud (Supabase) directly.
+  if (user == null || isSyncing) {
     return TransactionsRepository(ref.watch(supabaseClientProvider));
   }
+
+  // PRO → offline-aware: escribe en local primero y encola si no hay red.
+  if (isPro) {
+    final isOnline = ref.watch(isOnlineProvider);
+    return OfflineAwareTransactionsRepository(
+      cloud: TransactionsRepository(ref.watch(supabaseClientProvider)),
+      local: LocalTransactionsRepository(userId: user.id),
+      queue: SyncQueueRepository(userId: user.id),
+      isOnline: isOnline,
+    );
+  }
+
+  // FREE → SQLite local únicamente.
   return LocalTransactionsRepository(userId: user.id);
 });

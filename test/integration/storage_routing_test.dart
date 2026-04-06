@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:expense_manager/core/network/connectivity_service.dart';
 import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/features/auth/domain/user_model.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/offline_aware_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
@@ -29,19 +31,12 @@ final _fakeUser = UserModel(
 
 /// Fake SyncNotifier that exposes a fixed [SyncState] without running any
 /// migration logic, so routing tests are not affected by async side effects.
-///
-/// Explicitly assigns [state] inside [build] so the value is visible
-/// synchronously to providers that watch [syncProvider] during the same
-/// evaluation pass (Dart async functions run synchronously up to the first
-/// await, so the assignment happens before any watcher reads the state).
 class _FakeSyncNotifier extends SyncNotifier {
   _FakeSyncNotifier(this._state);
   final SyncState _state;
 
   @override
   Future<SyncState> build() async {
-    // Setting state here runs synchronously before the first suspension point,
-    // making the value available to dependent providers in the same read pass.
     state = AsyncData(_state);
     return _state;
   }
@@ -51,9 +46,9 @@ ProviderContainer _makeContainer({
   required bool isPro,
   UserModel? user,
   bool isSyncing = false,
+  bool isOnline = true,
 }) {
   final mockSupabase = MockSupabaseClient();
-  // The client must not throw when used to construct a repository.
   when(() => mockSupabase.auth).thenReturn(MockGoTrueClient());
 
   return ProviderContainer(
@@ -61,9 +56,13 @@ ProviderContainer _makeContainer({
       isProProvider.overrideWith((ref) => isPro),
       currentUserProvider.overrideWith((ref) => user),
       syncProvider.overrideWith(
-          () => _FakeSyncNotifier(SyncState(
-              status: isSyncing ? SyncStatus.syncing : SyncStatus.idle))),
+        () => _FakeSyncNotifier(
+          SyncState(status: isSyncing ? SyncStatus.syncing : SyncStatus.idle),
+        ),
+      ),
       supabaseClientProvider.overrideWith((ref) => mockSupabase),
+      // Override connectivity to avoid EventChannel in unit tests.
+      isOnlineProvider.overrideWith((ref) => isOnline),
     ],
   );
 }
@@ -74,12 +73,12 @@ void main() {
   // ── transactionsRepositoryProvider ────────────────────────────────────────
 
   group('transactionsRepositoryProvider', () {
-    test('returns TransactionsRepository (cloud) when user is PRO', () {
+    test('returns OfflineAwareTransactionsRepository when user is PRO', () {
       final container = _makeContainer(isPro: true, user: _fakeUser);
       addTearDown(container.dispose);
 
       final repo = container.read(transactionsRepositoryProvider);
-      expect(repo, isA<TransactionsRepository>());
+      expect(repo, isA<OfflineAwareTransactionsRepository>());
     });
 
     test('returns LocalTransactionsRepository when user is free and authenticated',
@@ -108,8 +107,7 @@ void main() {
       expect(repo, isA<TransactionsRepository>());
     });
 
-    test('returns cloud repo during sync (isSyncing=true) even if not PRO',
-        () {
+    test('returns cloud repo during sync (isSyncing=true) even if not PRO', () {
       final container =
           _makeContainer(isPro: false, user: _fakeUser, isSyncing: true);
       addTearDown(container.dispose);
@@ -132,6 +130,28 @@ void main() {
       addTearDown(containerDone.dispose);
       expect(containerDone.read(transactionsRepositoryProvider),
           isA<LocalTransactionsRepository>());
+    });
+
+    test('PRO online returns OfflineAwareTransactionsRepository', () {
+      final container =
+          _makeContainer(isPro: true, user: _fakeUser, isOnline: true);
+      addTearDown(container.dispose);
+
+      expect(
+        container.read(transactionsRepositoryProvider),
+        isA<OfflineAwareTransactionsRepository>(),
+      );
+    });
+
+    test('PRO offline also returns OfflineAwareTransactionsRepository', () {
+      final container =
+          _makeContainer(isPro: true, user: _fakeUser, isOnline: false);
+      addTearDown(container.dispose);
+
+      expect(
+        container.read(transactionsRepositoryProvider),
+        isA<OfflineAwareTransactionsRepository>(),
+      );
     });
   });
 
@@ -185,17 +205,8 @@ void main() {
   });
 
   // ── Repository stability (no spurious rebuilds) ────────────────────────────
-  //
-  // Verifies that [transactionsRepositoryProvider] and
-  // [recurringTransactionsRepositoryProvider] return the *same instance* when
-  // syncProvider emits a new state but [isSyncing] does not change.
-  // Before the .select() fix, every AsyncNotifier state transition (e.g.
-  // AsyncLoading → AsyncData) caused the provider to rebuild and create a new
-  // LocalRepository instance, triggering an unnecessary double-fetch.
 
   group('repository stability — no rebuild when isSyncing is unchanged', () {
-    /// A [_FakeSyncNotifier] subclass whose state can be updated after build,
-    /// simulating the AsyncLoading → AsyncData(idle) transition.
     ProviderContainer makeContainerWithLiveSyncNotifier({
       required bool isPro,
       required UserModel user,
@@ -207,9 +218,9 @@ void main() {
         overrides: [
           isProProvider.overrideWith((ref) => isPro),
           currentUserProvider.overrideWith((ref) => user),
-          // Start with isSyncing = false (idle).
           syncProvider.overrideWith(() => _FakeSyncNotifier(const SyncState())),
           supabaseClientProvider.overrideWith((ref) => mockSupabase),
+          isOnlineProvider.overrideWith((ref) => true),
         ],
       );
     }
@@ -225,11 +236,8 @@ void main() {
 
       final repo1 = container.read(transactionsRepositoryProvider);
 
-      // Simulate syncProvider emitting a new-but-equivalent state (e.g. done).
-      // isSyncing is still false — the provider must not rebuild.
-      container
-          .read(syncProvider.notifier)
-          .state = const AsyncData(SyncState(status: SyncStatus.done));
+      container.read(syncProvider.notifier).state =
+          const AsyncData(SyncState(status: SyncStatus.done));
 
       final repo2 = container.read(transactionsRepositoryProvider);
 
@@ -249,9 +257,8 @@ void main() {
 
       final repo1 = container.read(recurringTransactionsRepositoryProvider);
 
-      container
-          .read(syncProvider.notifier)
-          .state = const AsyncData(SyncState(status: SyncStatus.done));
+      container.read(syncProvider.notifier).state =
+          const AsyncData(SyncState(status: SyncStatus.done));
 
       final repo2 = container.read(recurringTransactionsRepositoryProvider);
 
@@ -268,16 +275,14 @@ void main() {
       addTearDown(container.dispose);
 
       // During sync: cloud repo.
-      container
-          .read(syncProvider.notifier)
-          .state = const AsyncData(SyncState(status: SyncStatus.syncing));
+      container.read(syncProvider.notifier).state =
+          const AsyncData(SyncState(status: SyncStatus.syncing));
       final repoSyncing = container.read(transactionsRepositoryProvider);
       expect(repoSyncing, isA<TransactionsRepository>());
 
       // Sync done: local repo.
-      container
-          .read(syncProvider.notifier)
-          .state = const AsyncData(SyncState(status: SyncStatus.done));
+      container.read(syncProvider.notifier).state =
+          const AsyncData(SyncState(status: SyncStatus.done));
       final repoDone = container.read(transactionsRepositoryProvider);
       expect(repoDone, isA<LocalTransactionsRepository>());
     });

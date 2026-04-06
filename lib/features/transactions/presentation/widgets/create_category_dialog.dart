@@ -81,38 +81,42 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Emoji field
               SizedBox(
-                width: 56,
+                width: 100,
                 child: TextField(
                   controller: _emojiController,
                   onChanged: _onEmojiChanged,
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 24),
                   decoration: InputDecoration(
+                    labelText: 'Emoji',
                     hintText: '😀',
                     hintStyle: TextStyle(
                       fontSize: 24,
                       color: context.colors.onSurface.withValues(alpha: 0.3),
                     ),
+                    counterText: '',
                   ),
                 ),
               ),
-              const Gap(12),
+              const Gap(8),
               // Name field
-              Expanded(
-                child: TextField(
-                  controller: _nameController,
-                  textCapitalization: TextCapitalization.sentences,
-                  autofocus: true,
-                  maxLength: 15,
-                  decoration: InputDecoration(labelText: l10n.categoryName),
-                  onChanged: (_) => setState(() {}),
-                  onSubmitted: (_) => _save(),
+              TextField(
+                controller: _nameController,
+                textCapitalization: TextCapitalization.sentences,
+                autofocus: true,
+                maxLength: 15,
+                decoration: InputDecoration(
+                  labelText: l10n.categoryName,
+                  counterText: '',
                 ),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _save(),
               ),
             ],
           ),
