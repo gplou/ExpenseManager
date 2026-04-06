@@ -114,15 +114,6 @@ class RecentTransactionTile extends ConsumerWidget {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   )
-                                else
-                                  Text(
-                                    transaction.date.formattedDate,
-                                    style: const TextStyle(
-                                      fontFamily: 'Sora',
-                                      fontSize: 12,
-                                      color: AppColors.textSubtle,
-                                    ),
-                                  ),
                               ],
                             ),
                           ),
