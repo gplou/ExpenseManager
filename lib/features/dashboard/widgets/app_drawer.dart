@@ -46,13 +46,14 @@ class AppDrawer extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () => _showEditNameSheet(context, ref, user?.name),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.lock_outline),
-                    title: Text(l10n.changePassword),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
-                    onTap: () =>
-                        _confirmChangePassword(context, ref, user?.email),
-                  ),
+                  if (ref.watch(isEmailPasswordUserProvider))
+                    ListTile(
+                      leading: const Icon(Icons.lock_outline),
+                      title: Text(l10n.changePassword),
+                      trailing: const Icon(Icons.chevron_right, size: 18),
+                      onTap: () =>
+                          _confirmChangePassword(context, ref, user?.email),
+                    ),
                   const Gap(8),
 
                   // ── Ajustes de la app ──────────────────────────────────────

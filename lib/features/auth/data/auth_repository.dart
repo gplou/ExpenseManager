@@ -213,7 +213,8 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
   UserModel _mapUser(User user) => UserModel(
         id: user.id,
         email: user.email ?? '',
-        name: user.userMetadata?['name'] as String?,
+        name: user.userMetadata?['name'] as String?
+            ?? user.userMetadata?['full_name'] as String?,
         avatarUrl: user.userMetadata?['avatar_url'] as String?,
         isEmailVerified: user.emailConfirmedAt != null,
         createdAt: DateTime.parse(user.createdAt),

@@ -19,6 +19,8 @@ import 'core/providers/locale_provider.dart' show localeProvider, kLocaleKey, su
 import 'core/providers/theme_provider.dart' show themeModeProvider, kThemeModeKey;
 import 'core/providers/widget_action_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'features/transactions/data/initial_sync_service.dart';
+import 'features/transactions/data/offline_sync_service.dart';
 import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
@@ -159,6 +161,11 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Arranca el servicio de sync offline una vez y lo mantiene vivo.
+    ref.watch(offlineSyncServiceProvider);
+    // Hidrata la BD local desde Supabase en el primer arranque para usuarios PRO.
+    ref.watch(initialSyncServiceProvider);
+
     final router = ref.watch(routerProvider);
     final themeMode =
         ref.watch(themeModeProvider).valueOrNull ?? widget.initialTheme;

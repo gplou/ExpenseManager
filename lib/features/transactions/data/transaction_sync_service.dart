@@ -50,6 +50,22 @@ class TransactionSyncService {
     await localRecurring.clearAllForUser();
   }
 
+  /// PRO (fresh install / new device): download all cloud data into the local
+  /// cache WITHOUT deleting anything from Supabase.
+  ///
+  /// Idempotent — uses [insertAll] which calls [ConflictAlgorithm.replace], so
+  /// re-running after a partial failure is safe and produces no duplicates.
+  Future<void> hydrateLocalFromCloud() async {
+    // Recurring first (FK dependency)
+    final allRecurring = await cloudRecurring.getAllForUser();
+    final allTransactions = await cloudTx.getTransactions(
+      from: DateTime(2000, 1, 1),
+      to: DateTime(2099, 12, 31),
+    );
+    await localRecurring.insertAll(allRecurring);
+    await localTx.insertAll(allTransactions);
+  }
+
   /// PRO → FREE: fetch all Supabase data and save locally, then delete from cloud.
   /// Recurring transactions are migrated first to preserve FK references.
   Future<void> migrateToLocal() async {

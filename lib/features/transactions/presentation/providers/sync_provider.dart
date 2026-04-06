@@ -6,6 +6,7 @@ import '../../../subscription/subscription_provider.dart';
 import '../../data/local_recurring_transactions_repository.dart';
 import '../../data/local_transactions_repository.dart';
 import '../../data/recurring_transactions_repository.dart';
+import '../../data/sync_queue_repository.dart';
 import '../../data/transaction_sync_service.dart';
 import '../../data/transactions_repository.dart';
 import 'transactions_provider.dart';
@@ -83,6 +84,12 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
         if (_cancelled) return;
 
         final supabase = ref.read(supabaseClientProvider);
+
+        // Descarta ops pendientes antes de migrar: los datos del store de
+        // origen son la fuente de verdad y la migración los trasladará
+        // íntegramente, por lo que la cola quedaría obsoleta.
+        await SyncQueueRepository(userId: userId).clearAll();
+
         final service = TransactionSyncService(
           localTx: LocalTransactionsRepository(userId: userId),
           cloudTx: TransactionsRepository(supabase),

@@ -30,8 +30,11 @@ class LocalDatabase {
     final path = p.join(dir.path, 'expense_manager.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, _) => createSchema(db),
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) await _addPendingOperationsTable(db);
+      },
     );
   }
 
@@ -72,6 +75,25 @@ class LocalDatabase {
     ''');
     await db.execute(
       'CREATE INDEX idx_recurring_user ON recurring_transactions(user_id)',
+    );
+    await _addPendingOperationsTable(db);
+  }
+
+  static Future<void> _addPendingOperationsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS pending_operations (
+        id         TEXT    PRIMARY KEY,
+        user_id    TEXT    NOT NULL,
+        op_type    TEXT    NOT NULL,
+        entity_id  TEXT    NOT NULL,
+        payload    TEXT,
+        created_at TEXT    NOT NULL,
+        attempts   INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_pending_user '
+      'ON pending_operations(user_id, created_at)',
     );
   }
 }
