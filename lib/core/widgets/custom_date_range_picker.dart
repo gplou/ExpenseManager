@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:productivity_app/l10n/app_localizations.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 /// Shows a custom date-range picker with:

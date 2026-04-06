@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/core/utils/ai_rate_limiter.dart';
+import 'package:expense_manager/core/utils/ai_rate_limiter.dart';
 
 void main() {
   group('AiRateLimiter', () {

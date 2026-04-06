@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/subscription/subscription_state.dart';
+import 'package:expense_manager/features/subscription/subscription_state.dart';
 
 void main() {
   group('SubscriptionState', () {

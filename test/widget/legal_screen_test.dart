@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/settings/legal_screen.dart';
+import 'package:expense_manager/features/settings/legal_screen.dart';
 
 void main() {
   const testTitle = 'Privacy Policy';

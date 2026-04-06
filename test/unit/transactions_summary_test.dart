@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 
 void main() {
   group('TransactionsSummary', () {

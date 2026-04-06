@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:productivity_app/core/errors/failures.dart';
-import 'package:productivity_app/features/auth/data/auth_repository.dart';
-import 'package:productivity_app/features/auth/domain/auth_repository_contract.dart';
-import 'package:productivity_app/features/auth/domain/user_model.dart';
-import 'package:productivity_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/core/errors/failures.dart';
+import 'package:expense_manager/features/auth/data/auth_repository.dart';
+import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
+import 'package:expense_manager/features/auth/domain/user_model.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 
 // ── Fake repository ───────────────────────────────────────────────────────────
 

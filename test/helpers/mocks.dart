@@ -1,10 +1,10 @@
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:productivity_app/features/chat/data/chat_repository.dart';
-import 'package:productivity_app/features/transactions/domain/transactions_repository_contract.dart';
-import 'package:productivity_app/features/transactions/domain/recurring_transactions_repository_contract.dart';
-import 'package:productivity_app/features/transactions/domain/custom_categories_repository_contract.dart';
-import 'package:productivity_app/features/subscription/domain/subscription_repository_contract.dart';
+import 'package:expense_manager/features/chat/data/chat_repository.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/custom_categories_repository_contract.dart';
+import 'package:expense_manager/features/subscription/domain/subscription_repository_contract.dart';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 

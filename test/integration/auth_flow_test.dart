@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/core/errors/failures.dart';
-import 'package:productivity_app/features/auth/domain/user_model.dart';
-import 'package:productivity_app/features/auth/domain/auth_repository_contract.dart';
+import 'package:expense_manager/core/errors/failures.dart';
+import 'package:expense_manager/features/auth/domain/user_model.dart';
+import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
 
 /// A fake implementation of AuthRepositoryContract for testing the auth flow.
 class FakeAuthRepository implements AuthRepositoryContract, SocialAuthContract {

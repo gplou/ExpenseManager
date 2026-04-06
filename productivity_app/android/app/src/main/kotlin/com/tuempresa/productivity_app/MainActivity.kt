@@ -1,4 +1,4 @@
-package com.tuempresa.productivity_app
+package com.tuempresa.expense_manager
 
 import io.flutter.embedding.android.FlutterActivity
 

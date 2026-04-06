@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/transactions/data/transactions_repository.dart';
-import 'package:productivity_app/features/transactions/data/recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
 
 /// Regression tests for IDOR (Insecure Direct Object Reference) protection.
 ///

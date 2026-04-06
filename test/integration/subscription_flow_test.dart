@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/subscription/subscription_repository.dart';
-import 'package:productivity_app/features/subscription/subscription_state.dart';
+import 'package:expense_manager/features/subscription/subscription_repository.dart';
+import 'package:expense_manager/features/subscription/subscription_state.dart';
 
 /// Integration test for the subscription lifecycle.
 ///

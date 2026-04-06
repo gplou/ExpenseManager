@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/core/utils/image_mime_detector.dart';
+import 'package:expense_manager/core/utils/image_mime_detector.dart';
 
 void main() {
   /// Helper to build a Uint8List of at least 12 bytes from a short prefix.

@@ -13,13 +13,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:productivity_app/core/local_db/local_database.dart';
-import 'package:productivity_app/core/network/supabase_client.dart';
-import 'package:productivity_app/features/auth/domain/user_model.dart';
-import 'package:productivity_app/features/auth/presentation/providers/auth_provider.dart';
-import 'package:productivity_app/features/subscription/subscription_provider.dart';
-import 'package:productivity_app/features/subscription/subscription_state.dart';
-import 'package:productivity_app/features/transactions/presentation/providers/sync_provider.dart';
+import 'package:expense_manager/core/local_db/local_database.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/features/auth/domain/user_model.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_state.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 
 import '../helpers/mocks.dart';
 
