@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/core/config/app_config.dart';
+import 'package:expense_manager/core/config/app_config.dart';
 
 void main() {
   group('AppConfig', () {

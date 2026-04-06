@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:productivity_app/core/providers/widget_action_provider.dart';
+import 'package:expense_manager/core/providers/widget_action_provider.dart';
 
 void main() {
   group('pendingWidgetActionProvider', () {

@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:productivity_app/features/chat/data/chat_repository.dart';
-import 'package:productivity_app/features/chat/presentation/providers/chat_provider.dart';
+import 'package:expense_manager/features/chat/data/chat_repository.dart';
+import 'package:expense_manager/features/chat/presentation/providers/chat_provider.dart';
 
 // ── Mock ──────────────────────────────────────────────────────────────────────
 

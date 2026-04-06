@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:productivity_app/features/subscription/domain/subscription_repository_contract.dart';
-import 'package:productivity_app/features/subscription/subscription_repository.dart';
-import 'package:productivity_app/features/subscription/subscription_state.dart';
+import 'package:expense_manager/features/subscription/domain/subscription_repository_contract.dart';
+import 'package:expense_manager/features/subscription/subscription_repository.dart';
+import 'package:expense_manager/features/subscription/subscription_state.dart';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 

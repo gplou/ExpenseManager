@@ -30,17 +30,14 @@
       "Bash(grep -r \"const.*=.*Duration\\\\|const.*=.*\\\\d\\\\+\" /c/Users/guill/Desktop/ExpenseManager/productivity_app/lib --include=*.dart)",
       "Bash(grep -r \"GOOGLE_AI_KEY\\\\|openai\\\\|claude\\\\|anthropic\" /c/Users/guill/Desktop/ExpenseManager/productivity_app --include=*.dart --include=*.ts --include=*.env*)",
       "Bash(flutter pub:*)",
-<<<<<<< HEAD
       "Bash(find android/app/src/main/kotlin -name MainActivity.kt -exec cat {})",
       "Bash(grep -n \"com.tuempresa\\\\|com.gpm\\\\|package_name\\\\|applicationId\" android/app/src/main/AndroidManifest.xml android/app/src/main/res/xml/*.xml)",
       "Bash(where java:*)",
       "Read(//c/Program Files/**)",
       "Read(//c/Program Files/Android/Android Studio/jbr/**)",
-      "Bash(flutter doctor:*)"
-=======
+      "Bash(flutter doctor:*)",
       "Bash(grep -r \"_SpeedDialFab\\\\|class _SpeedDial\" lib/ --include=*.dart)",
       "Bash(grep -r tutorial lib/l10n/*.arb)"
->>>>>>> a2b8215a3e71fb2b143db52108e0041a62e939fc
     ]
   }
 }

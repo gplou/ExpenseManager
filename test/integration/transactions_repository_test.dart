@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/transactions/domain/transaction_model.dart';
-import 'package:productivity_app/features/transactions/domain/transactions_repository_contract.dart';
-import 'package:productivity_app/core/utils/date_helpers.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/core/utils/date_helpers.dart';
 
 /// Integration tests for TransactionsRepository logic.
 ///

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/providers/currency_provider.dart';
 
 void main() {
   group('currencySymbol', () {

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:productivity_app/core/errors/failures.dart';
-import 'package:productivity_app/core/network/authenticated_repository.dart';
+import 'package:expense_manager/core/errors/failures.dart';
+import 'package:expense_manager/core/network/authenticated_repository.dart';
 
 import '../helpers/mocks.dart';
 

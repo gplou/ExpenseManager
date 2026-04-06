@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/transactions/domain/recurring_transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 
 void main() {
   group('nextRecurrenceDate', () {

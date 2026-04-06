@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/auth/domain/user_model.dart';
+import 'package:expense_manager/features/auth/domain/user_model.dart';
 
 void main() {
   group('UserModel', () {

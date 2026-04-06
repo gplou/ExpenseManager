@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:productivity_app/core/local_db/local_database.dart';
-import 'package:productivity_app/features/transactions/data/local_recurring_transactions_repository.dart';
-import 'package:productivity_app/features/transactions/data/local_transactions_repository.dart';
-import 'package:productivity_app/features/transactions/domain/recurring_transaction_model.dart';
-import 'package:productivity_app/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/core/local_db/local_database.dart';
+import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 

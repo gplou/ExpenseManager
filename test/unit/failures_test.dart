@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/core/errors/failures.dart';
+import 'package:expense_manager/core/errors/failures.dart';
 
 void main() {
   group('AppFailure', () {

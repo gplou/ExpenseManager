@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:productivity_app/features/tutorial/tutorial_notifier.dart';
-import 'package:productivity_app/features/tutorial/tutorial_step.dart';
+import 'package:expense_manager/features/tutorial/tutorial_notifier.dart';
+import 'package:expense_manager/features/tutorial/tutorial_step.dart';
 
 void main() {
   setUp(() {

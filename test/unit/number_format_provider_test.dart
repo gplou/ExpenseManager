@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:productivity_app/core/providers/number_format_provider.dart';
+import 'package:expense_manager/core/providers/number_format_provider.dart';
 
 void main() {
   setUp(() {

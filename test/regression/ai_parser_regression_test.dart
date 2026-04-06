@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/transactions/data/ai_response_parser.dart';
+import 'package:expense_manager/features/transactions/data/ai_response_parser.dart';
 
 /// Regression tests for AI response parsing.
 ///

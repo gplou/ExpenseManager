@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/core/widgets/ad_banner_footer.dart';
+import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 
 void main() {
   group('AdBannerFooter', () {

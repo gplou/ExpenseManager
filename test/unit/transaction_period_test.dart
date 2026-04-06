@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:productivity_app/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 
 void main() {
   group('TransactionPeriod', () {

@@ -7,15 +7,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:productivity_app/core/network/supabase_client.dart';
-import 'package:productivity_app/features/auth/domain/user_model.dart';
-import 'package:productivity_app/features/auth/presentation/providers/auth_provider.dart';
-import 'package:productivity_app/features/subscription/subscription_provider.dart';
-import 'package:productivity_app/features/transactions/data/local_recurring_transactions_repository.dart';
-import 'package:productivity_app/features/transactions/data/local_transactions_repository.dart';
-import 'package:productivity_app/features/transactions/data/recurring_transactions_repository.dart';
-import 'package:productivity_app/features/transactions/data/transactions_repository.dart';
-import 'package:productivity_app/features/transactions/presentation/providers/sync_provider.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/features/auth/domain/user_model.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 
 import '../helpers/mocks.dart';
 
