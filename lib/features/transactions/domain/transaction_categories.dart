@@ -108,6 +108,7 @@ class TransactionCategories {
     'Educación': (l) => l.categoryEducation,
     'Ropa': (l) => l.categoryClothing,
     'Tecnología': (l) => l.categoryTechnology,
+    'Otros': (l) => l.categoryOther,
   };
 
   /// Returns the localized display name for a DB category key.
