@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/errors/failures.dart';
 import '../../../core/local_db/local_database.dart';
 import '../../../core/utils/date_helpers.dart';
+import '../../../core/utils/transaction_id_generator.dart';
 import '../domain/transaction_model.dart';
 import '../domain/transactions_repository_contract.dart';
 
@@ -26,7 +28,8 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
         orderBy: 'date DESC, created_at DESC',
       );
       return rows.map(_fromRow).toList();
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalTransactionsRepository.getTransactions error: $e\n$st');
       throw const CacheFailure('Failed to load transactions from local DB');
     }
   }
@@ -55,7 +58,7 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
       final db = await _db;
       final id = transaction.id.isNotEmpty
           ? transaction.id
-          : '${DateTime.now().microsecondsSinceEpoch}_${userId.length >= 8 ? userId.substring(0, 8) : userId}';
+          : TransactionIdGenerator.generate(userId);
       final model = transaction.copyWith(
         id: id,
         userId: userId,
@@ -67,7 +70,8 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
       return model;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalTransactionsRepository.createTransaction error: $e\n$st');
       throw const CacheFailure('Failed to save transaction');
     }
   }
@@ -83,7 +87,8 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
         whereArgs: [transaction.id, userId],
       );
       return transaction;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalTransactionsRepository.updateTransaction error: $e\n$st');
       throw const CacheFailure('Failed to update transaction');
     }
   }
@@ -97,7 +102,8 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
         where: 'id = ? AND user_id = ?',
         whereArgs: [id, userId],
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalTransactionsRepository.deleteTransaction error: $e\n$st');
       throw const CacheFailure('Failed to delete transaction');
     }
   }

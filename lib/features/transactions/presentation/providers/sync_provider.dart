@@ -24,8 +24,15 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
   bool? _previousIsPro;
   String? _previousUserId;
 
+  /// Set to true in ref.onDispose so any in-flight migration aborts cleanly
+  /// instead of writing to a stale notifier after logout or account switch.
+  bool _cancelled = false;
+
   @override
   Future<SyncState> build() async {
+    _cancelled = false;
+    ref.onDispose(() => _cancelled = true);
+
     final isPro = ref.watch(isProProvider);
     final user = ref.watch(currentUserProvider);
     // Watch the raw subscription state to know if it has actually loaded.
@@ -73,6 +80,8 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
   void _runMigration({required bool wasPro, required String userId}) {
     Future(() async {
       try {
+        if (_cancelled) return;
+
         final supabase = ref.read(supabaseClientProvider);
         final service = TransactionSyncService(
           localTx: LocalTransactionsRepository(userId: userId),
@@ -89,10 +98,13 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
           await service.migrateToCloud();
         }
 
+        if (_cancelled) return;
+
         // Force UI to re-fetch from the now-correct store
         ref.invalidate(allTransactionsProvider);
         state = const AsyncData(SyncState(status: SyncStatus.done));
       } catch (e) {
+        if (_cancelled) return;
         state = AsyncData(SyncState(status: SyncStatus.error, error: e.toString()));
       }
     });

@@ -548,7 +548,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
     } catch (_) {
       setState(() {
         _loading = false;
-        _error = 'Error inesperado. Inténtalo de nuevo.';
+        _error = AppLocalizations.of(context).proPromoUnexpectedError;
       });
     }
   }

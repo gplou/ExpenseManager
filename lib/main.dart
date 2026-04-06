@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
+import 'core/constants/app_constants.dart';
 import 'core/services/analytics_service.dart';
 import 'core/config/router.dart';
 import 'core/local_db/local_database.dart';
@@ -111,15 +112,14 @@ Future<void> _initPostHog() async {
   await Posthog().setup(posthogConfig);
 }
 
-/// Extrae la acción ('voice' | 'add') de una URI de widget.
-/// URI esperada: expensemanager://widget/voice  o  expensemanager://widget/add
+/// Extrae la acción del widget de la URI de lanzamiento.
+/// URI esperada: expensemanager://widget/<action>
 String? _extractWidgetAction(Uri? uri) {
   if (uri == null) return null;
   final segments = uri.pathSegments;
   if (segments.isEmpty) return null;
   final action = segments.first;
-  if (action == 'voice' || action == 'add' || action == 'chat' || action == 'photo') return action;
-  return null;
+  return WidgetActions.all.contains(action) ? action : null;
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -144,11 +144,16 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _removeSplash() async {
-    // Esperar a que tema y locale carguen antes de quitar el splash
+    // Wait for theme and locale to load before removing the splash.
+    // The 3-second timeout ensures the splash is always removed even if a
+    // provider fails or hangs (e.g. SharedPreferences unavailable).
     await Future.wait([
       ref.read(themeModeProvider.future),
       ref.read(localeProvider.future),
-    ]);
+    ]).timeout(
+      const Duration(seconds: 3),
+      onTimeout: () => [ThemeMode.light, const Locale('en')],
+    );
     FlutterNativeSplash.remove();
   }
 

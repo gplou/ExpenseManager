@@ -4,6 +4,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/security/secure_storage.dart';
 import '../../core/services/analytics_service.dart';
 import '../auth/presentation/providers/auth_provider.dart';
+import 'data/revenue_cat_adapter.dart';
 import 'subscription_repository.dart';
 import 'subscription_state.dart';
 
@@ -15,8 +16,10 @@ const _kCacheSourceKey = 'sub_source';
 const _kCacheUserIdKey = 'sub_user_id';
 const _kCacheTrialUsedKey = 'sub_trial_used';
 
-/// Re-check the store/Supabase at most once every 24 hours.
-const _kCacheTtl = Duration(hours: 24);
+/// Re-check the store/Supabase at most once every 4 hours.
+/// Keeping this short limits the window where a tampered cache (e.g. on a
+/// rooted device) could grant offline PRO access beyond the real expiry.
+const _kCacheTtl = Duration(hours: 4);
 
 /// Max failed promo-code attempts before triggering a cooldown.
 const _kMaxPromoAttempts = 3;
@@ -277,21 +280,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// Handles a RevenueCat CustomerInfo update pushed by the SDK
   /// (e.g. subscription renewed or cancelled by the store).
   Future<void> _handleRCUpdate(CustomerInfo info) async {
-    final entitlement = info.entitlements.active[kRCEntitlementId];
-    if (entitlement == null) return; // not PRO — let the next 24 h check handle expiry
+    final result = RevenueCatAdapter.fromCustomerInfo(info);
+    // not PRO or no expiry — let the next cache-TTL check handle the expiry
+    if (!result.isPro || result.expiresAt == null) return;
 
-    final source = switch (entitlement.store) {
-      Store.appStore || Store.macAppStore => 'app_store',
-      Store.playStore => 'play_store',
-      Store.amazon => 'amazon',
-      Store.stripe || Store.rcBilling => 'stripe',
-      Store.promotional => 'promotional',
-      _ => 'unknown',
-    };
-    final expiresAtStr = entitlement.expirationDate;
-    if (expiresAtStr == null) return;
-    final expiresAt = DateTime.tryParse(expiresAtStr)?.toLocal();
-    if (expiresAt == null) return;
+    final expiresAt = result.expiresAt!;
+    final source = result.source;
 
     final repo = ref.read(subscriptionRepositoryProvider);
     await repo.upsertSubscription(expiresAt: expiresAt, source: source);

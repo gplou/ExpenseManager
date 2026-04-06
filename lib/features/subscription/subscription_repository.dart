@@ -3,6 +3,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/network/supabase_client.dart';
+import 'data/revenue_cat_adapter.dart';
 import 'domain/subscription_repository_contract.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
 
     try {
       final customerInfo = await Purchases.purchasePackage(package);
-      return _toResult(customerInfo);
+      return RevenueCatAdapter.fromCustomerInfo(customerInfo);
     } on PurchasesError catch (e) {
       if (e.code == PurchasesErrorCode.purchaseCancelledError) {
         throw const RCPurchaseCancelledException();
@@ -205,7 +206,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
   Future<RCPurchaseResult> restoreProPlan() async {
     try {
       final customerInfo = await Purchases.restorePurchases();
-      return _toResult(customerInfo);
+      return RevenueCatAdapter.fromCustomerInfo(customerInfo);
     } on PurchasesError catch (e) {
       throw RCPurchaseException(e.message);
     }
@@ -215,35 +216,10 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
   Future<RCPurchaseResult?> getCurrentRCStatus() async {
     try {
       final customerInfo = await Purchases.getCustomerInfo();
-      return _toResult(customerInfo);
+      return RevenueCatAdapter.fromCustomerInfo(customerInfo);
     } catch (_) {
       return null;
     }
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
-
-  static RCPurchaseResult _toResult(CustomerInfo info) {
-    final entitlement = info.entitlements.active[kRCEntitlementId];
-    if (entitlement == null) {
-      return const RCPurchaseResult(isPro: false, source: 'unknown');
-    }
-    final source = switch (entitlement.store) {
-      Store.appStore || Store.macAppStore => 'app_store',
-      Store.playStore => 'play_store',
-      Store.amazon => 'amazon',
-      Store.stripe || Store.rcBilling => 'stripe',
-      Store.promotional => 'promotional',
-      _ => 'unknown',
-    };
-    return RCPurchaseResult(
-      isPro: true,
-      source: source,
-      expiresAt: entitlement.expirationDate != null
-          ? DateTime.tryParse(entitlement.expirationDate!)?.toLocal()
-          : null,
-      storeTxId: info.originalAppUserId,
-    );
   }
 }
 
