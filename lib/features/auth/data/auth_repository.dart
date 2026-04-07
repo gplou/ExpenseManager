@@ -194,6 +194,17 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
     }
   }
 
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      await _client.rpc('delete_user_account');
+    } on AuthException catch (e) {
+      throw AuthFailure(_mapAuthError(e.message));
+    } catch (e) {
+      throw const UnexpectedFailure();
+    }
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   String _generateNonce([int length = 32]) {

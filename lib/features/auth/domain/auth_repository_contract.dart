@@ -26,6 +26,9 @@ abstract interface class AuthRepositoryContract {
 
   /// Send password reset email.
   Future<void> sendPasswordReset({required String email});
+
+  /// Delete the current user's account and all associated data.
+  Future<void> deleteAccount();
 }
 
 /// Social authentication operations (platform-dependent).

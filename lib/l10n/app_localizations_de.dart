@@ -803,4 +803,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get termsOfService => 'Nutzungsbedingungen';
+
+  @override
+  String get deleteAccount => 'Konto löschen';
+
+  @override
+  String get deleteAccountTitle => 'Konto wirklich löschen?';
+
+  @override
+  String get deleteAccountContent =>
+      'Diese Aktion ist unwiderruflich. Dein Konto und alle zugehörigen Daten – Transaktionen, Kategorien und Verlauf – werden dauerhaft gelöscht.';
+
+  @override
+  String get deleteAccountError =>
+      'Konto konnte nicht gelöscht werden. Bitte erneut versuchen.';
 }

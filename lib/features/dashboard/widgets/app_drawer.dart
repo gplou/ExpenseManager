@@ -136,11 +136,64 @@ class AppDrawer extends ConsumerWidget {
                 ref.read(authNotifierProvider.notifier).signOut();
               },
             ),
+            // ── Delete account ────────────────────────────────────────────
+            ListTile(
+              leading: Icon(
+                Icons.delete_forever_outlined,
+                color: context.colors.error,
+              ),
+              title: Text(
+                l10n.deleteAccount,
+                style: TextStyle(color: context.colors.error),
+              ),
+              onTap: () => _confirmDeleteAccount(context, ref),
+            ),
             const Gap(8),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteAccountTitle),
+        content: Text(l10n.deleteAccountContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: ctx.colors.error,
+              foregroundColor: ctx.colors.onError,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.deleteAccount),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    Navigator.of(context).pop(); // close the drawer
+
+    final success =
+        await ref.read(authNotifierProvider.notifier).deleteAccount();
+
+    if (!context.mounted) return;
+    if (!success) {
+      context.showSnackbar(l10n.deleteAccountError, isError: true);
+    }
   }
 
   void _showPromoCodeDialog(BuildContext context) {

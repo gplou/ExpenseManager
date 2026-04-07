@@ -62,6 +62,14 @@ class _FakeAuthRepo implements AuthRepositoryContract, SocialAuthContract {
   @override
   Future<void> sendPasswordReset({required String email}) async {}
 
+  bool failDeleteAccount = false;
+
+  @override
+  Future<void> deleteAccount() async {
+    if (failDeleteAccount) throw const UnexpectedFailure();
+    _user = null;
+  }
+
   UserModel _make(String email, {String? name}) => UserModel(
         id: 'test-${DateTime.now().millisecondsSinceEpoch}',
         email: email,

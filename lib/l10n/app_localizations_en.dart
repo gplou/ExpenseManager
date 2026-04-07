@@ -791,4 +791,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsOfService => 'Terms of Service';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountTitle => 'Delete your account?';
+
+  @override
+  String get deleteAccountContent =>
+      'This action is irreversible. Your account and all associated data — transactions, categories and history — will be permanently deleted.';
+
+  @override
+  String get deleteAccountError =>
+      'Could not delete the account. Please try again.';
 }

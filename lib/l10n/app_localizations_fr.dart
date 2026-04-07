@@ -798,4 +798,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get termsOfService => 'Conditions d\'utilisation';
+
+  @override
+  String get deleteAccount => 'Supprimer le compte';
+
+  @override
+  String get deleteAccountTitle => 'Supprimer votre compte ?';
+
+  @override
+  String get deleteAccountContent =>
+      'Cette action est irréversible. Votre compte et toutes les données associées — transactions, catégories et historique — seront définitivement supprimés.';
+
+  @override
+  String get deleteAccountError =>
+      'Impossible de supprimer le compte. Veuillez réessayer.';
 }

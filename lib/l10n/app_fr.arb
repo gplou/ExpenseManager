@@ -351,5 +351,14 @@
   "privacyPolicy": "Politique de confidentialité",
   "@privacyPolicy": {},
   "termsOfService": "Conditions d'utilisation",
-  "@termsOfService": {}
+  "@termsOfService": {},
+
+  "deleteAccount": "Supprimer le compte",
+  "@deleteAccount": {},
+  "deleteAccountTitle": "Supprimer votre compte ?",
+  "@deleteAccountTitle": {},
+  "deleteAccountContent": "Cette action est irréversible. Votre compte et toutes les données associées — transactions, catégories et historique — seront définitivement supprimés.",
+  "@deleteAccountContent": {},
+  "deleteAccountError": "Impossible de supprimer le compte. Veuillez réessayer.",
+  "@deleteAccountError": {}
 }

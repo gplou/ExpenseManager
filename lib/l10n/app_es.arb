@@ -557,5 +557,14 @@
   "privacyPolicy": "Política de privacidad",
   "@privacyPolicy": {},
   "termsOfService": "Términos de servicio",
-  "@termsOfService": {}
+  "@termsOfService": {},
+
+  "deleteAccount": "Eliminar cuenta",
+  "@deleteAccount": {},
+  "deleteAccountTitle": "¿Eliminar tu cuenta?",
+  "@deleteAccountTitle": {},
+  "deleteAccountContent": "Esta acción es irreversible. Se eliminarán permanentemente tu cuenta y todos los datos asociados: transacciones, categorías e historial.",
+  "@deleteAccountContent": {},
+  "deleteAccountError": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
+  "@deleteAccountError": {}
 }

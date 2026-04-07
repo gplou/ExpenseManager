@@ -127,6 +127,20 @@ class AuthNotifier extends _$AuthNotifier {
     state = Idle();
   }
 
+  Future<bool> deleteAccount() async {
+    state = Loading();
+    try {
+      Purchases.logOut().ignore();
+      AnalyticsService.reset();
+      await ref.read(authRepositoryProvider).deleteAccount();
+      state = Idle();
+      return true;
+    } on AppFailure catch (e) {
+      state = Failure(e);
+      return false;
+    }
+  }
+
   void reset() => state = Idle();
 
   void _identifyCurrentUser() {

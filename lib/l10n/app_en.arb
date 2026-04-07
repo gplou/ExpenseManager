@@ -317,5 +317,14 @@
   "privacyPolicy": "Privacy Policy",
   "@privacyPolicy": {},
   "termsOfService": "Terms of Service",
-  "@termsOfService": {}
+  "@termsOfService": {},
+
+  "deleteAccount": "Delete account",
+  "@deleteAccount": {},
+  "deleteAccountTitle": "Delete your account?",
+  "@deleteAccountTitle": {},
+  "deleteAccountContent": "This action is irreversible. Your account and all associated data — transactions, categories and history — will be permanently deleted.",
+  "@deleteAccountContent": {},
+  "deleteAccountError": "Could not delete the account. Please try again.",
+  "@deleteAccountError": {}
 }

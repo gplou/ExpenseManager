@@ -351,5 +351,14 @@
   "privacyPolicy": "Datenschutzrichtlinie",
   "@privacyPolicy": {},
   "termsOfService": "Nutzungsbedingungen",
-  "@termsOfService": {}
+  "@termsOfService": {},
+
+  "deleteAccount": "Konto löschen",
+  "@deleteAccount": {},
+  "deleteAccountTitle": "Konto wirklich löschen?",
+  "@deleteAccountTitle": {},
+  "deleteAccountContent": "Diese Aktion ist unwiderruflich. Dein Konto und alle zugehörigen Daten – Transaktionen, Kategorien und Verlauf – werden dauerhaft gelöscht.",
+  "@deleteAccountContent": {},
+  "deleteAccountError": "Konto konnte nicht gelöscht werden. Bitte erneut versuchen.",
+  "@deleteAccountError": {}
 }
