@@ -804,7 +804,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteAccountContent =>
-      'Esta acción es irreversible. Se eliminarán permanentemente tu cuenta y todos los datos asociados: transacciones, categorías e historial.';
+      'Esta acción es irreversible. Se eliminarán permanentemente tu cuenta y todos los datos asociados: transacciones, categorías e historial.\n\nSi tienes una suscripción PRO activa, también se cancelará.';
 
   @override
   String get deleteAccountError =>

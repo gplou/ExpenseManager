@@ -1581,7 +1581,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountContent.
   ///
   /// In es, this message translates to:
-  /// **'Esta acción es irreversible. Se eliminarán permanentemente tu cuenta y todos los datos asociados: transacciones, categorías e historial.'**
+  /// **'Esta acción es irreversible. Se eliminarán permanentemente tu cuenta y todos los datos asociados: transacciones, categorías e historial.\n\nSi tienes una suscripción PRO activa, también se cancelará.'**
   String get deleteAccountContent;
 
   /// No description provided for @deleteAccountError.

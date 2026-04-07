@@ -812,7 +812,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteAccountContent =>
-      'Diese Aktion ist unwiderruflich. Dein Konto und alle zugehörigen Daten – Transaktionen, Kategorien und Verlauf – werden dauerhaft gelöscht.';
+      'Diese Aktion ist unwiderruflich. Dein Konto und alle zugehörigen Daten – Transaktionen, Kategorien und Verlauf – werden dauerhaft gelöscht.\n\nFalls du ein aktives PRO-Abonnement hast, wird dieses ebenfalls gekündigt.';
 
   @override
   String get deleteAccountError =>
