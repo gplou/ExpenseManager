@@ -357,7 +357,7 @@
   "@deleteAccount": {},
   "deleteAccountTitle": "Supprimer votre compte ?",
   "@deleteAccountTitle": {},
-  "deleteAccountContent": "Cette action est irréversible. Votre compte et toutes les données associées — transactions, catégories et historique — seront définitivement supprimés.",
+  "deleteAccountContent": "Cette action est irréversible. Votre compte et toutes les données associées — transactions, catégories et historique — seront définitivement supprimés.\n\nSi vous avez un abonnement PRO actif, il sera également annulé.",
   "@deleteAccountContent": {},
   "deleteAccountError": "Impossible de supprimer le compte. Veuillez réessayer.",
   "@deleteAccountError": {}

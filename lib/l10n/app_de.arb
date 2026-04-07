@@ -357,7 +357,7 @@
   "@deleteAccount": {},
   "deleteAccountTitle": "Konto wirklich löschen?",
   "@deleteAccountTitle": {},
-  "deleteAccountContent": "Diese Aktion ist unwiderruflich. Dein Konto und alle zugehörigen Daten – Transaktionen, Kategorien und Verlauf – werden dauerhaft gelöscht.",
+  "deleteAccountContent": "Diese Aktion ist unwiderruflich. Dein Konto und alle zugehörigen Daten – Transaktionen, Kategorien und Verlauf – werden dauerhaft gelöscht.\n\nFalls du ein aktives PRO-Abonnement hast, wird dieses ebenfalls gekündigt.",
   "@deleteAccountContent": {},
   "deleteAccountError": "Konto konnte nicht gelöscht werden. Bitte erneut versuchen.",
   "@deleteAccountError": {}
