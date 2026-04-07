@@ -404,9 +404,9 @@ class _TransactionTile extends ConsumerWidget {
     final accentLight = isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
     final emoji = _emojiForCategory(transaction.category, isIncome);
     final customCats = ref.watch(customCategoriesSyncProvider)[transaction.type] ?? const [];
-    IconData? customIcon;
+    TransactionCategory? customCat;
     for (final c in customCats) {
-      if (c.name == transaction.category) { customIcon = c.icon; break; }
+      if (c.name == transaction.category) { customCat = c; break; }
     }
 
     return Padding(
@@ -500,8 +500,10 @@ class _TransactionTile extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
-                                child: customIcon != null
-                                    ? Icon(customIcon, size: 22, color: accentColor)
+                                child: customCat != null
+                                    ? customCat.emojiOverride != null
+                                        ? Text(customCat.emojiOverride!, style: const TextStyle(fontSize: 22))
+                                        : Icon(customCat.icon, size: 22, color: accentColor)
                                     : Text(emoji, style: const TextStyle(fontSize: 22)),
                               ),
                             ),

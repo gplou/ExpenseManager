@@ -25,6 +25,7 @@ import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/features/transactions/data/initial_sync_service.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 import '../helpers/mocks.dart';
 
@@ -72,22 +73,32 @@ ProviderContainer _makeContainer({
   bool isPro = true,
   bool isOnline = true,
   bool isSyncing = false,
-  UserModel? user,
+  bool authenticated = true,
 }) {
   final mockSupabase = MockSupabaseClient();
   final mockAuth = MockGoTrueClient();
   when(() => mockSupabase.auth).thenReturn(mockAuth);
   when(() => mockAuth.currentUser).thenReturn(null);
 
+  final mockTx = MockTransactionsRepository();
+  when(() => mockTx.getTransactions(from: any(named: 'from'), to: any(named: 'to')))
+      .thenAnswer((_) async => <TransactionModel>[]);
+
+  final mockRecurring = MockRecurringTransactionsRepository();
+  when(() => mockRecurring.getAllForUser())
+      .thenAnswer((_) async => []);
+
   return ProviderContainer(
     overrides: [
-      currentUserProvider.overrideWith((ref) => user ?? _fakeUser),
+      currentUserProvider.overrideWith((ref) => authenticated ? _fakeUser : null),
       isProProvider.overrideWith((ref) => isPro),
       isOnlineProvider.overrideWith((ref) => isOnline),
       connectivityProvider.overrideWith((ref) => connectivityStream),
       supabaseClientProvider.overrideWith((ref) => mockSupabase),
       subscriptionProvider.overrideWith(_FakeSubscriptionNotifier.new),
       syncProvider.overrideWith(() => _FakeSyncNotifier(isSyncing)),
+      cloudTxRepoForHydrationProvider.overrideWith((ref) => mockTx),
+      cloudRecurringRepoForHydrationProvider.overrideWith((ref) => mockRecurring),
     ],
   );
 }
@@ -170,7 +181,7 @@ void main() {
     final ctrl = StreamController<bool>.broadcast();
     final container = _makeContainer(
       connectivityStream: ctrl.stream,
-      user: null,
+      authenticated: false,
     );
     addTearDown(container.dispose);
     addTearDown(ctrl.close);

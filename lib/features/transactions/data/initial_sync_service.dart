@@ -6,6 +6,8 @@ import '../../../core/network/connectivity_service.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 import '../../subscription/subscription_provider.dart';
+import '../domain/recurring_transactions_repository_contract.dart';
+import '../domain/transactions_repository_contract.dart';
 import '../presentation/providers/sync_provider.dart';
 import '../presentation/providers/transactions_provider.dart';
 import 'local_recurring_transactions_repository.dart';
@@ -13,6 +15,18 @@ import 'local_transactions_repository.dart';
 import 'recurring_transactions_repository.dart';
 import 'transaction_sync_service.dart';
 import 'transactions_repository.dart';
+
+/// Cloud-only repos used exclusively by [InitialSyncService] for hydration.
+/// Exposed as providers so tests can override them with fakes/mocks.
+final cloudTxRepoForHydrationProvider =
+    Provider<TransactionsRepositoryContract>(
+  (ref) => TransactionsRepository(ref.read(supabaseClientProvider)),
+);
+
+final cloudRecurringRepoForHydrationProvider =
+    Provider<RecurringTransactionsRepositoryContract>(
+  (ref) => RecurringTransactionsRepository(ref.read(supabaseClientProvider)),
+);
 
 /// Provider that starts [InitialSyncService] once and keeps it alive.
 /// Watch it from the root widget alongside [offlineSyncServiceProvider].
@@ -91,12 +105,11 @@ class InitialSyncService {
 
     _running = true;
     try {
-      final supabase = _ref.read(supabaseClientProvider);
       final service = TransactionSyncService(
         localTx: LocalTransactionsRepository(userId: user.id),
-        cloudTx: TransactionsRepository(supabase),
+        cloudTx: _ref.read(cloudTxRepoForHydrationProvider),
         localRecurring: LocalRecurringTransactionsRepository(userId: user.id),
-        cloudRecurring: RecurringTransactionsRepository(supabase),
+        cloudRecurring: _ref.read(cloudRecurringRepoForHydrationProvider),
       );
       await service.hydrateLocalFromCloud();
       await prefs.setBool(key, true);
