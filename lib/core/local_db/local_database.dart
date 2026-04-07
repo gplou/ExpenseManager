@@ -25,6 +25,29 @@ class LocalDatabase {
   @visibleForTesting
   void setTestDb(Database db) => _db = db;
 
+  /// Deletes all local data belonging to [userId] across every table.
+  /// Does NOT touch rows from other users.
+  Future<void> clearUserData(String userId) async {
+    final database = await db;
+    await database.transaction((txn) async {
+      await txn.delete(
+        'transactions',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+      await txn.delete(
+        'recurring_transactions',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+      await txn.delete(
+        'pending_operations',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
+    });
+  }
+
   Future<Database> _open() async {
     final dir = await getApplicationDocumentsDirectory();
     final path = p.join(dir.path, 'expense_manager.db');

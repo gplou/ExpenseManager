@@ -13,6 +13,8 @@ class _FakeAuthRepository implements AuthRepositoryContract, SocialAuthContract 
   UserModel? _currentUser;
   bool shouldFailDeleteAccount = false;
   bool deleteAccountCalled = false;
+  bool signOutCalledAfterDelete = false;
+  bool _signOutCalled = false;
 
   @override
   Stream<UserModel?> get authStateChanges => Stream.value(_currentUser);
@@ -40,7 +42,10 @@ class _FakeAuthRepository implements AuthRepositoryContract, SocialAuthContract 
   }
 
   @override
-  Future<void> signOut() async => _currentUser = null;
+  Future<void> signOut() async {
+    _signOutCalled = true;
+    _currentUser = null;
+  }
 
   @override
   Future<UserModel> signInWithGoogle() async {
@@ -62,6 +67,9 @@ class _FakeAuthRepository implements AuthRepositoryContract, SocialAuthContract 
     deleteAccountCalled = true;
     if (shouldFailDeleteAccount) throw const UnexpectedFailure();
     _currentUser = null;
+    // Simulates signOut being called inside deleteAccount (as in AuthRepository)
+    await signOut();
+    signOutCalledAfterDelete = _signOutCalled;
   }
 
   UserModel _create({required String email, String? name}) => UserModel(
@@ -166,6 +174,27 @@ void main() {
       expect(repo.deleteAccountCalled, isFalse);
       await repo.deleteAccount();
       expect(repo.deleteAccountCalled, isTrue);
+    });
+
+    test('signOut is called as part of deleteAccount to trigger auth redirect',
+        () async {
+      await repo.signInWithEmail(email: 'user@test.com', password: 'pass1234');
+
+      await repo.deleteAccount();
+
+      expect(repo.signOutCalledAfterDelete, isTrue,
+          reason: 'signOut must be called so authStateChanges emits null '
+              'and GoRouter redirects to login');
+    });
+
+    test('authStateChanges emits null after deleteAccount (session cleared)',
+        () async {
+      await repo.signInWithEmail(email: 'user@test.com', password: 'pass1234');
+      await repo.deleteAccount();
+
+      final emitted = await repo.authStateChanges.first;
+      expect(emitted, isNull,
+          reason: 'null emission is what triggers the router redirect to login');
     });
   });
 

@@ -11,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/errors/failures.dart';
+import '../../../core/local_db/local_database.dart';
 import '../../../core/network/supabase_client.dart';
 import '../domain/auth_repository_contract.dart';
 import '../domain/user_model.dart';
@@ -196,8 +197,16 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
 
   @override
   Future<void> deleteAccount() async {
+    final userId = _client.auth.currentUser?.id;
     try {
+      // 1. Borra datos remotos + cuenta en Supabase
       await _client.rpc('delete_user_account');
+      // 2. Borra datos locales del usuario (otros usuarios no se ven afectados)
+      if (userId != null) {
+        await LocalDatabase.instance.clearUserData(userId);
+      }
+      // 3. Limpia la sesión local → dispara authStateChanges → router redirige al login
+      await _client.auth.signOut();
     } on AuthException catch (e) {
       throw AuthFailure(_mapAuthError(e.message));
     } catch (e) {
