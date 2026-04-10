@@ -2,11 +2,12 @@
 <resources>
     <color name="ic_launcher_background">#C8E6C9</color>
 
-    <!-- Widget colors – light mode -->
-    <color name="widget_bg">#F8F7F2</color>
-    <color name="widget_border">#E8E5DF</color>
-    <color name="widget_label">#333333</color>
-    <!-- Circle and icon are the same in both modes -->
-    <color name="widget_circle">#7A9A99</color>
+    <!-- Widget colors -->
+    <color name="widget_bg">#F9F8F4</color>
+    <color name="widget_border">#E4E1DA</color>
+    <color name="widget_label">#4A4A4A</color>
+    <color name="widget_circle_start">#7AADAB</color>
+    <color name="widget_circle_end">#527F7E</color>
+    <color name="widget_circle">#6B9B99</color>
     <color name="widget_icon">#FFFFFF</color>
 </resources>

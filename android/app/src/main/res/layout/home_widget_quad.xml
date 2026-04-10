@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="8dp">
+    android:padding="10dp">
 
     <!-- Fila superior -->
     <LinearLayout
@@ -13,45 +13,85 @@
         android:layout_weight="1"
         android:orientation="horizontal">
 
-        <!-- Arriba izquierda: Añadir transacción manual (edit_outlined) -->
+        <!-- Arriba izquierda: Manual -->
         <LinearLayout
             android:id="@+id/btn_add"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_margin="4dp"
             android:orientation="vertical"
-            android:gravity="center"
-            android:background="@drawable/widget_circle_bg">
+            android:gravity="center">
 
-            <ImageView
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:src="@drawable/ic_widget_add"
-                android:contentDescription="@string/widget_add_desc" />
+            <LinearLayout
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:gravity="center"
+                android:background="@drawable/widget_circle_bg">
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_widget_add"
+                    android:contentDescription="@string/widget_add_desc" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="@string/widget_add_label"
+                android:textColor="@color/widget_label"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                />
 
         </LinearLayout>
 
-        <!-- Arriba derecha: Chat IA (auto_awesome) -->
+        <!-- Arriba derecha: Chat IA -->
         <LinearLayout
             android:id="@+id/btn_chat"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_margin="4dp"
             android:orientation="vertical"
-            android:gravity="center"
-            android:background="@drawable/widget_circle_bg">
+            android:gravity="center">
 
-            <ImageView
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:src="@drawable/ic_widget_chat"
-                android:contentDescription="@string/widget_chat_desc" />
+            <LinearLayout
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:gravity="center"
+                android:background="@drawable/widget_circle_bg">
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_widget_chat"
+                    android:contentDescription="@string/widget_chat_desc" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="@string/widget_chat_label"
+                android:textColor="@color/widget_label"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                />
 
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- Divisor -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:background="@color/widget_border" />
 
     <!-- Fila inferior -->
     <LinearLayout
@@ -60,41 +100,73 @@
         android:layout_weight="1"
         android:orientation="horizontal">
 
-        <!-- Abajo izquierda: Voz (mic_outlined) -->
+        <!-- Abajo izquierda: Voz -->
         <LinearLayout
             android:id="@+id/btn_voice"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_margin="4dp"
             android:orientation="vertical"
-            android:gravity="center"
-            android:background="@drawable/widget_circle_bg">
+            android:gravity="center">
 
-            <ImageView
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:src="@drawable/ic_widget_mic"
-                android:contentDescription="@string/widget_voice_desc" />
+            <LinearLayout
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:gravity="center"
+                android:background="@drawable/widget_circle_bg">
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_widget_mic"
+                    android:contentDescription="@string/widget_voice_desc" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="@string/widget_voice_label"
+                android:textColor="@color/widget_label"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                />
 
         </LinearLayout>
 
-        <!-- Abajo derecha: Foto (camera_alt_outlined) -->
+        <!-- Abajo derecha: Foto -->
         <LinearLayout
             android:id="@+id/btn_camera"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_margin="4dp"
             android:orientation="vertical"
-            android:gravity="center"
-            android:background="@drawable/widget_circle_bg">
+            android:gravity="center">
 
-            <ImageView
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:src="@drawable/ic_widget_camera"
-                android:contentDescription="@string/widget_camera_desc" />
+            <LinearLayout
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:gravity="center"
+                android:background="@drawable/widget_circle_bg">
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:src="@drawable/ic_widget_camera"
+                    android:contentDescription="@string/widget_camera_desc" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="@string/widget_camera_label"
+                android:textColor="@color/widget_label"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                />
 
         </LinearLayout>
 
