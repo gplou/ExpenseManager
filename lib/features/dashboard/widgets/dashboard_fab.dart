@@ -13,6 +13,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/neo_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../subscription/subscription_provider.dart';
+import '../../subscription/subscription_state.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../transactions/data/image_transaction_parser.dart';
@@ -77,7 +78,16 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     return false;
   }
 
-  void _handleWidgetAction(String action) {
+  Future<void> _handleWidgetAction(String action) async {
+    // If the subscription provider is still initialising (AsyncLoading),
+    // wait for it so that isProProvider reflects the real cached/remote value
+    // before we gate on pro status. Without this wait, a cold-start from the
+    // widget always sees isPro == false and redirects to the paywall.
+    if (ref.read(subscriptionProvider).isLoading) {
+      await ref.read(subscriptionProvider.future).catchError((_) => const SubscriptionState());
+    }
+    if (!mounted) return;
+
     if (action == 'voice') {
       if (!_requirePro()) return;
       _startVoice();
