@@ -281,7 +281,6 @@ class _ProHeader extends StatelessWidget {
           decoration: const BoxDecoration(
             color: AppColors.warmAmberLight,
             shape: BoxShape.circle,
-            boxShadow: AppColors.shadowAmber,
           ),
           child: const Icon(
             Icons.star_rounded,

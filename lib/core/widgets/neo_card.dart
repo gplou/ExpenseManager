@@ -33,23 +33,10 @@ class NeoCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(borderRadius),
-          border: isDark
-              ? Border.all(color: cs.outline, width: 1)
-              : null,
-          boxShadow: isDark
-              ? null
-              : [
-                  BoxShadow(
-                    color: const Color(0x0F000000),
-                    blurRadius: 16,
-                    offset: shadowOffset,
-                  ),
-                  const BoxShadow(
-                    color: Color(0x06000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 1),
-                  ),
-                ],
+          border: Border.all(
+            color: isDark ? cs.outline : AppColors.borderLight,
+            width: 1,
+          ),
         ),
         child: child,
       ),

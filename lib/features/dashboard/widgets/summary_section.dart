@@ -30,7 +30,6 @@ class SummarySection extends StatelessWidget {
     final balance = summary.balance;
     final isPositive = balance >= 0;
     final accentColor = isPositive ? AppColors.sageGreen : AppColors.mutedTerra;
-    final accentLight = isPositive ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
     final total = summary.income + summary.expense;
     final incomePercent = total > 0 ? (summary.income / total * 100).round() : 0;
     final expensePercent = total > 0 ? (summary.expense / total * 100).round() : 0;
@@ -42,36 +41,12 @@ class SummarySection extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                  ? [
-                      accentLight.withValues(alpha: 0.18),
-                      AppColors.darkSurface,
-                    ]
-                  : [
-                      accentLight.withValues(alpha: 0.45),
-                      cs.surface,
-                    ],
+            color: isDark ? AppColors.darkSurface : AppColors.pureWhite,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorderColor : AppColors.borderLight,
+              width: 1,
             ),
-            borderRadius: BorderRadius.circular(24),
-            border: isDark
-                ? Border.all(color: cs.outline, width: 1)
-                : null,
-            boxShadow: [
-              BoxShadow(
-                color: accentColor.withValues(alpha: isDark ? 0.08 : 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-              if (!isDark)
-                const BoxShadow(
-                  color: Color(0x08000000),
-                  blurRadius: 4,
-                  offset: Offset(0, 1),
-                ),
-            ],
           ),
           child: Column(
             children: [

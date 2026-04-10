@@ -8,6 +8,7 @@ import 'package:gap/gap.dart';
 
 import '../../../../core/config/router.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -62,6 +63,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _handleForgotPassword() async {
+    final l10n = AppLocalizations.of(context);
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.isValidEmail) {
+      context.showSnackbar(l10n.enterEmail, isError: true);
+      return;
+    }
+    try {
+      await ref.read(supabaseClientProvider).auth.resetPasswordForEmail(email);
+      if (mounted) context.showSnackbar(l10n.checkEmailPassword);
+    } catch (_) {
+      if (mounted) context.showSnackbar(l10n.errorSendingEmail, isError: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -90,23 +106,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Container(
                     width: 80,
                     height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.dustyTeal,
-                          AppColors.dustyTeal.withValues(alpha: 0.7),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.dustyTeal.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
+                    decoration: const BoxDecoration(
+                      color: AppColors.dustyTeal,
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
                     ),
                     child: const Icon(
                       Icons.account_balance_wallet_rounded,
@@ -170,7 +172,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _handleForgotPassword,
                     child: Text(l10n.forgotPassword),
                   ),
                 ),

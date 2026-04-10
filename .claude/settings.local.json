@@ -37,7 +37,16 @@
       "Read(//c/Program Files/Android/Android Studio/jbr/**)",
       "Bash(flutter doctor:*)",
       "Bash(grep -r \"_SpeedDialFab\\\\|class _SpeedDial\" lib/ --include=*.dart)",
-      "Bash(grep -r tutorial lib/l10n/*.arb)"
+      "Bash(grep -r tutorial lib/l10n/*.arb)",
+      "Bash(keytool -list -v -keystore \"C:\\\\Users\\\\guill\\\\upload-keystore.jks\" -alias upload -storepass \"Desmotivaciones1;\")",
+      "Read(//c/Users/guill/AppData/Local/Programs/**)",
+      "Read(//c/Users/guill/AppData/Local/Android/Sdk/build-tools/**)",
+      "Read(//c/Users/guill/AppData/Local/Android/Sdk/**)",
+      "Read(//c/Users/guill/**)",
+      "Bash(python3 \"C:/Users/guill/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"expense manager finance personal productivity minimalist professional\" --design-system -p \"ExpenseManager\")",
+      "Bash(python \"C:/Users/guill/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"expense manager finance personal productivity minimalist professional\" --design-system -p \"ExpenseManager\")",
+      "Bash(python3 skills/ui-ux-pro-max/scripts/search.py \"personal finance expense manager fintech professional mobile\" --design-system -p \"ExpenseManager\")",
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"personal finance expense manager fintech professional mobile\" --design-system -p \"ExpenseManager\")"
     ]
   }
 }

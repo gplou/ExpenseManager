@@ -30,6 +30,8 @@ class RecentTransactionTile extends ConsumerWidget {
       if (c.name == transaction.category) { customCat = c; break; }
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GestureDetector(
@@ -42,114 +44,94 @@ class RecentTransactionTile extends ConsumerWidget {
           decoration: BoxDecoration(
             color: cs.surface,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: AppColors.softShadowSm,
+            border: Border.all(
+              color: isDark ? AppColors.darkBorderColor : AppColors.borderLight,
+              width: 1,
+            ),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: IntrinsicHeight(
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    decoration: BoxDecoration(
-                      color: accentColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
+          padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: accentLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: customCat != null
+                      ? customCat.emojiOverride != null
+                          ? Text(customCat.emojiOverride!, style: const TextStyle(fontSize: 22))
+                          : Icon(customCat.icon, size: 22, color: accentColor)
+                      : Text(emoji, style: const TextStyle(fontSize: 22)),
+                ),
+              ),
+              const Gap(12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      TransactionCategories.localizedName(transaction.category, l10n),
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface,
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 14, 16, 14),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: accentLight,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: customCat != null
-                                  ? customCat.emojiOverride != null
-                                      ? Text(customCat.emojiOverride!, style: const TextStyle(fontSize: 22))
-                                      : Icon(customCat.icon, size: 22, color: accentColor)
-                                  : Text(emoji, style: const TextStyle(fontSize: 22)),
-                            ),
-                          ),
-                          const Gap(12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  TransactionCategories.localizedName(transaction.category, l10n),
-                                  style: TextStyle(
-                                    fontFamily: 'Sora',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.onSurface,
-                                  ),
-                                ),
-                                if (transaction.subcategory != null)
-                                  Text(
-                                    transaction.subcategory!,
-                                    style: const TextStyle(
-                                      fontFamily: 'Sora',
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  )
-                                else if (transaction.description != null)
-                                  Text(
-                                    transaction.description!,
-                                    style: const TextStyle(
-                                      fontFamily: 'Sora',
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  )
-                              ],
-                            ),
-                          ),
-                          const Gap(8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')}${formatAmount(transaction.amount, ref.watch(numberFormatProvider).valueOrNull ?? NumberFormatStyle.dotDecimal)}',
-                                style: TextStyle(
-                                  fontFamily: 'Sora',
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: accentColor,
-                                ),
-                              ),
-                              Text(
-                                transaction.date.relativeDateL10n(AppLocalizations.of(context)),
-                                style: const TextStyle(
-                                  fontFamily: 'Sora',
-                                  fontSize: 11,
-                                  color: AppColors.textSubtle,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                    if (transaction.subcategory != null)
+                      Text(
+                        transaction.subcategory!,
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    else if (transaction.description != null)
+                      Text(
+                        transaction.description!,
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                  ],
+                ),
+              ),
+              const Gap(8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')}${formatAmount(transaction.amount, ref.watch(numberFormatProvider).valueOrNull ?? NumberFormatStyle.dotDecimal)}',
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: accentColor,
+                    ),
+                  ),
+                  Text(
+                    transaction.date.relativeDateL10n(AppLocalizations.of(context)),
+                    style: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 11,
+                      color: AppColors.textSubtle,
                     ),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ),
       ),

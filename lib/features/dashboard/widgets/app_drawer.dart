@@ -298,18 +298,12 @@ class _DrawerHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  AppColors.darkSurfaceHigh,
-                  AppColors.darkSurface,
-                ]
-              : [
-                  AppColors.dustyTealLight.withValues(alpha: 0.4),
-                  AppColors.pureWhite,
-                ],
+        color: isDark ? AppColors.darkSurface : AppColors.pureWhite,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? AppColors.darkBorderColor : AppColors.borderLight,
+            width: 1,
+          ),
         ),
       ),
       child: Row(
@@ -318,22 +312,8 @@ class _DrawerHeader extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.dustyTeal,
-                  AppColors.dustyTeal.withValues(alpha: 0.75),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.dustyTeal.withValues(alpha: 0.25),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              color: AppColors.dustyTeal,
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
               child: Text(
