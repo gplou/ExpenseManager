@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Expense Manager</string>
-    <string name="widget_voice_label">Añadir por voz</string>
+    <string name="widget_voice_label">Voz</string>
     <string name="widget_voice_desc">Widget para añadir transacciones por voz</string>
     <string name="widget_add_label">Manual</string>
     <string name="widget_add_desc">Widget para añadir una transacción manual</string>
