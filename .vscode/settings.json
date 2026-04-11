@@ -1,5 +1,8 @@
 {
-  "deno.enablePaths": ["supabase/functions"],
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
   "deno.lint": true,
-  "deno.unstable": []
+  "deno.unstable": [],
+  "dart.flutterSdkPath": ".fvm/versions/stable"
 }

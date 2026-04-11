@@ -50,3 +50,6 @@ android/key.properties
 
 # OAuth client secrets (downloaded from Google Cloud Console)
 /android/app/*.json
+
+# FVM Version Cache
+.fvm/
