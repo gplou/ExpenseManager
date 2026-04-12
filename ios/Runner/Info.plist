@@ -95,6 +95,11 @@
 				</array>
 			</dict>
 		</array>
+		<key>GADApplicationIdentifier</key>
+		<string>ca-app-pub-1289756694616623~9234039560</string>
+		<!-- Required for App Tracking Transparency (iOS 14+) -->
+		<key>NSUserTrackingUsageDescription</key>
+		<string>Tu privacidad es importante. Este identificador se usa para mostrarte anuncios relevantes y medir su efectividad.</string>
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
 		<key>UIStatusBarHidden</key>

@@ -4,6 +4,8 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/providers/currency_provider.dart';
+import '../../core/widgets/ad_banner_footer.dart';
+import '../subscription/subscription_provider.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/number_format_provider.dart';
 import '../../core/providers/theme_provider.dart';
@@ -40,6 +42,7 @@ class AppSettingsScreen extends ConsumerWidget {
         : l10n.numberFormatCommaDecimal;
 
     return Scaffold(
+      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
         title: Text(l10n.appSettings),
       ),

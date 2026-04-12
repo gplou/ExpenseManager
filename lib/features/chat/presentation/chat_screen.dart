@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/extensions.dart';
+import '../../../core/widgets/ad_banner_footer.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../subscription/subscription_provider.dart';
 import 'providers/chat_provider.dart';
 import 'widgets/chat_bubble.dart';
 
@@ -65,6 +67,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (messages.isNotEmpty) _scrollToBottom();
 
     return Scaffold(
+      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
         title: Row(
           children: [
