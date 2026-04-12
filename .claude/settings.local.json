@@ -46,7 +46,8 @@
       "Bash(python3 \"C:/Users/guill/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"expense manager finance personal productivity minimalist professional\" --design-system -p \"ExpenseManager\")",
       "Bash(python \"C:/Users/guill/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"expense manager finance personal productivity minimalist professional\" --design-system -p \"ExpenseManager\")",
       "Bash(python3 skills/ui-ux-pro-max/scripts/search.py \"personal finance expense manager fintech professional mobile\" --design-system -p \"ExpenseManager\")",
-      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"personal finance expense manager fintech professional mobile\" --design-system -p \"ExpenseManager\")"
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"personal finance expense manager fintech professional mobile\" --design-system -p \"ExpenseManager\")",
+      "Bash(flutter --version)"
     ]
   }
 }

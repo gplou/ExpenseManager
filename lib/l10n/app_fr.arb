@@ -360,5 +360,18 @@
   "deleteAccountContent": "Cette action est irréversible. Votre compte et toutes les données associées — transactions, catégories et historique — seront définitivement supprimés.\n\nSi vous avez un abonnement PRO actif, il sera également annulé.",
   "@deleteAccountContent": {},
   "deleteAccountError": "Impossible de supprimer le compte. Veuillez réessayer.",
-  "@deleteAccountError": {}
+  "@deleteAccountError": {},
+
+  "fabOpenMenu": "Ouvrir le menu d'actions",
+  "@fabOpenMenu": {},
+  "fabCloseMenu": "Fermer le menu d'actions",
+  "@fabCloseMenu": {},
+  "voiceListening": "Écoute en cours, touchez pour arrêter",
+  "@voiceListening": {},
+  "voiceProcessing": "Traitement audio en cours",
+  "@voiceProcessing": {},
+  "imageProcessing": "Traitement de l'image en cours",
+  "@imageProcessing": {},
+  "loadingTransactions": "Chargement des transactions",
+  "@loadingTransactions": {}
 }

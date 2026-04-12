@@ -812,4 +812,22 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Impossible de supprimer le compte. Veuillez réessayer.';
+
+  @override
+  String get fabOpenMenu => 'Ouvrir le menu d\'actions';
+
+  @override
+  String get fabCloseMenu => 'Fermer le menu d\'actions';
+
+  @override
+  String get voiceListening => 'Écoute en cours, touchez pour arrêter';
+
+  @override
+  String get voiceProcessing => 'Traitement audio en cours';
+
+  @override
+  String get imageProcessing => 'Traitement de l\'image en cours';
+
+  @override
+  String get loadingTransactions => 'Chargement des transactions';
 }

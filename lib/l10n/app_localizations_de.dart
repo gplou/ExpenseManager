@@ -817,4 +817,22 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Konto konnte nicht gelöscht werden. Bitte erneut versuchen.';
+
+  @override
+  String get fabOpenMenu => 'Aktionsmenü öffnen';
+
+  @override
+  String get fabCloseMenu => 'Aktionsmenü schließen';
+
+  @override
+  String get voiceListening => 'Hört zu, antippen zum Stoppen';
+
+  @override
+  String get voiceProcessing => 'Audio wird verarbeitet';
+
+  @override
+  String get imageProcessing => 'Bild wird verarbeitet';
+
+  @override
+  String get loadingTransactions => 'Transaktionen werden geladen';
 }
