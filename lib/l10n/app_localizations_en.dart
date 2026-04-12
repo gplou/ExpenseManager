@@ -805,4 +805,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Could not delete the account. Please try again.';
+
+  @override
+  String get fabOpenMenu => 'Open actions menu';
+
+  @override
+  String get fabCloseMenu => 'Close actions menu';
+
+  @override
+  String get voiceListening => 'Listening, tap to stop';
+
+  @override
+  String get voiceProcessing => 'Processing audio';
+
+  @override
+  String get imageProcessing => 'Processing image';
+
+  @override
+  String get loadingTransactions => 'Loading transactions';
 }

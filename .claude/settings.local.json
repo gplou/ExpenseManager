@@ -49,7 +49,8 @@
       "Bash(python skills/ui-ux-pro-max/scripts/search.py \"personal finance expense manager fintech professional mobile\" --design-system -p \"ExpenseManager\")",
       "Bash(flutter --version)",
       "Read(//Users/guillermo/**)",
-      "Bash(fvm list:*)"
+      "Bash(fvm list:*)",
+      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android)"
     ]
   }
 }

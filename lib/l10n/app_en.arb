@@ -326,5 +326,18 @@
   "deleteAccountContent": "This action is irreversible. Your account and all associated data — transactions, categories and history — will be permanently deleted.\n\nIf you have an active PRO subscription, it will also be cancelled.",
   "@deleteAccountContent": {},
   "deleteAccountError": "Could not delete the account. Please try again.",
-  "@deleteAccountError": {}
+  "@deleteAccountError": {},
+
+  "fabOpenMenu": "Open actions menu",
+  "@fabOpenMenu": {},
+  "fabCloseMenu": "Close actions menu",
+  "@fabCloseMenu": {},
+  "voiceListening": "Listening, tap to stop",
+  "@voiceListening": {},
+  "voiceProcessing": "Processing audio",
+  "@voiceProcessing": {},
+  "imageProcessing": "Processing image",
+  "@imageProcessing": {},
+  "loadingTransactions": "Loading transactions",
+  "@loadingTransactions": {}
 }

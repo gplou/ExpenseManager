@@ -8,6 +8,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/config/router.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/providers/currency_provider.dart';
 import '../../core/providers/number_format_provider.dart';
 import '../../core/providers/widget_action_provider.dart';
@@ -52,7 +53,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       final segments = uri.pathSegments;
       if (segments.isEmpty) return;
       final action = segments.first;
-      if (action == 'voice' || action == 'add' || action == 'chat' || action == 'photo') {
+      if (WidgetActions.all.contains(action)) {
         ref.read(pendingWidgetActionProvider.notifier).state = action;
       }
     });
@@ -241,32 +242,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          l10n.recent.toUpperCase(),
-                          style: TextStyle(
-                            fontFamily: 'Sora',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: cs.onSurface.withValues(alpha: 0.4),
-                            letterSpacing: 1.5,
+                        Semantics(
+                          header: true,
+                          child: Text(
+                            l10n.recent.toUpperCase(),
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: cs.onSurface.withValues(alpha: 0.4),
+                              letterSpacing: 1.5,
+                            ),
                           ),
                         ),
-                        GestureDetector(
-                          key: TutorialKeys.seeAllBtnKey,
-                          onTap: () => context.push(AppRoutes.transactions),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: AppColors.dustyTealLight,
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: Text(
-                              l10n.seeAll,
-                              style: const TextStyle(
-                                fontFamily: 'Sora',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.dustyTeal,
+                        Semantics(
+                          button: true,
+                          label: l10n.seeAll,
+                          child: InkWell(
+                            key: TutorialKeys.seeAllBtnKey,
+                            onTap: () => context.push(AppRoutes.transactions),
+                            borderRadius: BorderRadius.circular(100),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: AppColors.dustyTealLight,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(
+                                l10n.seeAll,
+                                style: const TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.dustyTeal,
+                                ),
                               ),
                             ),
                           ),
@@ -326,11 +335,15 @@ class _RecentTransactionsShimmer extends StatelessWidget {
     final base = cs.onSurface.withValues(alpha: 0.06);
     final highlight = cs.onSurface.withValues(alpha: 0.13);
 
-    return Shimmer.fromColors(
-      baseColor: base,
-      highlightColor: highlight,
-      child: Column(
-        children: List.generate(3, (_) => _ShimmerTile()),
+    return Semantics(
+      label: AppLocalizations.of(context).loadingTransactions,
+      excludeSemantics: true,
+      child: Shimmer.fromColors(
+        baseColor: base,
+        highlightColor: highlight,
+        child: Column(
+          children: List.generate(3, (_) => _ShimmerTile()),
+        ),
       ),
     );
   }
@@ -441,29 +454,34 @@ class _EmptyTransactions extends StatelessWidget {
               ),
             ),
             const Gap(8),
-            GestureDetector(
-              onTap: onAdd,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.dustyTealLight,
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.add, size: 16, color: AppColors.dustyTeal),
-                    const Gap(4),
-                    Text(
-                      l10n.newTransaction,
-                      style: const TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.dustyTeal,
+            Semantics(
+              button: true,
+              label: l10n.newTransaction,
+              child: InkWell(
+                onTap: onAdd,
+                borderRadius: BorderRadius.circular(100),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.dustyTealLight,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add, size: 16, color: AppColors.dustyTeal),
+                      const Gap(4),
+                      Text(
+                        l10n.newTransaction,
+                        style: const TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.dustyTeal,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

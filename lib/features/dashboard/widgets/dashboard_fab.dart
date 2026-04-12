@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../../core/config/router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/widget_action_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/neo_card.dart';
@@ -79,24 +80,22 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
   }
 
   Future<void> _handleWidgetAction(String action) async {
-    // If the subscription provider is still initialising (AsyncLoading),
-    // wait for it so that isProProvider reflects the real cached/remote value
-    // before we gate on pro status. Without this wait, a cold-start from the
-    // widget always sees isPro == false and redirects to the paywall.
+    // Wait for subscription to finish loading before gating on pro status
+    // (cold-start from widget would otherwise always see isPro == false).
     if (ref.read(subscriptionProvider).isLoading) {
       await ref.read(subscriptionProvider.future).catchError((_) => const SubscriptionState());
     }
     if (!mounted) return;
 
-    if (action == 'voice') {
+    if (action == WidgetActions.voice) {
       if (!_requirePro()) return;
       _startVoice();
-    } else if (action == 'add') {
+    } else if (action == WidgetActions.add) {
       context.push(AppRoutes.addTransaction);
-    } else if (action == 'chat') {
+    } else if (action == WidgetActions.chat) {
       if (!_requirePro()) return;
       context.push(AppRoutes.chat);
-    } else if (action == 'photo') {
+    } else if (action == WidgetActions.photo) {
       if (!_requirePro()) return;
       _startCamera();
     }
@@ -318,8 +317,10 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       final bodySize = bodyBox.size;
       final fabX = bodyOrigin.dx + (bodySize.width - _fabSize) / 2;
       final fabY = bodyOrigin.dy + bodySize.height - fabBottom - _fabSize;
-      ref.read(fabRectProvider.notifier).state =
-          Rect.fromLTWH(fabX, fabY, _fabSize, _fabSize);
+      final newRect = Rect.fromLTWH(fabX, fabY, _fabSize, _fabSize);
+      if (ref.read(fabRectProvider) != newRect) {
+        ref.read(fabRectProvider.notifier).state = newRect;
+      }
     });
 
     if (_voiceState != VoiceInputState.idle) {
@@ -339,16 +340,23 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        IgnorePointer(
-          ignoring: !_open,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: _open ? 1.0 : 0.0,
-            child: GestureDetector(
-              onTap: _closeDial,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.35),
+        ExcludeSemantics(
+          excluding: !_open,
+          child: IgnorePointer(
+            ignoring: !_open,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _open ? 1.0 : 0.0,
+              child: Semantics(
+                button: true,
+                label: l10n.fabCloseMenu,
+                child: GestureDetector(
+                  onTap: _closeDial,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.35),
+                  ),
+                ),
               ),
             ),
           ),
@@ -400,13 +408,17 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
                   Positioned(
                     left: (_stackW - _fabSize) / 2,
                     bottom: 0,
-                    child: SizedBox(
-                      key: TutorialKeys.fabKey,
-                      width: _fabSize,
-                      height: _fabSize,
-                      child: NeoFab(
-                        icon: _open ? Icons.close : Icons.add,
-                        onTap: _toggle,
+                    child: Semantics(
+                      button: true,
+                      label: _open ? l10n.fabCloseMenu : l10n.fabOpenMenu,
+                      child: SizedBox(
+                        key: TutorialKeys.fabKey,
+                        width: _fabSize,
+                        height: _fabSize,
+                        child: NeoFab(
+                          icon: _open ? Icons.close : Icons.add,
+                          onTap: _toggle,
+                        ),
                       ),
                     ),
                   ),
@@ -433,16 +445,19 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       curve: Curves.easeOut,
       left:   _left(centre),
       bottom: _bottom(centre),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: _open ? 1.0 : 0.0,
-        child: IgnorePointer(
-          ignoring: !_open,
-          child: _MiniDialButton(
-            key: tutorialKey,
-            icon: icon,
-            label: label,
-            onTap: onTap,
+      child: ExcludeSemantics(
+        excluding: !_open,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: _open ? 1.0 : 0.0,
+          child: IgnorePointer(
+            ignoring: !_open,
+            child: _MiniDialButton(
+              key: tutorialKey,
+              icon: icon,
+              label: label,
+              onTap: onTap,
+            ),
           ),
         ),
       ),
@@ -451,40 +466,53 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
 
   Widget _buildVoiceWidget() {
     const fabSize = _fabSize;
+    final l10n = AppLocalizations.of(context);
     if (_voiceState == VoiceInputState.processing ||
         _voiceState == VoiceInputState.cameraProcessing) {
-      return Container(
-        width: fabSize,
-        height: fabSize,
-        decoration: const BoxDecoration(
-          color: AppColors.dustyTeal,
-          shape: BoxShape.circle,
-        ),
-        child: const Center(
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              color: Colors.white,
+      final label = _voiceState == VoiceInputState.cameraProcessing
+          ? l10n.imageProcessing
+          : l10n.voiceProcessing;
+      return Semantics(
+        label: label,
+        liveRegion: true,
+        excludeSemantics: true,
+        child: Container(
+          width: fabSize,
+          height: fabSize,
+          decoration: const BoxDecoration(
+            color: AppColors.dustyTeal,
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
       );
     }
-    return GestureDetector(
-      onTap: () async {
-        await _speech.stop();
-        if (mounted) setState(() => _voiceState = VoiceInputState.idle);
-      },
-      child: Container(
-        width: fabSize,
-        height: fabSize,
-        decoration: const BoxDecoration(
-          color: Colors.red,
-          shape: BoxShape.circle,
+    return Semantics(
+      button: true,
+      label: l10n.voiceListening,
+      child: GestureDetector(
+        onTap: () async {
+          await _speech.stop();
+          if (mounted) setState(() => _voiceState = VoiceInputState.idle);
+        },
+        child: Container(
+          width: fabSize,
+          height: fabSize,
+          decoration: const BoxDecoration(
+            color: Colors.red,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.stop_rounded, color: Colors.white, size: 28),
         ),
-        child: const Icon(Icons.stop_rounded, color: Colors.white, size: 28),
       ),
     );
   }
@@ -499,52 +527,57 @@ class _MiniDialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: AppColors.dustyTeal,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.dustyTeal.withValues(alpha: 0.35),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(25),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppColors.dustyTeal,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.dustyTeal.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
-          const Gap(4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x20000000),
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
+            const Gap(4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x20000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
                 ),
-              ],
-            ),
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1589,6 +1589,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo eliminar la cuenta. Inténtalo de nuevo.'**
   String get deleteAccountError;
+
+  /// No description provided for @fabOpenMenu.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir menú de acciones'**
+  String get fabOpenMenu;
+
+  /// No description provided for @fabCloseMenu.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar menú de acciones'**
+  String get fabCloseMenu;
+
+  /// No description provided for @voiceListening.
+  ///
+  /// In es, this message translates to:
+  /// **'Escuchando, toca para detener'**
+  String get voiceListening;
+
+  /// No description provided for @voiceProcessing.
+  ///
+  /// In es, this message translates to:
+  /// **'Procesando audio'**
+  String get voiceProcessing;
+
+  /// No description provided for @imageProcessing.
+  ///
+  /// In es, this message translates to:
+  /// **'Procesando imagen'**
+  String get imageProcessing;
+
+  /// No description provided for @loadingTransactions.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando transacciones'**
+  String get loadingTransactions;
 }
 
 class _AppLocalizationsDelegate

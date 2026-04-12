@@ -809,4 +809,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'No se pudo eliminar la cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get fabOpenMenu => 'Abrir menú de acciones';
+
+  @override
+  String get fabCloseMenu => 'Cerrar menú de acciones';
+
+  @override
+  String get voiceListening => 'Escuchando, toca para detener';
+
+  @override
+  String get voiceProcessing => 'Procesando audio';
+
+  @override
+  String get imageProcessing => 'Procesando imagen';
+
+  @override
+  String get loadingTransactions => 'Cargando transacciones';
 }
