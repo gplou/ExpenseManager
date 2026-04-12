@@ -32,6 +32,16 @@ class AppConfig {
   static const String revenueCatIosKey =
       String.fromEnvironment('REVENUECAT_IOS_KEY');
 
+  // AdMob — ad unit IDs (test IDs used by default; replace via dart-define before publishing)
+  static const String admobAndroidBannerUnitId = String.fromEnvironment(
+    'ADMOB_ANDROID_BANNER_UNIT_ID',
+    defaultValue: 'ca-app-pub-3940256099942544/6300978111',
+  );
+  static const String admobIosBannerUnitId = String.fromEnvironment(
+    'ADMOB_IOS_BANNER_UNIT_ID',
+    defaultValue: 'ca-app-pub-3940256099942544/2934735716',
+  );
+
   // PostHog
   static const String postHogApiKey =
       String.fromEnvironment('POSTHOG_API_KEY');

@@ -1,7 +1,11 @@
+import 'dart:io';
+
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -70,6 +74,8 @@ Future<void> main() async {
     anonKey: AppConfig.supabaseAnonKey,
   );
 
+  await _requestTrackingAuthorization();
+  await MobileAds.instance.initialize();
   await _initRevenueCat();
   await _initPostHog();
   final packageInfo = await PackageInfo.fromPlatform();
@@ -89,6 +95,15 @@ Future<void> main() async {
       ),
     ),
   );
+}
+
+Future<void> _requestTrackingAuthorization() async {
+  if (!Platform.isIOS) return;
+  final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+  // Solo pedimos permiso si aún no se ha tomado ninguna decisión
+  if (status == TrackingStatus.notDetermined) {
+    await AppTrackingTransparency.requestTrackingAuthorization();
+  }
 }
 
 Future<void> _initRevenueCat() async {
