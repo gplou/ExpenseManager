@@ -189,9 +189,9 @@ class _InitErrorApp extends StatelessWidget {
               children: [
                 const Icon(Icons.error_outline, size: 48),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   AppConfig.appName,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 if (kDebugMode) ...[
                   const SizedBox(height: 12),
