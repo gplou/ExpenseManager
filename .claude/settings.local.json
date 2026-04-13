@@ -55,7 +55,8 @@
       "Bash(pod install:*)",
       "Bash(open /Users/guillermo/Workspace/ExpenseManager/.claude/worktrees/sharp-moser/ios/Runner.xcworkspace)",
       "Bash(flutter test:*)",
-      "Bash(/Users/guillermo/fvm/versions/stable/bin/flutter test:*)"
+      "Bash(/Users/guillermo/fvm/versions/stable/bin/flutter test:*)",
+      "Bash(dart analyze:*)"
     ]
   }
 }

@@ -70,7 +70,7 @@ class _FakeCloudTxRepo implements TransactionsRepositoryContract {
     final txs = await getTransactions(from: from, to: to);
     double income = 0, expense = 0;
     for (final t in txs) {
-      if (t.type.isIncome) income += t.amount; else expense += t.amount;
+      if (t.type.isIncome) { income += t.amount; } else { expense += t.amount; }
     }
     return TransactionsSummary(income: income, expense: expense);
   }
