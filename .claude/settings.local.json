@@ -50,7 +50,10 @@
       "Bash(flutter --version)",
       "Read(//Users/guillermo/**)",
       "Bash(fvm list:*)",
-      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android)"
+      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android)",
+      "Bash(fvm flutter:*)",
+      "Bash(pod install:*)",
+      "Bash(open /Users/guillermo/Workspace/ExpenseManager/.claude/worktrees/sharp-moser/ios/Runner.xcworkspace)"
     ]
   }
 }
