@@ -53,7 +53,9 @@
       "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android)",
       "Bash(fvm flutter:*)",
       "Bash(pod install:*)",
-      "Bash(open /Users/guillermo/Workspace/ExpenseManager/.claude/worktrees/sharp-moser/ios/Runner.xcworkspace)"
+      "Bash(open /Users/guillermo/Workspace/ExpenseManager/.claude/worktrees/sharp-moser/ios/Runner.xcworkspace)",
+      "Bash(flutter test:*)",
+      "Bash(/Users/guillermo/fvm/versions/stable/bin/flutter test:*)"
     ]
   }
 }

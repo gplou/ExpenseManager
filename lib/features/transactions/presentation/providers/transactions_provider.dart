@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/services/analytics_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../subscription/subscription_provider.dart';
+import '../../data/initial_sync_service.dart';
 import '../../data/local_transactions_repository.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../data/transactions_repository.dart';
@@ -94,15 +96,23 @@ class AllTransactionsNotifier
 
       if (cached.isNotEmpty) {
         // Muestra la caché de forma instantánea y refresca Supabase en fondo.
-        _refreshInBackground(repo, localRepo, range, generation);
+        _refreshInBackground(localRepo, range, generation);
         return cached;
       }
 
-      // Sin caché (primer arranque o rango nuevo): fetch normal de Supabase.
-      final fresh = await repo.getTransactions(from: range.from, to: range.to);
+      // No local cache yet (first launch or new date range): fetch directly
+      // from Supabase. We use the cloud-only repo here because the offline-aware
+      // repo returned by transactionsRepositoryProvider only reads from SQLite.
+      final cloudRepo = ref.read(cloudTxRepoForHydrationProvider);
+      final fresh = await cloudRepo.getTransactions(from: range.from, to: range.to);
 
-      // Guarda en SQLite para que el próximo arranque sea instantáneo.
-      _saveToCache(localRepo, fresh);
+      // Solo guardar en caché si InitialSyncService ya completó su hidratación.
+      // Si no, InitialSyncService escribirá en SQLite cuando termine, evitando
+      // así una carrera de escrituras concurrentes en el primer arranque.
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('pro_hydrated_${user.id}') == true) {
+        _saveToCache(localRepo, fresh);
+      }
       return fresh;
     }
 
@@ -112,17 +122,19 @@ class AllTransactionsNotifier
 
   // Refresca Supabase en segundo plano y actualiza la UI sin spinner.
   void _refreshInBackground(
-    TransactionsRepositoryContract repo,
     LocalTransactionsRepository localRepo,
     ({DateTime from, DateTime to}) range,
     int generation,
   ) {
     // Mantiene el provider vivo mientras dura el refresh de fondo.
     final keepAlive = ref.keepAlive();
+    // Siempre usar el repo cloud para obtener datos frescos de Supabase,
+    // igual que en el path sin caché. El repo offline-aware solo lee SQLite.
+    final cloudRepo = ref.read(cloudTxRepoForHydrationProvider);
 
     Future(() async {
       try {
-        final fresh = await repo.getTransactions(
+        final fresh = await cloudRepo.getTransactions(
           from: range.from,
           to: range.to,
         );

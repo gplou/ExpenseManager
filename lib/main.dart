@@ -31,70 +31,100 @@ Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: binding);
 
-  // Detectar si la app fue lanzada desde un widget de pantalla de inicio
-  HomeWidget.setAppGroupId('group.com.gpm.expensemanager_app');
-  final widgetLaunchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
-  final initialWidgetAction = _extractWidgetAction(widgetLaunchUri);
+  try {
+    debugPrint('[main] 1 - binding ok');
 
-  // Pre-cargar tema y locale para evitar flash al inicio
-  final prefs = await SharedPreferences.getInstance();
-  final savedTheme = prefs.getString(kThemeModeKey);
-  final systemBrightness =
-      WidgetsBinding.instance.platformDispatcher.platformBrightness;
-  final initialTheme = savedTheme == 'dark'
-      ? ThemeMode.dark
-      : savedTheme == 'light'
-          ? ThemeMode.light
-          : systemBrightness == Brightness.dark
-              ? ThemeMode.dark
-              : ThemeMode.light;
-  final savedLocale = prefs.getString(kLocaleKey);
-  final deviceCode =
-      WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-  final supportedCodes = supportedLocales.map((l) => l.code).toSet();
-  final resolvedDevice =
-      supportedCodes.contains(deviceCode) ? deviceCode : 'en';
-  final initialLocale = Locale(savedLocale ?? resolvedDevice);
+    // Detectar si la app fue lanzada desde un widget de pantalla de inicio
+    HomeWidget.setAppGroupId('group.com.gpm.expensemanager_app');
+    final widgetLaunchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+    final initialWidgetAction = _extractWidgetAction(widgetLaunchUri);
 
-  await Future.wait([
-    initializeDateFormatting('es'),
-    initializeDateFormatting('en'),
-    initializeDateFormatting('fr'),
-    initializeDateFormatting('de'),
-  ]);
+    // Pre-cargar tema y locale para evitar flash al inicio
+    final prefs = await SharedPreferences.getInstance();
+    debugPrint('[main] 2 - prefs ok');
+    final savedTheme = prefs.getString(kThemeModeKey);
+    final systemBrightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    final initialTheme = savedTheme == 'dark'
+        ? ThemeMode.dark
+        : savedTheme == 'light'
+            ? ThemeMode.light
+            : systemBrightness == Brightness.dark
+                ? ThemeMode.dark
+                : ThemeMode.light;
+    final savedLocale = prefs.getString(kLocaleKey);
+    final deviceCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final supportedCodes = supportedLocales.map((l) => l.code).toSet();
+    final resolvedDevice =
+        supportedCodes.contains(deviceCode) ? deviceCode : 'en';
+    final initialLocale = Locale(savedLocale ?? resolvedDevice);
 
-  AppConfig.validate();
+    await Future.wait([
+      initializeDateFormatting('es'),
+      initializeDateFormatting('en'),
+      initializeDateFormatting('fr'),
+      initializeDateFormatting('de'),
+    ]);
+    debugPrint('[main] 3 - date formatting ok');
 
-  // Pre-warm the local SQLite database in the background so the first
-  // non-PRO data fetch has no cold-start penalty.
-  LocalDatabase.instance.db.ignore();
+    AppConfig.validate();
+    debugPrint('[main] 4 - config ok');
 
-  await Supabase.initialize(
-    url: AppConfig.supabaseUrl,
-    anonKey: AppConfig.supabaseAnonKey,
-  );
+    // Pre-warm the local SQLite database in the background so the first
+    // non-PRO data fetch has no cold-start penalty.
+    LocalDatabase.instance.db.ignore();
 
-  await _requestTrackingAuthorization();
-  await MobileAds.instance.initialize();
-  await _initRevenueCat();
-  await _initPostHog();
-  final packageInfo = await PackageInfo.fromPlatform();
-  AnalyticsService.track(AnalyticsService.appOpened, {'version': packageInfo.version});
+    await Supabase.initialize(
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseAnonKey,
+    );
+    debugPrint('[main] 5 - supabase ok');
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        if (initialWidgetAction != null)
-          pendingWidgetActionProvider.overrideWith(
-            (ref) => initialWidgetAction,
-          ),
-      ],
-      child: MyApp(
-        initialTheme: initialTheme,
-        initialLocale: initialLocale,
+    await _requestTrackingAuthorization();
+    debugPrint('[main] 6 - tracking ok');
+
+    await MobileAds.instance.initialize().timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        debugPrint('[main] AdMob initialization timed out — continuing without ads');
+        return InitializationStatus({});
+      },
+    );
+    debugPrint('[main] 7 - admob ok');
+
+    await _initRevenueCat().timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => debugPrint('[main] RevenueCat initialization timed out — continuing without purchases'),
+    );
+    debugPrint('[main] 8 - revenuecat ok');
+
+    await _initPostHog();
+    debugPrint('[main] 9 - posthog ok');
+
+    final packageInfo = await PackageInfo.fromPlatform();
+    AnalyticsService.track(AnalyticsService.appOpened, {'version': packageInfo.version});
+
+    runApp(
+      ProviderScope(
+        overrides: [
+          if (initialWidgetAction != null)
+            pendingWidgetActionProvider.overrideWith(
+              (ref) => initialWidgetAction,
+            ),
+        ],
+        child: MyApp(
+          initialTheme: initialTheme,
+          initialLocale: initialLocale,
+        ),
       ),
-    ),
-  );
+    );
+    debugPrint('[main] 10 - runApp ok');
+  } catch (e, stack) {
+    debugPrint('[main] Fatal initialization error: $e\n$stack');
+    FlutterNativeSplash.remove();
+    runApp(_InitErrorApp(error: e));
+  }
 }
 
 Future<void> _requestTrackingAuthorization() async {
@@ -137,6 +167,47 @@ String? _extractWidgetAction(Uri? uri) {
   if (segments.isEmpty) return null;
   final action = segments.first;
   return WidgetActions.all.contains(action) ? action : null;
+}
+
+class _InitErrorApp extends StatelessWidget {
+  const _InitErrorApp({required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  AppConfig.appName,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                if (kDebugMode) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    error.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends ConsumerStatefulWidget {
