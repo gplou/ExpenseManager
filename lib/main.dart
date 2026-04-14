@@ -31,15 +31,18 @@ Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: binding);
 
+  var step = '0 - binding';
   try {
     debugPrint('[main] 1 - binding ok');
 
     // Detectar si la app fue lanzada desde un widget de pantalla de inicio
+    step = '1 - HomeWidget';
     HomeWidget.setAppGroupId('group.com.gpm.expensemanager_app');
     final widgetLaunchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
     final initialWidgetAction = _extractWidgetAction(widgetLaunchUri);
 
     // Pre-cargar tema y locale para evitar flash al inicio
+    step = '2 - SharedPreferences';
     final prefs = await SharedPreferences.getInstance();
     debugPrint('[main] 2 - prefs ok');
     final savedTheme = prefs.getString(kThemeModeKey);
@@ -60,6 +63,7 @@ Future<void> main() async {
         supportedCodes.contains(deviceCode) ? deviceCode : 'en';
     final initialLocale = Locale(savedLocale ?? resolvedDevice);
 
+    step = '3 - DateFormatting';
     await Future.wait([
       initializeDateFormatting('es'),
       initializeDateFormatting('en'),
@@ -68,22 +72,27 @@ Future<void> main() async {
     ]);
     debugPrint('[main] 3 - date formatting ok');
 
+    step = '4 - AppConfig.validate';
     AppConfig.validate();
     debugPrint('[main] 4 - config ok');
 
     // Pre-warm the local SQLite database in the background so the first
     // non-PRO data fetch has no cold-start penalty.
+    step = '4.5 - LocalDatabase';
     LocalDatabase.instance.db.ignore();
 
+    step = '5 - Supabase';
     await Supabase.initialize(
       url: AppConfig.supabaseUrl,
       anonKey: AppConfig.supabaseAnonKey,
     );
     debugPrint('[main] 5 - supabase ok');
 
+    step = '6 - Tracking';
     await _requestTrackingAuthorization();
     debugPrint('[main] 6 - tracking ok');
 
+    step = '7 - AdMob';
     try {
       await MobileAds.instance.initialize().timeout(
         const Duration(seconds: 10),
@@ -97,6 +106,7 @@ Future<void> main() async {
       debugPrint('[main] AdMob initialization failed — continuing without ads: $e');
     }
 
+    step = '8 - RevenueCat';
     try {
       await _initRevenueCat().timeout(
         const Duration(seconds: 10),
@@ -107,6 +117,7 @@ Future<void> main() async {
       debugPrint('[main] RevenueCat initialization failed — continuing without purchases: $e');
     }
 
+    step = '9 - PostHog';
     try {
       await _initPostHog();
       debugPrint('[main] 9 - posthog ok');
@@ -114,9 +125,11 @@ Future<void> main() async {
       debugPrint('[main] PostHog initialization failed — continuing without analytics: $e');
     }
 
+    step = '10 - PackageInfo';
     final packageInfo = await PackageInfo.fromPlatform();
     AnalyticsService.track(AnalyticsService.appOpened, {'version': packageInfo.version});
 
+    step = '11 - runApp';
     runApp(
       ProviderScope(
         overrides: [
@@ -133,9 +146,9 @@ Future<void> main() async {
     );
     debugPrint('[main] 10 - runApp ok');
   } catch (e, stack) {
-    debugPrint('[main] Fatal initialization error: $e\n$stack');
+    debugPrint('[main] Fatal initialization error at step "$step": $e\n$stack');
     FlutterNativeSplash.remove();
-    runApp(_InitErrorApp(error: e));
+    runApp(_InitErrorApp(error: e, step: step));
   }
 }
 
@@ -182,9 +195,10 @@ String? _extractWidgetAction(Uri? uri) {
 }
 
 class _InitErrorApp extends StatelessWidget {
-  const _InitErrorApp({required this.error});
+  const _InitErrorApp({required this.error, this.step = ''});
 
   final Object error;
+  final String step;
 
   @override
   Widget build(BuildContext context) {
@@ -205,14 +219,19 @@ class _InitErrorApp extends StatelessWidget {
                   AppConfig.appName,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                if (kDebugMode) ...[
-                  const SizedBox(height: 12),
+                const SizedBox(height: 12),
+                if (step.isNotEmpty)
                   Text(
-                    error.toString(),
+                    'Fallo en paso: $step',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 14, color: Colors.orange),
                   ),
-                ],
+                const SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ],
             ),
           ),
