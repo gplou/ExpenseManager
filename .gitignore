@@ -47,6 +47,7 @@ app.*.map.json
 # Secrets — never commit real values
 dart_defines.json
 android/key.properties
+android/app/upload-keystore.jks
 
 # OAuth client secrets (downloaded from Google Cloud Console)
 /android/app/*.json

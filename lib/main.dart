@@ -84,23 +84,35 @@ Future<void> main() async {
     await _requestTrackingAuthorization();
     debugPrint('[main] 6 - tracking ok');
 
-    await MobileAds.instance.initialize().timeout(
-      const Duration(seconds: 10),
-      onTimeout: () {
-        debugPrint('[main] AdMob initialization timed out — continuing without ads');
-        return InitializationStatus({});
-      },
-    );
-    debugPrint('[main] 7 - admob ok');
+    try {
+      await MobileAds.instance.initialize().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('[main] AdMob initialization timed out — continuing without ads');
+          return InitializationStatus({});
+        },
+      );
+      debugPrint('[main] 7 - admob ok');
+    } catch (e) {
+      debugPrint('[main] AdMob initialization failed — continuing without ads: $e');
+    }
 
-    await _initRevenueCat().timeout(
-      const Duration(seconds: 10),
-      onTimeout: () => debugPrint('[main] RevenueCat initialization timed out — continuing without purchases'),
-    );
-    debugPrint('[main] 8 - revenuecat ok');
+    try {
+      await _initRevenueCat().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => debugPrint('[main] RevenueCat initialization timed out — continuing without purchases'),
+      );
+      debugPrint('[main] 8 - revenuecat ok');
+    } catch (e) {
+      debugPrint('[main] RevenueCat initialization failed — continuing without purchases: $e');
+    }
 
-    await _initPostHog();
-    debugPrint('[main] 9 - posthog ok');
+    try {
+      await _initPostHog();
+      debugPrint('[main] 9 - posthog ok');
+    } catch (e) {
+      debugPrint('[main] PostHog initialization failed — continuing without analytics: $e');
+    }
 
     final packageInfo = await PackageInfo.fromPlatform();
     AnalyticsService.track(AnalyticsService.appOpened, {'version': packageInfo.version});
