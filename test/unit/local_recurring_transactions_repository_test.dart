@@ -264,6 +264,59 @@ void main() {
     });
   });
 
+  // ── upsertRecurring ────────────────────────────────────────────────────────
+
+  group('upsertRecurring', () {
+    test('inserts a new recurring transaction when none exists', () async {
+      final model = RecurringTransactionModel(
+        id: 'rec-new',
+        userId: 'user-1',
+        amount: 100,
+        type: TransactionType.expense,
+        category: 'Suscripción',
+        recurrenceType: RecurrenceType.monthly,
+        nextOccurrence: DateTime(2024, 6, 1),
+        createdAt: DateTime(2024, 1, 1),
+      );
+      await repo.upsertRecurring(model);
+
+      final all = await repo.getAllForUser();
+      expect(all.map((r) => r.id), contains('rec-new'));
+      expect(all.firstWhere((r) => r.id == 'rec-new').amount, 100.0);
+    });
+
+    test('replaces an existing recurring transaction preserving the id', () async {
+      final original = RecurringTransactionModel(
+        id: 'rec-exist',
+        userId: 'user-1',
+        amount: 50,
+        type: TransactionType.expense,
+        category: 'Comida',
+        recurrenceType: RecurrenceType.weekly,
+        nextOccurrence: DateTime(2024, 6, 1),
+        createdAt: DateTime(2024, 1, 1),
+      );
+      await repo.insertAll([original]);
+
+      await repo.upsertRecurring(RecurringTransactionModel(
+        id: 'rec-exist',
+        userId: 'user-1',
+        amount: 200,
+        type: TransactionType.income,
+        category: 'Salario',
+        recurrenceType: RecurrenceType.monthly,
+        nextOccurrence: DateTime(2024, 7, 1),
+        createdAt: DateTime(2024, 1, 1),
+      ));
+
+      final all = await repo.getAllForUser();
+      final found = all.where((r) => r.id == 'rec-exist').toList();
+      expect(found.length, 1);
+      expect(found.first.amount, 200.0);
+      expect(found.first.category, 'Salario');
+    });
+  });
+
   group('clearAllForUser', () {
     test('removes all recurring rows for the user', () async {
       await repo.createRecurring(

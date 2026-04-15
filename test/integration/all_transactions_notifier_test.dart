@@ -81,6 +81,8 @@ class _FakeCloudTxRepo implements TransactionsRepositoryContract {
   Future<TransactionModel> updateTransaction(TransactionModel t) async => t;
   @override
   Future<void> deleteTransaction(String id) async {}
+  @override
+  Future<void> upsertTransaction(TransactionModel t) async {}
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -25,24 +25,20 @@ class TransactionSyncService {
   /// FREE → PRO: copy all local data to Supabase, then clear local.
   /// Recurring transactions are migrated first to preserve FK references.
   Future<void> migrateToCloud() async {
-    // 1. Recurring transactions first (FK dependency)
+    // 1. Recurring transactions first (FK dependency).
+    // upsertRecurring preserves the local UUID so FK references in regular
+    // transactions remain valid after migration.
     final recurring = await localRecurring.getAllForUser();
     for (final r in recurring) {
-      await cloudRecurring.createRecurring(
-        amount: r.amount,
-        type: r.type,
-        category: r.category,
-        subcategory: r.subcategory,
-        description: r.description,
-        recurrenceType: r.recurrenceType,
-        nextOccurrence: r.nextOccurrence,
-      );
+      await cloudRecurring.upsertRecurring(r);
     }
 
-    // 2. Regular transactions
+    // 2. Regular transactions.
+    // upsertTransaction preserves the local UUID (avoids new Supabase-generated
+    // IDs that would break any existing recurring_transaction_id FK links).
     final transactions = await localTx.getAllForUser();
     for (final t in transactions) {
-      await cloudTx.createTransaction(t);
+      await cloudTx.upsertTransaction(t);
     }
 
     // 3. Clear local only after all writes have succeeded

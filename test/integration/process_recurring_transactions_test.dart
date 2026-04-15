@@ -43,6 +43,9 @@ class _FakeTxRepo implements TransactionsRepositoryContract {
 
   @override
   Future<void> deleteTransaction(String id) async {}
+
+  @override
+  Future<void> upsertTransaction(TransactionModel t) async {}
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

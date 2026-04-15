@@ -65,6 +65,12 @@ class _FakeTransactionsRepo implements TransactionsRepositoryContract {
     deleted.add(id);
     data.removeWhere((t) => t.id == id);
   }
+
+  @override
+  Future<void> upsertTransaction(TransactionModel t) async {
+    data.removeWhere((e) => e.id == t.id);
+    data.add(t);
+  }
 }
 
 class _MockRecurringRepo extends Mock

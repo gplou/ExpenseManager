@@ -49,6 +49,26 @@ class FakeCloudSync implements CloudTransactionSyncContract {
   }
 }
 
+/// A cloud sync that pauses on every upsert until [resume] is called.
+/// Used to verify that a second flush is blocked while the first is running.
+class _PausableCloudSync implements CloudTransactionSyncContract {
+  _PausableCloudSync(this._gate);
+
+  final Future<void> _gate;
+  final List<String> upsertedIds = [];
+
+  @override
+  Future<void> upsertTransaction(TransactionModel t) async {
+    await _gate;
+    upsertedIds.add(t.id);
+  }
+
+  @override
+  Future<void> deleteTransaction(String id) async {
+    await _gate;
+  }
+}
+
 class _SelectiveFakeCloudSync implements CloudTransactionSyncContract {
   _SelectiveFakeCloudSync({required this.failOnCallNumber});
 
@@ -283,6 +303,47 @@ void main() {
     await triggerReconnect(container);
 
     expect(fakeCloud.upsertedIds, isEmpty);
+  });
+
+  test('_flushing guard prevents a second flush from running while first is in progress', () async {
+    final gate = Completer<void>();
+    final pausableCloud = _PausableCloudSync(gate.future);
+
+    await queue.enqueue(makeCreateOp('tx-race'));
+
+    final container = ProviderContainer(
+      overrides: [
+        currentUserProvider.overrideWith((ref) => _fakeUser),
+        isProProvider.overrideWith((ref) => true),
+        connectivityProvider.overrideWith((ref) => connectivityCtrl.stream),
+        isOnlineProvider.overrideWith((ref) => true),
+        cloudTransactionSyncProvider.overrideWith((ref) => pausableCloud),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(_startSyncProvider);
+
+    // First reconnect — flush starts and blocks on the gate.
+    connectivityCtrl.add(false);
+    connectivityCtrl.add(true);
+
+    // Yield to let _flush() reach the first await and set _flushing = true.
+    await Future.microtask(() {});
+
+    // Second reconnect — should be rejected by the _flushing guard.
+    connectivityCtrl.add(false);
+    connectivityCtrl.add(true);
+
+    // Release the paused cloud call and let everything settle.
+    gate.complete();
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // The op must have been sent exactly once despite two reconnect events.
+    expect(
+      pausableCloud.upsertedIds.where((id) => id == 'tx-race').length,
+      1,
+    );
   });
 
   test('partial flush: successful ops removed, failed ops kept', () async {

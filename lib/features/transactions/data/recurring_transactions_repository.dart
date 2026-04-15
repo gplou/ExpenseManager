@@ -127,6 +127,21 @@ class RecurringTransactionsRepository
   }
 
   @override
+  Future<void> upsertRecurring(RecurringTransactionModel model) async {
+    await _client.from('recurring_transactions').upsert({
+      'id': model.id,
+      'user_id': userId,
+      'amount': model.amount,
+      'type': model.type.name,
+      'category': model.category,
+      'subcategory': model.subcategory,
+      'description': model.description,
+      'recurrence_type': model.recurrenceType.name,
+      'next_occurrence': dateToString(model.nextOccurrence),
+    }, onConflict: 'id');
+  }
+
+  @override
   Future<List<RecurringTransactionModel>> getAllForUser() async {
     final response = await _client
         .from('recurring_transactions')

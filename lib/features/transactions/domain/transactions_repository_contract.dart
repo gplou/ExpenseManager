@@ -31,6 +31,10 @@ abstract class TransactionWriter {
   Future<TransactionModel> updateTransaction(TransactionModel transaction);
 
   Future<void> deleteTransaction(String id);
+
+  /// Inserts or updates a transaction preserving its existing [id].
+  /// Used by [TransactionSyncService.migrateToCloud] to keep UUIDs intact.
+  Future<void> upsertTransaction(TransactionModel transaction);
 }
 
 /// Full contract combining read and write operations.
