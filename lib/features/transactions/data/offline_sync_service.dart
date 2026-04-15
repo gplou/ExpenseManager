@@ -35,14 +35,19 @@ class OfflineSyncService {
 
   final Ref _ref;
 
-  /// Inicia el listener. Llamar una vez desde main() tras inicializar Supabase.
+  /// Inicia los listeners. Llamar una vez desde el widget raíz de la app.
   void start() {
+    // Flush cuando la suscripción se confirma como PRO.
+    // El microtask inicial llega demasiado pronto (subscriptionProvider aún
+    // carga) y el flush aborta con isPro=false. Este listener cubre tanto
+    // el primer arranque como los cambios de plan durante la sesión.
+    _ref.listen<bool>(isProProvider, (prev, next) {
+      if (prev != true && next == true) _flush();
+    });
+
+    // Flush al recuperar conexión — procesa items encolados por estar offline.
     _ref.listen(connectivityProvider, (prev, next) {
-      final isOnline = next.valueOrNull ?? false;
-      final wasOffline = !(prev?.valueOrNull ?? true);
-      if (isOnline && wasOffline) {
-        _flush();
-      }
+      if (next.valueOrNull == true) _flush();
     });
   }
 

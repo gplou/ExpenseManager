@@ -12,6 +12,7 @@ import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/features/auth/domain/user_model.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/offline_aware_transactions_repository.dart';
@@ -20,6 +21,16 @@ import 'package:expense_manager/features/transactions/data/transactions_reposito
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 
 import '../helpers/mocks.dart';
+
+// ── Fakes ─────────────────────────────────────────────────────────────────────
+
+/// Returns an immediately-loaded empty SubscriptionState so that
+/// [subscriptionProvider].hasValue is true and [transactionsRepositoryProvider]
+/// does not treat the subscription as "still loading".
+class _FakeSubscriptionNotifier extends SubscriptionNotifier {
+  @override
+  Future<SubscriptionState> build() async => const SubscriptionState();
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -55,6 +66,7 @@ ProviderContainer _makeContainer({
     overrides: [
       isProProvider.overrideWith((ref) => isPro),
       currentUserProvider.overrideWith((ref) => user),
+      subscriptionProvider.overrideWith(_FakeSubscriptionNotifier.new),
       syncProvider.overrideWith(
         () => _FakeSyncNotifier(
           SyncState(status: isSyncing ? SyncStatus.syncing : SyncStatus.idle),
@@ -82,17 +94,19 @@ void main() {
     });
 
     test('returns LocalTransactionsRepository when user is free and authenticated',
-        () {
+        () async {
       final container = _makeContainer(isPro: false, user: _fakeUser);
       addTearDown(container.dispose);
+      await container.read(subscriptionProvider.future);
 
       final repo = container.read(transactionsRepositoryProvider);
       expect(repo, isA<LocalTransactionsRepository>());
     });
 
-    test('local repo has the correct userId', () {
+    test('local repo has the correct userId', () async {
       final container = _makeContainer(isPro: false, user: _fakeUser);
       addTearDown(container.dispose);
+      await container.read(subscriptionProvider.future);
 
       final repo = container.read(transactionsRepositoryProvider)
           as LocalTransactionsRepository;
@@ -116,18 +130,19 @@ void main() {
       expect(repo, isA<TransactionsRepository>());
     });
 
-    test('switches to local after sync completes', () {
-      // isSyncing = true → cloud
+    test('switches to local after sync completes', () async {
+      // isSyncing = true → cloud (doesn't depend on subscriptionLoaded)
       final containerSyncing =
           _makeContainer(isPro: false, user: _fakeUser, isSyncing: true);
       addTearDown(containerSyncing.dispose);
       expect(containerSyncing.read(transactionsRepositoryProvider),
           isA<TransactionsRepository>());
 
-      // isSyncing = false → local
+      // isSyncing = false → local (subscriptionLoaded must be true)
       final containerDone =
           _makeContainer(isPro: false, user: _fakeUser, isSyncing: false);
       addTearDown(containerDone.dispose);
+      await containerDone.read(subscriptionProvider.future);
       expect(containerDone.read(transactionsRepositoryProvider),
           isA<LocalTransactionsRepository>());
     });
@@ -218,6 +233,7 @@ void main() {
         overrides: [
           isProProvider.overrideWith((ref) => isPro),
           currentUserProvider.overrideWith((ref) => user),
+          subscriptionProvider.overrideWith(_FakeSubscriptionNotifier.new),
           syncProvider.overrideWith(() => _FakeSyncNotifier(const SyncState())),
           supabaseClientProvider.overrideWith((ref) => mockSupabase),
           isOnlineProvider.overrideWith((ref) => true),
@@ -267,12 +283,16 @@ void main() {
 
     test(
         'transactionsRepositoryProvider DOES return new instance '
-        'when isSyncing changes true → false (sync completes)', () {
+        'when isSyncing changes true → false (sync completes)', () async {
       final container = makeContainerWithLiveSyncNotifier(
         isPro: false,
         user: _fakeUser,
       );
       addTearDown(container.dispose);
+
+      // Ensure subscription is loaded so free users get LocalTransactionsRepository
+      // once sync is no longer in progress.
+      await container.read(subscriptionProvider.future);
 
       // During sync: cloud repo.
       container.read(syncProvider.notifier).state =

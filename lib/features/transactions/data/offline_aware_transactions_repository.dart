@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../../core/utils/date_helpers.dart';
 import '../domain/cloud_transaction_sync_contract.dart';
 import '../domain/transaction_model.dart';
@@ -8,29 +10,31 @@ import 'sync_queue_repository.dart';
 
 /// Repository para usuarios PRO con soporte offline-first.
 ///
-/// - Lecturas: siempre desde SQLite (caché local, < 100ms).
-/// - Escrituras con conexión: Supabase primero, luego actualiza caché local.
-/// - Escrituras sin conexión: SQLite primero, encola la op para sincronizar
-///   cuando se recupere la conexión.
+/// Flujo de escritura:
+///   1. Guarda siempre en SQLite local (respuesta instantánea al usuario).
+///   2. Intenta subir a Supabase. Si falla (sin red, error transitorio…)
+///      encola la operación para que [OfflineSyncService] la reintente.
 ///
-/// Depende de [CloudTransactionSyncContract] (abstracción) en lugar de la clase
-/// concreta [TransactionsRepository], cumpliendo el principio DIP de SOLID.
+/// Se intenta siempre la llamada a la nube; el try/catch gestiona el offline.
+/// Esto evita bloqueos por falsos negativos de connectivity_plus en Android.
+///
+/// Depende de [CloudTransactionSyncContract] en lugar de [TransactionsRepository]
+/// directamente, cumpliendo el principio DIP de SOLID.
 class OfflineAwareTransactionsRepository
     implements TransactionsRepositoryContract {
   const OfflineAwareTransactionsRepository({
     required CloudTransactionSyncContract cloud,
     required LocalTransactionsRepository local,
     required SyncQueueRepository queue,
-    required bool isOnline,
+    // isOnline conservado en constructor para no romper el provider existente.
+    bool isOnline = true,
   })  : _cloud = cloud,
         _local = local,
-        _queue = queue,
-        _isOnline = isOnline;
+        _queue = queue;
 
   final CloudTransactionSyncContract _cloud;
   final LocalTransactionsRepository _local;
   final SyncQueueRepository _queue;
-  final bool _isOnline;
 
   // ── Lecturas ─────────────────────────────────────────────────────────────
 
@@ -52,51 +56,35 @@ class OfflineAwareTransactionsRepository
 
   @override
   Future<TransactionModel> createTransaction(TransactionModel transaction) async {
-    // Guarda primero en local (siempre disponible y da feedback instantáneo).
     final saved = await _local.createTransaction(transaction);
-
-    if (_isOnline) {
-      // Sube a la nube. Si falla, encola para reintentar más tarde.
-      try {
-        await _cloud.upsertTransaction(saved);
-      } catch (_) {
-        await _enqueue(SyncOpType.create, saved);
-      }
-    } else {
+    try {
+      await _cloud.upsertTransaction(saved);
+    } catch (e) {
+      debugPrint('OfflineAware.createTransaction: cloud upsert failed, enqueuing — $e');
       await _enqueue(SyncOpType.create, saved);
     }
-
     return saved;
   }
 
   @override
   Future<TransactionModel> updateTransaction(TransactionModel transaction) async {
     final saved = await _local.updateTransaction(transaction);
-
-    if (_isOnline) {
-      try {
-        await _cloud.upsertTransaction(saved);
-      } catch (_) {
-        await _enqueue(SyncOpType.update, saved);
-      }
-    } else {
+    try {
+      await _cloud.upsertTransaction(saved);
+    } catch (e) {
+      debugPrint('OfflineAware.updateTransaction: cloud upsert failed, enqueuing — $e');
       await _enqueue(SyncOpType.update, saved);
     }
-
     return saved;
   }
 
   @override
   Future<void> deleteTransaction(String id) async {
     await _local.deleteTransaction(id);
-
-    if (_isOnline) {
-      try {
-        await _cloud.deleteTransaction(id);
-      } catch (_) {
-        await _enqueueDelete(id);
-      }
-    } else {
+    try {
+      await _cloud.deleteTransaction(id);
+    } catch (e) {
+      debugPrint('OfflineAware.deleteTransaction: cloud delete failed, enqueuing — $e');
       await _enqueueDelete(id);
     }
   }

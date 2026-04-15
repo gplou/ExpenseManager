@@ -1,23 +1,19 @@
 import 'dart:math';
 
-/// Centralises transaction ID generation so the format is consistent across
-/// local repositories and any future storage backends.
-///
-/// Format: `<microseconds>_<random>_<userId prefix>`
-/// - microseconds: monotonically increasing, provides rough ordering
-/// - random int: reduces collision probability when multiple records are
-///   created within the same microsecond (e.g. bulk import)
-/// - userId prefix: scopes IDs to the owning user without storing full UUIDs
+/// Generates UUID v4 strings compatible with Supabase's uuid column type.
 class TransactionIdGenerator {
   const TransactionIdGenerator._();
 
-  static final _rng = Random();
+  static final _rng = Random.secure();
 
-  /// Generates a unique ID scoped to [userId].
-  static String generate(String userId) {
-    final ts = DateTime.now().microsecondsSinceEpoch;
-    final rand = _rng.nextInt(0x7FFFFFFF);
-    final prefix = userId.length >= 8 ? userId.substring(0, 8) : userId;
-    return '${ts}_${rand}_$prefix';
+  /// Generates a random UUID v4 (e.g. `550e8400-e29b-41d4-a716-446655440000`).
+  static String generate([String? userId]) {
+    final bytes = List<int>.generate(16, (_) => _rng.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10xx
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+        '${hex.substring(12, 16)}-${hex.substring(16, 20)}-'
+        '${hex.substring(20)}';
   }
 }
