@@ -169,10 +169,15 @@ void main() {
     });
   });
 
-  // ── Offline writes → enqueue ───────────────────────────────────────────────
+  // ── Cloud-fail → enqueue ───────────────────────────────────────────────────
+  //
+  // The repository now always attempts the cloud call regardless of isOnline.
+  // Enqueueing happens when the cloud call throws (network error, timeout…),
+  // not based on the isOnline flag.
 
-  group('createTransaction — offline', () {
-    test('saves to local and enqueues a create op', () async {
+  group('createTransaction — cloud fails', () {
+    test('saves to local and enqueues a create op when cloud throws', () async {
+      cloud.failNext = true;
       await makeRepo(isOnline: false).createTransaction(makeTx(id: 'tx-q'));
 
       final localAll = await local.getAllForUser();
@@ -184,17 +189,19 @@ void main() {
       expect(pending.first.entityId, 'tx-q');
     });
 
-    test('does NOT call cloud when offline', () async {
+    test('always attempts cloud call even when isOnline is false', () async {
+      // isOnline parameter is kept for API compat but ignored internally.
       await makeRepo(isOnline: false).createTransaction(makeTx(id: 'tx-nc'));
-      expect(cloud.upsertedIds, isEmpty);
+      expect(cloud.upsertedIds, contains('tx-nc'));
     });
   });
 
-  group('updateTransaction — offline', () {
-    test('updates local and enqueues an update op', () async {
+  group('updateTransaction — cloud fails', () {
+    test('updates local and enqueues an update op when cloud throws', () async {
       final tx = makeTx(id: 'tx-uq');
       await local.createTransaction(tx);
 
+      cloud.failNext = true;
       await makeRepo(isOnline: false).updateTransaction(tx.copyWith(amount: 77));
 
       final pending = await queue.getPending();
@@ -202,10 +209,11 @@ void main() {
     });
   });
 
-  group('deleteTransaction — offline', () {
-    test('removes from local and enqueues a delete op', () async {
+  group('deleteTransaction — cloud fails', () {
+    test('removes from local and enqueues a delete op when cloud throws', () async {
       await local.createTransaction(makeTx(id: 'tx-dq'));
 
+      cloud.failNext = true;
       await makeRepo(isOnline: false).deleteTransaction('tx-dq');
 
       final all = await local.getAllForUser();
