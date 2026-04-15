@@ -31,9 +31,10 @@ final offlineSyncServiceProvider = Provider<void>((ref) {
 /// Las operaciones se procesan en orden FIFO y se eliminan de la cola
 /// únicamente cuando Supabase confirma el éxito.
 class OfflineSyncService {
-  const OfflineSyncService(this._ref);
+  OfflineSyncService(this._ref);
 
   final Ref _ref;
+  bool _flushing = false;
 
   /// Inicia los listeners. Llamar una vez desde el widget raíz de la app.
   void start() {
@@ -52,6 +53,16 @@ class OfflineSyncService {
   }
 
   Future<void> _flush() async {
+    if (_flushing) return;
+    _flushing = true;
+    try {
+      await _doFlush();
+    } finally {
+      _flushing = false;
+    }
+  }
+
+  Future<void> _doFlush() async {
     final user = _ref.read(currentUserProvider);
     final isPro = _ref.read(isProProvider);
     if (user == null || !isPro) return;

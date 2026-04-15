@@ -89,6 +89,17 @@ class OfflineAwareTransactionsRepository
     }
   }
 
+  @override
+  Future<void> upsertTransaction(TransactionModel transaction) async {
+    await _local.upsertTransaction(transaction);
+    try {
+      await _cloud.upsertTransaction(transaction);
+    } catch (e) {
+      debugPrint('OfflineAware.upsertTransaction: cloud upsert failed, enqueuing — $e');
+      await _enqueue(SyncOpType.update, transaction);
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   Future<void> _enqueue(SyncOpType opType, TransactionModel t) async {

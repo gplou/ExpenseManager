@@ -70,6 +70,12 @@ class _FakeCloudTxRepo implements TransactionsRepositoryContract {
     _data.removeWhere((t) => t.id == id);
   }
 
+  @override
+  Future<void> upsertTransaction(TransactionModel t) async {
+    _data.removeWhere((e) => e.id == t.id);
+    _data.add(t);
+  }
+
   List<TransactionModel> get all => List.unmodifiable(_data);
 }
 
@@ -135,6 +141,12 @@ class _FakeCloudRecurringRepo implements RecurringTransactionsRepositoryContract
   @override
   Future<void> deleteRecurring(String id) async {
     _data.removeWhere((r) => r.id == id);
+  }
+
+  @override
+  Future<void> upsertRecurring(RecurringTransactionModel model) async {
+    _data.removeWhere((r) => r.id == model.id);
+    _data.add(model);
   }
 
   List<RecurringTransactionModel> get all => List.unmodifiable(_data);
@@ -257,6 +269,29 @@ void main() {
 
       expect(cloudTx.all, isEmpty);
       expect(cloudRecurring.all, isEmpty);
+    });
+
+    test('preserves UUIDs for transactions (no new Supabase-generated IDs)', () async {
+      await localTx.insertAll([_tx(id: 'uuid-tx-1'), _tx(id: 'uuid-tx-2')]);
+      await service.migrateToCloud();
+      expect(cloudTx.all.map((t) => t.id), containsAll(['uuid-tx-1', 'uuid-tx-2']));
+    });
+
+    test('preserves UUIDs for recurring transactions', () async {
+      await localRecurring.insertAll([
+        RecurringTransactionModel(
+          id: 'uuid-rec-1',
+          userId: 'user-1',
+          amount: 50,
+          type: TransactionType.expense,
+          category: 'Suscripción',
+          recurrenceType: RecurrenceType.monthly,
+          nextOccurrence: DateTime(2024, 6, 1),
+          createdAt: DateTime(2024, 1, 1),
+        ),
+      ]);
+      await service.migrateToCloud();
+      expect(cloudRecurring.all.map((r) => r.id), contains('uuid-rec-1'));
     });
 
     test('does not clear local if cloud write fails', () async {
@@ -480,6 +515,11 @@ class _ThrowingCloudTxRepo implements TransactionsRepositoryContract {
 
   @override
   Future<void> deleteTransaction(String id) async {}
+
+  @override
+  Future<void> upsertTransaction(TransactionModel t) {
+    throw Exception('cloud write failed');
+  }
 }
 
 // ── Helper: local tx repo whose insertAll always throws ───────────────────────

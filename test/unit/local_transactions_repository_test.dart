@@ -293,6 +293,45 @@ void main() {
     });
   });
 
+  // ── upsertTransaction ──────────────────────────────────────────────────────
+
+  group('upsertTransaction', () {
+    test('inserts a new transaction when none exists', () async {
+      final tx = _tx(id: 'ups-new', amount: 42, type: TransactionType.income);
+      await repo.upsertTransaction(tx);
+
+      final all = await repo.getAllForUser();
+      expect(all.map((t) => t.id), contains('ups-new'));
+      expect(all.firstWhere((t) => t.id == 'ups-new').amount, 42.0);
+    });
+
+    test('replaces an existing transaction preserving the id', () async {
+      final tx = _tx(id: 'ups-exist', amount: 10, type: TransactionType.expense);
+      await repo.createTransaction(tx);
+
+      await repo.upsertTransaction(tx.copyWith(amount: 99));
+
+      final all = await repo.getAllForUser();
+      final found = all.where((t) => t.id == 'ups-exist').toList();
+      expect(found.length, 1);
+      expect(found.first.amount, 99.0);
+    });
+
+    test('does not affect transactions of other users', () async {
+      final otherRepo = LocalTransactionsRepository(userId: 'user-9');
+      final otherTx =
+          _tx(id: 'other-ups', amount: 500, type: TransactionType.income, userId: 'user-9');
+      await otherRepo.createTransaction(otherTx);
+
+      await repo.upsertTransaction(
+          _tx(id: 'my-ups', amount: 1, type: TransactionType.expense));
+
+      final otherAll = await otherRepo.getAllForUser();
+      expect(otherAll.map((t) => t.id), contains('other-ups'));
+      expect(otherAll.first.amount, 500.0);
+    });
+  });
+
   group('clearAllForUser', () {
     test('removes all transactions for the user', () async {
       await repo.createTransaction(

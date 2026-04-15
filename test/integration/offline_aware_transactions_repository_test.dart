@@ -248,6 +248,39 @@ void main() {
     });
   });
 
+  // ── upsertTransaction ──────────────────────────────────────────────────────
+
+  group('upsertTransaction — online', () {
+    test('saves to local and calls cloud upsert', () async {
+      await makeRepo(isOnline: true).upsertTransaction(makeTx(id: 'ups-ok'));
+
+      final localAll = await local.getAllForUser();
+      expect(localAll.map((t) => t.id), contains('ups-ok'));
+      expect(cloud.upsertedIds, contains('ups-ok'));
+    });
+
+    test('does not enqueue when cloud upsert succeeds', () async {
+      await makeRepo(isOnline: true).upsertTransaction(makeTx(id: 'ups-clean'));
+
+      expect(await queue.getPending(), isEmpty);
+    });
+  });
+
+  group('upsertTransaction — cloud fails', () {
+    test('saves to local and enqueues an update op when cloud throws', () async {
+      cloud.failNext = true;
+      await makeRepo(isOnline: false).upsertTransaction(makeTx(id: 'ups-fail'));
+
+      final localAll = await local.getAllForUser();
+      expect(localAll.map((t) => t.id), contains('ups-fail'));
+
+      final pending = await queue.getPending();
+      expect(pending.length, 1);
+      expect(pending.first.opType, SyncOpType.update);
+      expect(pending.first.entityId, 'ups-fail');
+    });
+  });
+
   // ── getSummary ─────────────────────────────────────────────────────────────
 
   group('getSummary', () {

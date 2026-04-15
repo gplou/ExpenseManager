@@ -108,6 +108,21 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
     }
   }
 
+  @override
+  Future<void> upsertTransaction(TransactionModel transaction) async {
+    try {
+      final db = await _db;
+      await db.insert(
+        'transactions',
+        _toRow(transaction),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e, st) {
+      debugPrint('LocalTransactionsRepository.upsertTransaction error: $e\n$st');
+      throw const CacheFailure('Failed to upsert transaction');
+    }
+  }
+
   // ── Bulk helpers used by TransactionSyncService ──────────────────────────
 
   Future<List<TransactionModel>> getAllForUser() async {

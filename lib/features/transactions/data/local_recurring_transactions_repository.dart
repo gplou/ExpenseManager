@@ -158,6 +158,22 @@ class LocalRecurringTransactionsRepository
     }
   }
 
+  @override
+  Future<void> upsertRecurring(RecurringTransactionModel model) async {
+    try {
+      final db = await _db;
+      await db.insert(
+        'recurring_transactions',
+        _toRow(model),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e, st) {
+      debugPrint(
+          'LocalRecurringTransactionsRepository.upsertRecurring error: $e\n$st');
+      throw const CacheFailure('Failed to upsert recurring transaction');
+    }
+  }
+
   // ── Bulk helpers used by TransactionSyncService ──────────────────────────
 
   @override

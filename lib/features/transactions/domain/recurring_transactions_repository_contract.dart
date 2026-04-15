@@ -35,4 +35,8 @@ abstract class RecurringTransactionsRepositoryContract {
   Future<void> updateNextOccurrence(String id, DateTime next);
 
   Future<void> deleteRecurring(String id);
+
+  /// Inserts or updates a recurring transaction preserving its existing [id].
+  /// Used by [TransactionSyncService.migrateToCloud] to keep UUIDs intact.
+  Future<void> upsertRecurring(RecurringTransactionModel model);
 }
