@@ -29,6 +29,68 @@ class TransactionsListScreen extends ConsumerStatefulWidget {
 class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen> {
   bool _exporting = false;
   String? _selectedCategory; // null = todas
+  bool _isSelecting = false;
+  final Set<String> _selectedIds = {};
+
+  void _enterSelectionMode(String id) {
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isSelecting = true;
+      _selectedIds.add(id);
+    });
+  }
+
+  void _toggleSelection(String id) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+        if (_selectedIds.isEmpty) _isSelecting = false;
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelecting = false;
+      _selectedIds.clear();
+    });
+  }
+
+  Future<void> _deleteSelected(List<TransactionModel> allTransactions) async {
+    final l10n = AppLocalizations.of(context);
+    final count = _selectedIds.length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.deleteSelectedConfirm(count)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.mutedTerra),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final notifier = ref.read(transactionsNotifierProvider.notifier);
+    final toDelete = allTransactions.where((t) => _selectedIds.contains(t.id)).toList();
+    for (final t in toDelete) {
+      await notifier.delete(t.id, recurringTransactionId: t.recurringTransactionId);
+    }
+    _exitSelectionMode();
+  }
 
   Future<void> _exportToExcel(List<TransactionModel> transactions) async {
     final l10n = AppLocalizations.of(context);
@@ -59,8 +121,27 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     return Scaffold(
       bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
-        title: Text(l10n.history),
+        leading: _isSelecting
+            ? IconButton(
+                icon: const Icon(Icons.close_rounded),
+                onPressed: _exitSelectionMode,
+              )
+            : null,
+        title: _isSelecting
+            ? Text(
+                l10n.selectedCount(_selectedIds.length),
+                style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w600),
+              )
+            : Text(l10n.history),
         actions: [
+          if (_isSelecting)
+            transactionsAsync.whenOrNull(
+              data: (allTx) => IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, color: AppColors.mutedTerra),
+                onPressed: _selectedIds.isEmpty ? null : () => _deleteSelected(allTx),
+              ),
+            ) ?? const SizedBox.shrink()
+          else
           transactionsAsync.whenOrNull(
             data: (transactions) {
               final categories = transactions
@@ -252,18 +333,34 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           child: _DateHeader(date: entry.date, l10n: l10n),
                         ),
                         ...entry.transactions.map(
-                          (t) => _TransactionTile(transaction: t),
+                          (t) => _TransactionTile(
+                            transaction: t,
+                            isSelecting: _isSelecting,
+                            isSelected: _selectedIds.contains(t.id),
+                            onLongPress: () => _isSelecting
+                                ? _toggleSelection(t.id)
+                                : _enterSelectionMode(t.id),
+                            onSelectTap: _isSelecting
+                                ? () => _toggleSelection(t.id)
+                                : null,
+                          ),
                         ),
                       ],
                     );
                   },
                 ),
               ),
-              _ExportButton(
-                onTap: _exporting ? null : () => _exportToExcel(transactions),
-                exporting: _exporting,
-                label: l10n.exportExcel,
-              ),
+              if (_isSelecting)
+                _DeleteSelectedButton(
+                  count: _selectedIds.length,
+                  onTap: _selectedIds.isEmpty ? null : () => _deleteSelected(allTx),
+                )
+              else
+                _ExportButton(
+                  onTap: _exporting ? null : () => _exportToExcel(transactions),
+                  exporting: _exporting,
+                  label: l10n.exportExcel,
+                ),
             ],
           );
         },
@@ -344,6 +441,61 @@ class _ExportButton extends StatelessWidget {
   }
 }
 
+// ── Delete selected button ────────────────────────────────────────────────────
+
+class _DeleteSelectedButton extends StatelessWidget {
+  const _DeleteSelectedButton({required this.count, required this.onTap});
+  final int count;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 52,
+          decoration: BoxDecoration(
+            color: onTap != null
+                ? AppColors.mutedTerra
+                : AppColors.mutedTerra.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.delete_outline_rounded, color: AppColors.pureWhite, size: 20),
+              const Gap(8),
+              Text(
+                '${l10n.delete} ($count)',
+                style: const TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.pureWhite,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DateGroup {
   _DateGroup(this.date);
   final DateTime date;
@@ -392,8 +544,18 @@ class _DateHeader extends StatelessWidget {
 // ── Transaction tile ──────────────────────────────────────────────────────────
 
 class _TransactionTile extends ConsumerWidget {
-  const _TransactionTile({required this.transaction});
+  const _TransactionTile({
+    required this.transaction,
+    required this.isSelecting,
+    required this.isSelected,
+    required this.onLongPress,
+    this.onSelectTap,
+  });
   final TransactionModel transaction;
+  final bool isSelecting;
+  final bool isSelected;
+  final VoidCallback onLongPress;
+  final VoidCallback? onSelectTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -409,11 +571,23 @@ class _TransactionTile extends ConsumerWidget {
       if (c.name == transaction.category) { customCat = c; break; }
     }
 
+    void handleTap() {
+      if (onSelectTap != null) {
+        onSelectTap!();
+      } else {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AddTransactionScreen(transaction: transaction),
+          ),
+        );
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Dismissible(
         key: ValueKey(transaction.id),
-        direction: DismissDirection.endToStart,
+        direction: isSelecting ? DismissDirection.none : DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 24),
@@ -423,7 +597,7 @@ class _TransactionTile extends ConsumerWidget {
           ),
           child: const Icon(Icons.delete_outline_rounded, color: AppColors.mutedTerra, size: 26),
         ),
-        confirmDismiss: (_) async {
+        confirmDismiss: isSelecting ? null : (_) async {
           final isRecurring = transaction.recurringTransactionId != null;
           final String confirmMessage;
           if (isRecurring) {
@@ -454,22 +628,23 @@ class _TransactionTile extends ConsumerWidget {
             ),
           );
         },
-        onDismissed: (_) async {
+        onDismissed: isSelecting ? null : (_) async {
           await ref
               .read(transactionsNotifierProvider.notifier)
               .delete(transaction.id, recurringTransactionId: transaction.recurringTransactionId);
         },
         child: GestureDetector(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => AddTransactionScreen(transaction: transaction),
-            ),
-          ),
-          child: Container(
+          onTap: handleTap,
+          onLongPress: onLongPress,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: cs.surface,
+              color: isSelected ? accentLight : cs.surface,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: AppColors.softShadowSm,
+              boxShadow: isSelected ? null : AppColors.softShadowSm,
+              border: isSelected
+                  ? Border.all(color: accentColor.withValues(alpha: 0.5), width: 1.5)
+                  : null,
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
@@ -492,19 +667,32 @@ class _TransactionTile extends ConsumerWidget {
                         padding: const EdgeInsets.fromLTRB(12, 14, 16, 14),
                         child: Row(
                           children: [
-                            Container(
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: accentLight,
+                                color: isSelecting
+                                    ? (isSelected ? accentColor : AppColors.borderLight)
+                                    : accentLight,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
-                                child: customCat != null
-                                    ? customCat.emojiOverride != null
-                                        ? Text(customCat.emojiOverride!, style: const TextStyle(fontSize: 22))
-                                        : Icon(customCat.icon, size: 22, color: accentColor)
-                                    : Text(emoji, style: const TextStyle(fontSize: 22)),
+                                child: isSelecting
+                                    ? Icon(
+                                        isSelected
+                                            ? Icons.check_rounded
+                                            : Icons.circle_outlined,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppColors.textSubtle,
+                                        size: 22,
+                                      )
+                                    : (customCat != null
+                                        ? customCat.emojiOverride != null
+                                            ? Text(customCat.emojiOverride!, style: const TextStyle(fontSize: 22))
+                                            : Icon(customCat.icon, size: 22, color: accentColor)
+                                        : Text(emoji, style: const TextStyle(fontSize: 22))),
                               ),
                             ),
                             const Gap(12),

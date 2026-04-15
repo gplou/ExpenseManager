@@ -339,5 +339,13 @@
   "imageProcessing": "Processing image",
   "@imageProcessing": {},
   "loadingTransactions": "Loading transactions",
-  "@loadingTransactions": {}
+  "@loadingTransactions": {},
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "deleteSelectedConfirm": "Delete {count} selected transaction(s)?",
+  "@deleteSelectedConfirm": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

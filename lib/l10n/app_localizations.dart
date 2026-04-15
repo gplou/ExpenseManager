@@ -1625,6 +1625,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Cargando transacciones'**
   String get loadingTransactions;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} seleccionadas'**
+  String selectedCount(int count);
+
+  /// No description provided for @deleteSelectedConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar {count} transacción(es) seleccionada(s)?'**
+  String deleteSelectedConfirm(int count);
 }
 
 class _AppLocalizationsDelegate

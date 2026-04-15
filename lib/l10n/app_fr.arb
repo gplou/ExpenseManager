@@ -373,5 +373,13 @@
   "imageProcessing": "Traitement de l'image en cours",
   "@imageProcessing": {},
   "loadingTransactions": "Chargement des transactions",
-  "@loadingTransactions": {}
+  "@loadingTransactions": {},
+  "selectedCount": "{count} sélectionnée(s)",
+  "@selectedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "deleteSelectedConfirm": "Supprimer {count} transaction(s) sélectionnée(s) ?",
+  "@deleteSelectedConfirm": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

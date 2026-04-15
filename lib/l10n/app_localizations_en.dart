@@ -823,4 +823,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingTransactions => 'Loading transactions';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String deleteSelectedConfirm(int count) {
+    return 'Delete $count selected transaction(s)?';
+  }
 }
