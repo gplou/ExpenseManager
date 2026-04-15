@@ -9,6 +9,7 @@ import '../../../subscription/subscription_provider.dart';
 import '../../data/initial_sync_service.dart';
 import '../../data/local_transactions_repository.dart';
 import '../../data/recurring_transactions_repository.dart';
+import '../../data/sync_queue_repository.dart';
 import '../../data/transactions_repository.dart';
 import '../../domain/transaction_model.dart';
 import '../../domain/transactions_repository_contract.dart';
@@ -143,16 +144,35 @@ class AllTransactionsNotifier
         // descartamos este resultado para no sobreescribir el estado nuevo.
         if (_generation != generation) return;
 
-        // Sincroniza la caché: elimina el rango y reinserta datos frescos
-        // para gestionar correctamente las transacciones borradas en la nube.
+        // Preserve locally-created transactions not yet synced to the cloud
+        // (offline creates or failed upserts sitting in the pending queue).
+        final queue = SyncQueueRepository(userId: localRepo.userId);
+        final pending = await queue.getPending();
+        final pendingIds = pending.map((op) => op.entityId).toSet();
+        final cloudIds = fresh.map((t) => t.id).toSet();
+
+        final localInRange =
+            await localRepo.getTransactions(from: range.from, to: range.to);
+        final pendingLocal = localInRange
+            .where((t) => !cloudIds.contains(t.id) && pendingIds.contains(t.id))
+            .toList();
+
+        // Sincroniza la caché: elimina el rango y reinserta datos frescos +
+        // transacciones pendientes locales, para gestionar correctamente las
+        // borradas en la nube sin perder las creadas offline.
         await localRepo.deleteByDateRange(range.from, range.to);
-        await localRepo.insertAll(fresh);
+        final merged = [...fresh, ...pendingLocal]
+          ..sort((a, b) {
+            final cmp = b.date.compareTo(a.date);
+            return cmp != 0 ? cmp : b.createdAt.compareTo(a.createdAt);
+          });
+        await localRepo.insertAll(merged);
 
         if (_generation != generation) return;
 
         // Actualización silenciosa: la UI recibe los datos frescos sin mostrar
         // ningún indicador de carga.
-        state = AsyncData(fresh);
+        state = AsyncData(merged);
       } catch (_) {
         // El refresh de fondo falla silenciosamente; el usuario sigue viendo
         // la caché sin ninguna interrupción.
@@ -219,7 +239,9 @@ class TransactionsNotifier extends Notifier<void> {
   void build() {}
 
   Future<void> create(TransactionModel transaction) async {
-    await ref.read(transactionsRepositoryProvider).createTransaction(transaction);
+    final repo = ref.read(transactionsRepositoryProvider);
+    debugPrint('TransactionsNotifier.create: repo=${repo.runtimeType}');
+    await repo.createTransaction(transaction);
     // Only invalidate the single source of truth; derived providers
     // (summary, recent, distribution) rebuild automatically.
     ref.invalidate(allTransactionsProvider);

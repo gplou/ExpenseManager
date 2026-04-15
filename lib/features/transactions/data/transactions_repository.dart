@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -109,6 +110,7 @@ class TransactionsRepository
           .eq('id', id)
           .eq('user_id', userId);
     } catch (e) {
+      debugPrint('TransactionsRepository.deleteTransaction ERROR: $e');
       throw const NetworkFailure('Failed to delete transaction');
     }
   }
@@ -132,6 +134,7 @@ class TransactionsRepository
       };
       await _client.from('transactions').upsert(data, onConflict: 'id');
     } catch (e) {
+      debugPrint('TransactionsRepository.upsertTransaction ERROR: $e');
       throw const NetworkFailure('Failed to upsert transaction');
     }
   }
@@ -180,14 +183,22 @@ final transactionsRepositoryProvider =
   final isSyncing = ref.watch(
     syncProvider.select((s) => s.valueOrNull?.isSyncing ?? false),
   );
+  // True una vez que subscriptionProvider ha resuelto su primer valor.
+  final subscriptionLoaded = ref.watch(
+    subscriptionProvider.select((s) => s.hasValue),
+  );
 
-  // Not authenticated or migration in progress → cloud (Supabase) directly.
+  // No autenticado o migración en curso → Supabase directo.
   if (user == null || isSyncing) {
+    debugPrint('transactionsRepo → DirectSupabase (user=${user?.id}, syncing=$isSyncing)');
     return TransactionsRepository(ref.watch(supabaseClientProvider));
   }
 
-  // PRO → offline-aware: escribe en local primero y encola si no hay red.
-  if (isPro) {
+  // PRO confirmado, o suscripción todavía cargando.
+  // Usamos OfflineAware mientras carga para evitar que transacciones creadas
+  // en esa ventana se guarden solo en SQLite sin intentar Supabase.
+  if (isPro || !subscriptionLoaded) {
+    debugPrint('transactionsRepo → OfflineAware (isPro=$isPro, loaded=$subscriptionLoaded)');
     final isOnline = ref.watch(isOnlineProvider);
     return OfflineAwareTransactionsRepository(
       cloud: TransactionsRepository(ref.watch(supabaseClientProvider)),
@@ -197,6 +208,7 @@ final transactionsRepositoryProvider =
     );
   }
 
-  // FREE → SQLite local únicamente.
+  // FREE confirmado → SQLite local únicamente.
+  debugPrint('transactionsRepo → LocalOnly (FREE user, subscription loaded)');
   return LocalTransactionsRepository(userId: user.id);
 });
