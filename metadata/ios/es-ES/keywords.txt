@@ -1,0 +1,1 @@
+presupuesto,ingresos,finanzas,ahorro,IA,voz,foto,estadísticas,recurrente,categorías,balance,dinero

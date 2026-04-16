@@ -1,0 +1,1 @@
+budget,income,finance,savings,receipts,AI,voice,photo,statistics,recurring,categories,tracker,money
