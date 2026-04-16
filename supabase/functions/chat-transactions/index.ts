@@ -16,12 +16,7 @@ function getCorsHeaders(req: Request) {
   }
 }
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN || '',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
-}
-
-function jsonResponse(body: Record<string, unknown>, status = 200) {
+function jsonResponse(body: Record<string, unknown>, status = 200, corsHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'content-type': 'application/json' },
@@ -67,20 +62,22 @@ Rules:
 }
 
 serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   // ── 1. Verify the user is authenticated ──────────────────────────────────
   const authHeader = req.headers.get('Authorization')
-  if (!authHeader) return jsonResponse({ error: 'Unauthorized' }, 401)
+  if (!authHeader) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders)
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
   })
 
   const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) return jsonResponse({ error: 'Unauthorized' }, 401)
+  if (userError || !user) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders)
 
   // ── 2. Verify PRO subscription ──────────────────────────────────────────
   const { data: sub } = await supabase
@@ -90,7 +87,7 @@ serve(async (req: Request) => {
     .single()
 
   if (!sub || new Date(sub.expires_at) < new Date()) {
-    return jsonResponse({ error: 'PRO subscription required' }, 403)
+    return jsonResponse({ error: 'PRO subscription required' }, 403, corsHeaders)
   }
 
   // ── 3. Rate limit: 20 msgs per hour ────────────────────────────────────
@@ -105,7 +102,7 @@ serve(async (req: Request) => {
   })
 
   if (rateLimitError || allowed === false) {
-    return jsonResponse({ error: 'Rate limit exceeded. Maximum 20 messages per hour.' }, 429)
+    return jsonResponse({ error: 'Rate limit exceeded. Maximum 20 messages per hour.' }, 429, corsHeaders)
   }
 
   // ── 4. Parse request body ──────────────────────────────────────────────
@@ -124,7 +121,7 @@ serve(async (req: Request) => {
     // Keep only last 10 history messages to limit token usage
     if (history.length > 10) history = history.slice(-10)
   } catch {
-    return jsonResponse({ error: 'Bad request: message is required' }, 400)
+    return jsonResponse({ error: 'Bad request: message is required' }, 400, corsHeaders)
   }
 
   // ── 5. Fetch user's financial data ─────────────────────────────────────
@@ -196,7 +193,7 @@ Previous month (${prevMonthStart} to ${prevMonthEnd}):
 
   // ── 6. Call Gemini API ─────────────────────────────────────────────────
   if (!GOOGLE_AI_KEY) {
-    return jsonResponse({ error: 'Server misconfiguration: GOOGLE_AI_KEY is not set' }, 500)
+    return jsonResponse({ error: 'Server misconfiguration: GOOGLE_AI_KEY is not set' }, 500, corsHeaders)
   }
 
   const systemPrompt = buildSystemPrompt(summaryBlock, recentTxBlock, todayDate, locale)
@@ -233,11 +230,11 @@ Previous month (${prevMonthStart} to ${prevMonthEnd}):
 
   if (!geminiRes.ok) {
     const geminiErr = await geminiRes.text()
-    return jsonResponse({ error: `Gemini ${geminiRes.status}: ${geminiErr}` }, 502)
+    return jsonResponse({ error: `Gemini ${geminiRes.status}: ${geminiErr}` }, 502, corsHeaders)
   }
 
   const geminiData = await geminiRes.json()
   const text: string = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 
-  return jsonResponse({ reply: text.trim() })
+  return jsonResponse({ reply: text.trim() }, 200, corsHeaders)
 })

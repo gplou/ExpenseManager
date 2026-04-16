@@ -45,8 +45,6 @@ Rules:
 - Example: "He salido a cenar mexicano" → category: "Comida", subcategory: "Cena", description: "Mexicano", date: null, is_recurring: false, recurrence_type: null`
 }
 
-// Mobile apps don't send Origin headers, so CORS is mainly for web clients.
-// Restrict to same-site only; adjust if you add a web frontend.
 const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') ?? ''
 
 function getCorsHeaders(req: Request) {
@@ -58,13 +56,9 @@ function getCorsHeaders(req: Request) {
   }
 }
 
-// Legacy alias for non-preflight responses (uses empty origin when not matched)
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN || '',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
-}
-
 serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }

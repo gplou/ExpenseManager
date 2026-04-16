@@ -52,12 +52,9 @@ function getCorsHeaders(req: Request) {
   }
 }
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN || '',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
-}
-
 serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
