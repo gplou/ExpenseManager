@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -90,16 +91,23 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
 
   @override
   Future<UserModel> signInWithGoogle() async {
+    return _signInWithGoogleNative();
+  }
+
+  /// Flujo nativo con google_sign_in (iOS, Android, macOS).
+  /// En iOS/macOS se pasa un nonce hasheado al SDK para que lo embeba en el
+  /// idToken; Supabase verifica con el nonce raw — mismo patrón que Apple.
+  Future<UserModel> _signInWithGoogleNative() async {
     try {
       if (AppConfig.googleWebClientId.isEmpty) {
         throw const AuthFailure(
           'Falta configurar GOOGLE_WEB_CLIENT_ID en AppConfig.',
         );
       }
+
       final googleSignIn = GoogleSignIn(
         serverClientId: AppConfig.googleWebClientId,
       );
-      // Desconectar sesión previa para forzar el selector de cuenta
       await googleSignIn.signOut();
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
@@ -125,9 +133,9 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
     } on AuthFailure {
       rethrow;
     } on AuthException catch (e) {
+      debugPrint('[GoogleSignIn] AuthException: ${e.message} | statusCode: ${e.statusCode}');
       throw AuthFailure(_mapAuthError(e.message));
     } on PlatformException catch (e) {
-      // Errores nativos del SDK de Google (SHA-1 incorrecto, cancelación, etc.)
       if (e.code == 'sign_in_canceled') {
         throw const AuthFailure('Inicio de sesión cancelado');
       }
@@ -140,6 +148,7 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
             : 'Error al iniciar sesión con Google',
       );
     } catch (e) {
+      debugPrint('[GoogleSignIn] unexpected error: $e');
       throw AuthFailure(
         kDebugMode ? 'Error inesperado: $e' : 'Error al iniciar sesión con Google',
       );

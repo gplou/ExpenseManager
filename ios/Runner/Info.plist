@@ -76,6 +76,8 @@
 		<string>Necesitamos acceso a tu galería para seleccionar fotos de recibos.</string>
 		<key>NSPhotoLibraryAddOnlyUsageDescription</key>
 		<string>Necesitamos permiso para guardar fotos en tu galería.</string>
+		<key>GIDClientID</key>
+		<string>633018728869-f5ccs5nvdbcg6h4eoku7ff1in6nkh8du.apps.googleusercontent.com</string>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
