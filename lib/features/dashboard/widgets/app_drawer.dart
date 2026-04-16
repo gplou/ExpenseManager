@@ -441,6 +441,7 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
         TextField(
           controller: _controller,
           autofocus: true,
+          maxLength: 20,
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
             labelText: l10n.fullName,

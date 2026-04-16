@@ -22,8 +22,8 @@ Stream<UserModel?> authState(AuthStateRef ref) {
 /// (login, logout, token refresh, restauración de sesión).
 @riverpod
 UserModel? currentUser(CurrentUserRef ref) {
-  return ref.watch(authStateProvider).valueOrNull
-      ?? ref.watch(authRepositoryProvider).currentUser;
+  ref.watch(authStateProvider); // reacciona a cambios de auth (login/logout/userUpdated)
+  return ref.watch(authRepositoryProvider).currentUser;
 }
 
 /// Devuelve true si el usuario inició sesión con email y contraseña.
