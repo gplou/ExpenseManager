@@ -180,17 +180,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
   // ── RevenueCat ────────────────────────────────────────────────────────────
 
   @override
-  Future<RCPurchaseResult> purchaseProPlan() async {
-    final offerings = await Purchases.getOfferings();
-    // Prefer the monthly package; fall back to the first available package.
-    final package = offerings.current?.monthly ??
-        offerings.current?.availablePackages.firstOrNull;
-
-    if (package == null) {
-      throw const RCPurchaseException(
-          'Producto no disponible. Inténtalo más tarde.');
-    }
-
+  Future<RCPurchaseResult> purchaseProPlan(Package package) async {
     try {
       final customerInfo = await Purchases.purchasePackage(package);
       return RevenueCatAdapter.fromCustomerInfo(customerInfo);

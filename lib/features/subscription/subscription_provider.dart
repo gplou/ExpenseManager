@@ -5,6 +5,7 @@ import '../../core/security/secure_storage.dart';
 import '../../core/services/analytics_service.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import 'data/revenue_cat_adapter.dart';
+import 'domain/subscription_expiry_calculator.dart';
 import 'subscription_repository.dart';
 import 'subscription_state.dart';
 
@@ -16,7 +17,7 @@ const _kCacheSourceKey = 'sub_source';
 const _kCacheUserIdKey = 'sub_user_id';
 const _kCacheTrialUsedKey = 'sub_trial_used';
 
-/// Re-check the store/Supabase at most once every 4 hours.
+/// Re-check the store/Supabase at most once every [_kCacheTtl].
 /// Keeping this short limits the window where a tampered cache (e.g. on a
 /// rooted device) could grant offline PRO access beyond the real expiry.
 const _kCacheTtl = Duration(hours: 4);
@@ -38,14 +39,25 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   int _promoFailedAttempts = 0;
   DateTime? _promoCooldownUntil;
 
+  /// Tracks the RC identity currently logged in so we can detect user
+  /// transitions across [build] re-runs. Without this we can't distinguish
+  /// "first build for a user" from "same user rebuilt" from "logout".
+  String? _rcIdentityUserId;
+
+  /// Set while a purchase/restore is in flight. The RC SDK fires
+  /// `CustomerInfoUpdateListener` when the entitlement changes after a
+  /// purchase; that callback runs concurrently with [_applyRCResult] and
+  /// would overwrite Supabase without the bonus-days from a pending discount.
+  /// We suppress the listener for the duration of the explicit flow.
+  bool _purchaseInFlight = false;
+
   @override
   Future<SubscriptionState> build() async {
     // Rebuild when the logged-in user changes so stale cache is never reused.
     final user = ref.watch(currentUserProvider);
+    _syncRevenueCatIdentity(user?.id);
 
-    // Sync RC user identity so RevenueCat can attribute purchases correctly.
     if (user != null) {
-      Purchases.logIn(user.id).ignore();
       AnalyticsService.identify(
         user.id,
         isPro: state.valueOrNull?.isPro ?? false,
@@ -57,20 +69,43 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     Purchases.addCustomerInfoUpdateListener(onRCUpdate);
     ref.onDispose(() {
       Purchases.removeCustomerInfoUpdateListener(onRCUpdate);
-      if (user == null) Purchases.logOut().ignore();
+      // Release the RC identity on provider disposal so the next app session
+      // starts clean. We intentionally do NOT gate on `user == null` here:
+      // that captured the build-time value, not the current one.
+      if (_rcIdentityUserId != null) {
+        Purchases.logOut().ignore();
+        _rcIdentityUserId = null;
+      }
     });
 
     return _loadInitialState();
   }
 
+  /// Logs in/out of RevenueCat as the signed-in Supabase user changes.
+  /// Called from [build] every time `currentUserProvider` emits; the
+  /// [_rcIdentityUserId] field makes the transitions idempotent so we only
+  /// hit the RC SDK when the identity actually changed.
+  void _syncRevenueCatIdentity(String? newUserId) {
+    if (_rcIdentityUserId == newUserId) return;
+    if (_rcIdentityUserId != null && newUserId != _rcIdentityUserId) {
+      Purchases.logOut().ignore();
+    }
+    if (newUserId != null) {
+      Purchases.logIn(newUserId).ignore();
+    }
+    _rcIdentityUserId = newUserId;
+  }
+
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  /// Initiates the native purchase flow via RevenueCat.
-  Future<void> purchase() async {
+  /// Initiates the native purchase flow via RevenueCat for [package].
+  Future<void> purchase(Package package) async {
     _setLoading(true);
+    _purchaseInFlight = true;
     try {
-      final result =
-          await ref.read(subscriptionRepositoryProvider).purchaseProPlan();
+      final result = await ref
+          .read(subscriptionRepositoryProvider)
+          .purchaseProPlan(package);
       await _applyRCResult(result, isRestore: false);
     } on RCPurchaseCancelledException {
       final current = state.valueOrNull ?? const SubscriptionState();
@@ -81,12 +116,15 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       AnalyticsService.track(AnalyticsService.purchaseError, {
         'error': e.message,
       });
+    } finally {
+      _purchaseInFlight = false;
     }
   }
 
   /// Restores previous purchases via RevenueCat.
   Future<void> restorePurchases() async {
     _setLoading(true);
+    _purchaseInFlight = true;
     try {
       final result =
           await ref.read(subscriptionRepositoryProvider).restoreProPlan();
@@ -97,6 +135,8 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
         'error': e.message,
         'flow': 'restore',
       });
+    } finally {
+      _purchaseInFlight = false;
     }
   }
 
@@ -160,7 +200,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     }
   }
 
-  /// Activates the one-time 3-day free trial.
+  /// Activates the one-time free trial ([kFreeTrialDays] days).
   Future<void> startFreeTrial() async {
     _setLoading(true);
     try {
@@ -187,7 +227,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     }
   }
 
-  /// Forces a re-check against Supabase + RevenueCat, ignoring the 24 h cache.
+  /// Forces a re-check against Supabase + RevenueCat, ignoring the cache TTL.
   Future<void> forceRefresh() async {
     _setLoading(true);
     final fresh = await _fetchRemote();
@@ -280,6 +320,17 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// Handles a RevenueCat CustomerInfo update pushed by the SDK
   /// (e.g. subscription renewed or cancelled by the store).
   Future<void> _handleRCUpdate(CustomerInfo info) async {
+    // An explicit purchase/restore flow is running: it will apply the
+    // authoritative result (including any pending discount bonus days) via
+    // [_applyRCResult]. Skipping here prevents a double upsert that would
+    // race the bonus-days logic and occasionally persist the store expiry
+    // without the extra days the user was promised.
+    if (_purchaseInFlight) return;
+
+    // No Supabase session (e.g. listener fires mid-logout). Bail out rather
+    // than crashing on the non-null assertion inside upsertSubscription.
+    if (ref.read(currentUserProvider) == null) return;
+
     final result = RevenueCatAdapter.fromCustomerInfo(info);
     // not PRO or no expiry — let the next cache-TTL check handle the expiry
     if (!result.isPro || result.expiresAt == null) return;
@@ -314,10 +365,17 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     }
 
     // Apply bonus days from a pending discount promo code, if any.
+    // BUG FIX: the previous implementation only applied bonus days when the
+    // store did NOT return an expiry (the `??` fallback branch), meaning real
+    // store purchases — which always return an expiry — silently dropped the
+    // discount the user redeemed. The calculator now adds bonus days on top
+    // of the store expiry in all cases.
     final current = state.valueOrNull ?? const SubscriptionState();
-    final bonusDays = current.discountBonusDays;
-    final expiresAt = result.expiresAt ??
-        DateTime.now().add(Duration(days: kSubscriptionDays + bonusDays));
+    final expiresAt = SubscriptionExpiryCalculator.effectiveExpiry(
+      storeExpiry: result.expiresAt,
+      bonusDays: current.discountBonusDays,
+      fallbackPeriodDays: kSubscriptionDays,
+    );
 
     final repo = ref.read(subscriptionRepositoryProvider);
     await repo.upsertSubscription(
@@ -353,10 +411,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   // SECURITY: The subscription cache (including expiresAt) is stored in
   // flutter_secure_storage (Android EncryptedSharedPreferences / iOS Keychain).
   // On a rooted/jailbroken device the stored values could be tampered with to
-  // extend a subscription locally. This is mitigated by the 24-hour TTL that
-  // forces a server re-check, but a user in airplane mode could exploit the
-  // stale cache. Consider adding a server-signed expiry token if this becomes
-  // a significant abuse vector.
+  // extend a subscription locally. This is mitigated by the cache TTL
+  // ([_kCacheTtl]) that forces a server re-check, but a user in airplane mode
+  // could exploit the stale cache. Consider adding a server-signed expiry
+  // token if this becomes a significant abuse vector.
   Future<void> _persistCache({
     DateTime? expiresAt,
     String? source,
@@ -420,4 +478,11 @@ final isProProvider = Provider<bool>((ref) {
   return ref.watch(
     subscriptionProvider.select((s) => s.valueOrNull?.isPro ?? false),
   );
+});
+
+/// Loads the current RevenueCat offering with real store prices.
+/// Auto-disposed: fetched fresh each time the paywall opens.
+final offeringsProvider = FutureProvider.autoDispose<Offering?>((ref) async {
+  final offerings = await Purchases.getOfferings();
+  return offerings.current;
 });

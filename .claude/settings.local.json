@@ -60,7 +60,14 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\({k: 'FILLED' if v and not v.startswith\\('your'\\) and not v.startswith\\('sk-ant-your'\\) and not v.startswith\\('https://your'\\) and not v.startswith\\('goog_your'\\) and not v.startswith\\('appl_your'\\) and not v.startswith\\('phc_your'\\) else 'EMPTY/PLACEHOLDER' for k,v in d.items\\(\\)}\\)\")",
       "Bash(flutter build:*)",
       "Bash(open /Users/guillermo/Downloads/)",
-      "Bash(osascript -e 'tell application \"Finder\" to duplicate POSIX file \"/Users/guillermo/Downloads/upload-keystore.jks\" to POSIX file \"/Users/guillermo/Workspace/ExpenseManager/android/app\" with replacing')"
+      "Bash(osascript -e 'tell application \"Finder\" to duplicate POSIX file \"/Users/guillermo/Downloads/upload-keystore.jks\" to POSIX file \"/Users/guillermo/Workspace/ExpenseManager/android/app\" with replacing')",
+      "Bash(keytool -list -v -keystore /Users/guillermo/Workspace/ExpenseManager/android/app/upload-keystore.jks -alias upload -storepass \"Desmotivaciones1;\")",
+      "Bash(keytool -list -v -keystore /Users/guillermo/Workspace/ExpenseManager/android/app/upload-keystore.jks -storepass \"Desmotivaciones1;\")",
+      "Bash(/usr/libexec/java_home)",
+      "Bash(export JAVA_HOME=$\\(/usr/libexec/java_home \\))",
+      "Read(//usr/libexec/**)",
+      "Read(//Library/Java/JavaVirtualMachines/**)",
+      "Bash(flutter config *)"
     ]
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:expense_manager/features/subscription/domain/subscription_expiry_calculator.dart';
 import 'package:expense_manager/features/subscription/domain/subscription_repository_contract.dart';
 import 'package:expense_manager/features/subscription/subscription_repository.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
@@ -8,6 +10,8 @@ import 'package:expense_manager/features/subscription/subscription_state.dart';
 
 class MockSubscriptionRepository extends Mock
     implements SubscriptionRepositoryContract {}
+
+class MockPackage extends Mock implements Package {}
 
 /// These tests verify the business logic that the SubscriptionNotifier
 /// applies to repository results. Because the notifier's build() method
@@ -26,6 +30,7 @@ void main() {
 
     // Register fallback values for methods that take required params.
     registerFallbackValue(DateTime(2026));
+    registerFallbackValue(MockPackage());
   });
 
   // ── State transition: initial (no subscription) ─────────────────────────
@@ -57,7 +62,7 @@ void main() {
   group('Purchase flow state transitions', () {
     test('purchase with PRO result updates state to isPro=true', () async {
       final expires = DateTime.now().add(const Duration(days: 31));
-      when(() => mockRepo.purchaseProPlan()).thenAnswer(
+      when(() => mockRepo.purchaseProPlan(any())).thenAnswer(
         (_) async => RCPurchaseResult(
           isPro: true,
           source: 'google_play',
@@ -71,7 +76,7 @@ void main() {
             storeTxId: any(named: 'storeTxId'),
           )).thenAnswer((_) async {});
 
-      final result = await mockRepo.purchaseProPlan();
+      final result = await mockRepo.purchaseProPlan(MockPackage());
 
       // Simulate the state transition that the notifier would apply.
       expect(result.isPro, isTrue);
@@ -149,14 +154,18 @@ void main() {
 
     test('purchase with pending discount applies bonus days to expiry', () async {
       // Simulates _applyRCResult when a discount promo is pending.
-      // RC returns an expiresAt; the notifier should add discountBonusDays on top.
+      // RC returns an expiresAt; the notifier must add discountBonusDays on top
+      // via SubscriptionExpiryCalculator (the same code path production uses).
       const pendingState = SubscriptionState(pendingDiscountPercentage: 100);
       // 100% discount → bonusDays = kSubscriptionDays (30)
       expect(pendingState.discountBonusDays, 30);
 
-      final rcExpiry = DateTime.now().add(const Duration(days: 30));
-      final bonusDays = pendingState.discountBonusDays;
-      final effectiveExpiry = rcExpiry.add(Duration(days: bonusDays));
+      final rcExpiry = DateTime.utc(2026, 5, 1);
+      final effectiveExpiry = SubscriptionExpiryCalculator.effectiveExpiry(
+        storeExpiry: rcExpiry,
+        bonusDays: pendingState.discountBonusDays,
+        fallbackPeriodDays: 30,
+      );
 
       final newState = SubscriptionState(
         expiresAt: effectiveExpiry,
@@ -165,12 +174,38 @@ void main() {
       );
 
       expect(newState.isPro, isTrue);
+      expect(effectiveExpiry, DateTime.utc(2026, 5, 31));
       expect(
         effectiveExpiry.isAfter(rcExpiry),
         isTrue,
         reason: 'Bonus days must extend the RC expiry',
       );
     });
+
+    test(
+      'BUG REGRESSION: bonus days are applied even when the store returns an expiry',
+      () {
+        // Old code:
+        //   final expiresAt = result.expiresAt ??
+        //       DateTime.now().add(Duration(days: kSubscriptionDays + bonusDays));
+        // With a non-null RC expiry the `??` short-circuits and bonusDays
+        // never reach the persisted value — the user loses the discount
+        // they redeemed. This test guards that regression.
+        final rcExpiry = DateTime.utc(2026, 1, 1);
+        const bonusDays = 15;
+        final effective = SubscriptionExpiryCalculator.effectiveExpiry(
+          storeExpiry: rcExpiry,
+          bonusDays: bonusDays,
+          fallbackPeriodDays: 30,
+        );
+        expect(effective, DateTime.utc(2026, 1, 16));
+        expect(
+          effective.isAfter(rcExpiry),
+          isTrue,
+          reason: 'Discount bonus must not be discarded when RC returns expiry',
+        );
+      },
+    );
   });
 
   // ── State transition: redeemPromoCode() ─────────────────────────────────
@@ -345,6 +380,119 @@ void main() {
       expect(state.isPro, isTrue);
       expect(state.source, 'promo_code');
       expect(state.expiresAt, supabaseExpiry);
+    });
+  });
+
+  // ── RC identity transitions ─────────────────────────────────────────────
+
+  group('RevenueCat identity transitions', () {
+    // Mirrors the decision logic in SubscriptionNotifier._syncRevenueCatIdentity.
+    // We reproduce it here as a pure function so the transitions are tested
+    // without touching the RC SDK (which requires platform channels).
+    ({bool logOut, bool logIn, String? next}) syncIdentity({
+      required String? previous,
+      required String? incoming,
+    }) {
+      if (previous == incoming) {
+        return (logOut: false, logIn: false, next: previous);
+      }
+      final shouldLogOut = previous != null;
+      final shouldLogIn = incoming != null;
+      return (logOut: shouldLogOut, logIn: shouldLogIn, next: incoming);
+    }
+
+    test('first login calls logIn and no logOut', () {
+      final t = syncIdentity(previous: null, incoming: 'user-1');
+      expect(t.logIn, isTrue);
+      expect(t.logOut, isFalse);
+      expect(t.next, 'user-1');
+    });
+
+    test('same user on rebuild is a no-op', () {
+      final t = syncIdentity(previous: 'user-1', incoming: 'user-1');
+      expect(t.logIn, isFalse);
+      expect(t.logOut, isFalse);
+      expect(t.next, 'user-1');
+    });
+
+    test('logout (user → null) calls logOut and skips logIn', () {
+      // BUG REGRESSION: the previous `onDispose(() { if (user == null) logOut(); })`
+      // captured the OLD user, so a non-null → null transition never fired
+      // logOut. This direct check must stay green.
+      final t = syncIdentity(previous: 'user-1', incoming: null);
+      expect(t.logOut, isTrue);
+      expect(t.logIn, isFalse);
+      expect(t.next, isNull);
+    });
+
+    test('account switch (userA → userB) calls logOut AND logIn', () {
+      final t = syncIdentity(previous: 'user-a', incoming: 'user-b');
+      expect(t.logOut, isTrue);
+      expect(t.logIn, isTrue);
+      expect(t.next, 'user-b');
+    });
+  });
+
+  // ── Listener race vs. explicit purchase flow ────────────────────────────
+
+  group('CustomerInfoUpdateListener race guard', () {
+    // Mirrors _handleRCUpdate's guard: when an explicit purchase/restore is
+    // in flight, the listener must no-op so it doesn't clobber Supabase with
+    // an expiry that lacks the discount bonus days.
+    bool shouldProcessListener({
+      required bool purchaseInFlight,
+      required bool hasSession,
+      required bool isPro,
+      required DateTime? expiresAt,
+    }) {
+      if (purchaseInFlight) return false;
+      if (!hasSession) return false;
+      if (!isPro) return false;
+      if (expiresAt == null) return false;
+      return true;
+    }
+
+    test('skips listener while a purchase is in flight', () {
+      final ok = shouldProcessListener(
+        purchaseInFlight: true,
+        hasSession: true,
+        isPro: true,
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      );
+      expect(ok, isFalse,
+          reason: 'Explicit purchase flow owns the upsert; listener must yield');
+    });
+
+    test('skips listener when no Supabase session', () {
+      // BUG REGRESSION: without this guard the RC callback hit
+      // `currentUser!.id` and threw during logout-driven RC callbacks.
+      final ok = shouldProcessListener(
+        purchaseInFlight: false,
+        hasSession: false,
+        isPro: true,
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      );
+      expect(ok, isFalse);
+    });
+
+    test('skips when entitlement inactive', () {
+      final ok = shouldProcessListener(
+        purchaseInFlight: false,
+        hasSession: true,
+        isPro: false,
+        expiresAt: null,
+      );
+      expect(ok, isFalse);
+    });
+
+    test('processes listener on a legitimate background renewal', () {
+      final ok = shouldProcessListener(
+        purchaseInFlight: false,
+        hasSession: true,
+        isPro: true,
+        expiresAt: DateTime.now().add(const Duration(days: 31)),
+      );
+      expect(ok, isTrue);
     });
   });
 

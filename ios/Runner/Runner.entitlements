@@ -8,7 +8,7 @@
     </array>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.com.gpm.expensemanager_app</string>
+        <string>group.com.gpm.expensemanagerapp</string>
     </array>
 </dict>
 </plist>

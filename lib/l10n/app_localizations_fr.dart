@@ -840,4 +840,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String deleteSelectedConfirm(int count) {
     return 'Supprimer $count transaction(s) sélectionnée(s) ?';
   }
+
+  @override
+  String get planAnnual => 'Annuel';
+
+  @override
+  String get planMonthly => 'Mensuel';
+
+  @override
+  String get planWeekly => 'Hebdomadaire';
+
+  @override
+  String planPerMonth(String price) {
+    return '$price / mois';
+  }
 }
