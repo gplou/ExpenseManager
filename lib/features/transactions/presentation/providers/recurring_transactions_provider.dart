@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../subscription/subscription_provider.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../data/transactions_repository.dart';
 import '../../domain/recurring_transaction_model.dart';
@@ -20,6 +21,18 @@ void resetProcessedRecurringState() => _processedThisSession.clear();
 /// Al ser un FutureProvider sin autoDispose, se ejecuta una vez por sesión
 /// y solo se repite si se invalida explícitamente (ej. al hacer pull-to-refresh).
 final processRecurringTransactionsProvider = FutureProvider<void>((ref) async {
+  // Wait for the subscription to resolve before processing. Without this guard,
+  // the provider runs during the loading window where isProProvider is still
+  // false, causing recurringTransactionsRepositoryProvider to return the LOCAL
+  // repo instead of the cloud one. That makes updateNextOccurrence write only
+  // to SQLite — leaving next_occurrence stale in Supabase — and the next
+  // session creates a duplicate transaction for the same date.
+  // Using ref.watch here causes the FutureProvider to rebuild automatically
+  // once the subscription resolves, so no manual invalidation is needed.
+  final subscriptionLoaded =
+      ref.watch(subscriptionProvider.select((s) => s.hasValue));
+  if (!subscriptionLoaded) return;
+
   final recurringRepo = ref.read(recurringTransactionsRepositoryProvider);
   final txRepo = ref.read(transactionsRepositoryProvider);
 
@@ -39,6 +52,16 @@ final processRecurringTransactionsProvider = FutureProvider<void>((ref) async {
     // la misma transacción (evita duplicados persistentes en Supabase).
     final next = nextRecurrenceDate(r.nextOccurrence, r.recurrenceType);
     await recurringRepo.updateNextOccurrence(r.id, next);
+
+    // Defensive dedup: skip creation if a transaction for this recurring+date
+    // already exists. Guards against stale next_occurrence left in Supabase by
+    // a prior interrupted session (e.g. updateNextOccurrence hit local-only repo
+    // before the subscription-loading guard was added).
+    final existing = await txRepo.getTransactions(
+      from: r.nextOccurrence,
+      to: r.nextOccurrence,
+    );
+    if (existing.any((t) => t.recurringTransactionId == r.id)) continue;
 
     // Crear la transacción real para la fecha de vencimiento
     await txRepo.createTransaction(
