@@ -48,6 +48,31 @@ class _FakeTxRepo implements TransactionsRepositoryContract {
   Future<void> upsertTransaction(TransactionModel t) async {}
 }
 
+class _TrackingTxRepo implements TransactionsRepositoryContract {
+  _TrackingTxRepo(this._inner, this._log);
+  final _FakeTxRepo _inner;
+  final List<String> _log;
+
+  @override
+  Future<TransactionModel> createTransaction(TransactionModel t) async {
+    _log.add('create');
+    return _inner.createTransaction(t);
+  }
+
+  @override
+  Future<List<TransactionModel>> getTransactions({required DateTime from, required DateTime to}) =>
+      _inner.getTransactions(from: from, to: to);
+  @override
+  Future<TransactionsSummary> getSummary({required DateTime from, required DateTime to}) =>
+      _inner.getSummary(from: from, to: to);
+  @override
+  Future<TransactionModel> updateTransaction(TransactionModel t) => _inner.updateTransaction(t);
+  @override
+  Future<void> deleteTransaction(String id) => _inner.deleteTransaction(id);
+  @override
+  Future<void> upsertTransaction(TransactionModel t) => _inner.upsertTransaction(t);
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 RecurringTransactionModel _recurring({
@@ -91,6 +116,7 @@ void main() {
   setUp(() {
     recurringRepo = _MockRecurringRepo();
     txRepo = _FakeTxRepo();
+    resetProcessedRecurringState();
     registerFallbackValue(
       TransactionModel(
         id: '',
@@ -159,7 +185,7 @@ void main() {
       expect(txRepo.created.first.date, dueDate);
     });
 
-    test('advances nextOccurrence after creating transaction', () async {
+    test('advances nextOccurrence to the correct next date', () async {
       final dueDate = DateTime(2024, 3, 15);
       final r = _recurring(
         id: 'rec-1',
@@ -184,6 +210,66 @@ void main() {
       final nextDate = captured.first as DateTime;
       // Monthly: Mar 15 → Apr 15
       expect(nextDate, DateTime(2024, 4, 15));
+    });
+
+    test('advances nextOccurrence BEFORE creating transaction — prevents duplicates on crash', () async {
+      final callOrder = <String>[];
+
+      when(() => recurringRepo.getDueRecurring())
+          .thenAnswer((_) async => [_recurring(id: 'rec-1')]);
+      when(() => recurringRepo.updateNextOccurrence(any(), any())).thenAnswer((_) async {
+        callOrder.add('advance');
+      });
+
+      final trackingTxRepo = _TrackingTxRepo(txRepo, callOrder);
+      final container = ProviderContainer(
+        overrides: [
+          recurringTransactionsRepositoryProvider
+              .overrideWith((ref) => recurringRepo),
+          transactionsRepositoryProvider.overrideWith((ref) => trackingTxRepo),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(processRecurringTransactionsProvider.future);
+
+      expect(
+        callOrder,
+        ['advance', 'create'],
+        reason: 'nextOccurrence must be advanced before the transaction is '
+            'created so that a crash between the two steps cannot cause '
+            'duplicate transactions on the next session.',
+      );
+    });
+
+    test('second concurrent run is a no-op (prevents duplicate cloud writes)', () async {
+      when(() => recurringRepo.getDueRecurring()).thenAnswer((_) async => [
+            _recurring(id: 'rec-1'),
+          ]);
+      when(() => recurringRepo.updateNextOccurrence(any(), any()))
+          .thenAnswer((_) async {});
+
+      final container = _makeContainer(
+        recurringRepo: recurringRepo,
+        txRepo: txRepo,
+      );
+      addTearDown(container.dispose);
+
+      // Start first run.
+      final first = container.read(processRecurringTransactionsProvider.future);
+
+      // Invalidate (simulates pull-to-refresh) and start second run concurrently.
+      container.invalidate(processRecurringTransactionsProvider);
+      final second = container.read(processRecurringTransactionsProvider.future);
+
+      await Future.wait([first, second]);
+
+      // Despite two runs, each recurring transaction is only created once.
+      expect(
+        txRepo.created.length,
+        1,
+        reason: 'Concurrent invalidation must not cause duplicate transactions.',
+      );
     });
 
     test('processes multiple due recurring transactions', () async {
