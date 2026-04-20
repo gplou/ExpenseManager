@@ -12,10 +12,10 @@
 
 ### Pendiente (gratis)
 - [x] **Privacy policy** — publicada en GitHub Pages.
-- [ ] **Support URL** — página o email público
+- [x] **Support URL** — https://gplou.github.io/ExpenseManager/support.html
 - [ ] **Screenshots App Store** — tomar con simulador iOS (6.5" iPhone 14 Pro Max + 5.5" iPhone 8 Plus mínimo)
   - Skills: `/simulator-utils` (capturar + redimensionar), `/ui-ux-pro-max` (composición visual)
-- [ ] **Metadata** — nombre app, subtítulo (≤30 chars), descripción, keywords (≤100 chars)
+- [x] **Metadata** — nombre app, subtítulo (≤30 chars), descripción, keywords (≤100 chars) → `store.config.json`
   - Skills: `/apple-aso` (optimización ASO: keywords, título, descripción para máximo ranking)
 - [ ] **Age rating questionnaire** — preparar respuestas (sin violencia, sin contenido adulto, etc.)
 - [ ] **RevenueCat dashboard** — verificar iOS products configurados
