@@ -17,9 +17,11 @@
   - Skills: `/simulator-utils` (capturar + redimensionar), `/ui-ux-pro-max` (composición visual)
 - [x] **Metadata** — nombre app, subtítulo (≤30 chars), descripción, keywords (≤100 chars) → `store.config.json`
   - Skills: `/apple-aso` (optimización ASO: keywords, título, descripción para máximo ranking)
-- [ ] **Age rating questionnaire** — preparar respuestas (sin violencia, sin contenido adulto, etc.)
+- [x] **Age rating questionnaire** — preparar respuestas (sin violencia, sin contenido adulto, etc.)
 - [ ] **RevenueCat dashboard** — verificar iOS products configurados
-- [ ] **AdMob** — confirmar app iOS registrada y ad unit IDs correctos para iOS
+- [ ] **AdMob** — SKAdNetworkItems ✅, ad unit IDs ✅, ATT prompt ✅ — pendiente en consola AdMob:
+  - [ ] **Estado de aprobación** — "Debe revisarse" (se resuelve al publicar en App Store)
+  - [ ] **Verificación de aplicaciones** — completar en AdMob Console → Configuración de la aplicación
 - [ ] **Build local iOS** — `flutter build ios --dart-define-from-file=dart_defines.json` sin errores
   - Skills: `/ios-dev`
 
