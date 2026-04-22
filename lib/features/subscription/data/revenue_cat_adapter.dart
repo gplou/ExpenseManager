@@ -22,7 +22,10 @@ class RevenueCatAdapter {
       expiresAt: entitlement.expirationDate != null
           ? DateTime.tryParse(entitlement.expirationDate!)?.toLocal()
           : null,
-      storeTxId: info.originalAppUserId,
+      // The Flutter RC SDK does not expose a store transaction id on
+      // EntitlementInfo. Leave null rather than writing the RC app-user id
+      // into the `store_tx_id` column, which would corrupt that field.
+      storeTxId: null,
     );
   }
 

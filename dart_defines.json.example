@@ -5,5 +5,7 @@
   "CLAUDE_API_KEY": "sk-ant-your-api-key",
   "REVENUECAT_ANDROID_KEY": "goog_your-revenuecat-android-key",
   "REVENUECAT_IOS_KEY": "appl_your-revenuecat-ios-key",
-  "POSTHOG_API_KEY": "phc_your-posthog-api-key"
+  "POSTHOG_API_KEY": "phc_your-posthog-api-key",
+  "ADMOB_ANDROID_BANNER_UNIT_ID": "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX",
+  "ADMOB_IOS_BANNER_UNIT_ID": "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
 }

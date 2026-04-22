@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:expense_manager/features/subscription/domain/subscription_repository_contract.dart';
 import 'package:expense_manager/features/subscription/subscription_repository.dart';
 
@@ -7,6 +8,8 @@ import 'package:expense_manager/features/subscription/subscription_repository.da
 
 class MockSubscriptionRepository extends Mock
     implements SubscriptionRepositoryContract {}
+
+class MockPackage extends Mock implements Package {}
 
 void main() {
   // ── RCPurchaseResult ─────────────────────────────────────────────────────
@@ -121,11 +124,12 @@ void main() {
 
     setUp(() {
       mockRepo = MockSubscriptionRepository();
+      registerFallbackValue(MockPackage());
     });
 
     test('purchaseProPlan returns PRO result', () async {
       final expires = DateTime.now().add(const Duration(days: 31));
-      when(() => mockRepo.purchaseProPlan()).thenAnswer(
+      when(() => mockRepo.purchaseProPlan(any())).thenAnswer(
         (_) async => RCPurchaseResult(
           isPro: true,
           source: 'google_play',
@@ -134,7 +138,7 @@ void main() {
         ),
       );
 
-      final result = await mockRepo.purchaseProPlan();
+      final result = await mockRepo.purchaseProPlan(MockPackage());
       expect(result.isPro, isTrue);
       expect(result.source, 'google_play');
       expect(result.expiresAt, expires);
@@ -142,21 +146,21 @@ void main() {
 
     test('purchaseProPlan throws RCPurchaseCancelledException on cancel',
         () async {
-      when(() => mockRepo.purchaseProPlan())
+      when(() => mockRepo.purchaseProPlan(any()))
           .thenThrow(const RCPurchaseCancelledException());
 
       expect(
-        () => mockRepo.purchaseProPlan(),
+        () => mockRepo.purchaseProPlan(MockPackage()),
         throwsA(isA<RCPurchaseCancelledException>()),
       );
     });
 
     test('purchaseProPlan throws RCPurchaseException on error', () async {
-      when(() => mockRepo.purchaseProPlan())
+      when(() => mockRepo.purchaseProPlan(any()))
           .thenThrow(const RCPurchaseException('Network error'));
 
       expect(
-        () => mockRepo.purchaseProPlan(),
+        () => mockRepo.purchaseProPlan(MockPackage()),
         throwsA(
           isA<RCPurchaseException>()
               .having((e) => e.message, 'message', 'Network error'),

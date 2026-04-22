@@ -347,5 +347,15 @@
   "deleteSelectedConfirm": "Delete {count} selected transaction(s)?",
   "@deleteSelectedConfirm": {
     "placeholders": { "count": { "type": "int" } }
+  },
+  "planAnnual": "Annual",
+  "@planAnnual": {},
+  "planMonthly": "Monthly",
+  "@planMonthly": {},
+  "planWeekly": "Weekly",
+  "@planWeekly": {},
+  "planPerMonth": "{price} / month",
+  "@planPerMonth": {
+    "placeholders": { "price": { "type": "String" } }
   }
 }

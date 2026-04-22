@@ -37,7 +37,7 @@ Future<void> main() async {
 
     // Detectar si la app fue lanzada desde un widget de pantalla de inicio
     step = '1 - HomeWidget';
-    HomeWidget.setAppGroupId('group.com.gpm.expensemanager_app');
+    HomeWidget.setAppGroupId('group.com.gpm.expensemanagerapp');
     final widgetLaunchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
     final initialWidgetAction = _extractWidgetAction(widgetLaunchUri);
 

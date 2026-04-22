@@ -1,3 +1,5 @@
+import 'package:purchases_flutter/purchases_flutter.dart';
+
 import '../subscription_repository.dart';
 
 // ── Supabase sub-contract ─────────────────────────────────────────────────────
@@ -27,10 +29,10 @@ abstract class SupabaseSubscriptionContract {
 /// Implementations of this interface must only interact with the RC SDK;
 /// they must not depend on any Supabase client.
 abstract class RevenueCatContract {
-  /// Triggers the native store purchase sheet and returns the result.
+  /// Triggers the native store purchase sheet for the given [package].
   /// Throws [RCPurchaseCancelledException] if the user cancels.
   /// Throws [RCPurchaseException] on any other error.
-  Future<RCPurchaseResult> purchaseProPlan();
+  Future<RCPurchaseResult> purchaseProPlan(Package package);
 
   /// Restores previous store purchases.
   /// Returns the current RC entitlement state (may not be PRO if nothing to restore).

@@ -1637,6 +1637,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'¿Eliminar {count} transacción(es) seleccionada(s)?'**
   String deleteSelectedConfirm(int count);
+
+  /// No description provided for @planAnnual.
+  ///
+  /// In es, this message translates to:
+  /// **'Anual'**
+  String get planAnnual;
+
+  /// No description provided for @planMonthly.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensual'**
+  String get planMonthly;
+
+  /// No description provided for @planWeekly.
+  ///
+  /// In es, this message translates to:
+  /// **'Semanal'**
+  String get planWeekly;
+
+  /// No description provided for @planPerMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'{price} / mes'**
+  String planPerMonth(String price);
 }
 
 class _AppLocalizationsDelegate

@@ -22,10 +22,6 @@ class AppConfig {
   static const String googleWebClientId =
       String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
 
-  // Claude API — para interpretar transacciones por voz
-  static const String claudeApiKey =
-      String.fromEnvironment('CLAUDE_API_KEY');
-
   // RevenueCat
   static const String revenueCatAndroidKey =
       String.fromEnvironment('REVENUECAT_ANDROID_KEY');
@@ -87,12 +83,6 @@ class AppConfig {
       debugPrint(
         '[AppConfig] GOOGLE_WEB_CLIENT_ID está vacío. '
         'El inicio de sesión con Google no funcionará.',
-      );
-    }
-    if (claudeApiKey.isEmpty) {
-      debugPrint(
-        '[AppConfig] CLAUDE_API_KEY está vacío. '
-        'Las funciones de voz, imagen y chat IA no funcionarán.',
       );
     }
   }

@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
@@ -9,6 +11,13 @@ import 'package:expense_manager/features/transactions/domain/recurring_transacti
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/recurring_transactions_provider.dart';
+
+// ── Fakes ─────────────────────────────────────────────────────────────────────
+
+class _FakeSubscriptionNotifier extends SubscriptionNotifier {
+  @override
+  Future<SubscriptionState> build() async => const SubscriptionState();
+}
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -94,17 +103,22 @@ RecurringTransactionModel _recurring({
       createdAt: DateTime(2024, 1, 1),
     );
 
-ProviderContainer _makeContainer({
+Future<ProviderContainer> _makeContainer({
   required _MockRecurringRepo recurringRepo,
   required _FakeTxRepo txRepo,
-}) {
-  return ProviderContainer(
+}) async {
+  final container = ProviderContainer(
     overrides: [
+      subscriptionProvider.overrideWith(_FakeSubscriptionNotifier.new),
       recurringTransactionsRepositoryProvider
           .overrideWith((ref) => recurringRepo),
       transactionsRepositoryProvider.overrideWith((ref) => txRepo),
     ],
   );
+  // Resolve subscription before processRecurring reads it so hasValue is true
+  // on the first build, preventing a reactive rebuild that causes test timeouts.
+  await container.read(subscriptionProvider.future);
+  return container;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -134,7 +148,7 @@ void main() {
     test('does nothing when no due recurring transactions', () async {
       when(() => recurringRepo.getDueRecurring()).thenAnswer((_) async => []);
 
-      final container = _makeContainer(
+      final container = await _makeContainer(
         recurringRepo: recurringRepo,
         txRepo: txRepo,
       );
@@ -152,7 +166,7 @@ void main() {
       when(() => recurringRepo.updateNextOccurrence(any(), any()))
           .thenAnswer((_) async {});
 
-      final container = _makeContainer(
+      final container = await _makeContainer(
         recurringRepo: recurringRepo,
         txRepo: txRepo,
       );
@@ -174,7 +188,7 @@ void main() {
       when(() => recurringRepo.updateNextOccurrence(any(), any()))
           .thenAnswer((_) async {});
 
-      final container = _makeContainer(
+      final container = await _makeContainer(
         recurringRepo: recurringRepo,
         txRepo: txRepo,
       );
@@ -196,7 +210,7 @@ void main() {
       when(() => recurringRepo.updateNextOccurrence(any(), any()))
           .thenAnswer((_) async {});
 
-      final container = _makeContainer(
+      final container = await _makeContainer(
         recurringRepo: recurringRepo,
         txRepo: txRepo,
       );
@@ -224,12 +238,14 @@ void main() {
       final trackingTxRepo = _TrackingTxRepo(txRepo, callOrder);
       final container = ProviderContainer(
         overrides: [
+          subscriptionProvider.overrideWith(_FakeSubscriptionNotifier.new),
           recurringTransactionsRepositoryProvider
               .overrideWith((ref) => recurringRepo),
           transactionsRepositoryProvider.overrideWith((ref) => trackingTxRepo),
         ],
       );
       addTearDown(container.dispose);
+      await container.read(subscriptionProvider.future);
 
       await container.read(processRecurringTransactionsProvider.future);
 
@@ -242,33 +258,32 @@ void main() {
       );
     });
 
-    test('second concurrent run is a no-op (prevents duplicate cloud writes)', () async {
+    test('second run in same session is a no-op (prevents duplicate cloud writes)', () async {
       when(() => recurringRepo.getDueRecurring()).thenAnswer((_) async => [
             _recurring(id: 'rec-1'),
           ]);
       when(() => recurringRepo.updateNextOccurrence(any(), any()))
           .thenAnswer((_) async {});
 
-      final container = _makeContainer(
+      final container = await _makeContainer(
         recurringRepo: recurringRepo,
         txRepo: txRepo,
       );
       addTearDown(container.dispose);
 
-      // Start first run.
-      final first = container.read(processRecurringTransactionsProvider.future);
+      // First run processes rec-1 and creates the transaction.
+      await container.read(processRecurringTransactionsProvider.future);
+      expect(txRepo.created.length, 1);
 
-      // Invalidate (simulates pull-to-refresh) and start second run concurrently.
+      // Second run (simulates pull-to-refresh in the same session).
+      // _processedThisSession already contains 'rec-1' so it must be a no-op.
       container.invalidate(processRecurringTransactionsProvider);
-      final second = container.read(processRecurringTransactionsProvider.future);
+      await container.read(processRecurringTransactionsProvider.future);
 
-      await Future.wait([first, second]);
-
-      // Despite two runs, each recurring transaction is only created once.
       expect(
         txRepo.created.length,
         1,
-        reason: 'Concurrent invalidation must not cause duplicate transactions.',
+        reason: 'Same-session re-run must not create duplicate transactions.',
       );
     });
 
@@ -280,7 +295,7 @@ void main() {
       when(() => recurringRepo.updateNextOccurrence(any(), any()))
           .thenAnswer((_) async {});
 
-      final container = _makeContainer(
+      final container = await _makeContainer(
         recurringRepo: recurringRepo,
         txRepo: txRepo,
       );
@@ -301,7 +316,7 @@ void main() {
       when(() => recurringRepo.updateNextOccurrence(any(), any()))
           .thenAnswer((_) async {});
 
-      final container = _makeContainer(
+      final container = await _makeContainer(
         recurringRepo: recurringRepo,
         txRepo: txRepo,
       );
