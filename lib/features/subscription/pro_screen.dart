@@ -474,8 +474,8 @@ class _PlanPickerFallback extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            l10n.proPrice,
-            style: context.textTheme.headlineMedium?.copyWith(
+            l10n.planMonthly,
+            style: context.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
               color: AppColors.dustyTeal,
             ),
