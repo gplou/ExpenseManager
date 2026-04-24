@@ -304,7 +304,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                         cSymbol: cSymbol,
                         numFmtStyle: numFmt,
                       ),
-                      const Gap(24),
+                      Gap(MediaQuery.of(context).padding.bottom + 24),
                     ],
                   ),
                 );
