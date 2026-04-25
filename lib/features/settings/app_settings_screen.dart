@@ -11,7 +11,6 @@ import '../../core/providers/number_format_provider.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/utils/extensions.dart';
 import '../../l10n/app_localizations.dart';
-import '../tutorial/tutorial_notifier.dart';
 
 class AppSettingsScreen extends ConsumerWidget {
   const AppSettingsScreen({super.key});
@@ -49,19 +48,6 @@ class AppSettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           const Gap(8),
-          ListTile(
-            leading: const Icon(Icons.help_outline_rounded),
-            title: Text(l10n.tutorialTitle),
-            trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () {
-              final tutNotifier = ref.read(tutorialProvider.notifier);
-              Navigator.of(context).pop();
-              Future<void>.delayed(
-                const Duration(milliseconds: 350),
-                tutNotifier.start,
-              );
-            },
-          ),
           SwitchListTile(
             secondary: Icon(
               isDark

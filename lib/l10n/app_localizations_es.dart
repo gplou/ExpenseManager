@@ -588,6 +588,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tutorialStart => '¡Empezar!';
 
   @override
+  String get tutorialDialogTitle => '¿Te enseñamos cómo va?';
+
+  @override
+  String get tutorialDialogBody =>
+      'Un tour rápido para descubrir lo esencial de la app. Puedes saltarlo y verlo más tarde desde el menú.';
+
+  @override
+  String get tutorialDialogStartCta => 'Ver tour';
+
+  @override
+  String get tutorialDialogLaterCta => 'Más tarde';
+
+  @override
   String get onboardingWelcomeTitle => '¡Bienvenido a ExpenseManager!';
 
   @override

@@ -66,10 +66,16 @@ class TutorialNotifier extends Notifier<TutorialState> {
   /// Skips the tutorial and marks it as seen.
   void skip() => _complete();
 
-  Future<void> _complete() async {
-    state = TutorialState.inactive;
+  /// Persists the "seen" flag without touching overlay state.
+  /// Used when the user dismisses the welcome dialog without starting the tour.
+  Future<void> markSeen() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kTutorialSeenKey, true);
+  }
+
+  Future<void> _complete() async {
+    state = TutorialState.inactive;
+    await markSeen();
   }
 }
 

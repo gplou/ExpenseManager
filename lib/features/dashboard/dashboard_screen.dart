@@ -74,9 +74,49 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Future<void> _startTutorialIfNeeded() async {
     if (!mounted) return;
     final tutSeen = await ref.read(tutorialProvider.notifier).hasSeen();
-    if (!tutSeen && mounted) {
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-      if (mounted) ref.read(tutorialProvider.notifier).start();
+    if (tutSeen || !mounted) return;
+
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context);
+    final shouldStart = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.auto_awesome_rounded,
+                color: AppColors.dustyTeal, size: 22),
+            const Gap(10),
+            Expanded(child: Text(l10n.tutorialDialogTitle)),
+          ],
+        ),
+        content: Text(l10n.tutorialDialogBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.tutorialDialogLaterCta),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.dustyTeal,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.tutorialDialogStartCta),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+    final tutNotifier = ref.read(tutorialProvider.notifier);
+    if (shouldStart == true) {
+      tutNotifier.start();
+    } else {
+      await tutNotifier.markSeen();
     }
   }
 

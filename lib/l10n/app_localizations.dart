@@ -1200,6 +1200,30 @@ abstract class AppLocalizations {
   /// **'¡Empezar!'**
   String get tutorialStart;
 
+  /// No description provided for @tutorialDialogTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Te enseñamos cómo va?'**
+  String get tutorialDialogTitle;
+
+  /// No description provided for @tutorialDialogBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Un tour rápido para descubrir lo esencial de la app. Puedes saltarlo y verlo más tarde desde el menú.'**
+  String get tutorialDialogBody;
+
+  /// No description provided for @tutorialDialogStartCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver tour'**
+  String get tutorialDialogStartCta;
+
+  /// No description provided for @tutorialDialogLaterCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Más tarde'**
+  String get tutorialDialogLaterCta;
+
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In es, this message translates to:

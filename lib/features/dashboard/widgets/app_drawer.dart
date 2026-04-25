@@ -13,6 +13,7 @@ import '../../auth/presentation/providers/auth_provider.dart';
 import '../../subscription/subscription_provider.dart';
 import '../../subscription/subscription_repository.dart';
 import '../../subscription/widgets/pro_badge.dart';
+import '../../tutorial/tutorial_notifier.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -64,6 +65,21 @@ class AppDrawer extends ConsumerWidget {
                     onTap: () {
                       Navigator.of(context).pop();
                       context.push(AppRoutes.appSettings);
+                    },
+                  ),
+                  // ── Tutorial ──────────────────────────────────────────────
+                  ListTile(
+                    leading: const Icon(Icons.help_outline_rounded),
+                    title: Text(l10n.tutorialTitle),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    onTap: () {
+                      final tutNotifier =
+                          ref.read(tutorialProvider.notifier);
+                      Navigator.of(context).pop();
+                      Future<void>.delayed(
+                        const Duration(milliseconds: 350),
+                        tutNotifier.start,
+                      );
                     },
                   ),
                   // ── Plan PRO ──────────────────────────────────────────
