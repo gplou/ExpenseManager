@@ -582,6 +582,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialNext => 'Next';
 
   @override
+  String get tutorialBack => 'Back';
+
+  @override
   String get tutorialStart => 'Get Started!';
 
   @override

@@ -587,6 +587,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialNext => 'Suivant';
 
   @override
+  String get tutorialBack => 'Retour';
+
+  @override
   String get tutorialStart => 'Commencer !';
 
   @override

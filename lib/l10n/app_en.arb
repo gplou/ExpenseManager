@@ -203,6 +203,8 @@
   "@tutorialSkip": {},
   "tutorialNext": "Next",
   "@tutorialNext": {},
+  "tutorialBack": "Back",
+  "@tutorialBack": {},
   "tutorialStart": "Get Started!",
   "@tutorialStart": {},
   "tutorialDialogTitle": "Want a quick tour?",

@@ -203,6 +203,8 @@
   "@tutorialSkip": {},
   "tutorialNext": "Weiter",
   "@tutorialNext": {},
+  "tutorialBack": "Zurück",
+  "@tutorialBack": {},
   "tutorialStart": "Loslegen!",
   "@tutorialStart": {},
   "tutorialDialogTitle": "Lust auf eine kurze Tour?",

@@ -33,8 +33,10 @@ class TutorialOverlay extends ConsumerWidget {
               stepIndex: tut.stepIndex,
               totalSteps: steps.length,
               isLast: tut.isLastStep,
+              isFirst: tut.isFirstStep,
               fabRect: fabRect,
               onNext: () => ref.read(tutorialProvider.notifier).next(),
+              onBack: () => ref.read(tutorialProvider.notifier).previous(),
               onSkip: () => ref.read(tutorialProvider.notifier).skip(),
             )
           : const SizedBox.shrink(),
@@ -51,7 +53,9 @@ class _TutorialOverlayContent extends StatefulWidget {
     required this.stepIndex,
     required this.totalSteps,
     required this.isLast,
+    required this.isFirst,
     required this.onNext,
+    required this.onBack,
     required this.onSkip,
     this.fabRect,
   });
@@ -60,7 +64,9 @@ class _TutorialOverlayContent extends StatefulWidget {
   final int stepIndex;
   final int totalSteps;
   final bool isLast;
+  final bool isFirst;
   final VoidCallback onNext;
+  final VoidCallback onBack;
   final VoidCallback onSkip;
   /// Pre-computed FAB screen rect (bypasses GlobalKey measurement for the FAB step).
   final Rect? fabRect;
@@ -268,7 +274,9 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
               stepIndex: widget.stepIndex,
               totalSteps: widget.totalSteps,
               isLast: widget.isLast,
+              isFirst: widget.isFirst,
               onNext: widget.onNext,
+              onBack: widget.onBack,
             ),
           ),
         ],
@@ -351,14 +359,18 @@ class _TooltipCard extends StatelessWidget {
     required this.stepIndex,
     required this.totalSteps,
     required this.isLast,
+    required this.isFirst,
     required this.onNext,
+    required this.onBack,
   });
 
   final TutorialStep step;
   final int stepIndex;
   final int totalSteps;
   final bool isLast;
+  final bool isFirst;
   final VoidCallback onNext;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -457,6 +469,36 @@ class _TooltipCard extends StatelessWidget {
                   ),
                 ),
                 const Gap(12),
+
+                // Back button (hidden on first step)
+                if (!isFirst) ...[
+                  TextButton(
+                    onPressed: onBack,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.dustyTeal,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.arrow_back_rounded, size: 14),
+                        const Gap(4),
+                        Text(AppLocalizations.of(context).tutorialBack),
+                      ],
+                    ),
+                  ),
+                  const Gap(8),
+                ],
 
                 // Next / Finish button
                 FilledButton(

@@ -409,6 +409,8 @@
   "@tutorialSkip": {},
   "tutorialNext": "Siguiente",
   "@tutorialNext": {},
+  "tutorialBack": "Atrás",
+  "@tutorialBack": {},
   "tutorialStart": "¡Empezar!",
   "@tutorialStart": {},
   "tutorialDialogTitle": "¿Te enseñamos cómo va?",

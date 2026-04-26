@@ -591,6 +591,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tutorialNext => 'Weiter';
 
   @override
+  String get tutorialBack => 'Zurück';
+
+  @override
   String get tutorialStart => 'Loslegen!';
 
   @override

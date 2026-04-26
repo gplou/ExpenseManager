@@ -24,6 +24,7 @@ class TutorialState {
   final int stepIndex;
 
   bool get isLastStep => stepIndex == kTutorialStepCount - 1;
+  bool get isFirstStep => stepIndex == 0;
 
   TutorialState copyWith({bool? isActive, int? stepIndex}) => TutorialState(
         isActive: isActive ?? this.isActive,
@@ -62,6 +63,12 @@ class TutorialNotifier extends Notifier<TutorialState> {
     } else {
       state = state.copyWith(stepIndex: state.stepIndex + 1);
     }
+  }
+
+  /// Goes back to the previous step. No-op on the first step or when inactive.
+  void previous() {
+    if (!state.isActive || state.isFirstStep) return;
+    state = state.copyWith(stepIndex: state.stepIndex - 1);
   }
 
   /// Skips the tutorial and marks it as seen.

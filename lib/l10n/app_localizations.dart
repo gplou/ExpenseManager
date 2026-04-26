@@ -1194,6 +1194,12 @@ abstract class AppLocalizations {
   /// **'Siguiente'**
   String get tutorialNext;
 
+  /// No description provided for @tutorialBack.
+  ///
+  /// In es, this message translates to:
+  /// **'Atrás'**
+  String get tutorialBack;
+
   /// No description provided for @tutorialStart.
   ///
   /// In es, this message translates to:
