@@ -60,7 +60,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     if (user != null) {
       AnalyticsService.identify(
         user.id,
-        isPro: state.valueOrNull?.isPro ?? false,
+        isPro: state.value?.isPro ?? false,
       );
     }
 
@@ -108,7 +108,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
           .purchaseProPlan(package);
       await _applyRCResult(result, isRestore: false);
     } on RCPurchaseCancelledException {
-      final current = state.valueOrNull ?? const SubscriptionState();
+      final current = state.value ?? const SubscriptionState();
       state = AsyncData(current.copyWith(isLoading: false, clearError: true));
       AnalyticsService.track(AnalyticsService.purchaseCancelled);
     } on RCPurchaseException catch (e) {
@@ -160,7 +160,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
       if (result.isSubscription) {
         final now = DateTime.now();
-        final current = state.valueOrNull;
+        final current = state.value;
         final base = (current?.isPro == true) ? current!.expiresAt! : now;
         final expiresAt = base.add(Duration(days: result.durationDays));
 
@@ -177,7 +177,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
           'duration_days': result.durationDays,
         });
       } else {
-        final current = state.valueOrNull ?? const SubscriptionState();
+        final current = state.value ?? const SubscriptionState();
         state = AsyncData(
           current.copyWith(
             pendingDiscountPercentage: result.discountPercentage,
@@ -346,7 +346,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       SubscriptionState(
         expiresAt: expiresAt,
         source: source,
-        trialUsed: state.valueOrNull?.trialUsed ?? false,
+        trialUsed: state.value?.trialUsed ?? false,
       ),
     );
   }
@@ -359,7 +359,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   }) async {
     if (!result.isPro) {
       // Restore found nothing — show a neutral state.
-      final current = state.valueOrNull ?? const SubscriptionState();
+      final current = state.value ?? const SubscriptionState();
       state = AsyncData(current.copyWith(isLoading: false, clearError: true));
       return;
     }
@@ -370,7 +370,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     // store purchases — which always return an expiry — silently dropped the
     // discount the user redeemed. The calculator now adds bonus days on top
     // of the store expiry in all cases.
-    final current = state.valueOrNull ?? const SubscriptionState();
+    final current = state.value ?? const SubscriptionState();
     final expiresAt = SubscriptionExpiryCalculator.effectiveExpiry(
       storeExpiry: result.expiresAt,
       bonusDays: current.discountBonusDays,
@@ -454,12 +454,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   }
 
   void _setLoading(bool loading) {
-    final current = state.valueOrNull ?? const SubscriptionState();
+    final current = state.value ?? const SubscriptionState();
     state = AsyncData(current.copyWith(isLoading: loading, clearError: true));
   }
 
   void _setError(String message) {
-    final current = state.valueOrNull ?? const SubscriptionState();
+    final current = state.value ?? const SubscriptionState();
     state =
         AsyncData(current.copyWith(isLoading: false, purchaseError: message));
   }
@@ -476,7 +476,7 @@ final subscriptionProvider =
 /// Derived bool provider for widgets that only need to know "is user PRO?".
 final isProProvider = Provider<bool>((ref) {
   return ref.watch(
-    subscriptionProvider.select((s) => s.valueOrNull?.isPro ?? false),
+    subscriptionProvider.select((s) => s.value?.isPro ?? false),
   );
 });
 

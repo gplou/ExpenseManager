@@ -76,9 +76,9 @@ class NeoBrutalButton extends StatefulWidget {
 class _NeoBrutalButtonState extends State<NeoBrutalButton> {
   bool _pressed = false;
 
-  void _onTapDown(_) => setState(() => _pressed = true);
+  void _onTapDown(TapDownDetails _) => setState(() => _pressed = true);
 
-  void _onTapUp(_) {
+  void _onTapUp(TapUpDetails _) {
     setState(() => _pressed = false);
     if (!widget.disabled && !widget.isLoading) widget.onTap?.call();
   }

@@ -582,7 +582,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialNext => 'Next';
 
   @override
+  String get tutorialBack => 'Back';
+
+  @override
   String get tutorialStart => 'Get Started!';
+
+  @override
+  String get tutorialDialogTitle => 'Want a quick tour?';
+
+  @override
+  String get tutorialDialogBody =>
+      'A short walkthrough of the essentials. You can skip it and replay it any time from the menu.';
+
+  @override
+  String get tutorialDialogStartCta => 'Take the tour';
+
+  @override
+  String get tutorialDialogLaterCta => 'Later';
 
   @override
   String get onboardingWelcomeTitle => 'Welcome to ExpenseManager!';

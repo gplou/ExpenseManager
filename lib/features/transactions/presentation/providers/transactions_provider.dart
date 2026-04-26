@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/services/analytics_service.dart';
@@ -72,7 +73,7 @@ final effectiveDateRangeProvider =
 //   Consulta directa a SQLite, ya es rápida por naturaleza.
 
 class AllTransactionsNotifier
-    extends AutoDisposeAsyncNotifier<List<TransactionModel>> {
+    extends AsyncNotifier<List<TransactionModel>> {
   // Generación actual del build. Incrementa en cada rebuild para cancelar
   // refreshes de fondo que quedaron obsoletos.
   int _generation = 0;

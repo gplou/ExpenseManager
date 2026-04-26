@@ -89,9 +89,13 @@ class ExportExcelService {
     final filePath = '${dir.path}/$fileName';
     await File(filePath).writeAsBytes(Uint8List.fromList(bytes));
 
-    await Share.shareXFiles(
-      [XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')],
-      subject: fileName,
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [
+          XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+        ],
+        subject: fileName,
+      ),
     );
   }
 }

@@ -48,7 +48,7 @@ class OfflineSyncService {
 
     // Flush al recuperar conexión — procesa items encolados por estar offline.
     _ref.listen(connectivityProvider, (prev, next) {
-      if (next.valueOrNull == true) _flush();
+      if (next.value == true) _flush();
     });
   }
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -30,6 +31,10 @@ import 'l10n/app_localizations.dart';
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: binding);
+
+  if (Platform.isAndroid) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
 
   var step = '0 - binding';
   try {
@@ -185,7 +190,7 @@ Future<void> _initPostHog() async {
 }
 
 /// Extrae la acción del widget de la URI de lanzamiento.
-/// URI esperada: expensemanager://widget/<action>
+/// URI esperada: `expensemanager://widget/<action>`
 String? _extractWidgetAction(Uri? uri) {
   if (uri == null) return null;
   final segments = uri.pathSegments;
@@ -285,9 +290,9 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     final router = ref.watch(routerProvider);
     final themeMode =
-        ref.watch(themeModeProvider).valueOrNull ?? widget.initialTheme;
+        ref.watch(themeModeProvider).value ?? widget.initialTheme;
     final locale =
-        ref.watch(localeProvider).valueOrNull ?? widget.initialLocale;
+        ref.watch(localeProvider).value ?? widget.initialLocale;
 
     return MaterialApp.router(
       title: AppConfig.appName,

@@ -13,6 +13,7 @@ import '../../auth/presentation/providers/auth_provider.dart';
 import '../../subscription/subscription_provider.dart';
 import '../../subscription/subscription_repository.dart';
 import '../../subscription/widgets/pro_badge.dart';
+import '../../tutorial/tutorial_notifier.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -66,11 +67,26 @@ class AppDrawer extends ConsumerWidget {
                       context.push(AppRoutes.appSettings);
                     },
                   ),
+                  // ── Tutorial ──────────────────────────────────────────────
+                  ListTile(
+                    leading: const Icon(Icons.help_outline_rounded),
+                    title: Text(l10n.tutorialTitle),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    onTap: () {
+                      final tutNotifier =
+                          ref.read(tutorialProvider.notifier);
+                      Navigator.of(context).pop();
+                      Future<void>.delayed(
+                        const Duration(milliseconds: 350),
+                        tutNotifier.start,
+                      );
+                    },
+                  ),
                   // ── Plan PRO ──────────────────────────────────────────
                   Consumer(
                     builder: (context, ref, _) {
                       final isPro = ref.watch(isProProvider);
-                      final sub = ref.watch(subscriptionProvider).valueOrNull;
+                      final sub = ref.watch(subscriptionProvider).value;
                       return ListTile(
                         leading: Icon(
                           Icons.star_rounded,
@@ -133,7 +149,7 @@ class AppDrawer extends ConsumerWidget {
               ),
               onTap: () {
                 Navigator.of(context).pop();
-                ref.read(authNotifierProvider.notifier).signOut();
+                ref.read(authProvider.notifier).signOut();
               },
             ),
             // ── Delete account ────────────────────────────────────────────
@@ -188,7 +204,7 @@ class AppDrawer extends ConsumerWidget {
     Navigator.of(context).pop(); // close the drawer
 
     final success =
-        await ref.read(authNotifierProvider.notifier).deleteAccount();
+        await ref.read(authProvider.notifier).deleteAccount();
 
     if (!context.mounted) return;
     if (!success) {

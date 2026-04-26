@@ -144,7 +144,7 @@ class ChartBarSection extends StatelessWidget {
                     final short =
                         name.length > 4 ? '${name.substring(0, 4)}.' : name;
                     return SideTitleWidget(
-                      axisSide: meta.axisSide,
+                      meta: meta,
                       child: Text(
                         short,
                         style: TextStyle(
@@ -158,7 +158,7 @@ class ChartBarSection extends StatelessWidget {
                       entries[i].key, type,
                       extra: extra);
                   return SideTitleWidget(
-                    axisSide: meta.axisSide,
+                    meta: meta,
                     child: Icon(icon, size: 14, color: colors[i]),
                   );
                 },
@@ -171,7 +171,7 @@ class ChartBarSection extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   if (value == meta.max) return const SizedBox.shrink();
                   return SideTitleWidget(
-                    axisSide: meta.axisSide,
+                    meta: meta,
                     child: Text(
                       '$cSymbol${formatAmount(value, numFmtStyle, decimals: 0)}',
                       style: context.textTheme.bodySmall?.copyWith(

@@ -44,7 +44,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
     final customRange = ref.watch(customDateRangeProvider);
 
     final cSymbol = currencySymbol(ref.watch(currencyProvider).value ?? 'EUR');
-    final numFmt = ref.watch(numberFormatProvider).valueOrNull ??
+    final numFmt = ref.watch(numberFormatProvider).value ??
         NumberFormatStyle.dotDecimal;
     final accentColor =
         type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
@@ -304,7 +304,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                         cSymbol: cSymbol,
                         numFmtStyle: numFmt,
                       ),
-                      const Gap(24),
+                      Gap(MediaQuery.of(context).padding.bottom + 24),
                     ],
                   ),
                 );

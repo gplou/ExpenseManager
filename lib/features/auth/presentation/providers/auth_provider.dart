@@ -13,7 +13,7 @@ part 'auth_provider.g.dart';
 /// Estado del stream de autenticación.
 /// Escucha cambios en tiempo real (login, logout, token refresh).
 @riverpod
-Stream<UserModel?> authState(AuthStateRef ref) {
+Stream<UserModel?> authState(Ref ref) {
   return ref.watch(authRepositoryProvider).authStateChanges;
 }
 
@@ -21,7 +21,7 @@ Stream<UserModel?> authState(AuthStateRef ref) {
 /// Escucha [authStateProvider] para reconstruirse en cada cambio de auth
 /// (login, logout, token refresh, restauración de sesión).
 @riverpod
-UserModel? currentUser(CurrentUserRef ref) {
+UserModel? currentUser(Ref ref) {
   ref.watch(authStateProvider); // reacciona a cambios de auth (login/logout/userUpdated)
   return ref.watch(authRepositoryProvider).currentUser;
 }
@@ -29,7 +29,7 @@ UserModel? currentUser(CurrentUserRef ref) {
 /// Devuelve true si el usuario inició sesión con email y contraseña.
 /// Los usuarios de Google/Apple tienen provider distinto a 'email'.
 @riverpod
-bool isEmailPasswordUser(IsEmailPasswordUserRef ref) {
+bool isEmailPasswordUser(Ref ref) {
   // Re-ejecutar cuando cambie el estado de auth
   ref.watch(authStateProvider);
   final user = ref.watch(supabaseClientProvider).auth.currentUser;

@@ -11,7 +11,6 @@ import '../../core/providers/number_format_provider.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/utils/extensions.dart';
 import '../../l10n/app_localizations.dart';
-import '../tutorial/tutorial_notifier.dart';
 
 class AppSettingsScreen extends ConsumerWidget {
   const AppSettingsScreen({super.key});
@@ -20,9 +19,9 @@ class AppSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final isDark = ref.watch(
-      themeModeProvider.select((v) => v.valueOrNull == ThemeMode.dark),
+      themeModeProvider.select((v) => v.value == ThemeMode.dark),
     );
-    final currentLocale = ref.watch(localeProvider).valueOrNull;
+    final currentLocale = ref.watch(localeProvider).value;
     final currentLocaleName = supportedLocales
         .firstWhere(
           (l) => l.code == (currentLocale?.languageCode ?? 'es'),
@@ -30,12 +29,12 @@ class AppSettingsScreen extends ConsumerWidget {
         )
         .name;
     final currentCurrencyCode =
-        ref.watch(currencyProvider).valueOrNull ?? 'EUR';
+        ref.watch(currencyProvider).value ?? 'EUR';
     final currentCurrency = supportedCurrencies.firstWhere(
       (c) => c.code == currentCurrencyCode,
       orElse: () => supportedCurrencies.first,
     );
-    final numFmtStyle = ref.watch(numberFormatProvider).valueOrNull ??
+    final numFmtStyle = ref.watch(numberFormatProvider).value ??
         NumberFormatStyle.dotDecimal;
     final numFmtLabel = numFmtStyle == NumberFormatStyle.dotDecimal
         ? l10n.numberFormatDotDecimal
@@ -49,19 +48,6 @@ class AppSettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           const Gap(8),
-          ListTile(
-            leading: const Icon(Icons.help_outline_rounded),
-            title: Text(l10n.tutorialTitle),
-            trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () {
-              final tutNotifier = ref.read(tutorialProvider.notifier);
-              Navigator.of(context).pop();
-              Future<void>.delayed(
-                const Duration(milliseconds: 350),
-                tutNotifier.start,
-              );
-            },
-          ),
           SwitchListTile(
             secondary: Icon(
               isDark
@@ -120,7 +106,7 @@ class AppSettingsScreen extends ConsumerWidget {
       ),
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx);
-        final current = ref.read(numberFormatProvider).valueOrNull ??
+        final current = ref.read(numberFormatProvider).value ??
             NumberFormatStyle.dotDecimal;
         return SafeArea(
           child: Padding(
@@ -175,7 +161,7 @@ class AppSettingsScreen extends ConsumerWidget {
       ),
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx);
-        final currentLocale = ref.read(localeProvider).valueOrNull;
+        final currentLocale = ref.read(localeProvider).value;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -223,7 +209,7 @@ class AppSettingsScreen extends ConsumerWidget {
       ),
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx);
-        final currentCode = ref.read(currencyProvider).valueOrNull ?? 'EUR';
+        final currentCode = ref.read(currencyProvider).value ?? 'EUR';
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),

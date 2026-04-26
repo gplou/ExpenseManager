@@ -181,7 +181,7 @@ final transactionsRepositoryProvider =
   final isPro = ref.watch(isProProvider);
   final user = ref.watch(currentUserProvider);
   final isSyncing = ref.watch(
-    syncProvider.select((s) => s.valueOrNull?.isSyncing ?? false),
+    syncProvider.select((s) => s.value?.isSyncing ?? false),
   );
   // True una vez que subscriptionProvider ha resuelto su primer valor.
   final subscriptionLoaded = ref.watch(

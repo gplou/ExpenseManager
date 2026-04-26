@@ -58,8 +58,8 @@ class InitialSyncService {
 
     // Retry when the device comes back online (was offline → now online).
     _ref.listen(connectivityProvider, (prev, next) {
-      final isOnline = next.valueOrNull ?? false;
-      final wasOffline = !(prev?.valueOrNull ?? true);
+      final isOnline = next.value ?? false;
+      final wasOffline = !(prev?.value ?? true);
       if (isOnline && wasOffline) _tryHydrate();
     });
 
@@ -74,7 +74,7 @@ class InitialSyncService {
     // Retry after a FREE→PRO migration completes (it clears local; we must
     // re-populate from cloud even though the flag may not be set yet).
     _ref.listen(
-      syncProvider.select((s) => s.valueOrNull?.isSyncing ?? false),
+      syncProvider.select((s) => s.value?.isSyncing ?? false),
       (prev, next) {
         if (prev == true && next == false) _tryHydrate();
       },
@@ -95,7 +95,7 @@ class InitialSyncService {
 
     // Don't start while a FREE↔PRO migration is already running.
     final isSyncing = _ref.read(
-      syncProvider.select((s) => s.valueOrNull?.isSyncing ?? false),
+      syncProvider.select((s) => s.value?.isSyncing ?? false),
     );
     if (isSyncing) return;
 

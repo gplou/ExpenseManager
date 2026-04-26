@@ -35,7 +35,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context);
 
-    final success = await ref.read(authNotifierProvider.notifier).signUp(
+    final success = await ref.read(authProvider.notifier).signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           name: _nameController.text.trim(),
@@ -50,13 +50,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final authState = ref.watch(authNotifierProvider);
+    final authState = ref.watch(authProvider);
     final isLoading = authState is Loading;
 
-    ref.listen(authNotifierProvider, (_, next) {
+    ref.listen(authProvider, (_, next) {
       if (next is Failure) {
         context.showSnackbar(next.failure.userMessage, isError: true);
-        ref.read(authNotifierProvider.notifier).reset();
+        ref.read(authProvider.notifier).reset();
       }
     });
 

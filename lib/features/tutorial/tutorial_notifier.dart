@@ -1,5 +1,6 @@
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'tutorial_step.dart';
@@ -23,6 +24,7 @@ class TutorialState {
   final int stepIndex;
 
   bool get isLastStep => stepIndex == kTutorialStepCount - 1;
+  bool get isFirstStep => stepIndex == 0;
 
   TutorialState copyWith({bool? isActive, int? stepIndex}) => TutorialState(
         isActive: isActive ?? this.isActive,
@@ -63,13 +65,25 @@ class TutorialNotifier extends Notifier<TutorialState> {
     }
   }
 
+  /// Goes back to the previous step. No-op on the first step or when inactive.
+  void previous() {
+    if (!state.isActive || state.isFirstStep) return;
+    state = state.copyWith(stepIndex: state.stepIndex - 1);
+  }
+
   /// Skips the tutorial and marks it as seen.
   void skip() => _complete();
 
-  Future<void> _complete() async {
-    state = TutorialState.inactive;
+  /// Persists the "seen" flag without touching overlay state.
+  /// Used when the user dismisses the welcome dialog without starting the tour.
+  Future<void> markSeen() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kTutorialSeenKey, true);
+  }
+
+  Future<void> _complete() async {
+    state = TutorialState.inactive;
+    await markSeen();
   }
 }
 

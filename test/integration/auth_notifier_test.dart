@@ -101,7 +101,7 @@ void main() {
       final container = _makeContainer(repo);
       addTearDown(container.dispose);
 
-      expect(container.read(authNotifierProvider), isA<Idle>());
+      expect(container.read(authProvider), isA<Idle>());
     });
   });
 
@@ -111,11 +111,11 @@ void main() {
       addTearDown(container.dispose);
 
       final result = await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
 
       expect(result, isTrue);
-      expect(container.read(authNotifierProvider), isA<Success>());
+      expect(container.read(authProvider), isA<Success>());
     });
 
     test('returns false and transitions to Failure on bad credentials', () async {
@@ -126,11 +126,11 @@ void main() {
       addTearDown(container.dispose);
 
       final result = await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'bad@test.com', password: 'wrong');
 
       expect(result, isFalse);
-      final state = container.read(authNotifierProvider);
+      final state = container.read(authProvider);
       expect(state, isA<Failure>());
       expect((state as Failure).failure, isA<AuthFailure>());
       expect((state.failure as AuthFailure).message, 'Email o contraseña incorrectos');
@@ -143,11 +143,11 @@ void main() {
       addTearDown(container.dispose);
 
       final result = await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signUp(email: 'new@test.com', password: 'pass1234', name: 'Test');
 
       expect(result, isTrue);
-      expect(container.read(authNotifierProvider), isA<Success>());
+      expect(container.read(authProvider), isA<Success>());
     });
 
     test('returns false and transitions to Failure on duplicate email', () async {
@@ -158,11 +158,11 @@ void main() {
       addTearDown(container.dispose);
 
       final result = await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signUp(email: 'dup@test.com', password: 'pass1234');
 
       expect(result, isFalse);
-      final state = container.read(authNotifierProvider);
+      final state = container.read(authProvider);
       expect(state, isA<Failure>());
     });
   });
@@ -173,11 +173,11 @@ void main() {
       addTearDown(container.dispose);
 
       final result = await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signInWithGoogle();
 
       expect(result, isTrue);
-      expect(container.read(authNotifierProvider), isA<Success>());
+      expect(container.read(authProvider), isA<Success>());
     });
 
     test('returns false and transitions to Failure when Google fails', () async {
@@ -187,11 +187,11 @@ void main() {
       addTearDown(container.dispose);
 
       final result = await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signInWithGoogle();
 
       expect(result, isFalse);
-      expect(container.read(authNotifierProvider), isA<Failure>());
+      expect(container.read(authProvider), isA<Failure>());
     });
   });
 
@@ -201,11 +201,11 @@ void main() {
       addTearDown(container.dispose);
 
       final result = await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signInWithApple();
 
       expect(result, isTrue);
-      expect(container.read(authNotifierProvider), isA<Success>());
+      expect(container.read(authProvider), isA<Success>());
     });
   });
 
@@ -215,12 +215,12 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
-      expect(container.read(authNotifierProvider), isA<Success>());
+      expect(container.read(authProvider), isA<Success>());
 
-      await container.read(authNotifierProvider.notifier).signOut();
-      expect(container.read(authNotifierProvider), isA<Idle>());
+      await container.read(authProvider.notifier).signOut();
+      expect(container.read(authProvider), isA<Idle>());
     });
   });
 
@@ -232,12 +232,12 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'bad@test.com', password: 'wrong');
-      expect(container.read(authNotifierProvider), isA<Failure>());
+      expect(container.read(authProvider), isA<Failure>());
 
-      container.read(authNotifierProvider.notifier).reset();
-      expect(container.read(authNotifierProvider), isA<Idle>());
+      container.read(authProvider.notifier).reset();
+      expect(container.read(authProvider), isA<Idle>());
     });
 
     test('resets Success state back to Idle', () async {
@@ -245,12 +245,12 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
-      expect(container.read(authNotifierProvider), isA<Success>());
+      expect(container.read(authProvider), isA<Success>());
 
-      container.read(authNotifierProvider.notifier).reset();
-      expect(container.read(authNotifierProvider), isA<Idle>());
+      container.read(authProvider.notifier).reset();
+      expect(container.read(authProvider), isA<Idle>());
     });
   });
 }

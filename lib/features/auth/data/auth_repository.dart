@@ -105,26 +105,26 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         );
       }
 
-      final googleSignIn = GoogleSignIn(
+      await GoogleSignIn.instance.initialize(
         serverClientId: AppConfig.googleWebClientId,
       );
-      await googleSignIn.signOut();
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        throw const AuthFailure('Inicio de sesión cancelado');
-      }
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
+      await GoogleSignIn.instance.signOut();
+      final googleUser = await GoogleSignIn.instance.authenticate(
+        scopeHint: const ['email', 'profile'],
+      );
+      final idToken = googleUser.authentication.idToken;
       if (idToken == null) {
         throw const AuthFailure(
           'idToken nulo: verifica que GOOGLE_WEB_CLIENT_ID sea el '
           'Web Client ID (no el de Android/iOS) de Google Cloud Console.',
         );
       }
+      final authorization = await googleUser.authorizationClient
+          .authorizationForScopes(const ['email', 'profile']);
       final response = await _client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
-        accessToken: googleAuth.accessToken,
+        accessToken: authorization?.accessToken,
       );
       if (response.user == null) {
         throw const AuthFailure('No se pudo iniciar sesión con Google');

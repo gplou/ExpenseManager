@@ -6,9 +6,8 @@ part of 'transaction_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$TransactionModelImpl _$$TransactionModelImplFromJson(
-        Map<String, dynamic> json) =>
-    _$TransactionModelImpl(
+_TransactionModel _$TransactionModelFromJson(Map<String, dynamic> json) =>
+    _TransactionModel(
       id: json['id'] as String,
       userId: json['userId'] as String,
       amount: (json['amount'] as num).toDouble(),
@@ -22,8 +21,7 @@ _$TransactionModelImpl _$$TransactionModelImplFromJson(
       currency: json['currency'] as String? ?? 'EUR',
     );
 
-Map<String, dynamic> _$$TransactionModelImplToJson(
-        _$TransactionModelImpl instance) =>
+Map<String, dynamic> _$TransactionModelToJson(_TransactionModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'userId': instance.userId,

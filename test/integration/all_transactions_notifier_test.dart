@@ -291,6 +291,10 @@ void main() {
       final container = _makeContainer(cloudRepo: cloudRepo);
       addTearDown(container.dispose);
 
+      // Keep the autoDispose provider alive across the build's async gaps.
+      final sub = container.listen(allTransactionsProvider, (_, __) {});
+      addTearDown(sub.close);
+
       // SQLite is empty → falls into the no-cache path → fetches from Supabase.
       final txs = await container.read(allTransactionsProvider.future);
       await _pump();
@@ -330,6 +334,10 @@ void main() {
 
       final container = _makeContainer(cloudRepo: cloudRepo);
       addTearDown(container.dispose);
+
+      // Keep the autoDispose provider alive across the build's async gaps.
+      final sub = container.listen(allTransactionsProvider, (_, __) {});
+      addTearDown(sub.close);
 
       // SQLite is empty → no-cache path → must fetch AND cache.
       await container.read(allTransactionsProvider.future);

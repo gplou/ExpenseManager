@@ -98,11 +98,11 @@ void main() {
 
       // Sign in first so there is a user session
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
 
       final result =
-          await container.read(authNotifierProvider.notifier).deleteAccount();
+          await container.read(authProvider.notifier).deleteAccount();
 
       expect(result, isTrue);
     });
@@ -112,12 +112,12 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
+      await container.read(authProvider.notifier).deleteAccount();
 
-      expect(container.read(authNotifierProvider), isA<Idle>());
+      expect(container.read(authProvider), isA<Idle>());
     });
 
     test('repository user is null after deletion', () async {
@@ -125,11 +125,11 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
       expect(repo.currentUser, isNotNull);
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
+      await container.read(authProvider.notifier).deleteAccount();
 
       expect(repo.currentUser, isNull);
     });
@@ -140,7 +140,7 @@ void main() {
       addTearDown(container.dispose);
 
       final result =
-          await container.read(authNotifierProvider.notifier).deleteAccount();
+          await container.read(authProvider.notifier).deleteAccount();
 
       expect(result, isTrue);
       expect(repo.currentUser, isNull);
@@ -154,7 +154,7 @@ void main() {
       addTearDown(container.dispose);
 
       final result =
-          await container.read(authNotifierProvider.notifier).deleteAccount();
+          await container.read(authProvider.notifier).deleteAccount();
 
       expect(result, isFalse);
     });
@@ -164,9 +164,9 @@ void main() {
       final container = _makeContainer(repo);
       addTearDown(container.dispose);
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
+      await container.read(authProvider.notifier).deleteAccount();
 
-      expect(container.read(authNotifierProvider), isA<Failure>());
+      expect(container.read(authProvider), isA<Failure>());
     });
 
     test('Failure contains the underlying AppFailure', () async {
@@ -174,9 +174,9 @@ void main() {
       final container = _makeContainer(repo);
       addTearDown(container.dispose);
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
+      await container.read(authProvider.notifier).deleteAccount();
 
-      final state = container.read(authNotifierProvider);
+      final state = container.read(authProvider);
       expect((state as Failure).failure, isA<AppFailure>());
     });
 
@@ -187,10 +187,10 @@ void main() {
 
       // Sign in so a user exists
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
+      await container.read(authProvider.notifier).deleteAccount();
 
       // Repo user should still be set because deletion failed
       expect(repo.currentUser, isNotNull);
@@ -201,11 +201,11 @@ void main() {
       final container = _makeContainer(repo);
       addTearDown(container.dispose);
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
-      expect(container.read(authNotifierProvider), isA<Failure>());
+      await container.read(authProvider.notifier).deleteAccount();
+      expect(container.read(authProvider), isA<Failure>());
 
-      container.read(authNotifierProvider.notifier).reset();
-      expect(container.read(authNotifierProvider), isA<Idle>());
+      container.read(authProvider.notifier).reset();
+      expect(container.read(authProvider), isA<Idle>());
     });
   });
 
@@ -215,11 +215,11 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
       expect(repo.currentUser, isNotNull);
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
+      await container.read(authProvider.notifier).deleteAccount();
       expect(repo.currentUser, isNull);
     });
 
@@ -227,14 +227,14 @@ void main() {
       final container = _makeContainer(repo);
       addTearDown(container.dispose);
 
-      await container.read(authNotifierProvider.notifier).signUp(
+      await container.read(authProvider.notifier).signUp(
             email: 'new@test.com',
             password: 'pass1234',
             name: 'New User',
           );
       expect(repo.currentUser, isNotNull);
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
+      await container.read(authProvider.notifier).deleteAccount();
       expect(repo.currentUser, isNull);
     });
 
@@ -244,13 +244,13 @@ void main() {
       addTearDown(container.dispose);
 
       await container
-          .read(authNotifierProvider.notifier)
+          .read(authProvider.notifier)
           .signIn(email: 'user@test.com', password: 'pass1234');
-      expect(container.read(authNotifierProvider), isA<Success>());
+      expect(container.read(authProvider), isA<Success>());
 
-      await container.read(authNotifierProvider.notifier).deleteAccount();
-      expect(container.read(authNotifierProvider), isA<Idle>());
-      expect(container.read(authNotifierProvider), isNot(isA<Success>()));
+      await container.read(authProvider.notifier).deleteAccount();
+      expect(container.read(authProvider), isA<Idle>());
+      expect(container.read(authProvider), isNot(isA<Success>()));
     });
   });
 }
