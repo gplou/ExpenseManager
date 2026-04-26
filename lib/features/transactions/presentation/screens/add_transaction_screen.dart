@@ -216,7 +216,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
-    final currentCurrency = ref.read(currencyProvider).valueOrNull ?? 'EUR';
+    final currentCurrency = ref.read(currencyProvider).value ?? 'EUR';
     final amountText = _amountController.text.trim().replaceAll(',', '.');
     final amount = double.tryParse(amountText);
 
@@ -511,7 +511,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       ),
                       decoration: InputDecoration(
                         prefixText:
-                            '${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')} ',
+                            '${currencySymbol(ref.watch(currencyProvider).value ?? 'EUR')} ',
                         prefixStyle: TextStyle(
                           fontFamily: 'Sora',
                           fontSize: 20,
@@ -543,7 +543,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           width: 1),
                     ),
                     child: Text(
-                      ref.watch(currencyProvider).valueOrNull ?? 'EUR',
+                      ref.watch(currencyProvider).value ?? 'EUR',
                       style: TextStyle(
                         fontFamily: 'Sora',
                         fontSize: 11,
@@ -919,7 +919,7 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
     final asyncSubs = ref.watch(
       subcategoriesProvider((category: category, type: type)),
     );
-    final subcategories = asyncSubs.valueOrNull ?? [];
+    final subcategories = asyncSubs.value ?? [];
 
     return Padding(
       padding: EdgeInsets.only(

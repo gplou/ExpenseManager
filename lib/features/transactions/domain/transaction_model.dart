@@ -18,7 +18,7 @@ enum TransactionType {
 }
 
 @freezed
-class TransactionModel with _$TransactionModel implements TransactionBase {
+abstract class TransactionModel with _$TransactionModel implements TransactionBase {
   const factory TransactionModel({
     required String id,
     required String userId,

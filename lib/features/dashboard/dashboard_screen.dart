@@ -147,7 +147,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final recentAsync = ref.watch(recentTransactionsProvider);
     final cs = context.colors;
     final cSymbol = currencySymbol(ref.watch(currencyProvider).value ?? 'EUR');
-    final numFmt = ref.watch(numberFormatProvider).valueOrNull ??
+    final numFmt = ref.watch(numberFormatProvider).value ??
         NumberFormatStyle.dotDecimal;
 
     return Stack(

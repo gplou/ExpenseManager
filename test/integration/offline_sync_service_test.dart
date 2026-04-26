@@ -175,7 +175,12 @@ void main() {
   });
 
   Future<void> triggerReconnect(ProviderContainer container) async {
-    container.read(_startSyncProvider); // attaches listener
+    // Keep connectivityProvider alive so the StreamProvider stays subscribed
+    // to our test stream. Riverpod 3 won't materialise a provider just because
+    // another provider's build calls `ref.listen` on it; in production, UI
+    // widgets watch connectivity so this isn't an issue.
+    container.listen(connectivityProvider, (_, __) {});
+    container.read(_startSyncProvider); // attaches sync listener
     connectivityCtrl.add(false);
     connectivityCtrl.add(true);
     await Future.delayed(const Duration(milliseconds: 100));
@@ -322,6 +327,7 @@ void main() {
     );
     addTearDown(container.dispose);
 
+    container.listen(connectivityProvider, (_, __) {});
     container.read(_startSyncProvider);
 
     // First reconnect — flush starts and blocks on the gate.

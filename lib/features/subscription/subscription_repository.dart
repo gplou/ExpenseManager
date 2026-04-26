@@ -182,8 +182,8 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
   @override
   Future<RCPurchaseResult> purchaseProPlan(Package package) async {
     try {
-      final customerInfo = await Purchases.purchasePackage(package);
-      return RevenueCatAdapter.fromCustomerInfo(customerInfo);
+      final result = await Purchases.purchase(PurchaseParams.package(package));
+      return RevenueCatAdapter.fromCustomerInfo(result.customerInfo);
     } on PurchasesError catch (e) {
       if (e.code == PurchasesErrorCode.purchaseCancelledError) {
         throw const RCPurchaseCancelledException();

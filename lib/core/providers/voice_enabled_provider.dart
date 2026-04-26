@@ -11,7 +11,7 @@ class VoiceEnabledNotifier extends AsyncNotifier<bool> {
   }
 
   Future<void> toggle() async {
-    final current = state.valueOrNull ?? false;
+    final current = state.value ?? false;
     state = AsyncData(!current);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kVoiceEnabledKey, !current);

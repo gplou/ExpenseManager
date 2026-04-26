@@ -57,7 +57,7 @@ class _RouterRefreshNotifier extends ChangeNotifier {
 }
 
 @Riverpod(keepAlive: true)
-GoRouter router(RouterRef ref) {
+GoRouter router(Ref ref) {
   final authRepo = ref.read(authRepositoryProvider);
 
   return GoRouter(

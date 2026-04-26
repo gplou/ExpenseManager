@@ -113,7 +113,7 @@ class RecentTransactionTile extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).valueOrNull ?? 'EUR')}${formatAmount(transaction.amount, ref.watch(numberFormatProvider).valueOrNull ?? NumberFormatStyle.dotDecimal)}',
+                    '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).value ?? 'EUR')}${formatAmount(transaction.amount, ref.watch(numberFormatProvider).value ?? NumberFormatStyle.dotDecimal)}',
                     style: TextStyle(
                       fontFamily: 'Sora',
                       fontSize: 15,

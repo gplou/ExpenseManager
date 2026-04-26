@@ -37,7 +37,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(authNotifierProvider.notifier).signIn(
+    final success = await ref.read(authProvider.notifier).signIn(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
@@ -49,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleGoogleSignIn() async {
     final success =
-        await ref.read(authNotifierProvider.notifier).signInWithGoogle();
+        await ref.read(authProvider.notifier).signInWithGoogle();
     if (success && mounted) {
       context.go(AppRoutes.dashboard);
     }
@@ -57,7 +57,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleAppleSignIn() async {
     final success =
-        await ref.read(authNotifierProvider.notifier).signInWithApple();
+        await ref.read(authProvider.notifier).signInWithApple();
     if (success && mounted) {
       context.go(AppRoutes.dashboard);
     }
@@ -81,13 +81,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final authState = ref.watch(authNotifierProvider);
+    final authState = ref.watch(authProvider);
     final isLoading = authState is Loading;
 
-    ref.listen(authNotifierProvider, (_, next) {
+    ref.listen(authProvider, (_, next) {
       if (next is Failure) {
         context.showSnackbar(next.failure.userMessage, isError: true);
-        ref.read(authNotifierProvider.notifier).reset();
+        ref.read(authProvider.notifier).reset();
       }
     });
 

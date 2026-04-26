@@ -55,6 +55,9 @@ class _FakeSyncNotifier extends SyncNotifier {
     final s = SyncState(
       status: _isSyncing ? SyncStatus.syncing : SyncStatus.idle,
     );
+    // Expose value synchronously: InitialSyncService reads via .select((s) =>
+    // s.value?.isSyncing) immediately after start(), before the async build
+    // future resolves. Without this assignment .value would be null.
     state = AsyncData(s);
     return s;
   }
@@ -131,26 +134,15 @@ void main() {
   // ── Happy path ────────────────────────────────────────────────────────────
 
   test('hydrates local DB from cloud on first start', () async {
-    // Simulate cloud having two transactions via a real TransactionsRepository
-    // whose Supabase client is mocked to return canned rows.
-    final mockSupabase = MockSupabaseClient();
-    final mockAuth = MockGoTrueClient();
-    when(() => mockSupabase.auth).thenReturn(mockAuth);
-    when(() => mockAuth.currentUser).thenReturn(null);
-
-    // We override the whole supabaseClientProvider and use a _FakeCloudSync
-    // approach: intercept by replacing the cloud repo in the service.
-    // Simplest: just seed local directly, check via a spy on insertAll.
-    // Even simpler: use a controllable stream and seed local manually to verify
-    // the service doesn't duplicate — but it's cleaner to test via the public
-    // SharedPreferences flag.
-
     // Use an in-process approach: start the service, verify the flag is set.
     // The actual DB population is covered by transaction_sync_service_test.dart.
     final ctrl = StreamController<bool>.broadcast();
     final container = _makeContainer(connectivityStream: ctrl.stream);
-    addTearDown(container.dispose);
+    // Order matters: container.dispose() must run BEFORE ctrl.close() so
+    // Riverpod cancels its stream subscription on a still-open controller.
+    // addTearDown is LIFO, so register dispose LAST.
     addTearDown(ctrl.close);
+    addTearDown(container.dispose);
 
     container.read(_startInitialSyncProvider);
     await _pump();
@@ -166,8 +158,8 @@ void main() {
       connectivityStream: ctrl.stream,
       isPro: false,
     );
-    addTearDown(container.dispose);
     addTearDown(ctrl.close);
+    addTearDown(container.dispose);
 
     container.read(_startInitialSyncProvider);
     await _pump();
@@ -183,8 +175,8 @@ void main() {
       connectivityStream: ctrl.stream,
       authenticated: false,
     );
-    addTearDown(container.dispose);
     addTearDown(ctrl.close);
+    addTearDown(container.dispose);
 
     container.read(_startInitialSyncProvider);
     await _pump();
@@ -199,8 +191,8 @@ void main() {
       connectivityStream: ctrl.stream,
       isOnline: false,
     );
-    addTearDown(container.dispose);
     addTearDown(ctrl.close);
+    addTearDown(container.dispose);
 
     container.read(_startInitialSyncProvider);
     await _pump();
@@ -216,8 +208,8 @@ void main() {
 
     final ctrl = StreamController<bool>.broadcast();
     final container = _makeContainer(connectivityStream: ctrl.stream);
-    addTearDown(container.dispose);
     addTearDown(ctrl.close);
+    addTearDown(container.dispose);
 
     container.read(_startInitialSyncProvider);
     await _pump();
@@ -234,8 +226,8 @@ void main() {
       connectivityStream: ctrl.stream,
       isOnline: false,
     );
-    addTearDown(container.dispose);
     addTearDown(ctrl.close);
+    addTearDown(container.dispose);
 
     container.read(_startInitialSyncProvider);
     await _pump();
@@ -266,8 +258,8 @@ void main() {
       connectivityStream: ctrl.stream,
       isSyncing: true,
     );
-    addTearDown(container.dispose);
     addTearDown(ctrl.close);
+    addTearDown(container.dispose);
 
     container.read(_startInitialSyncProvider);
     await _pump();

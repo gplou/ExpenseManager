@@ -190,7 +190,7 @@ Future<void> _initPostHog() async {
 }
 
 /// Extrae la acción del widget de la URI de lanzamiento.
-/// URI esperada: expensemanager://widget/<action>
+/// URI esperada: `expensemanager://widget/<action>`
 String? _extractWidgetAction(Uri? uri) {
   if (uri == null) return null;
   final segments = uri.pathSegments;
@@ -290,9 +290,9 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     final router = ref.watch(routerProvider);
     final themeMode =
-        ref.watch(themeModeProvider).valueOrNull ?? widget.initialTheme;
+        ref.watch(themeModeProvider).value ?? widget.initialTheme;
     final locale =
-        ref.watch(localeProvider).valueOrNull ?? widget.initialLocale;
+        ref.watch(localeProvider).value ?? widget.initialLocale;
 
     return MaterialApp.router(
       title: AppConfig.appName,

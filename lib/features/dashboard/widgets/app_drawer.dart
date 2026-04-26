@@ -86,7 +86,7 @@ class AppDrawer extends ConsumerWidget {
                   Consumer(
                     builder: (context, ref, _) {
                       final isPro = ref.watch(isProProvider);
-                      final sub = ref.watch(subscriptionProvider).valueOrNull;
+                      final sub = ref.watch(subscriptionProvider).value;
                       return ListTile(
                         leading: Icon(
                           Icons.star_rounded,
@@ -149,7 +149,7 @@ class AppDrawer extends ConsumerWidget {
               ),
               onTap: () {
                 Navigator.of(context).pop();
-                ref.read(authNotifierProvider.notifier).signOut();
+                ref.read(authProvider.notifier).signOut();
               },
             ),
             // ── Delete account ────────────────────────────────────────────
@@ -204,7 +204,7 @@ class AppDrawer extends ConsumerWidget {
     Navigator.of(context).pop(); // close the drawer
 
     final success =
-        await ref.read(authNotifierProvider.notifier).deleteAccount();
+        await ref.read(authProvider.notifier).deleteAccount();
 
     if (!context.mounted) return;
     if (!success) {

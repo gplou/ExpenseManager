@@ -158,7 +158,7 @@ final recurringTransactionsRepositoryProvider =
   final isPro = ref.watch(isProProvider);
   final user = ref.watch(currentUserProvider);
   final isSyncing = ref.watch(
-    syncProvider.select((s) => s.valueOrNull?.isSyncing ?? false),
+    syncProvider.select((s) => s.value?.isSyncing ?? false),
   );
 
   if (isPro || user == null || isSyncing) {

@@ -129,7 +129,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     setState(() => _voiceState = VoiceInputState.listening);
     AnalyticsService.track(AnalyticsService.voiceUsed);
 
-    final langCode = ref.read(localeProvider).valueOrNull?.languageCode ?? 'es';
+    final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
     await _speech.listen(
       localeId: _speechLocaleId(langCode),
       onResult: (result) {

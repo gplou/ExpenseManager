@@ -91,7 +91,7 @@ final customCategoriesProvider = AsyncNotifierProvider<
 /// Minimizes UI changes: existing ref.watch calls just swap provider name.
 final customCategoriesSyncProvider =
     Provider<Map<TransactionType, List<TransactionCategory>>>((ref) {
-  return ref.watch(customCategoriesProvider).valueOrNull ??
+  return ref.watch(customCategoriesProvider).value ??
       {
         TransactionType.income: [],
         TransactionType.expense: [],
