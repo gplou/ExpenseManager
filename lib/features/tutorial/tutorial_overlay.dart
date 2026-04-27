@@ -299,6 +299,61 @@ class _Backdrop extends StatelessWidget {
       );
 }
 
+// ── Sliding dot progress indicator ───────────────────────────────────────────
+
+class _StepDots extends StatelessWidget {
+  const _StepDots({
+    required this.totalSteps,
+    required this.stepIndex,
+    required this.isDark,
+  });
+
+  final int totalSteps;
+  final int stepIndex;
+  final bool isDark;
+
+  static const int _maxVisible = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor =
+        isDark ? Colors.white : AppColors.dustyTeal;
+    final inactiveColor = isDark
+        ? Colors.white.withValues(alpha: 0.30)
+        : AppColors.dustyTeal.withValues(alpha: 0.25);
+
+    final int start = totalSteps <= _maxVisible
+        ? 0
+        : (stepIndex - _maxVisible ~/ 2).clamp(0, totalSteps - _maxVisible);
+    final int end =
+        totalSteps <= _maxVisible ? totalSteps : start + _maxVisible;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(end - start, (j) {
+        final i = start + j;
+        final active = i == stepIndex;
+        final isEdge = totalSteps > _maxVisible && (j == 0 || j == end - start - 1);
+        final size = active ? 10.0 : 7.0;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: EdgeInsets.only(right: j < end - start - 1 ? 6 : 0),
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: active
+                ? activeColor
+                : isEdge
+                    ? inactiveColor.withValues(alpha: isDark ? 0.15 : 0.12)
+                    : inactiveColor,
+            shape: BoxShape.circle,
+          ),
+        );
+      }),
+    );
+  }
+}
+
 // ── Spotlight CustomPainter ───────────────────────────────────────────────────
 
 class _SpotlightPainter extends CustomPainter {
@@ -438,34 +493,11 @@ class _TooltipCard extends StatelessWidget {
             // Footer: dot indicators + next button
             Row(
               children: [
-                // Progress dots (single row, never wraps)
                 Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: List.generate(totalSteps, (i) {
-                        final active = i == stepIndex;
-                        final size = active ? 10.0 : 7.0;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: EdgeInsets.only(
-                              right: i < totalSteps - 1 ? 6 : 0),
-                          width: size,
-                          height: size,
-                          decoration: BoxDecoration(
-                            color: active
-                                ? (isDark
-                                    ? Colors.white
-                                    : AppColors.dustyTeal)
-                                : (isDark
-                                    ? Colors.white.withValues(alpha: 0.30)
-                                    : AppColors.dustyTeal
-                                        .withValues(alpha: 0.25)),
-                            shape: BoxShape.circle,
-                          ),
-                        );
-                      }),
-                    ),
+                  child: _StepDots(
+                    totalSteps: totalSteps,
+                    stepIndex: stepIndex,
+                    isDark: isDark,
                   ),
                 ),
                 const Gap(12),
