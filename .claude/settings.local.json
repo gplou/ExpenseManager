@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CAVEMAN_DEFAULT_MODE": "ultra"
+  },
   "permissions": {
     "allow": [
       "WebFetch(domain:claude.ai)",
