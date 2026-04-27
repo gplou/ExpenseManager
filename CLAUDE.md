@@ -4,16 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+> This project uses **FVM** (`fvm flutter` instead of `flutter`). `build_release.sh` already wraps it; use `fvm flutter` for manual commands.
+
 **Run the app:**
 ```bash
-flutter run --dart-define-from-file=dart_defines.json
+fvm flutter run --dart-define-from-file=dart_defines.json
 ```
 
 **Build:**
 ```bash
-flutter build apk --dart-define-from-file=dart_defines.json   # Android debug APK
-bash build_release.sh                                          # Android release AAB
-flutter build ios --dart-define-from-file=dart_defines.json   # iOS
+fvm flutter build apk --dart-define-from-file=dart_defines.json   # Android debug APK
+bash build_release.sh                                              # Android release AAB
+fvm flutter build ios --dart-define-from-file=dart_defines.json   # iOS
 ```
 
 **Code generation** (required after modifying `@freezed` models or `@riverpod` providers):
@@ -67,7 +69,7 @@ features/<feature>/
 
 ### State Management
 
-Riverpod 2.x with code generation (`riverpod_annotation`):
+Riverpod 3.x with code generation (`riverpod_annotation`):
 - **Plain `Provider`** for repository singletons in `data/`
 - **`@riverpod` function providers** for computed/derived state in `presentation/providers/`
 - **`AsyncNotifier`** for async state with CRUD actions (e.g., `TransactionsNotifier`, `AuthNotifier`, `SubscriptionNotifier`)
@@ -78,7 +80,7 @@ Never put business logic in widgets. Widgets call notifier methods and watch pro
 
 **Remote:** Supabase (PostgreSQL + Auth + Edge Functions). Each feature has a repository implementing a contract interface (`*_repository_contract.dart`).
 
-**Local cache:** SQLite via `sqflite`. `LocalDatabase` (`lib/core/local_db/local_database.dart`) is a lazy-open singleton. Tables: `transactions`, `recurring_transactions`, `pending_operations`, `custom_categories`, `subcategories`.
+**Local cache:** SQLite via `sqflite`. `LocalDatabase` (`lib/core/local_db/local_database.dart`) is a lazy-open singleton. Tables: `transactions`, `recurring_transactions`, `pending_operations`.
 
 **Offline sync:** `OfflineSyncService` runs in the background and drains `pending_operations`. `InitialSyncService` hydrates PRO users on first load. Conflict resolution is last-write-wins.
 
@@ -90,7 +92,7 @@ Sealed `AppFailure` hierarchy (`lib/core/errors/failures.dart`): `AuthFailure`, 
 
 ### Navigation
 
-GoRouter 13.x. All route names/paths are constants in `AppRoutes` (`lib/core/config/router.dart`) — never hardcode path strings inline. The router subscribes to Supabase `authStateChanges` via `_RouterRefreshNotifier` to re-evaluate redirects without rebuilding the router.
+GoRouter 17.x. All route names/paths are constants in `AppRoutes` (`lib/core/config/router.dart`) — never hardcode path strings inline. The router subscribes to Supabase `authStateChanges` via `_RouterRefreshNotifier` to re-evaluate redirects without rebuilding the router.
 
 Deep links use the `expensemanager://` URI scheme (e.g., home widget actions).
 
@@ -110,6 +112,18 @@ All AI calls go through Supabase Edge Functions, which proxy to **Gemini 2.5 Fla
 ### Localization
 
 4 locales: Spanish (`es`), English (`en`), French (`fr`), German (`de`). Source files are `.arb` in `lib/l10n/`. Run `flutter gen-l10n` to regenerate `AppLocalizations`. Category keys are stored in Spanish in the DB; translation happens at the presentation layer via `TransactionCategories`.
+
+### Analytics
+
+`AnalyticsService` (`lib/core/services/analytics_service.dart`) is a thin static wrapper over PostHog. All methods are fire-and-forget (errors are swallowed). `AnalyticsRouteObserver` (`lib/core/services/analytics_route_observer.dart`) wires GoRouter navigation to PostHog screen events automatically. Never call PostHog directly — always go through `AnalyticsService`.
+
+### Ads
+
+Google Mobile Ads (`google_mobile_ads: ^8.0.0`) with `app_tracking_transparency` for iOS ATT prompt. Ads are gated behind the PRO entitlement — PRO users see no ads.
+
+### Tutorial
+
+`lib/features/tutorial/` contains an in-app tutorial overlay system (`TutorialOverlay`, `TutorialNotifier`, `TutorialStep`). Tutorial state is driven by `tutorial_notifier.dart` and keyed by `tutorial_keys.dart`.
 
 ### Code Generation Files
 
