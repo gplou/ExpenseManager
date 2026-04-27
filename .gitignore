@@ -54,3 +54,7 @@ android/app/upload-keystore.jks
 
 # FVM Version Cache
 .fvm/
+
+# Claude Code local state
+.claude/scheduled_tasks.lock
+.claude/worktrees/
