@@ -514,6 +514,8 @@
   "@labelManual": {},
   "labelPhoto": "Foto",
   "@labelPhoto": {},
+  "labelChat": "Chat",
+  "@labelChat": {},
   "cameraOption": "Cámara",
   "@cameraOption": {},
   "galleryOption": "Galería",

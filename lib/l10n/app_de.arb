@@ -308,6 +308,8 @@
   "@labelManual": {},
   "labelPhoto": "Foto",
   "@labelPhoto": {},
+  "labelChat": "Chat",
+  "@labelChat": {},
   "cameraOption": "Kamera",
   "@cameraOption": {},
   "galleryOption": "Galerie",

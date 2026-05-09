@@ -1482,6 +1482,12 @@ abstract class AppLocalizations {
   /// **'Foto'**
   String get labelPhoto;
 
+  /// No description provided for @labelChat.
+  ///
+  /// In es, this message translates to:
+  /// **'Chat'**
+  String get labelChat;
+
   /// No description provided for @cameraOption.
   ///
   /// In es, this message translates to:

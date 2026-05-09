@@ -756,6 +756,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get labelPhoto => 'Foto';
 
   @override
+  String get labelChat => 'Chat';
+
+  @override
   String get cameraOption => 'Kamera';
 
   @override

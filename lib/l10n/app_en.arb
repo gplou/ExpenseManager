@@ -286,6 +286,7 @@
   "labelVoice": "Voice",
   "labelManual": "Manual",
   "labelPhoto": "Photo",
+  "labelChat": "Chat",
   "cameraOption": "Camera",
   "galleryOption": "Gallery",
   "micUnavailable": "Microphone not available",
