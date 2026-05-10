@@ -38,16 +38,25 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
       _AddTransactionScreenState();
 }
 
-// ── Recurrence info banner ────────────────────────────────────────────────────
+// ── Recurring frequency picker (segmented + info) ────────────────────────────
 
-class _RecurrenceInfoBanner extends StatelessWidget {
-  const _RecurrenceInfoBanner({required this.date, required this.type});
+class _RecurringFrequencyPicker extends StatelessWidget {
+  const _RecurringFrequencyPicker({
+    required this.recurrenceType,
+    required this.date,
+    required this.accent,
+    required this.onChangeFrequency,
+  });
+
+  final RecurrenceType? recurrenceType;
   final DateTime date;
-  final RecurrenceType type;
+  final Color accent;
+  final ValueChanged<RecurrenceType> onChangeFrequency;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final type = recurrenceType ?? RecurrenceType.monthly;
     final next = nextRecurrenceDate(date, type);
     final dayStr =
         '${next.day.toString().padLeft(2, '0')}/${next.month.toString().padLeft(2, '0')}/${next.year}';
@@ -57,34 +66,58 @@ class _RecurrenceInfoBanner extends StatelessWidget {
       RecurrenceType.annual => l10n.frequencyYear,
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: const BoxDecoration(
-        color: AppColors.dustyTealLight,
-        borderRadius: AppRadius.radiusMd,
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.repeat_rounded,
-            size: 16,
-            color: AppColors.dustyTeal,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              l10n.nextRepetition(dayStr, freq),
-              style: const TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.dustyTeal,
-                height: 1.5,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SegmentedButton<RecurrenceType>(
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(
+              value: RecurrenceType.weekly,
+              label: Text(l10n.weekly),
+              icon: const Icon(Icons.calendar_view_week_outlined, size: 16),
             ),
+            ButtonSegment(
+              value: RecurrenceType.monthly,
+              label: Text(l10n.monthly),
+              icon: const Icon(Icons.calendar_month_outlined, size: 16),
+            ),
+            ButtonSegment(
+              value: RecurrenceType.annual,
+              label: Text(l10n.yearly),
+              icon: const Icon(Icons.event_repeat_outlined, size: 16),
+            ),
+          ],
+          selected: {type},
+          onSelectionChanged: (s) => onChangeFrequency(s.first),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: const BoxDecoration(
+            color: AppColors.dustyTealLight,
+            borderRadius: AppRadius.radiusMd,
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              const Icon(Icons.repeat_rounded,
+                  size: 14, color: AppColors.dustyTeal),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  l10n.nextRepetition(dayStr, freq),
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.dustyTeal,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -469,7 +502,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         behavior: HitTestBehavior.opaque,
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
+              AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xs),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -484,14 +517,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   });
                 },
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.sm),
               _AmountDisplay(
                 controller: _keypadController,
                 accent: accentColor,
                 currencyCode: ref.watch(currencyProvider).value ?? 'EUR',
                 error: _amountError,
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.sm),
 
               // Categorías frecuentes (1-tap selection).
               RecentCategoriesStrip(
@@ -506,49 +539,85 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   });
                 },
               ),
+              const SizedBox(height: AppSpacing.sm),
 
-              _CategorySubcategoryRow(
-                type: _type,
-                selectedCategory: _selectedCategory,
-                selectedSubcategory: _selectedSubcategory,
-                accentColor: accentColor,
-                accentLight: accentLight,
-                customCats: customCats,
-                onCategoryTap: _openCategoryPicker,
-                onSubcategorySelected: (sub) =>
-                    setState(() => _selectedSubcategory = sub),
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              _DateQuickPicker(
-                selected: _selectedDate,
-                accent: accentColor,
-                accentLight: accentLight,
-                onSelect: (d) => setState(() => _selectedDate = d),
-                onPickCustom: _pickDate,
+              // Category + Date en la misma fila
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _CategoryBlock(
+                      type: _type,
+                      selectedCategory: _selectedCategory,
+                      selectedSubcategory: _selectedSubcategory,
+                      accentColor: accentColor,
+                      accentLight: accentLight,
+                      customCats: customCats,
+                      onCategoryTap: _openCategoryPicker,
+                      onSubcategorySelected: (sub) =>
+                          setState(() => _selectedSubcategory = sub),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: _DateQuickPicker(
+                      selected: _selectedDate,
+                      accent: accentColor,
+                      accentLight: accentLight,
+                      onSelect: (d) => setState(() => _selectedDate = d),
+                      onPickCustom: _pickDate,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              _DescriptionField(
-                controller: _descriptionController,
-                focusNode: _descriptionFocus,
+              // Description + Recurring en la misma fila
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: _DetailsBlock(
+                      descriptionController: _descriptionController,
+                      descriptionFocus: _descriptionFocus,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _RecurringToggleCompact(
+                    isRecurring: _isRecurring,
+                    recurrenceType: _recurrenceType,
+                    date: _selectedDate,
+                    accent: accentColor,
+                    onToggle: (v) => setState(() {
+                      _isRecurring = v;
+                      _recurrenceType = v ? RecurrenceType.monthly : null;
+                    }),
+                    onChangeFrequency: (t) =>
+                        setState(() => _recurrenceType = t),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.md),
 
-              // Recurring
-              _RecurringSection(
-                isRecurring: _isRecurring,
-                recurrenceType: _recurrenceType,
-                date: _selectedDate,
-                accent: accentColor,
-                onToggle: (v) => setState(() {
-                  _isRecurring = v;
-                  _recurrenceType = v ? RecurrenceType.monthly : null;
-                }),
-                onChangeFrequency: (t) =>
-                    setState(() => _recurrenceType = t),
+              // Frecuencia — solo visible cuando recurring está activo
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                child: _isRecurring
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: _RecurringFrequencyPicker(
+                          recurrenceType: _recurrenceType,
+                          date: _selectedDate,
+                          accent: accentColor,
+                          onChangeFrequency: (t) =>
+                              setState(() => _recurrenceType = t),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.sm),
             ],
           ),
         ),
@@ -787,44 +856,38 @@ class _DateQuickPicker extends StatelessWidget {
     final isYesterday = selectedDay == yesterday;
     final isOther = !isToday && !isYesterday;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: _DateChip(
-            label: l10n.today,
-            active: isToday,
-            accent: accent,
-            accentLight: accentLight,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onSelect(today);
-            },
-          ),
+        _DateChip(
+          label: l10n.today,
+          active: isToday,
+          accent: accent,
+          accentLight: accentLight,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onSelect(today);
+          },
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _DateChip(
-            label: l10n.yesterday,
-            active: isYesterday,
-            accent: accent,
-            accentLight: accentLight,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onSelect(yesterday);
-            },
-          ),
+        const SizedBox(height: AppSpacing.xs),
+        _DateChip(
+          label: l10n.yesterday,
+          active: isYesterday,
+          accent: accent,
+          accentLight: accentLight,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onSelect(yesterday);
+          },
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          flex: 2,
-          child: _DateChip(
-            label: isOther ? selected.formattedDate : '…',
-            icon: Icons.calendar_today_rounded,
-            active: isOther,
-            accent: accent,
-            accentLight: accentLight,
-            onTap: onPickCustom,
-          ),
+        const SizedBox(height: AppSpacing.xs),
+        _DateChip(
+          label: isOther ? selected.formattedDate : '…',
+          icon: Icons.calendar_today_rounded,
+          active: isOther,
+          accent: accent,
+          accentLight: accentLight,
+          onTap: onPickCustom,
         ),
       ],
     );
@@ -904,10 +967,10 @@ class _DateChip extends StatelessWidget {
   }
 }
 
-// ── Recurring section ────────────────────────────────────────────────────────
+// ── Recurring toggle compacto (chip icon + switch) ───────────────────────────
 
-class _RecurringSection extends StatelessWidget {
-  const _RecurringSection({
+class _RecurringToggleCompact extends StatelessWidget {
+  const _RecurringToggleCompact({
     required this.isRecurring,
     required this.recurrenceType,
     required this.date,
@@ -926,80 +989,41 @@ class _RecurringSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppCard(
-          variant: AppCardVariant.outlined,
-          padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg, vertical: 12),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.repeat_rounded,
-                size: 20,
-                color: AppColors.dustyTeal,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  l10n.recurringTransaction,
-                  style: const TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Semantics(
-                toggled: isRecurring,
-                label: l10n.recurringTransaction,
-                child: Switch(
-                  value: isRecurring,
-                  onChanged: onToggle,
-                ),
-              ),
-            ],
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      toggled: isRecurring,
+      label: l10n.recurringTransaction,
+      child: GestureDetector(
+        onTap: () => onToggle(!isRecurring),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
+            color: isRecurring
+                ? AppColors.dustyTealLight
+                : cs.surfaceContainerHigh,
+            borderRadius: AppRadius.radiusMd,
+            border: Border.all(
+              color: isRecurring ? AppColors.dustyTeal : AppColors.borderLight,
+              width: 1.5,
+            ),
+          ),
+          child: Icon(
+            Icons.repeat_rounded,
+            size: 20,
+            color: isRecurring ? AppColors.dustyTeal : AppColors.textMuted,
           ),
         ),
-        if (isRecurring) ...[
-          const SizedBox(height: AppSpacing.md),
-          SegmentedButton<RecurrenceType>(
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                value: RecurrenceType.weekly,
-                label: Text(l10n.weekly),
-                icon: const Icon(Icons.calendar_view_week_outlined, size: 16),
-              ),
-              ButtonSegment(
-                value: RecurrenceType.monthly,
-                label: Text(l10n.monthly),
-                icon: const Icon(Icons.calendar_month_outlined, size: 16),
-              ),
-              ButtonSegment(
-                value: RecurrenceType.annual,
-                label: Text(l10n.yearly),
-                icon: const Icon(Icons.event_repeat_outlined, size: 16),
-              ),
-            ],
-            selected: {recurrenceType ?? RecurrenceType.monthly},
-            onSelectionChanged: (s) => onChangeFrequency(s.first),
-          ),
-          if (recurrenceType != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            _RecurrenceInfoBanner(date: date, type: recurrenceType!),
-          ],
-        ],
-      ],
+      ),
     );
   }
 }
 
-// ── Category + subcategory row ────────────────────────────────────────────────
+// ── Category block: categoría full-width + subcategoría indentada ─────────────
 
-class _CategorySubcategoryRow extends StatelessWidget {
-  const _CategorySubcategoryRow({
+class _CategoryBlock extends StatelessWidget {
+  const _CategoryBlock({
     required this.type,
     required this.selectedCategory,
     required this.selectedSubcategory,
@@ -1022,73 +1046,77 @@ class _CategorySubcategoryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: AppCompactRow(
-            emoji: selectedCategory != null
-                ? TransactionCategories.resolveEmoji(
-                    selectedCategory!, type.isIncome, customCats)
-                : null,
-            icon: selectedCategory == null ? Icons.category_outlined : null,
-            label: selectedCategory != null
-                ? TransactionCategories.localizedName(selectedCategory!, l10n)
-                : l10n.category,
-            hasValue: selectedCategory != null,
-            accent: accentColor,
-            accentLight: accentLight,
-            onTap: onCategoryTap,
-            semanticLabel:
-                '${l10n.category}: ${selectedCategory != null ? TransactionCategories.localizedName(selectedCategory!, l10n) : l10n.tutorialSkip}',
-          ),
+        AppCompactRow(
+          emoji: selectedCategory != null
+              ? TransactionCategories.resolveEmoji(
+                  selectedCategory!, type.isIncome, customCats)
+              : null,
+          icon: selectedCategory == null ? Icons.category_outlined : null,
+          label: selectedCategory != null
+              ? TransactionCategories.localizedName(selectedCategory!, l10n)
+              : l10n.category,
+          hasValue: selectedCategory != null,
+          accent: accentColor,
+          accentLight: accentLight,
+          onTap: onCategoryTap,
+          semanticLabel:
+              '${l10n.category}: ${selectedCategory != null ? TransactionCategories.localizedName(selectedCategory!, l10n) : l10n.tutorialSkip}',
         ),
-        const SizedBox(width: AppSpacing.sm + 2),
-        Expanded(
-          child: AppCompactRow(
-            icon: selectedSubcategory == null
-                ? Icons.label_outline_rounded
-                : null,
-            emoji: selectedSubcategory != null ? '🏷' : null,
-            label: selectedSubcategory ?? l10n.subcategory,
-            hasValue: selectedSubcategory != null,
-            disabled: selectedCategory == null,
-            accent: accentColor,
-            accentLight: accentLight,
-            onTap: selectedCategory != null
-                ? () async {
-                    final sub = await showModalBottomSheet<String>(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (_) => _SubcategoryPickerSheet(
-                        selected: selectedSubcategory,
-                        category: selectedCategory!,
-                        type: type,
-                        accentColor: accentColor,
-                        accentLight: accentLight,
-                      ),
-                    );
-                    if (sub != null) onSubcategorySelected(sub);
-                  }
-                : null,
-            semanticLabel: '${l10n.subcategory}: ${selectedSubcategory ?? ""}',
-          ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          child: selectedCategory != null
+              ? Padding(
+                  padding: const EdgeInsets.only(
+                      top: AppSpacing.sm, left: AppSpacing.xl),
+                  child: AppCompactRow(
+                    icon: selectedSubcategory == null
+                        ? Icons.label_outline_rounded
+                        : null,
+                    emoji: selectedSubcategory != null ? '🏷' : null,
+                    label: selectedSubcategory ?? l10n.subcategory,
+                    hasValue: selectedSubcategory != null,
+                    accent: accentColor,
+                    accentLight: accentLight,
+                    onTap: () async {
+                      final sub = await showModalBottomSheet<String>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (_) => _SubcategoryPickerSheet(
+                          selected: selectedSubcategory,
+                          category: selectedCategory!,
+                          type: type,
+                          accentColor: accentColor,
+                          accentLight: accentLight,
+                        ),
+                      );
+                      if (sub != null) onSubcategorySelected(sub);
+                    },
+                    semanticLabel:
+                        '${l10n.subcategory}: ${selectedSubcategory ?? ""}',
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
       ],
     );
   }
 }
 
-// ── Description field ─────────────────────────────────────────────────────────
+// ── Details block: descripción con label visible ───────────────────────────────
 
-class _DescriptionField extends StatelessWidget {
-  const _DescriptionField({
-    required this.controller,
-    required this.focusNode,
+class _DetailsBlock extends StatelessWidget {
+  const _DetailsBlock({
+    required this.descriptionController,
+    required this.descriptionFocus,
   });
 
-  final TextEditingController controller;
-  final FocusNode focusNode;
+  final TextEditingController descriptionController;
+  final FocusNode descriptionFocus;
 
   @override
   Widget build(BuildContext context) {
@@ -1096,36 +1124,59 @@ class _DescriptionField extends StatelessWidget {
     final cs = context.colors;
     return AppCard(
       variant: AppCardVariant.outlined,
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.xs + 1),
-      child: TextFormField(
-        controller: controller,
-        focusNode: focusNode,
-        maxLines: 1,
-        maxLength: 50,
-        textInputAction: TextInputAction.done,
-        onTapOutside: (_) => focusNode.unfocus(),
-        onEditingComplete: focusNode.unfocus,
-        style: TextStyle(
-          fontFamily: 'Sora',
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: cs.onSurface,
-        ),
-        decoration: InputDecoration(
-          icon: const Icon(Icons.edit_note_rounded, color: AppColors.textMuted),
-          hintText: l10n.descriptionOptional,
-          hintStyle: const TextStyle(
-            fontFamily: 'Sora',
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textTertiary,
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+                left: AppSpacing.xl + AppSpacing.sm,
+                top: AppSpacing.xs + 2),
+            child: Text(
+              l10n.descriptionOptional.toUpperCase(),
+              style: const TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: AppColors.textMuted,
+              ),
+            ),
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          counterText: '',
-        ),
+          TextFormField(
+            controller: descriptionController,
+            focusNode: descriptionFocus,
+            maxLines: 1,
+            maxLength: 50,
+            textInputAction: TextInputAction.done,
+            onTapOutside: (_) => descriptionFocus.unfocus(),
+            onEditingComplete: descriptionFocus.unfocus,
+            style: TextStyle(
+              fontFamily: 'Sora',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: cs.onSurface,
+            ),
+            decoration: InputDecoration(
+              icon: const Icon(Icons.edit_note_rounded,
+                  color: AppColors.textMuted),
+              hintText: '—',
+              hintStyle: const TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textTertiary,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              counterText: '',
+              contentPadding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.sm),
+            ),
+          ),
+        ],
       ),
     );
   }
