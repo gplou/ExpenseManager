@@ -81,11 +81,18 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
 
   @override
   Future<void> signOut() async {
+    final userId = _client.auth.currentUser?.id;
     try {
       await _client.auth.signOut();
     } on AuthException catch (_) {
       // signOut failures are non-critical — the session is cleared locally
       // regardless, so swallow the error silently.
+    } finally {
+      // Clear local SQLite data so no sensitive records persist on shared devices.
+      // Mirrors the cleanup that deleteAccount() already performs.
+      if (userId != null) {
+        await LocalDatabase.instance.clearUserData(userId);
+      }
     }
   }
 

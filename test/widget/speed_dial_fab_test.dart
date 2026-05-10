@@ -13,6 +13,7 @@ import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
+import 'package:expense_manager/features/tutorial/tutorial_notifier.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
 // ── Fakes ─────────────────────────────────────────────────────────────────────
@@ -39,6 +40,14 @@ class _FakeLocaleNotifier extends LocaleNotifier {
   Future<Locale> build() async => const Locale('es');
 }
 
+/// Forces the tutorial to be active so the FAB renders the radial dial path
+/// (outside tutorial, the FAB now opens a `QuickAddSheet` bottom sheet, which
+/// these accessibility tests don't exercise).
+class _ActiveTutorialNotifier extends TutorialNotifier {
+  @override
+  TutorialState build() => const TutorialState(isActive: true, stepIndex: 0);
+}
+
 /// Never calls the real Supabase Edge Function.
 class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
   @override
@@ -63,6 +72,7 @@ Widget _buildFab({bool isPro = true}) => ProviderScope(
         localeProvider.overrideWith(() => _FakeLocaleNotifier()),
         voiceTransactionParserProvider.overrideWithValue(_FakeVoiceParser()),
         imageTransactionParserProvider.overrideWithValue(_FakeImageParser()),
+        tutorialProvider.overrideWith(_ActiveTutorialNotifier.new),
       ],
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,

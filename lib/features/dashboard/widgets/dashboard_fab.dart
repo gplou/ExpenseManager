@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +23,7 @@ import '../../transactions/data/voice_transaction_parser.dart';
 import '../../transactions/domain/parsed_voice_transaction.dart';
 import '../../tutorial/tutorial_keys.dart';
 import '../../tutorial/tutorial_notifier.dart';
+import 'quick_add_sheet.dart';
 
 enum VoiceInputState { idle, listening, processing, cameraProcessing }
 
@@ -101,10 +103,42 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     }
   }
 
-  void _toggle() => setState(() => _open = !_open);
+  void _toggle() {
+    // Durante el tutorial mantenemos el dial radial para que el spotlight siga
+    // encontrando voiceBtnKey/manualBtnKey/cameraBtnKey y la onboarding intacta.
+    final tutorialActive = ref.read(tutorialProvider).isActive;
+    if (tutorialActive) {
+      setState(() => _open = !_open);
+      return;
+    }
+    if (_open) {
+      setState(() => _open = false);
+      return;
+    }
+    HapticFeedback.lightImpact();
+    _openQuickAddSheet();
+  }
 
   void _closeDial() {
     if (_open) setState(() => _open = false);
+  }
+
+  Future<void> _openQuickAddSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => QuickAddSheet(
+        onVoiceTap: () {
+          if (!_requirePro()) return;
+          _startVoice();
+        },
+        onCameraTap: () {
+          if (!_requirePro()) return;
+          _startCamera();
+        },
+      ),
+    );
   }
 
   Future<void> _startVoice() async {

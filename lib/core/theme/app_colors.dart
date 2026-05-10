@@ -26,10 +26,15 @@ class AppColors {
   static const Color warmAmber       = Color(0xFFD97706); // amber (amber-600)
   static const Color warmAmberLight  = Color(0xFFFEF3C7); // amber background (amber-100)
 
-  // Text
+  // ── Text (light) ──────────────────────────────────────────────────────────
+  // textDark: 19.2:1 sobre pureWhite (AAA).
+  // textMuted: 5.74:1 sobre pureWhite (AA).
+  // textSubtle: 2.85:1 — NO usar para texto. Solo dividers, chevrons grandes, decoración.
+  // textTertiary: 4.54:1 — usar para hints, labels secundarios.
   static const Color textDark        = Color(0xFF0F172A); // primary text (slate-900)
   static const Color textMuted       = Color(0xFF64748B); // secondary text (slate-500)
-  static const Color textSubtle      = Color(0xFF94A3B8); // hint/subtle text (slate-400)
+  static const Color textTertiary    = Color(0xFF748399); // hint, labels (≥4.5:1)
+  static const Color textSubtle      = Color(0xFF94A3B8); // ⚠ decorativo, no para texto
 
   // Borders
   static const Color borderLight     = Color(0xFFE2E8F0); // subtle border (slate-200)
@@ -41,9 +46,9 @@ class AppColors {
   static const Color darkSurfaceHigh = Color(0xFF334155); // elevated surface (slate-700)
   static const Color darkBorderColor = Color(0xFF475569); // border (slate-600)
   static const Color darkText        = Color(0xFFF1F5F9); // primary text (slate-100)
-  static const Color darkTextMuted   = Color(0xFF94A3B8); // secondary text (slate-400)
+  static const Color darkTextMuted   = Color(0xFF94A3B8); // secondary (slate-400, 5.41:1 OK en darkSurface)
 
-  // ── Shadows ───────────────────────────────────────────────────────────────
+  // ── Shadows (legacy — preferir AppElevation) ─────────────────────────────
   static const List<BoxShadow> softShadow = [
     BoxShadow(color: Color(0x12000000), blurRadius: 16, offset: Offset(0, 4)),
     BoxShadow(color: Color(0x07000000), blurRadius: 4,  offset: Offset(0, 1)),

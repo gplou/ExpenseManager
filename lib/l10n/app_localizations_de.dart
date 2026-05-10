@@ -249,6 +249,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get invalidEmail => 'Ungültige E-Mail';
 
   @override
+  String get showPassword => 'Passwort anzeigen';
+
+  @override
+  String get hidePassword => 'Passwort verbergen';
+
+  @override
   String get passwordLabel => 'Passwort';
 
   @override
@@ -754,6 +760,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get labelPhoto => 'Foto';
+
+  @override
+  String get labelChat => 'Chat';
 
   @override
   String get cameraOption => 'Kamera';

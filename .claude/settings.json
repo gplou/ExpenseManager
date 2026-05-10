@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk -F/ '{print $NF}')",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"fintech expense tracker mobile fast entry minimal\" --design-system -p \"ExpenseManager\")",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"form input mobile fast entry numeric keyboard\" --domain ux -n 10)",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"accessibility contrast touch target focus\" --domain ux -n 10)",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"fintech finance saas dashboard\" --domain color -n 5)",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile finance expense tracker form transaction\" --design-system -p \"ExpenseManager\" -f markdown)",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile form fields subcategory description input UX\" --domain ux -n 5)",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"form input layout mobile\" --stack flutter)",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile form compact no-scroll layout density\" --domain ux -n 5)",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"flutter mobile form compact layout single screen\" --stack flutter -n 5)"
+    ]
+  }
+}

@@ -1,13 +1,19 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gap/gap.dart';
 
 import '../../../../core/providers/currency_provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_elevation.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../../../core/widgets/neo_card.dart';
+import '../../../../core/widgets/ad_banner_footer.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/numeric_keypad.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../subscription/subscription_provider.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../data/subcategories_repository.dart';
 import '../../domain/parsed_voice_transaction.dart';
@@ -18,9 +24,8 @@ import '../providers/custom_categories_provider.dart';
 import '../providers/subcategories_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../widgets/category_picker_sheet.dart';
-import '../../../subscription/subscription_provider.dart';
-import '../../../../core/widgets/ad_banner_footer.dart';
 import '../widgets/create_subcategory_dialog.dart';
+import '../widgets/recent_categories_strip.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key, this.transaction, this.voiceData});
@@ -33,16 +38,25 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
       _AddTransactionScreenState();
 }
 
-// ── Recurrence info banner ────────────────────────────────────────────────────
+// ── Recurring frequency picker (segmented + info) ────────────────────────────
 
-class _RecurrenceInfoBanner extends StatelessWidget {
-  const _RecurrenceInfoBanner({required this.date, required this.type});
+class _RecurringFrequencyPicker extends StatelessWidget {
+  const _RecurringFrequencyPicker({
+    required this.recurrenceType,
+    required this.date,
+    required this.accent,
+    required this.onChangeFrequency,
+  });
+
+  final RecurrenceType? recurrenceType;
   final DateTime date;
-  final RecurrenceType type;
+  final Color accent;
+  final ValueChanged<RecurrenceType> onChangeFrequency;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final type = recurrenceType ?? RecurrenceType.monthly;
     final next = nextRecurrenceDate(date, type);
     final dayStr =
         '${next.day.toString().padLeft(2, '0')}/${next.month.toString().padLeft(2, '0')}/${next.year}';
@@ -52,30 +66,58 @@ class _RecurrenceInfoBanner extends StatelessWidget {
       RecurrenceType.annual => l10n.frequencyYear,
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.dustyTealLight,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Text('🔁', style: TextStyle(fontSize: 16)),
-          const Gap(10),
-          Expanded(
-            child: Text(
-              l10n.nextRepetition(dayStr, freq),
-              style: const TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.dustyTeal,
-                height: 1.5,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SegmentedButton<RecurrenceType>(
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(
+              value: RecurrenceType.weekly,
+              label: Text(l10n.weekly),
+              icon: const Icon(Icons.calendar_view_week_outlined, size: 16),
             ),
+            ButtonSegment(
+              value: RecurrenceType.monthly,
+              label: Text(l10n.monthly),
+              icon: const Icon(Icons.calendar_month_outlined, size: 16),
+            ),
+            ButtonSegment(
+              value: RecurrenceType.annual,
+              label: Text(l10n.yearly),
+              icon: const Icon(Icons.event_repeat_outlined, size: 16),
+            ),
+          ],
+          selected: {type},
+          onSelectionChanged: (s) => onChangeFrequency(s.first),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: const BoxDecoration(
+            color: AppColors.dustyTealLight,
+            borderRadius: AppRadius.radiusMd,
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              const Icon(Icons.repeat_rounded,
+                  size: 14, color: AppColors.dustyTeal),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  l10n.nextRepetition(dayStr, freq),
+                  style: const TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.dustyTeal,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -84,14 +126,16 @@ class _RecurrenceInfoBanner extends StatelessWidget {
 
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   late TransactionType _type;
-  late final TextEditingController _amountController;
+  late final AmountKeypadController _keypadController;
   late final TextEditingController _descriptionController;
+  final FocusNode _descriptionFocus = FocusNode();
   String? _selectedCategory;
   String? _selectedSubcategory;
   late DateTime _selectedDate;
   bool _isSaving = false;
   bool _isRecurring = false;
   RecurrenceType? _recurrenceType;
+  String? _amountError;
 
   bool get _isEditing => widget.transaction != null;
 
@@ -101,18 +145,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final t = widget.transaction;
     final v = widget.voiceData;
     _type = t?.type ?? v?.type ?? TransactionType.expense;
-    _amountController = TextEditingController(
-      text: t != null
-          ? t.amount.toStringAsFixed(2)
-          : v != null
-              ? v.amount.toStringAsFixed(2)
-              : '',
-    );
-    _descriptionController = TextEditingController(text: t?.description ?? v?.description ?? '');
+    _keypadController = AmountKeypadController();
+    final initialAmount = t?.amount ?? v?.amount;
+    if (initialAmount != null && initialAmount > 0) {
+      _keypadController.setValue(initialAmount);
+    }
+    _descriptionController =
+        TextEditingController(text: t?.description ?? v?.description ?? '');
     _selectedCategory = t?.category ?? v?.category;
     _selectedSubcategory = t?.subcategory ?? v?.subcategory;
     _selectedDate = t?.date ?? v?.date ?? DateTime.now();
-    // If voice AI detected recurring, pre-fill it
+
     if (v?.isRecurring == true) {
       _isRecurring = true;
       _recurrenceType = switch (v?.recurrenceType) {
@@ -121,9 +164,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         _ => RecurrenceType.monthly,
       };
     }
-    // If voice/image AI provided a subcategory, ensure it exists in the DB.
-    // We always upsert: if it's new (isNewSubcategory: true) or if the AI
-    // incorrectly flagged an existing match that isn't actually in the DB.
     if (v?.subcategory != null && v?.category != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
@@ -136,8 +176,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ref.invalidate(subcategoriesProvider(
             (category: v.category, type: v.type),
           ));
-        } catch (_) {
-          // Subcategory creation failed — not critical, user can add manually
+        } catch (e, st) {
+          developer.log(
+            'Failed to ensure voice subcategory',
+            error: e,
+            stackTrace: st,
+          );
         }
       });
     }
@@ -158,8 +202,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   @override
   void dispose() {
-    _amountController.dispose();
+    _keypadController.dispose();
     _descriptionController.dispose();
+    _descriptionFocus.dispose();
     super.dispose();
   }
 
@@ -184,16 +229,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
   }
 
-  String _resolveCategoryEmoji(
-      String category, bool isIncome, List<TransactionCategory> customCats) {
-    // Check custom categories first (emoji stored in emojiOverride)
-    final custom = customCats.where((c) => c.name == category).firstOrNull;
-    if (custom != null && custom.emojiOverride != null) {
-      return custom.emojiOverride!;
-    }
-    return TransactionCategories.emojiFor(category, isIncome: isIncome);
-  }
-
   Future<void> _pickDate() async {
     final cs = context.colors;
     final picked = await showDatePicker(
@@ -211,19 +246,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null && mounted) setState(() => _selectedDate = picked);
   }
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final currentCurrency = ref.read(currencyProvider).value ?? 'EUR';
-    final amountText = _amountController.text.trim().replaceAll(',', '.');
-    final amount = double.tryParse(amountText);
+    final amount = _keypadController.resolve();
 
     if (amount == null || amount <= 0) {
-      context.showSnackbar(l10n.invalidAmount, isError: true);
+      setState(() => _amountError = l10n.invalidAmount);
+      HapticFeedback.heavyImpact();
       return;
     }
+    setState(() => _amountError = null);
+
     if (_selectedCategory == null) {
       context.showSnackbar(l10n.selectCategory, isError: true);
       return;
@@ -254,7 +291,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         if (_isRecurring && _recurrenceType != null) {
           final nextDate = nextRecurrenceDate(_selectedDate, _recurrenceType!);
           if (existingRecurringId != null) {
-            // Actualiza la entrada existente en recurring_transactions
             await ref
                 .read(recurringTransactionsRepositoryProvider)
                 .updateRecurring(
@@ -271,7 +307,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 .read(transactionsNotifierProvider.notifier)
                 .update(updated);
           } else {
-            // La transacción no era recurrente → crear nueva entrada
             final recurringId = await ref
                 .read(recurringTransactionsRepositoryProvider)
                 .createRecurring(
@@ -288,7 +323,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 .update(updated.copyWith(recurringTransactionId: recurringId));
           }
         } else {
-          // Se quitó la recurrencia → eliminar el registro de recurring_transactions
           if (existingRecurringId != null) {
             await ref
                 .read(recurringTransactionsRepositoryProvider)
@@ -331,8 +365,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             .read(transactionsNotifierProvider.notifier)
             .create(transaction);
       }
-      if (mounted) Navigator.of(context).pop();
-    } catch (e) {
+      if (mounted) {
+        HapticFeedback.heavyImpact();
+        Navigator.of(context).pop();
+      }
+    } catch (e, st) {
+      developer.log(
+        _isEditing ? 'Update transaction failed' : 'Create transaction failed',
+        error: e,
+        stackTrace: st,
+      );
       if (mounted) {
         context.showSnackbar(
           _isEditing ? l10n.errorUpdating : l10n.errorSaving,
@@ -386,149 +428,352 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final cs = context.colors;
-    final customCats = ref.watch(customCategoriesSyncProvider);
+    final customCats = ref.watch(
+      customCategoriesSyncProvider.select((m) => m[_type] ?? []),
+    );
 
-    final accentColor = _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
-    final accentLight = _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+    final accentColor =
+        _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
+    final accentLight =
+        _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+
+    final isPro = ref.watch(isProProvider);
 
     return Scaffold(
-      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
         actions: [
           if (_isEditing)
-            GestureDetector(
-              onTap: _delete,
-              child: Container(
-                margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.mutedTerraLight,
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: const Text('🗑️', style: TextStyle(fontSize: 16)),
+            IconButton(
+              tooltip: l10n.delete,
+              onPressed: _delete,
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.mutedTerra,
               ),
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(context).padding.bottom),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Expense / Income toggle ──────────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: TransactionType.values.map((type) {
-                  final isSelected = _type == type;
-                  final isIncome = type.isIncome;
-                  final color = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
-                  final lightColor = isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
-                  final emoji = isIncome ? '💰' : '💳';
-
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          _type = type;
-                          _selectedCategory = null;
-                          _selectedSubcategory = null;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeOut,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: isSelected ? cs.surface : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: isSelected ? AppColors.softShadowSm : [],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: isSelected ? lightColor : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Center(
-                                child: Text(emoji, style: const TextStyle(fontSize: 14)),
-                              ),
-                            ),
-                            const Gap(8),
-                            Text(
-                              type.l10nLabel(l10n),
-                              style: TextStyle(
-                                fontFamily: 'Sora',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected ? color : AppColors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListenableBuilder(
+                listenable: _descriptionFocus,
+                builder: (context, _) {
+                  final focused = _descriptionFocus.hasFocus;
+                  final label = _isEditing
+                      ? l10n.saveChanges
+                      : (_type.isIncome ? l10n.saveIncome : l10n.saveExpense);
+                  if (focused) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                          AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
+                      child: ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _save,
+                        icon: const Icon(Icons.check_rounded),
+                        label: Text(label),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: accentColor),
                       ),
-                    ),
+                    );
+                  }
+                  return NumericKeypad(
+                    controller: _keypadController,
+                    accent: accentColor,
+                    submitLabel: label,
+                    canSubmit: !_isSaving,
+                    onSubmit: _save,
                   );
-                }).toList(),
+                },
               ),
-            ),
-            const Gap(16),
+              if (!isPro) const AdBannerFooter(),
+            ],
+          ),
+        ),
+      ),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _TypeToggle(
+                value: _type,
+                onChanged: (next) {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    _type = next;
+                    _selectedCategory = null;
+                    _selectedSubcategory = null;
+                  });
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _AmountDisplay(
+                controller: _keypadController,
+                accent: accentColor,
+                currencyCode: ref.watch(currencyProvider).value ?? 'EUR',
+                error: _amountError,
+              ),
+              const SizedBox(height: AppSpacing.sm),
 
-            // ── Amount (compact) ────────────────────────────────────────
-            NeoCard(
-              accentColor: accentColor,
-              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-              child: Row(
+              // Categorías frecuentes (1-tap selection).
+              RecentCategoriesStrip(
+                type: _type,
+                selected: _selectedCategory,
+                accentColor: accentColor,
+                accentLight: accentLight,
+                onSelect: (cat) {
+                  setState(() {
+                    _selectedCategory = cat;
+                    _selectedSubcategory = null;
+                  });
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // Category + Date en la misma fila
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _CategoryBlock(
+                      type: _type,
+                      selectedCategory: _selectedCategory,
+                      selectedSubcategory: _selectedSubcategory,
+                      accentColor: accentColor,
+                      accentLight: accentLight,
+                      customCats: customCats,
+                      onCategoryTap: _openCategoryPicker,
+                      onSubcategorySelected: (sub) =>
+                          setState(() => _selectedSubcategory = sub),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: _DateQuickPicker(
+                      selected: _selectedDate,
+                      accent: accentColor,
+                      accentLight: accentLight,
+                      onSelect: (d) => setState(() => _selectedDate = d),
+                      onPickCustom: _pickDate,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // Description + Recurring en la misma fila
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: TextFormField(
-                      controller: _amountController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-                        _DecimalLimitFormatter(3),
-                      ],
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: accentColor,
-                        letterSpacing: -1,
+                    child: _DetailsBlock(
+                      descriptionController: _descriptionController,
+                      descriptionFocus: _descriptionFocus,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _RecurringToggleCompact(
+                    isRecurring: _isRecurring,
+                    recurrenceType: _recurrenceType,
+                    date: _selectedDate,
+                    accent: accentColor,
+                    onToggle: (v) => setState(() {
+                      _isRecurring = v;
+                      _recurrenceType = v ? RecurrenceType.monthly : null;
+                    }),
+                    onChangeFrequency: (t) =>
+                        setState(() => _recurrenceType = t),
+                  ),
+                ],
+              ),
+
+              // Frecuencia — solo visible cuando recurring está activo
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                child: _isRecurring
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: _RecurringFrequencyPicker(
+                          recurrenceType: _recurrenceType,
+                          date: _selectedDate,
+                          accent: accentColor,
+                          onChangeFrequency: (t) =>
+                              setState(() => _recurrenceType = t),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Type toggle (Expense / Income) ────────────────────────────────────────────
+
+class _TypeToggle extends StatelessWidget {
+  const _TypeToggle({required this.value, required this.onChanged});
+
+  final TransactionType value;
+  final ValueChanged<TransactionType> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: AppRadius.radiusLg,
+      ),
+      child: Row(
+        children: TransactionType.values.map((type) {
+          final isSelected = value == type;
+          final isIncome = type.isIncome;
+          final color = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
+          final iconData = isIncome
+              ? Icons.trending_up_rounded
+              : Icons.trending_down_rounded;
+          return Expanded(
+            child: Semantics(
+              button: true,
+              selected: isSelected,
+              label: type.l10nLabel(l10n),
+              child: GestureDetector(
+                onTap: () => onChanged(type),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isSelected ? cs.surface : Colors.transparent,
+                    borderRadius: AppRadius.radiusMd,
+                    boxShadow: isSelected ? AppColors.softShadowSm : AppElevation.e0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        iconData,
+                        size: 18,
+                        color: isSelected ? color : AppColors.textMuted,
                       ),
-                      decoration: InputDecoration(
-                        prefixText:
-                            '${currencySymbol(ref.watch(currencyProvider).value ?? 'EUR')} ',
-                        prefixStyle: TextStyle(
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        type.l10nLabel(l10n),
+                        style: TextStyle(
                           fontFamily: 'Sora',
-                          fontSize: 20,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: accentColor.withValues(alpha: 0.35),
+                          color: isSelected ? color : AppColors.textMuted,
                         ),
-                        hintText: l10n.amountHint,
-                        hintStyle: TextStyle(
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+// ── Amount display (no editable, viene del keypad) ────────────────────────────
+
+class _AmountDisplay extends StatelessWidget {
+  const _AmountDisplay({
+    required this.controller,
+    required this.accent,
+    required this.currencyCode,
+    required this.error,
+  });
+
+  final AmountKeypadController controller;
+  final Color accent;
+  final String currencyCode;
+  final String? error;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final hasValue = controller.current.isNotEmpty;
+        final pendingOp = controller.pendingOpSymbol;
+        final previous = controller.previousText;
+
+        return AppCard(
+          variant: AppCardVariant.outlined,
+          accent: accent,
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+          semanticLabel:
+              '${l10n.amountHint}: ${hasValue ? controller.current : "0"} $currencyCode',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (previous != null && pendingOp != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: Text(
+                    '$previous $pendingOp',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: accent.withValues(alpha: 0.65),
+                    ),
+                  ),
+                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '${currencySymbol(currencyCode)} ',
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: accent.withValues(alpha: 0.55),
+                    ),
+                  ),
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        hasValue ? controller.current : '0',
+                        style: TextStyle(
                           fontFamily: 'Sora',
-                          fontSize: 32,
+                          fontSize: 36,
                           fontWeight: FontWeight.w800,
-                          color: cs.onSurface.withValues(alpha: 0.08),
+                          color: hasValue
+                              ? accent
+                              : accent.withValues(alpha: 0.25),
+                          letterSpacing: -1,
                         ),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        fillColor: Colors.transparent,
                       ),
                     ),
                   ),
@@ -536,360 +781,402 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(100),
+                      color: accent.withValues(alpha: 0.1),
+                      borderRadius: AppRadius.radiusPill,
                       border: Border.all(
-                          color: accentColor.withValues(alpha: 0.3),
-                          width: 1),
+                          color: accent.withValues(alpha: 0.3), width: 1),
                     ),
                     child: Text(
-                      ref.watch(currencyProvider).value ?? 'EUR',
+                      currencyCode,
                       style: TextStyle(
                         fontFamily: 'Sora',
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: accentColor,
+                        color: accent,
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-            const Gap(16),
-
-            // ── Category + Subcategory row ────────────────────────────────
-            Row(
-              children: [
-                Expanded(
-                  child: _CompactCard(
-                    emoji: _selectedCategory != null
-                        ? _resolveCategoryEmoji(
-                            _selectedCategory!, _type.isIncome, customCats[_type] ?? [])
-                        : null,
-                    label: _selectedCategory != null
-                        ? TransactionCategories.localizedName(
-                            _selectedCategory!, l10n)
-                        : l10n.category,
-                    hasValue: _selectedCategory != null,
-                    accentColor: accentColor,
-                    accentLight: accentLight,
-                    onTap: _openCategoryPicker,
-                  ),
-                ),
-                const Gap(10),
-                Expanded(
-                  child: _CompactCard(
-                    emoji: _selectedSubcategory != null ? '🏷' : null,
-                    label: _selectedSubcategory ?? l10n.subcategory,
-                    hasValue: _selectedSubcategory != null,
-                    disabled: _selectedCategory == null,
-                    accentColor: accentColor,
-                    accentLight: accentLight,
-                    onTap: _selectedCategory != null
-                        ? () async {
-                            final sub = await showModalBottomSheet<String>(
-                              context: context,
-                              isScrollControlled: true,
-                              useSafeArea: true,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(20)),
-                              ),
-                              builder: (_) => _SubcategoryPickerSheet(
-                                selected: _selectedSubcategory,
-                                category: _selectedCategory!,
-                                type: _type,
-                                accentColor: accentColor,
-                                accentLight: accentLight,
-                              ),
-                            );
-                            if (mounted && sub != null) {
-                              setState(() => _selectedSubcategory = sub);
-                            }
-                          }
-                        : null,
-                  ),
-                ),
-              ],
-            ),
-            const Gap(16),
-
-            // ── Date ──────────────────────────────────────────────────────
-            GestureDetector(
-              onTap: _pickDate,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  border: Border.all(color: AppColors.borderLight, width: 1.5),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: AppColors.softShadowSm,
-                ),
-                child: Row(
+              if (error != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Row(
                   children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.warmAmberLight,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Center(
-                        child: Text('📅', style: TextStyle(fontSize: 18)),
-                      ),
-                    ),
-                    const Gap(12),
-                    Text(
-                      _selectedDate.formattedDate,
-                      style: TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    const Spacer(),
                     const Icon(
-                      Icons.chevron_right_rounded,
-                      color: AppColors.textSubtle,
+                      Icons.error_outline_rounded,
+                      size: 14,
+                      color: AppColors.mutedTerra,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      error!,
+                      style: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.mutedTerra,
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ),
-            const Gap(10),
-
-            // ── Description field ───────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: cs.surface,
-                border: Border.all(color: AppColors.borderLight, width: 1.5),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppColors.softShadowSm,
-              ),
-              child: TextFormField(
-                controller: _descriptionController,
-                maxLines: 1,
-                maxLength: 50,
-                style: TextStyle(
-                  fontFamily: 'Sora',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: cs.onSurface,
-                ),
-                decoration: InputDecoration(
-                  icon: const Text('📝', style: TextStyle(fontSize: 18)),
-                  hintText: l10n.descriptionOptional,
-                  hintStyle: TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: cs.onSurface.withValues(alpha: 0.3),
-                  ),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                ),
-              ),
-            ),
-            const Gap(16),
-
-            // ── Recurring ─────────────────────────────────────────────────
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              decoration: BoxDecoration(
-                color: cs.surface,
-                border:
-                    Border.all(color: AppColors.borderLight, width: 1.5),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppColors.softShadowSm,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.dustyTealLight,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Center(
-                      child: Text('🔁', style: TextStyle(fontSize: 18)),
-                    ),
-                  ),
-                  const Gap(12),
-                  Expanded(
-                    child: Text(
-                      l10n.recurringTransaction,
-                      style: TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                  ),
-                  Switch(
-                    value: _isRecurring,
-                    onChanged: (v) => setState(() {
-                      _isRecurring = v;
-                      _recurrenceType = v ? RecurrenceType.monthly : null;
-                    }),
-                  ),
-                ],
-              ),
-            ),
-            if (_isRecurring) ...[
-              const Gap(12),
-              SegmentedButton<RecurrenceType>(
-                showSelectedIcon: false,
-                segments: [
-                  ButtonSegment(
-                    value: RecurrenceType.weekly,
-                    label: Text(l10n.weekly),
-                    icon: const Icon(Icons.calendar_view_week_outlined,
-                        size: 16),
-                  ),
-                  ButtonSegment(
-                    value: RecurrenceType.monthly,
-                    label: Text(l10n.monthly),
-                    icon: const Icon(Icons.calendar_month_outlined,
-                        size: 16),
-                  ),
-                  ButtonSegment(
-                    value: RecurrenceType.annual,
-                    label: Text(l10n.yearly),
-                    icon: const Icon(Icons.event_repeat_outlined,
-                        size: 16),
-                  ),
-                ],
-                selected: {_recurrenceType ?? RecurrenceType.monthly},
-                onSelectionChanged: (s) =>
-                    setState(() => _recurrenceType = s.first),
-              ),
-              if (_recurrenceType != null) ...[
-                const Gap(12),
-                _RecurrenceInfoBanner(
-                  date: _selectedDate,
-                  type: _recurrenceType!,
-                ),
               ],
             ],
-            const Gap(16),
+          ),
+        );
+      },
+    );
+  }
+}
 
-            // ── Save button ───────────────────────────────────────────────
-            NeoBrutalButton(
-              label: _isEditing
-                  ? l10n.saveChanges
-                  : _type.isIncome
-                      ? l10n.saveIncome
-                      : l10n.saveExpense,
-              backgroundColor: accentColor,
-              foregroundColor: AppColors.pureWhite,
-              isLoading: _isSaving,
-              disabled: _isSaving,
-              onTap: _save,
-            ),
-            const Gap(16),
-          ],
+// ── Date quick picker (Today / Yesterday / Other) ────────────────────────────
+
+class _DateQuickPicker extends StatelessWidget {
+  const _DateQuickPicker({
+    required this.selected,
+    required this.accent,
+    required this.accentLight,
+    required this.onSelect,
+    required this.onPickCustom,
+  });
+
+  final DateTime selected;
+  final Color accent;
+  final Color accentLight;
+  final ValueChanged<DateTime> onSelect;
+  final VoidCallback onPickCustom;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final today = _normalize(DateTime.now());
+    final yesterday = today.subtract(const Duration(days: 1));
+    final selectedDay = _normalize(selected);
+
+    final isToday = selectedDay == today;
+    final isYesterday = selectedDay == yesterday;
+    final isOther = !isToday && !isYesterday;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _DateChip(
+          label: l10n.today,
+          active: isToday,
+          accent: accent,
+          accentLight: accentLight,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onSelect(today);
+          },
         ),
-      ),
+        const SizedBox(height: AppSpacing.xs),
+        _DateChip(
+          label: l10n.yesterday,
+          active: isYesterday,
+          accent: accent,
+          accentLight: accentLight,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onSelect(yesterday);
+          },
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        _DateChip(
+          label: isOther ? selected.formattedDate : '…',
+          icon: Icons.calendar_today_rounded,
+          active: isOther,
+          accent: accent,
+          accentLight: accentLight,
+          onTap: onPickCustom,
+        ),
+      ],
     );
   }
 
+  DateTime _normalize(DateTime d) => DateTime(d.year, d.month, d.day);
 }
 
-
-
-
-
-// ── Detail chip (summary) ─────────────────────────────────────────────────────
-
-// ── Compact card (category / subcategory) ─────────────────────────────────────
-
-class _CompactCard extends StatelessWidget {
-  const _CompactCard({
+class _DateChip extends StatelessWidget {
+  const _DateChip({
     required this.label,
-    required this.hasValue,
-    required this.accentColor,
+    required this.active,
+    required this.accent,
     required this.accentLight,
     required this.onTap,
-    this.emoji,
-    this.disabled = false,
+    this.icon,
   });
 
-  final String? emoji;
   final String label;
-  final bool hasValue;
-  final Color accentColor;
+  final bool active;
+  final Color accent;
   final Color accentLight;
-  final VoidCallback? onTap;
-  final bool disabled;
+  final VoidCallback onTap;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: disabled ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: disabled
-              ? cs.onSurface.withValues(alpha: 0.04)
-              : hasValue
-                  ? accentLight
-                  : cs.surface,
-          border: Border.all(
-            color: disabled
-                ? cs.onSurface.withValues(alpha: 0.08)
-                : hasValue
-                    ? accentColor
-                    : AppColors.borderLight,
-            width: 1.5,
+    return Semantics(
+      button: true,
+      selected: active,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md, vertical: 12),
+          decoration: BoxDecoration(
+            color: active ? accentLight : cs.surface,
+            borderRadius: AppRadius.radiusMd,
+            border: Border.all(
+              color: active ? accent : AppColors.borderLight,
+              width: 1.5,
+            ),
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: (hasValue || disabled) ? null : AppColors.softShadowSm,
-        ),
-        child: Row(
-          children: [
-            if (emoji != null) ...[
-              Opacity(
-                opacity: disabled ? 0.3 : 1.0,
-                child: Text(emoji!, style: const TextStyle(fontSize: 16)),
-              ),
-              const Gap(8),
-            ],
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: 'Sora',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: disabled
-                      ? cs.onSurface.withValues(alpha: 0.2)
-                      : hasValue
-                          ? accentColor
-                          : AppColors.textMuted,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 14,
+                  color: active ? accent : AppColors.textMuted,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: active ? accent : AppColors.textMuted,
+                    letterSpacing: 0.4,
+                  ),
                 ),
               ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: disabled
-                  ? cs.onSurface.withValues(alpha: 0.12)
-                  : hasValue
-                      ? accentColor
-                      : AppColors.textSubtle,
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Recurring toggle compacto (chip icon + switch) ───────────────────────────
+
+class _RecurringToggleCompact extends StatelessWidget {
+  const _RecurringToggleCompact({
+    required this.isRecurring,
+    required this.recurrenceType,
+    required this.date,
+    required this.accent,
+    required this.onToggle,
+    required this.onChangeFrequency,
+  });
+
+  final bool isRecurring;
+  final RecurrenceType? recurrenceType;
+  final DateTime date;
+  final Color accent;
+  final ValueChanged<bool> onToggle;
+  final ValueChanged<RecurrenceType> onChangeFrequency;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      toggled: isRecurring,
+      label: l10n.recurringTransaction,
+      child: GestureDetector(
+        onTap: () => onToggle(!isRecurring),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
+            color: isRecurring
+                ? AppColors.dustyTealLight
+                : cs.surfaceContainerHigh,
+            borderRadius: AppRadius.radiusMd,
+            border: Border.all(
+              color: isRecurring ? AppColors.dustyTeal : AppColors.borderLight,
+              width: 1.5,
+            ),
+          ),
+          child: Icon(
+            Icons.repeat_rounded,
+            size: 20,
+            color: isRecurring ? AppColors.dustyTeal : AppColors.textMuted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Category block: categoría full-width + subcategoría indentada ─────────────
+
+class _CategoryBlock extends StatelessWidget {
+  const _CategoryBlock({
+    required this.type,
+    required this.selectedCategory,
+    required this.selectedSubcategory,
+    required this.accentColor,
+    required this.accentLight,
+    required this.customCats,
+    required this.onCategoryTap,
+    required this.onSubcategorySelected,
+  });
+
+  final TransactionType type;
+  final String? selectedCategory;
+  final String? selectedSubcategory;
+  final Color accentColor;
+  final Color accentLight;
+  final List<TransactionCategory> customCats;
+  final VoidCallback onCategoryTap;
+  final ValueChanged<String> onSubcategorySelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppCompactRow(
+          emoji: selectedCategory != null
+              ? TransactionCategories.resolveEmoji(
+                  selectedCategory!, type.isIncome, customCats)
+              : null,
+          icon: selectedCategory == null ? Icons.category_outlined : null,
+          label: selectedCategory != null
+              ? TransactionCategories.localizedName(selectedCategory!, l10n)
+              : l10n.category,
+          hasValue: selectedCategory != null,
+          accent: accentColor,
+          accentLight: accentLight,
+          onTap: onCategoryTap,
+          semanticLabel:
+              '${l10n.category}: ${selectedCategory != null ? TransactionCategories.localizedName(selectedCategory!, l10n) : l10n.tutorialSkip}',
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          child: selectedCategory != null
+              ? Padding(
+                  padding: const EdgeInsets.only(
+                      top: AppSpacing.sm, left: AppSpacing.xl),
+                  child: AppCompactRow(
+                    icon: selectedSubcategory == null
+                        ? Icons.label_outline_rounded
+                        : null,
+                    emoji: selectedSubcategory != null ? '🏷' : null,
+                    label: selectedSubcategory ?? l10n.subcategory,
+                    hasValue: selectedSubcategory != null,
+                    accent: accentColor,
+                    accentLight: accentLight,
+                    onTap: () async {
+                      final sub = await showModalBottomSheet<String>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (_) => _SubcategoryPickerSheet(
+                          selected: selectedSubcategory,
+                          category: selectedCategory!,
+                          type: type,
+                          accentColor: accentColor,
+                          accentLight: accentLight,
+                        ),
+                      );
+                      if (sub != null) onSubcategorySelected(sub);
+                    },
+                    semanticLabel:
+                        '${l10n.subcategory}: ${selectedSubcategory ?? ""}',
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Details block: descripción con label visible ───────────────────────────────
+
+class _DetailsBlock extends StatelessWidget {
+  const _DetailsBlock({
+    required this.descriptionController,
+    required this.descriptionFocus,
+  });
+
+  final TextEditingController descriptionController;
+  final FocusNode descriptionFocus;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cs = context.colors;
+    return AppCard(
+      variant: AppCardVariant.outlined,
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(
+                left: AppSpacing.xl + AppSpacing.sm,
+                top: AppSpacing.xs + 2),
+            child: Text(
+              l10n.descriptionOptional.toUpperCase(),
+              style: const TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ),
+          TextFormField(
+            controller: descriptionController,
+            focusNode: descriptionFocus,
+            maxLines: 1,
+            maxLength: 50,
+            textInputAction: TextInputAction.done,
+            onTapOutside: (_) => descriptionFocus.unfocus(),
+            onEditingComplete: descriptionFocus.unfocus,
+            style: TextStyle(
+              fontFamily: 'Sora',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: cs.onSurface,
+            ),
+            decoration: InputDecoration(
+              icon: const Icon(Icons.edit_note_rounded,
+                  color: AppColors.textMuted),
+              hintText: '—',
+              hintStyle: const TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textTertiary,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              counterText: '',
+              contentPadding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.sm),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -923,14 +1210,14 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: MediaQuery.viewInsetsOf(context).bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Gap(16),
+          const SizedBox(height: AppSpacing.lg),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
             child: Row(
               children: [
                 Text(
@@ -944,27 +1231,22 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
                   child: Text(
                     l10n.tutorialSkip,
-                    style: TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: accentColor,
-                    ),
+                    style: TextStyle(color: accentColor),
                   ),
                 ),
               ],
             ),
           ),
-          const Gap(16),
+          const SizedBox(height: AppSpacing.lg),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
             child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
               children: [
                 ...subcategories.map((name) {
                   final isSelected = selected == name;
@@ -974,11 +1256,10 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                         left: 14, top: 4, bottom: 4, right: 4),
                     decoration: BoxDecoration(
                       color: isSelected ? accentLight : cs.surface,
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: AppRadius.radiusPill,
                       border: Border.all(
-                        color: isSelected
-                            ? accentColor
-                            : AppColors.borderLight,
+                        color:
+                            isSelected ? accentColor : AppColors.borderLight,
                         width: 1.5,
                       ),
                       boxShadow:
@@ -1008,13 +1289,11 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        const Gap(6),
+                        const SizedBox(width: AppSpacing.xs + 2),
                         GestureDetector(
                           onTap: () {
                             HapticFeedback.heavyImpact();
-                            _confirmDeleteSubcategory(
-                              context, ref, name,
-                            );
+                            _confirmDeleteSubcategory(context, ref, name);
                           },
                           behavior: HitTestBehavior.opaque,
                           child: Container(
@@ -1040,7 +1319,6 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                     ),
                   );
                 }),
-                // New subcategory button
                 GestureDetector(
                   onTap: () async {
                     final newName = await showDialog<String>(
@@ -1059,7 +1337,7 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                         horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(100),
+                      borderRadius: AppRadius.radiusPill,
                       border: Border.all(
                         color: AppColors.dustyTeal,
                         width: 1.5,
@@ -1070,7 +1348,7 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                       children: [
                         const Icon(Icons.add_rounded,
                             size: 14, color: AppColors.dustyTeal),
-                        const Gap(4),
+                        const SizedBox(width: AppSpacing.xs),
                         Text(
                           l10n.newSubcategory,
                           style: const TextStyle(
@@ -1087,7 +1365,7 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
               ],
             ),
           ),
-          const Gap(24),
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );
@@ -1126,29 +1404,5 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
     ref.invalidate(
       subcategoriesProvider((category: category, type: type)),
     );
-  }
-}
-
-// ── Description input sheet ───────────────────────────────────────────────────
-
-// ── Decimal limit formatter ───────────────────────────────────────────────────
-
-class _DecimalLimitFormatter extends TextInputFormatter {
-  _DecimalLimitFormatter(this.maxDecimals);
-  final int maxDecimals;
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final text = newValue.text;
-    final dotIndex = text.lastIndexOf('.');
-    final commaIndex = text.lastIndexOf(',');
-    final sepIndex = dotIndex > commaIndex ? dotIndex : commaIndex;
-    if (sepIndex < 0) return newValue;
-    final decimals = text.length - sepIndex - 1;
-    if (decimals > maxDecimals) return oldValue;
-    return newValue;
   }
 }

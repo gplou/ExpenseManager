@@ -9,6 +9,55 @@ import '../../../l10n/app_localizations.dart';
 import '../../transactions/domain/transactions_repository_contract.dart';
 import '../../tutorial/tutorial_keys.dart';
 
+/// Texto numérico que interpola entre el valor anterior y el nuevo cuando
+/// cambia. Útil para balance / income / expense después de guardar una
+/// transacción — el cambio se siente "vivo" en lugar de saltar.
+class AnimatedAmount extends StatefulWidget {
+  const AnimatedAmount({
+    super.key,
+    required this.value,
+    required this.formatter,
+    required this.style,
+    this.duration = const Duration(milliseconds: 600),
+    this.curve = Curves.easeOutCubic,
+  });
+
+  final double value;
+  final String Function(double v) formatter;
+  final TextStyle style;
+  final Duration duration;
+  final Curve curve;
+
+  @override
+  State<AnimatedAmount> createState() => _AnimatedAmountState();
+}
+
+class _AnimatedAmountState extends State<AnimatedAmount> {
+  late double _previous = widget.value;
+
+  @override
+  void didUpdateWidget(AnimatedAmount oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _previous = oldWidget.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    if (disableAnimations || _previous == widget.value) {
+      return Text(widget.formatter(widget.value), style: widget.style);
+    }
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: _previous, end: widget.value),
+      duration: widget.duration,
+      curve: widget.curve,
+      builder: (context, v, _) => Text(widget.formatter(v), style: widget.style),
+    );
+  }
+}
+
 class SummarySection extends StatelessWidget {
   const SummarySection({
     super.key,
@@ -79,9 +128,10 @@ class SummarySection extends StatelessWidget {
                 ),
               ),
               const Gap(10),
-              Text(
-                '${isPositive ? '' : '-'}$cSymbol${formatAmount(balance.abs(), numFmtStyle)}',
-                style: context.textTheme.headlineLarge?.copyWith(
+              AnimatedAmount(
+                value: balance,
+                formatter: (v) => '${v < 0 ? '-' : ''}$cSymbol${formatAmount(v.abs(), numFmtStyle)}',
+                style: context.textTheme.headlineLarge!.copyWith(
                   color: cs.onSurface,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
@@ -150,15 +200,16 @@ class SummarySection extends StatelessWidget {
                                   color: cs.onSurface.withValues(alpha: 0.5),
                                 ),
                               ),
-                              Text(
-                                '$cSymbol${formatAmount(summary.income, numFmtStyle)}',
+                              AnimatedAmount(
+                                value: summary.income,
+                                formatter: (v) =>
+                                    '$cSymbol${formatAmount(v, numFmtStyle)}',
                                 style: const TextStyle(
                                   fontFamily: 'Sora',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.sageGreen,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -204,15 +255,16 @@ class SummarySection extends StatelessWidget {
                                   color: cs.onSurface.withValues(alpha: 0.5),
                                 ),
                               ),
-                              Text(
-                                '$cSymbol${formatAmount(summary.expense, numFmtStyle)}',
+                              AnimatedAmount(
+                                value: summary.expense,
+                                formatter: (v) =>
+                                    '$cSymbol${formatAmount(v, numFmtStyle)}',
                                 style: const TextStyle(
                                   fontFamily: 'Sora',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.mutedTerra,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),

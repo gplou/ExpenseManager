@@ -136,4 +136,16 @@ class TransactionCategories {
   /// Returns the emoji for a built-in DB category key.
   static String emojiFor(String dbKey, {bool isIncome = false}) =>
       _emojis[dbKey] ?? (isIncome ? '💰' : '💸');
+
+  /// Resolves an emoji honoring user overrides on custom categories,
+  /// falling back to [emojiFor] for built-ins.
+  static String resolveEmoji(
+    String name,
+    bool isIncome,
+    List<TransactionCategory> custom,
+  ) {
+    final c = custom.where((c) => c.name == name).firstOrNull;
+    if (c?.emojiOverride != null) return c!.emojiOverride!;
+    return emojiFor(name, isIncome: isIncome);
+  }
 }

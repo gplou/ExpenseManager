@@ -45,7 +45,7 @@ class TransactionsRepository
           .map((e) => _fromRow(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw const NetworkFailure('Failed to load transactions');
+      _mapToFailure(e);
     }
   }
 
@@ -71,7 +71,7 @@ class TransactionsRepository
           .single();
       return _fromRow(response);
     } catch (e) {
-      throw const NetworkFailure('Failed to save transaction');
+      _mapToFailure(e);
     }
   }
 
@@ -97,7 +97,7 @@ class TransactionsRepository
           .single();
       return _fromRow(response);
     } catch (e) {
-      throw const NetworkFailure('Failed to update transaction');
+      _mapToFailure(e);
     }
   }
 
@@ -110,8 +110,7 @@ class TransactionsRepository
           .eq('id', id)
           .eq('user_id', userId);
     } catch (e) {
-      debugPrint('TransactionsRepository.deleteTransaction ERROR: $e');
-      throw const NetworkFailure('Failed to delete transaction');
+      _mapToFailure(e);
     }
   }
 
@@ -134,8 +133,7 @@ class TransactionsRepository
       };
       await _client.from('transactions').upsert(data, onConflict: 'id');
     } catch (e) {
-      debugPrint('TransactionsRepository.upsertTransaction ERROR: $e');
-      throw const NetworkFailure('Failed to upsert transaction');
+      _mapToFailure(e);
     }
   }
 
@@ -174,6 +172,22 @@ class TransactionsRepository
       );
 }
 
+// ── Error mapping ────────────────────────────────────────────────────────────
+
+/// Converts Supabase/network exceptions into typed [AppFailure]s.
+/// Existing [AppFailure]s (e.g. [AuthFailure] from the [userId] getter) are
+/// re-thrown unchanged so they are never silently downgraded to [NetworkFailure].
+Never _mapToFailure(Object e) {
+  if (e is AppFailure) throw e;
+  if (e is AuthException) {
+    throw const AuthFailure('Sesión expirada. Inicia sesión de nuevo.');
+  }
+  if (e is PostgrestException) {
+    throw NetworkFailure(e.message);
+  }
+  throw const NetworkFailure('Error de red. Inténtalo de nuevo.');
+}
+
 // ── Provider ─────────────────────────────────────────────────────────────────
 
 final transactionsRepositoryProvider =
@@ -190,7 +204,7 @@ final transactionsRepositoryProvider =
 
   // No autenticado o migración en curso → Supabase directo.
   if (user == null || isSyncing) {
-    debugPrint('transactionsRepo → DirectSupabase (user=${user?.id}, syncing=$isSyncing)');
+    debugPrint('transactionsRepo → DirectSupabase (user=${user?.id.substring(0, 8)}, syncing=$isSyncing)');
     return TransactionsRepository(ref.watch(supabaseClientProvider));
   }
 

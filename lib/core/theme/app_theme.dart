@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'app_colors.dart';
+import 'app_spacing.dart';
 
 class AppTheme {
   AppTheme._();
@@ -39,6 +41,11 @@ class AppTheme {
           centerTitle: false,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarIconBrightness: Brightness.dark,
+          ),
           titleTextStyle: TextStyle(
             fontFamily: 'Sora',
             fontSize: 20,
@@ -53,9 +60,9 @@ class AppTheme {
           color: AppColors.pureWhite,
           elevation: 0,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: AppColors.borderLight, width: 1),
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusLg,
+            side: BorderSide(color: AppColors.borderLight, width: 1),
           ),
           margin: EdgeInsets.zero,
         ),
@@ -79,11 +86,11 @@ class AppTheme {
             backgroundColor: AppColors.dustyTeal,
             foregroundColor: AppColors.pureWhite,
             disabledBackgroundColor: AppColors.surfaceElevated,
-            disabledForegroundColor: AppColors.textSubtle,
+            disabledForegroundColor: AppColors.textMuted, // 5.74:1 (WCAG AA)
             minimumSize: const Size(double.infinity, 56),
             elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusLg,
             ),
             textStyle: const TextStyle(
               fontFamily: 'Sora',
@@ -100,8 +107,8 @@ class AppTheme {
             foregroundColor: AppColors.dustyTeal,
             side: const BorderSide(color: AppColors.dustyTeal, width: 1.5),
             minimumSize: const Size(double.infinity, 52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusLg,
             ),
           ),
         ),
@@ -119,61 +126,61 @@ class AppTheme {
         ),
 
         // ── Inputs ────────────────────────────────────────────────────────
-        inputDecorationTheme: InputDecorationTheme(
+        inputDecorationTheme: const InputDecorationTheme(
           filled: true,
           fillColor: AppColors.pureWhite,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.borderLight, width: 1.5),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.borderLight, width: 1.5),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.borderLight, width: 1.5),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.borderLight, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.dustyTeal, width: 2),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.dustyTeal, width: 2),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.mutedTerra, width: 1.5),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.mutedTerra, width: 1.5),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.mutedTerra, width: 2),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.mutedTerra, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          labelStyle: const TextStyle(
+          contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          labelStyle: TextStyle(
             fontFamily: 'Sora',
             color: AppColors.textMuted,
             fontWeight: FontWeight.w500,
           ),
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             fontFamily: 'Sora',
-            color: AppColors.textSubtle,
+            color: AppColors.textTertiary, // 4.54:1 — WCAG AA para hint
             fontWeight: FontWeight.w400,
           ),
         ),
 
         // ── Chips ─────────────────────────────────────────────────────────
-        chipTheme: ChipThemeData(
+        chipTheme: const ChipThemeData(
           backgroundColor: AppColors.pureWhite,
           selectedColor: AppColors.dustyTeal,
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             fontFamily: 'Sora',
             fontWeight: FontWeight.w600,
             fontSize: 12,
             color: AppColors.textDark,
           ),
-          secondaryLabelStyle: const TextStyle(
+          secondaryLabelStyle: TextStyle(
             fontFamily: 'Sora',
             fontWeight: FontWeight.w600,
             fontSize: 12,
             color: AppColors.pureWhite,
           ),
-          side: const BorderSide(color: AppColors.borderLight, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          side: BorderSide(color: AppColors.borderLight, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusPill),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         ),
 
         // ── Switch ───────────────────────────────────────────────────────
@@ -200,7 +207,9 @@ class AppTheme {
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMd,
+            ),
           ),
         ),
 
@@ -227,28 +236,28 @@ class AppTheme {
         bottomSheetTheme: const BottomSheetThemeData(
           backgroundColor: AppColors.pureWhite,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: AppRadius.radiusSheet,
           ),
           showDragHandle: true,
           dragHandleColor: AppColors.borderMedium,
         ),
 
         // ── Dialog ───────────────────────────────────────────────────────
-        dialogTheme: DialogThemeData(
+        dialogTheme: const DialogThemeData(
           backgroundColor: AppColors.pureWhite,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: AppRadius.radiusXxl,
           ),
-          shadowColor: const Color(0x14000000),
-          titleTextStyle: const TextStyle(
+          shadowColor: Color(0x14000000),
+          titleTextStyle: TextStyle(
             fontFamily: 'Sora',
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppColors.textDark,
             letterSpacing: -0.2,
           ),
-          contentTextStyle: const TextStyle(
+          contentTextStyle: TextStyle(
             fontFamily: 'Sora',
             fontSize: 14,
             color: AppColors.textMuted,
@@ -295,6 +304,11 @@ class AppTheme {
           centerTitle: false,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarIconBrightness: Brightness.light,
+          ),
           titleTextStyle: TextStyle(
             fontFamily: 'Sora',
             fontSize: 20,
@@ -305,12 +319,12 @@ class AppTheme {
         ),
 
         // ── Cards ─────────────────────────────────────────────────────────
-        cardTheme: CardThemeData(
+        cardTheme: const CardThemeData(
           color: AppColors.darkSurface,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: AppColors.darkBorderColor, width: 1),
+            borderRadius: AppRadius.radiusXl,
+            side: BorderSide(color: AppColors.darkBorderColor, width: 1),
           ),
         ),
 
@@ -336,8 +350,8 @@ class AppTheme {
             disabledForegroundColor: AppColors.darkTextMuted,
             minimumSize: const Size(double.infinity, 56),
             elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusLg,
             ),
             textStyle: const TextStyle(
               fontFamily: 'Sora',
@@ -354,8 +368,8 @@ class AppTheme {
             foregroundColor: AppColors.dustyTeal,
             side: const BorderSide(color: AppColors.dustyTeal, width: 1.5),
             minimumSize: const Size(double.infinity, 52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusLg,
             ),
           ),
         ),
@@ -373,61 +387,61 @@ class AppTheme {
         ),
 
         // ── Inputs ────────────────────────────────────────────────────────
-        inputDecorationTheme: InputDecorationTheme(
+        inputDecorationTheme: const InputDecorationTheme(
           filled: true,
           fillColor: AppColors.darkSurface,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.darkBorderColor, width: 1.5),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.darkBorderColor, width: 1.5),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.darkBorderColor, width: 1.5),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.darkBorderColor, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.dustyTeal, width: 2),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.dustyTeal, width: 2),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.mutedTerra, width: 1.5),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.mutedTerra, width: 1.5),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.mutedTerra, width: 2),
+            borderRadius: AppRadius.radiusLg,
+            borderSide: BorderSide(color: AppColors.mutedTerra, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          labelStyle: const TextStyle(
+          contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          labelStyle: TextStyle(
             fontFamily: 'Sora',
             color: AppColors.darkTextMuted,
             fontWeight: FontWeight.w500,
           ),
           hintStyle: TextStyle(
             fontFamily: 'Sora',
-            color: AppColors.darkTextMuted.withValues(alpha: 0.6),
+            color: AppColors.darkTextMuted, // ya cumple AA en darkSurface
             fontWeight: FontWeight.w400,
           ),
         ),
 
         // ── Chips ─────────────────────────────────────────────────────────
-        chipTheme: ChipThemeData(
+        chipTheme: const ChipThemeData(
           backgroundColor: AppColors.darkSurface,
           selectedColor: AppColors.dustyTeal,
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             fontFamily: 'Sora',
             fontWeight: FontWeight.w600,
             fontSize: 12,
             color: AppColors.darkText,
           ),
-          secondaryLabelStyle: const TextStyle(
+          secondaryLabelStyle: TextStyle(
             fontFamily: 'Sora',
             fontWeight: FontWeight.w600,
             fontSize: 12,
             color: AppColors.pureWhite,
           ),
-          side: const BorderSide(color: AppColors.darkBorderColor, width: 1),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          side: BorderSide(color: AppColors.darkBorderColor, width: 1),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusPill),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         ),
 
         // ── Switch ───────────────────────────────────────────────────────
@@ -454,7 +468,9 @@ class AppTheme {
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMd,
+            ),
           ),
         ),
 
@@ -481,28 +497,28 @@ class AppTheme {
         bottomSheetTheme: const BottomSheetThemeData(
           backgroundColor: AppColors.darkSurface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: AppRadius.radiusSheet,
           ),
           showDragHandle: true,
           dragHandleColor: AppColors.darkBorderColor,
         ),
 
         // ── Dialog ───────────────────────────────────────────────────────
-        dialogTheme: DialogThemeData(
+        dialogTheme: const DialogThemeData(
           backgroundColor: AppColors.darkSurface,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: AppColors.darkBorderColor, width: 1),
+            borderRadius: AppRadius.radiusXxl,
+            side: BorderSide(color: AppColors.darkBorderColor, width: 1),
           ),
-          titleTextStyle: const TextStyle(
+          titleTextStyle: TextStyle(
             fontFamily: 'Sora',
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppColors.darkText,
             letterSpacing: -0.2,
           ),
-          contentTextStyle: const TextStyle(
+          contentTextStyle: TextStyle(
             fontFamily: 'Sora',
             fontSize: 14,
             color: AppColors.darkTextMuted,
