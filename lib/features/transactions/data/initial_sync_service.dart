@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/local_db/local_database.dart';
 import '../../../core/network/connectivity_service.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
@@ -101,6 +102,14 @@ class InitialSyncService {
 
     final prefs = await SharedPreferences.getInstance();
     final key = _hydrationKey(user.id);
+
+    // After upgrading from a pre-encryption schema the DB version bumped to 3,
+    // which sets this flag. Clear the stale hydration flag so we re-sync from
+    // Supabase — the local cache may be empty or corrupt after the migration.
+    if (LocalDatabase.instance.needsHydrationReset) {
+      await prefs.remove(key);
+    }
+
     if (prefs.getBool(key) == true) return;
 
     _running = true;

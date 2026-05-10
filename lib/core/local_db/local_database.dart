@@ -20,6 +20,12 @@ class LocalDatabase {
   static final LocalDatabase instance = LocalDatabase._();
 
   Database? _db;
+  bool _needsHydrationReset = false;
+
+  /// True after an upgrade from a pre-encryption schema (v<3).
+  /// [InitialSyncService] reads this once to clear the hydration flag and
+  /// force a re-sync from the cloud, then the app restart resets it to false.
+  bool get needsHydrationReset => _needsHydrationReset;
 
   static const _keyStorageKey = 'db_encryption_key';
 
@@ -79,10 +85,11 @@ class LocalDatabase {
     return openDatabase(
       path,
       password: key,
-      version: 2,
+      version: 3,
       onCreate: (db, _) => createSchema(db),
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) await _addPendingOperationsTable(db);
+        if (oldVersion < 3) _needsHydrationReset = true;
       },
     );
   }
