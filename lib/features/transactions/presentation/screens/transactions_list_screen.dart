@@ -123,6 +123,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       appBar: AppBar(
         leading: _isSelecting
             ? IconButton(
+                tooltip: l10n.cancel,
                 icon: const Icon(Icons.close_rounded),
                 onPressed: _exitSelectionMode,
               )
@@ -137,6 +138,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           if (_isSelecting)
             transactionsAsync.whenOrNull(
               data: (allTx) => IconButton(
+                tooltip: l10n.delete,
                 icon: const Icon(Icons.delete_outline_rounded, color: AppColors.mutedTerra),
                 onPressed: _selectedIds.isEmpty ? null : () => _deleteSelected(allTx),
               ),

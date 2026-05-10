@@ -213,7 +213,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null && mounted) setState(() => _selectedDate = picked);
   }
 
   Future<void> _save() async {
@@ -395,8 +395,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final cs = context.colors;
-    final customCats = ref.watch(customCategoriesSyncProvider);
+    final customCats = ref.watch(
+      customCategoriesSyncProvider.select((m) => m[_type] ?? []),
+    );
 
     final accentColor =
         _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
@@ -506,67 +507,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 },
               ),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: AppCompactRow(
-                      emoji: _selectedCategory != null
-                          ? TransactionCategories.resolveEmoji(
-                              _selectedCategory!,
-                              _type.isIncome,
-                              customCats[_type] ?? [])
-                          : null,
-                      icon: _selectedCategory == null
-                          ? Icons.category_outlined
-                          : null,
-                      label: _selectedCategory != null
-                          ? TransactionCategories.localizedName(
-                              _selectedCategory!, l10n)
-                          : l10n.category,
-                      hasValue: _selectedCategory != null,
-                      accent: accentColor,
-                      accentLight: accentLight,
-                      onTap: _openCategoryPicker,
-                      semanticLabel:
-                          '${l10n.category}: ${_selectedCategory != null ? TransactionCategories.localizedName(_selectedCategory!, l10n) : l10n.tutorialSkip}',
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm + 2),
-                  Expanded(
-                    child: AppCompactRow(
-                      icon: _selectedSubcategory == null
-                          ? Icons.label_outline_rounded
-                          : null,
-                      emoji: _selectedSubcategory != null ? '🏷' : null,
-                      label: _selectedSubcategory ?? l10n.subcategory,
-                      hasValue: _selectedSubcategory != null,
-                      disabled: _selectedCategory == null,
-                      accent: accentColor,
-                      accentLight: accentLight,
-                      onTap: _selectedCategory != null
-                          ? () async {
-                              final sub = await showModalBottomSheet<String>(
-                                context: context,
-                                isScrollControlled: true,
-                                useSafeArea: true,
-                                builder: (_) => _SubcategoryPickerSheet(
-                                  selected: _selectedSubcategory,
-                                  category: _selectedCategory!,
-                                  type: _type,
-                                  accentColor: accentColor,
-                                  accentLight: accentLight,
-                                ),
-                              );
-                              if (mounted && sub != null) {
-                                setState(() => _selectedSubcategory = sub);
-                              }
-                            }
-                          : null,
-                      semanticLabel:
-                          '${l10n.subcategory}: ${_selectedSubcategory ?? ""}',
-                    ),
-                  ),
-                ],
+              _CategorySubcategoryRow(
+                type: _type,
+                selectedCategory: _selectedCategory,
+                selectedSubcategory: _selectedSubcategory,
+                accentColor: accentColor,
+                accentLight: accentLight,
+                customCats: customCats,
+                onCategoryTap: _openCategoryPicker,
+                onSubcategorySelected: (sub) =>
+                    setState(() => _selectedSubcategory = sub),
               ),
               const SizedBox(height: AppSpacing.md),
 
@@ -579,43 +529,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              // Descripción
-              AppCard(
-                variant: AppCardVariant.outlined,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md, vertical: AppSpacing.xs + 1),
-                child: TextFormField(
-                  controller: _descriptionController,
-                  focusNode: _descriptionFocus,
-                  maxLines: 1,
-                  maxLength: 50,
-                  textInputAction: TextInputAction.done,
-                  onTapOutside: (_) => _descriptionFocus.unfocus(),
-                  onEditingComplete: () => _descriptionFocus.unfocus(),
-                  style: TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: cs.onSurface,
-                  ),
-                  decoration: InputDecoration(
-                    icon: const Icon(
-                      Icons.edit_note_rounded,
-                      color: AppColors.textMuted,
-                    ),
-                    hintText: l10n.descriptionOptional,
-                    hintStyle: const TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textTertiary,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    counterText: '',
-                  ),
-                ),
+              _DescriptionField(
+                controller: _descriptionController,
+                focusNode: _descriptionFocus,
               ),
               const SizedBox(height: AppSpacing.md),
 
@@ -1076,6 +992,141 @@ class _RecurringSection extends StatelessWidget {
           ],
         ],
       ],
+    );
+  }
+}
+
+// ── Category + subcategory row ────────────────────────────────────────────────
+
+class _CategorySubcategoryRow extends StatelessWidget {
+  const _CategorySubcategoryRow({
+    required this.type,
+    required this.selectedCategory,
+    required this.selectedSubcategory,
+    required this.accentColor,
+    required this.accentLight,
+    required this.customCats,
+    required this.onCategoryTap,
+    required this.onSubcategorySelected,
+  });
+
+  final TransactionType type;
+  final String? selectedCategory;
+  final String? selectedSubcategory;
+  final Color accentColor;
+  final Color accentLight;
+  final List<TransactionCategory> customCats;
+  final VoidCallback onCategoryTap;
+  final ValueChanged<String> onSubcategorySelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: AppCompactRow(
+            emoji: selectedCategory != null
+                ? TransactionCategories.resolveEmoji(
+                    selectedCategory!, type.isIncome, customCats)
+                : null,
+            icon: selectedCategory == null ? Icons.category_outlined : null,
+            label: selectedCategory != null
+                ? TransactionCategories.localizedName(selectedCategory!, l10n)
+                : l10n.category,
+            hasValue: selectedCategory != null,
+            accent: accentColor,
+            accentLight: accentLight,
+            onTap: onCategoryTap,
+            semanticLabel:
+                '${l10n.category}: ${selectedCategory != null ? TransactionCategories.localizedName(selectedCategory!, l10n) : l10n.tutorialSkip}',
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm + 2),
+        Expanded(
+          child: AppCompactRow(
+            icon: selectedSubcategory == null
+                ? Icons.label_outline_rounded
+                : null,
+            emoji: selectedSubcategory != null ? '🏷' : null,
+            label: selectedSubcategory ?? l10n.subcategory,
+            hasValue: selectedSubcategory != null,
+            disabled: selectedCategory == null,
+            accent: accentColor,
+            accentLight: accentLight,
+            onTap: selectedCategory != null
+                ? () async {
+                    final sub = await showModalBottomSheet<String>(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (_) => _SubcategoryPickerSheet(
+                        selected: selectedSubcategory,
+                        category: selectedCategory!,
+                        type: type,
+                        accentColor: accentColor,
+                        accentLight: accentLight,
+                      ),
+                    );
+                    if (sub != null) onSubcategorySelected(sub);
+                  }
+                : null,
+            semanticLabel: '${l10n.subcategory}: ${selectedSubcategory ?? ""}',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Description field ─────────────────────────────────────────────────────────
+
+class _DescriptionField extends StatelessWidget {
+  const _DescriptionField({
+    required this.controller,
+    required this.focusNode,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cs = context.colors;
+    return AppCard(
+      variant: AppCardVariant.outlined,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.xs + 1),
+      child: TextFormField(
+        controller: controller,
+        focusNode: focusNode,
+        maxLines: 1,
+        maxLength: 50,
+        textInputAction: TextInputAction.done,
+        onTapOutside: (_) => focusNode.unfocus(),
+        onEditingComplete: focusNode.unfocus,
+        style: TextStyle(
+          fontFamily: 'Sora',
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: cs.onSurface,
+        ),
+        decoration: InputDecoration(
+          icon: const Icon(Icons.edit_note_rounded, color: AppColors.textMuted),
+          hintText: l10n.descriptionOptional,
+          hintStyle: const TextStyle(
+            fontFamily: 'Sora',
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textTertiary,
+          ),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          counterText: '',
+        ),
+      ),
     );
   }
 }

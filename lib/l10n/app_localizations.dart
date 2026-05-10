@@ -558,6 +558,18 @@ abstract class AppLocalizations {
   /// **'Email inválido'**
   String get invalidEmail;
 
+  /// No description provided for @showPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar contraseña'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocultar contraseña'**
+  String get hidePassword;
+
   /// No description provided for @passwordLabel.
   ///
   /// In es, this message translates to:

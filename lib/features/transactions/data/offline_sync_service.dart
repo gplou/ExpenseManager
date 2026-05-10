@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/errors/failures.dart';
 import '../../../core/network/connectivity_service.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
@@ -62,6 +64,9 @@ class OfflineSyncService {
     }
   }
 
+  // Ops que superen este límite se descartan para evitar queue poisoning.
+  static const _maxAttempts = 5;
+
   Future<void> _doFlush() async {
     final user = _ref.read(currentUserProvider);
     final isPro = _ref.read(isProProvider);
@@ -75,15 +80,32 @@ class OfflineSyncService {
     bool anySuccess = false;
 
     for (final op in pending) {
+      // Descartar ops que han fallado demasiadas veces para evitar queue poisoning.
+      if (op.attempts >= _maxAttempts) {
+        debugPrint(
+          'OfflineSyncService: dropping op ${op.id} after $_maxAttempts failed attempts',
+        );
+        await queue.remove(op.id);
+        continue;
+      }
+
       try {
         await _apply(cloud, op);
         await queue.remove(op.id);
         anySuccess = true;
+      } on AuthException {
+        // Token expirado o sesión revocada — no tiene sentido continuar con
+        // el resto de ops porque todas fallarán con el mismo error.
+        debugPrint('OfflineSyncService: auth error, aborting flush');
+        break;
+      } on AuthFailure {
+        debugPrint('OfflineSyncService: auth failure, aborting flush');
+        break;
       } catch (e) {
         await queue.incrementAttempts(op.id);
         debugPrint(
           'OfflineSyncService: failed op ${op.id} '
-          '(${op.attempts + 1} attempts): $e',
+          '(${op.attempts + 1}/$_maxAttempts attempts): $e',
         );
       }
     }

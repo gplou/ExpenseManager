@@ -70,6 +70,7 @@ class RecentCategoriesStrip extends ConsumerWidget {
             final label = TransactionCategories.localizedName(name, l10n);
 
             return _RecentChip(
+              key: ValueKey(name),
               emoji: emoji,
               label: label,
               isSelected: isSelected,
@@ -85,11 +86,11 @@ class RecentCategoriesStrip extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _RecentChip extends StatelessWidget {
   const _RecentChip({
+    super.key,
     required this.emoji,
     required this.label,
     required this.isSelected,

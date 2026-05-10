@@ -79,6 +79,8 @@
   "emailLabel": "E-Mail",
   "enterEmail": "E-Mail eingeben",
   "invalidEmail": "Ungültige E-Mail",
+  "showPassword": "Passwort anzeigen",
+  "hidePassword": "Passwort verbergen",
   "passwordLabel": "Passwort",
   "enterPassword": "Passwort eingeben",
   "forgotPassword": "Passwort vergessen?",

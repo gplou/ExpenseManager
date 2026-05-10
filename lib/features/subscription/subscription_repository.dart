@@ -118,63 +118,25 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
 
   @override
   Future<PromoResult> redeemPromoCode(String code) async {
-    final userId = _client.auth.currentUser!.id;
-    final normalised = code.toUpperCase().trim();
-
-    final Map<String, dynamic>? codeRow;
+    // Validation, redemption insert, and use_count increment are handled
+    // atomically by the redeem_promo_code Postgres function (FOR UPDATE lock).
+    // This prevents the race condition where two concurrent clients could both
+    // read the same use_count and both write count+1, bypassing max_uses.
     try {
-      codeRow = await _client
-          .from('promo_codes')
-          .select()
-          .eq('code', normalised)
-          .maybeSingle();
+      final result = await _client.rpc(
+        'redeem_promo_code',
+        params: {'code': code.toUpperCase().trim()},
+      ) as Map<String, dynamic>;
+
+      return PromoResult(
+        type: (result['type'] as String?) ?? 'subscription',
+        durationDays: (result['duration_days'] as int?) ?? 30,
+        discountPercentage: result['discount_percentage'] as int?,
+      );
     } on PostgrestException catch (e) {
-      throw PromoCodeException('Error al verificar el código: ${e.message}');
+      // The RPC raises P0001 with user-facing messages in Spanish.
+      throw PromoCodeException(e.message);
     }
-
-    if (codeRow == null) throw const PromoCodeException('Código no válido');
-
-    final maxUses = codeRow['max_uses'] as int?;
-    final useCount = (codeRow['use_count'] as int?) ?? 0;
-    final validUntil = codeRow['valid_until'] != null
-        ? DateTime.parse(codeRow['valid_until'] as String)
-        : null;
-
-    if (maxUses != null && useCount >= maxUses) {
-      throw const PromoCodeException('Este código ya no tiene usos disponibles');
-    }
-    if (validUntil != null && validUntil.isBefore(DateTime.now())) {
-      throw const PromoCodeException('Este código ha expirado');
-    }
-
-    try {
-      await _client.from('promo_code_redemptions').insert({
-        'promo_code_id': codeRow['id'] as String,
-        'user_id': userId,
-      });
-    } on PostgrestException catch (e) {
-      if (e.code == '23505') {
-        throw const PromoCodeException('Ya has utilizado este código');
-      }
-      throw PromoCodeException('Error al canjear el código: ${e.message}');
-    }
-
-    // SECURITY: Incrementing use_count from the client is vulnerable to race
-    // conditions (two concurrent redemptions can both read the same count) and
-    // client-side manipulation (a modified client could skip this call). This
-    // should be moved to a Supabase Edge Function or a Postgres trigger/RPC
-    // that atomically increments the counter server-side.
-    await _client
-        .from('promo_codes')
-        .update({'use_count': useCount + 1})
-        .eq('id', codeRow['id'] as String);
-
-    final type = (codeRow['type'] as String?) ?? 'subscription';
-    return PromoResult(
-      type: type,
-      durationDays: (codeRow['duration_days'] as int?) ?? 30,
-      discountPercentage: codeRow['discount_percentage'] as int?,
-    );
   }
 
   // ── RevenueCat ────────────────────────────────────────────────────────────

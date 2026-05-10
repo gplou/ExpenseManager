@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_spacing.dart';
+
 class LegalScreen extends StatelessWidget {
   const LegalScreen({super.key, required this.title, required this.content});
 
@@ -11,7 +13,7 @@ class LegalScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: AppSpacing.paddingLg,
         child: SelectableText(
           content,
           style: Theme.of(context).textTheme.bodyMedium,

@@ -247,6 +247,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get invalidEmail => 'Email inválido';
 
   @override
+  String get showPassword => 'Mostrar contraseña';
+
+  @override
+  String get hidePassword => 'Ocultar contraseña';
+
+  @override
   String get passwordLabel => 'Contraseña';
 
   @override

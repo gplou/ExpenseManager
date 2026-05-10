@@ -171,6 +171,8 @@
   "@enterEmail": {},
   "invalidEmail": "Email inválido",
   "@invalidEmail": {},
+  "showPassword": "Mostrar contraseña",
+  "hidePassword": "Ocultar contraseña",
   "passwordLabel": "Contraseña",
   "@passwordLabel": {},
   "enterPassword": "Ingresa tu contraseña",

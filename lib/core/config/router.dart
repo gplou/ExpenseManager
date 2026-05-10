@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../features/auth/data/auth_repository.dart';
+import '../../features/subscription/subscription_provider.dart';
 import '../services/analytics_route_observer.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -67,10 +68,14 @@ GoRouter router(Ref ref) {
     // Al cambiar el auth state, GoRouter re-evalúa redirect sin recrearse
     refreshListenable: _RouterRefreshNotifier(authRepo.authStateChanges),
     redirect: (context, state) {
-      // Las URIs expensemanager://widget/* provienen del widget de pantalla de inicio.
+      // Solo las URIs expensemanager://widget/* provienen del widget de pantalla de inicio.
       // La acción ya fue capturada en main.dart via pendingWidgetActionProvider;
       // aquí solo redirigimos al dashboard para que GoRouter no las trate como rutas.
-      if (state.uri.scheme == 'expensemanager') return AppRoutes.dashboard;
+      // Cualquier otro host/path del esquema se ignora para evitar abusos vía intent.
+      if (state.uri.scheme == 'expensemanager') {
+        if (state.uri.host == 'widget') return AppRoutes.dashboard;
+        return AppRoutes.login;
+      }
 
       final isLoggedIn = authRepo.currentUser != null;
       final isAuthRoute = state.matchedLocation == AppRoutes.login ||
@@ -123,6 +128,8 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: AppRoutes.chat,
         name: 'chat',
+        redirect: (context, state) =>
+            ref.read(isProProvider) ? null : AppRoutes.pro,
         builder: (context, state) => const ChatScreen(),
       ),
       GoRoute(

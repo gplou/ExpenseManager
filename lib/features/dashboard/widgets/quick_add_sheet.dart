@@ -126,7 +126,9 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isPro = ref.watch(isProProvider);
-    final customCats = ref.watch(customCategoriesSyncProvider);
+    final customCats = ref.watch(
+      customCategoriesSyncProvider.select((m) => m[_type] ?? []),
+    );
     final currency = ref.watch(currencyProvider).value ?? 'EUR';
 
     return Padding(
@@ -278,7 +280,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                       ? TransactionCategories.resolveEmoji(
                           _selectedCategory!,
                           _type.isIncome,
-                          customCats[_type] ?? [])
+                          customCats)
                       : null,
                   icon: _selectedCategory == null
                       ? Icons.category_outlined
@@ -311,7 +313,6 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
       ),
     );
   }
-
 }
 
 class _ShortcutButton extends StatelessWidget {
@@ -382,11 +383,11 @@ class _ShortcutButton extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Sora',
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -421,30 +422,37 @@ class _MiniTypeToggle extends StatelessWidget {
               ? Icons.trending_up_rounded
               : Icons.trending_down_rounded;
           return Expanded(
-            child: GestureDetector(
-              onTap: () => onChanged(t),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSel ? cs.surface : Colors.transparent,
-                  borderRadius: AppRadius.radiusSm,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, size: 16, color: isSel ? color : AppColors.textMuted),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      t.l10nLabel(l10n),
-                      style: TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isSel ? color : AppColors.textMuted,
+            child: Semantics(
+              button: true,
+              selected: isSel,
+              label: t.l10nLabel(l10n),
+              child: GestureDetector(
+                onTap: () => onChanged(t),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSel ? cs.surface : Colors.transparent,
+                    borderRadius: AppRadius.radiusSm,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon,
+                          size: 16,
+                          color: isSel ? color : AppColors.textMuted),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        t.l10nLabel(l10n),
+                        style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isSel ? color : AppColors.textMuted,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

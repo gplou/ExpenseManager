@@ -101,36 +101,49 @@ class AppCard extends StatelessWidget {
       }
     }
 
-    Widget content = AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border.all(color: borderColor, width: borderWidth),
-        borderRadius: radius,
-        boxShadow: shadow,
-      ),
-      child: child,
-    );
+    Widget content;
 
     if (onTap != null && !disabled) {
-      content = Material(
-        color: Colors.transparent,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onTap!();
-          },
+      // Material wraps the animated decoration so InkWell ripples paint on top.
+      content = AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor, width: borderWidth),
           borderRadius: radius,
-          splashColor: effectiveAccent.withValues(alpha: 0.08),
-          highlightColor: effectiveAccent.withValues(alpha: 0.04),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: AppTapTargets.minSize),
-            child: content,
+          boxShadow: shadow,
+        ),
+        child: Material(
+          color: bg,
+          borderRadius: radius,
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onTap!();
+            },
+            borderRadius: radius,
+            splashColor: effectiveAccent.withValues(alpha: 0.08),
+            highlightColor: effectiveAccent.withValues(alpha: 0.04),
+            child: ConstrainedBox(
+              constraints:
+                  const BoxConstraints(minHeight: AppTapTargets.minSize),
+              child: Padding(padding: padding, child: child),
+            ),
           ),
         ),
+      );
+    } else {
+      content = AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border.all(color: borderColor, width: borderWidth),
+          borderRadius: radius,
+          boxShadow: shadow,
+        ),
+        child: child,
       );
     }
 

@@ -9,6 +9,7 @@ import '../subscription/subscription_provider.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/number_format_provider.dart';
 import '../../core/providers/theme_provider.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/utils/extensions.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -110,7 +111,7 @@ class AppSettingsScreen extends ConsumerWidget {
             NumberFormatStyle.dotDecimal;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -164,7 +165,7 @@ class AppSettingsScreen extends ConsumerWidget {
         final currentLocale = ref.read(localeProvider).value;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -212,7 +213,7 @@ class AppSettingsScreen extends ConsumerWidget {
         final currentCode = ref.read(currencyProvider).value ?? 'EUR';
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
