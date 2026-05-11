@@ -100,13 +100,19 @@ class InitialSyncService {
     );
     if (isSyncing) return;
 
+    // Force the DB to open so any pending v<3 → v3 upgrade runs (and persists
+    // the hydration-reset flag) before we read it. Without this await, the
+    // first _tryHydrate may execute before any other code has opened the DB.
+    await LocalDatabase.instance.db;
+
     final prefs = await SharedPreferences.getInstance();
     final key = _hydrationKey(user.id);
 
-    // After upgrading from a pre-encryption schema the DB version bumped to 3,
-    // which sets this flag. Clear the stale hydration flag so we re-sync from
-    // Supabase — the local cache may be empty or corrupt after the migration.
-    if (LocalDatabase.instance.needsHydrationReset) {
+    // After upgrading from a pre-encryption schema the DB version bumped to 3.
+    // Clear the stale hydration flag so we re-sync from Supabase — the local
+    // cache may be empty or corrupt after the migration. The flag is persisted
+    // so it survives restarts until hydration actually completes.
+    if (prefs.getBool(LocalDatabase.needsHydrationResetKey) == true) {
       await prefs.remove(key);
     }
 
@@ -122,6 +128,7 @@ class InitialSyncService {
       );
       await service.hydrateLocalFromCloud();
       await prefs.setBool(key, true);
+      await prefs.remove(LocalDatabase.needsHydrationResetKey);
       _ref.invalidate(allTransactionsProvider);
     } catch (e) {
       // Leave the flag unset — will retry on next connectivity restore or start.

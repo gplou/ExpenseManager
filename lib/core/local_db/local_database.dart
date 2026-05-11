@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../security/secure_storage.dart';
@@ -20,14 +21,15 @@ class LocalDatabase {
   static final LocalDatabase instance = LocalDatabase._();
 
   Database? _db;
-  bool _needsHydrationReset = false;
-
-  /// True after an upgrade from a pre-encryption schema (v<3).
-  /// [InitialSyncService] reads this once to clear the hydration flag and
-  /// force a re-sync from the cloud, then the app restart resets it to false.
-  bool get needsHydrationReset => _needsHydrationReset;
 
   static const _keyStorageKey = 'db_encryption_key';
+
+  /// SharedPreferences key that survives until [InitialSyncService] consumes it.
+  /// Set inside [onUpgrade] when crossing from a pre-v3 schema; the in-memory
+  /// flag we used before was lost on app restart if hydration didn't run in
+  /// the same launch (e.g. user was offline), leaving PRO users with stale
+  /// `pro_hydrated_*` flags and an empty local cache forever.
+  static const needsHydrationResetKey = 'needs_hydration_reset_v3';
 
   Future<Database> get db async {
     _db ??= await _open();
@@ -89,7 +91,10 @@ class LocalDatabase {
       onCreate: (db, _) => createSchema(db),
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) await _addPendingOperationsTable(db);
-        if (oldVersion < 3) _needsHydrationReset = true;
+        if (oldVersion < 3) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool(needsHydrationResetKey, true);
+        }
       },
     );
   }
