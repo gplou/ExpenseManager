@@ -15,6 +15,10 @@ class SecureStorageService {
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
+    // flutter_secure_storage v10+ on Android uses custom ciphers instead of
+    // EncryptedSharedPreferences, which avoids AndroidKeyStore hangs on some
+    // devices after app updates. No extra options needed.
+    aOptions: AndroidOptions.defaultOptions,
   );
 
   Future<String?> read(String key) => _storage.read(key: key);

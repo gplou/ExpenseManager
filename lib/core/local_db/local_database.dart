@@ -72,7 +72,12 @@ class LocalDatabase {
     final dir = await getApplicationDocumentsDirectory();
     final path = p.join(dir.path, 'expense_manager.db');
 
-    var key = await SecureStorageService.instance.read(_keyStorageKey);
+    // flutter_secure_storage can hang indefinitely on some Android devices when
+    // the Keystore is initializing (common right after an app update). A 10-second
+    // timeout converts a silent hang into a recoverable exception.
+    var key = await SecureStorageService.instance
+        .read(_keyStorageKey)
+        .timeout(const Duration(seconds: 10));
     if (key == null) {
       key = _generateKey();
       // Migrate existing plaintext DB before storing the key so that a crash
