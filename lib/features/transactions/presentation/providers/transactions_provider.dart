@@ -91,10 +91,18 @@ class AllTransactionsNotifier
     // ── Usuarios PRO: caché SQLite primero ───────────────────────────────────
     if (isPro && user != null) {
       final localRepo = LocalTransactionsRepository(userId: user.id);
-      final cached = await localRepo.getTransactions(
-        from: range.from,
-        to: range.to,
-      );
+
+      // Wrap in try/catch: on some Android devices the SQLite open can hang
+      // (Keystore timeout) or fail after an update. Fall through to Supabase
+      // so the shimmer doesn't spin forever.
+      List<TransactionModel> cached = [];
+      try {
+        cached = await localRepo
+            .getTransactions(from: range.from, to: range.to)
+            .timeout(const Duration(seconds: 15));
+      } catch (_) {
+        // Local DB unavailable — skip to cloud fetch below.
+      }
 
       if (cached.isNotEmpty) {
         // Muestra la caché de forma instantánea y refresca Supabase en fondo.
@@ -106,7 +114,9 @@ class AllTransactionsNotifier
       // from Supabase. We use the cloud-only repo here because the offline-aware
       // repo returned by transactionsRepositoryProvider only reads from SQLite.
       final cloudRepo = ref.read(cloudTxRepoForHydrationProvider);
-      final fresh = await cloudRepo.getTransactions(from: range.from, to: range.to);
+      final fresh = await cloudRepo
+          .getTransactions(from: range.from, to: range.to)
+          .timeout(const Duration(seconds: 30));
 
       // Solo guardar en caché si InitialSyncService ya completó su hidratación.
       // Si no, InitialSyncService escribirá en SQLite cuando termine, evitando
