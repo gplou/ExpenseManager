@@ -9,6 +9,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/local_db/local_database.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/offline_aware_transactions_repository.dart';
@@ -43,6 +44,45 @@ class _FakeCloudSync implements CloudTransactionSyncContract {
       throw Exception('network error');
     }
     deletedIds.add(id);
+  }
+}
+
+/// Local repo subclass that can be forced to fail on the next write, simulating
+/// SQLite being unavailable (e.g. Keystore hang or post-SQLCipher-migration
+/// corruption on Android). Delegates to the real implementation otherwise.
+class _FailableLocal extends LocalTransactionsRepository {
+  _FailableLocal({required super.userId});
+  bool failNext = false;
+
+  void _maybeFail() {
+    if (failNext) {
+      failNext = false;
+      throw const CacheFailure('simulated local fail');
+    }
+  }
+
+  @override
+  Future<TransactionModel> createTransaction(TransactionModel transaction) {
+    _maybeFail();
+    return super.createTransaction(transaction);
+  }
+
+  @override
+  Future<TransactionModel> updateTransaction(TransactionModel transaction) {
+    _maybeFail();
+    return super.updateTransaction(transaction);
+  }
+
+  @override
+  Future<void> deleteTransaction(String id) {
+    _maybeFail();
+    return super.deleteTransaction(id);
+  }
+
+  @override
+  Future<void> upsertTransaction(TransactionModel transaction) {
+    _maybeFail();
+    return super.upsertTransaction(transaction);
   }
 }
 
@@ -278,6 +318,113 @@ void main() {
       expect(pending.length, 1);
       expect(pending.first.opType, SyncOpType.update);
       expect(pending.first.entityId, 'ups-fail');
+    });
+  });
+
+  // ── Local fails → cloud-only fallback ──────────────────────────────────────
+  //
+  // When SQLite is unavailable (Keystore hang, post-SQLCipher-migration
+  // corruption…) the write must still reach Supabase so the user doesn't lose
+  // the transaction. Enqueueing is skipped because the queue lives in the same
+  // SQLite DB and would also fail.
+
+  group('createTransaction — local fails', () {
+    test('still upserts to cloud with the stamped id', () async {
+      final failableLocal = _FailableLocal(userId: _userId)..failNext = true;
+      final repo = OfflineAwareTransactionsRepository(
+        cloud: cloud,
+        local: failableLocal,
+        queue: queue,
+      );
+
+      final saved = await repo.createTransaction(makeTx(id: 'tx-local-fail'));
+
+      expect(saved.id, 'tx-local-fail');
+      expect(cloud.upsertedIds, contains('tx-local-fail'));
+      expect(await queue.getPending(), isEmpty);
+    });
+
+    test('stamps a UUID v4 id when caller passes empty id', () async {
+      final failableLocal = _FailableLocal(userId: _userId)..failNext = true;
+      final repo = OfflineAwareTransactionsRepository(
+        cloud: cloud,
+        local: failableLocal,
+        queue: queue,
+      );
+
+      final saved = await repo.createTransaction(makeTx(id: ''));
+
+      final uuidV4 = RegExp(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+      );
+      expect(uuidV4.hasMatch(saved.id), isTrue,
+          reason: 'id "${saved.id}" should be UUID v4');
+      expect(saved.userId, _userId);
+      expect(cloud.upsertedIds.single, saved.id);
+    });
+
+    test('rethrows when both local AND cloud fail', () async {
+      final failableLocal = _FailableLocal(userId: _userId)..failNext = true;
+      cloud.failNext = true;
+      final repo = OfflineAwareTransactionsRepository(
+        cloud: cloud,
+        local: failableLocal,
+        queue: queue,
+      );
+
+      await expectLater(
+        repo.createTransaction(makeTx(id: 'tx-both-fail')),
+        throwsA(isA<Exception>()),
+      );
+      expect(await queue.getPending(), isEmpty);
+    });
+  });
+
+  group('updateTransaction — local fails', () {
+    test('still upserts to cloud with the passed id', () async {
+      final failableLocal = _FailableLocal(userId: _userId)..failNext = true;
+      final repo = OfflineAwareTransactionsRepository(
+        cloud: cloud,
+        local: failableLocal,
+        queue: queue,
+      );
+
+      await repo.updateTransaction(makeTx(id: 'tx-upd-lf'));
+
+      expect(cloud.upsertedIds, contains('tx-upd-lf'));
+      expect(await queue.getPending(), isEmpty);
+    });
+  });
+
+  group('deleteTransaction — local fails', () {
+    test('still issues cloud delete', () async {
+      final failableLocal = _FailableLocal(userId: _userId)..failNext = true;
+      final repo = OfflineAwareTransactionsRepository(
+        cloud: cloud,
+        local: failableLocal,
+        queue: queue,
+      );
+
+      await repo.deleteTransaction('tx-del-lf');
+
+      expect(cloud.deletedIds, contains('tx-del-lf'));
+      expect(await queue.getPending(), isEmpty);
+    });
+  });
+
+  group('upsertTransaction — local fails', () {
+    test('still upserts to cloud', () async {
+      final failableLocal = _FailableLocal(userId: _userId)..failNext = true;
+      final repo = OfflineAwareTransactionsRepository(
+        cloud: cloud,
+        local: failableLocal,
+        queue: queue,
+      );
+
+      await repo.upsertTransaction(makeTx(id: 'tx-ups-lf'));
+
+      expect(cloud.upsertedIds, contains('tx-ups-lf'));
+      expect(await queue.getPending(), isEmpty);
     });
   });
 
