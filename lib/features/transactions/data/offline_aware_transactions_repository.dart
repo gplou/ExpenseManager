@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../core/utils/date_helpers.dart';
+import '../../../core/utils/transaction_id_generator.dart';
 import '../domain/cloud_transaction_sync_contract.dart';
 import '../domain/transaction_model.dart';
 import '../domain/transactions_repository_contract.dart';
@@ -11,12 +12,15 @@ import 'sync_queue_repository.dart';
 /// Repository para usuarios PRO con soporte offline-first.
 ///
 /// Flujo de escritura:
-///   1. Guarda siempre en SQLite local (respuesta instantánea al usuario).
+///   1. Intenta guardar en SQLite local (respuesta instantánea al usuario).
 ///   2. Intenta subir a Supabase. Si falla (sin red, error transitorio…)
 ///      encola la operación para que [OfflineSyncService] la reintente.
 ///
-/// Se intenta siempre la llamada a la nube; el try/catch gestiona el offline.
-/// Esto evita bloqueos por falsos negativos de connectivity_plus en Android.
+/// Si la escritura local falla (DB corrupta, Keystore hang en Android…)
+/// se sigue intentando la subida a Supabase con el id ya estampado para no
+/// dejar al usuario sin poder guardar. El read-path ya tiene su propio
+/// fallback a cloud cuando SQLite no está disponible, así que el siguiente
+/// rebuild del listado mostrará la transacción aunque local no funcione.
 ///
 /// Depende de [CloudTransactionSyncContract] en lugar de [TransactionsRepository]
 /// directamente, cumpliendo el principio DIP de SOLID.
@@ -56,47 +60,111 @@ class OfflineAwareTransactionsRepository
 
   @override
   Future<TransactionModel> createTransaction(TransactionModel transaction) async {
-    final saved = await _local.createTransaction(transaction);
+    // Estampar id/userId antes del local para que el path cloud-only conserve
+    // el mismo id si SQLite falla. El guard `id.isNotEmpty` de
+    // LocalTransactionsRepository preserva este id en el happy path.
+    final stamped = transaction.copyWith(
+      id: transaction.id.isNotEmpty
+          ? transaction.id
+          : TransactionIdGenerator.generate(_local.userId),
+      userId: _local.userId,
+    );
+
+    TransactionModel saved = stamped;
+    bool localOk = false;
+    try {
+      saved = await _local.createTransaction(stamped);
+      localOk = true;
+    } catch (e, st) {
+      debugPrint(
+        'OfflineAware.createTransaction: local failed, trying cloud only — $e\n$st',
+      );
+    }
+
     try {
       await _cloud.upsertTransaction(saved);
+      return saved;
     } catch (e) {
-      debugPrint('OfflineAware.createTransaction: cloud upsert failed, enqueuing — $e');
-      await _enqueue(SyncOpType.create, saved);
+      debugPrint('OfflineAware.createTransaction: cloud upsert failed — $e');
+      if (localOk) {
+        await _enqueue(SyncOpType.create, saved);
+        return saved;
+      }
+      rethrow; // local y cloud fallaron — el usuario verá errorSaving
     }
-    return saved;
   }
 
   @override
   Future<TransactionModel> updateTransaction(TransactionModel transaction) async {
-    final saved = await _local.updateTransaction(transaction);
+    TransactionModel saved = transaction;
+    bool localOk = false;
+    try {
+      saved = await _local.updateTransaction(transaction);
+      localOk = true;
+    } catch (e, st) {
+      debugPrint(
+        'OfflineAware.updateTransaction: local failed, trying cloud only — $e\n$st',
+      );
+    }
+
     try {
       await _cloud.upsertTransaction(saved);
+      return saved;
     } catch (e) {
-      debugPrint('OfflineAware.updateTransaction: cloud upsert failed, enqueuing — $e');
-      await _enqueue(SyncOpType.update, saved);
+      debugPrint('OfflineAware.updateTransaction: cloud upsert failed — $e');
+      if (localOk) {
+        await _enqueue(SyncOpType.update, saved);
+        return saved;
+      }
+      rethrow;
     }
-    return saved;
   }
 
   @override
   Future<void> deleteTransaction(String id) async {
-    await _local.deleteTransaction(id);
+    bool localOk = false;
+    try {
+      await _local.deleteTransaction(id);
+      localOk = true;
+    } catch (e, st) {
+      debugPrint(
+        'OfflineAware.deleteTransaction: local failed, trying cloud only — $e\n$st',
+      );
+    }
+
     try {
       await _cloud.deleteTransaction(id);
     } catch (e) {
-      debugPrint('OfflineAware.deleteTransaction: cloud delete failed, enqueuing — $e');
-      await _enqueueDelete(id);
+      debugPrint('OfflineAware.deleteTransaction: cloud delete failed — $e');
+      if (localOk) {
+        await _enqueueDelete(id);
+        return;
+      }
+      rethrow;
     }
   }
 
   @override
   Future<void> upsertTransaction(TransactionModel transaction) async {
-    await _local.upsertTransaction(transaction);
+    bool localOk = false;
+    try {
+      await _local.upsertTransaction(transaction);
+      localOk = true;
+    } catch (e, st) {
+      debugPrint(
+        'OfflineAware.upsertTransaction: local failed, trying cloud only — $e\n$st',
+      );
+    }
+
     try {
       await _cloud.upsertTransaction(transaction);
     } catch (e) {
-      debugPrint('OfflineAware.upsertTransaction: cloud upsert failed, enqueuing — $e');
-      await _enqueue(SyncOpType.update, transaction);
+      debugPrint('OfflineAware.upsertTransaction: cloud upsert failed — $e');
+      if (localOk) {
+        await _enqueue(SyncOpType.update, transaction);
+        return;
+      }
+      rethrow;
     }
   }
 

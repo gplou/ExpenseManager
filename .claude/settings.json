@@ -10,7 +10,15 @@
       "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile form fields subcategory description input UX\" --domain ux -n 5)",
       "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"form input layout mobile\" --stack flutter)",
       "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile form compact no-scroll layout density\" --domain ux -n 5)",
-      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"flutter mobile form compact layout single screen\" --stack flutter -n 5)"
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"flutter mobile form compact layout single screen\" --stack flutter -n 5)",
+      "Bash(git log *)",
+      "Bash(grep -E \"\\\\.\\(dart\\)$\")",
+      "Bash(awk -F: ' *)",
+      "Bash(xargs ls -la)",
+      "Bash(chmod +x /Users/guillermo/Workspace/ExpenseManager/tool/coverage.sh)",
+      "Bash(find ~/.pub-cache/hosted/pub.dev/flutter_riverpod-3* -name \"*.dart\")",
+      "Bash(find ~/.pub-cache/hosted/pub.dev/riverpod-3* -name \"*.dart\")",
+      "Bash(bash tool/coverage.sh)"
     ]
   }
 }
