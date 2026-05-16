@@ -146,6 +146,17 @@ class AllTransactionsNotifier
 
     Future(() async {
       try {
+        // Snapshot de IDs locales ANTES del fetch al cloud. Cualquier tx local
+        // que aparezca después (creada por el usuario mientras el fetch estaba
+        // en vuelo) se conservará aunque no esté en cloudIds ni en pendingIds.
+        // Sin este snapshot la creación se borraba al hacer deleteByDateRange.
+        final preFetchLocalIds = (await localRepo.getTransactions(
+          from: range.from,
+          to: range.to,
+        ))
+            .map((t) => t.id)
+            .toSet();
+
         final fresh = await cloudRepo.getTransactions(
           from: range.from,
           to: range.to,
@@ -164,15 +175,22 @@ class AllTransactionsNotifier
 
         final localInRange =
             await localRepo.getTransactions(from: range.from, to: range.to);
-        final pendingLocal = localInRange
-            .where((t) => !cloudIds.contains(t.id) && pendingIds.contains(t.id))
-            .toList();
+        // Conservar txs locales que no están en el cloud y son:
+        //  - operaciones pendientes de subida, o
+        //  - txs nuevas creadas DURANTE este refresh (no existían en el snapshot
+        //    pre-fetch). Esto cierra la carrera entre crear una transacción y
+        //    un refresh ya en vuelo que la borraría al hacer deleteByDateRange.
+        final localToKeep = localInRange.where((t) {
+          if (cloudIds.contains(t.id)) return false;
+          if (pendingIds.contains(t.id)) return true;
+          return !preFetchLocalIds.contains(t.id);
+        }).toList();
 
         // Sincroniza la caché: elimina el rango y reinserta datos frescos +
-        // transacciones pendientes locales, para gestionar correctamente las
-        // borradas en la nube sin perder las creadas offline.
+        // transacciones locales conservadas, para gestionar correctamente las
+        // borradas en la nube sin perder creadas offline ni recién añadidas.
         await localRepo.deleteByDateRange(range.from, range.to);
-        final merged = [...fresh, ...pendingLocal]
+        final merged = [...fresh, ...localToKeep]
           ..sort((a, b) {
             final cmp = b.date.compareTo(a.date);
             return cmp != 0 ? cmp : b.createdAt.compareTo(a.createdAt);
