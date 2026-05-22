@@ -94,14 +94,24 @@ class LocalDatabase {
       password: key,
       version: 3,
       onCreate: (db, _) => createSchema(db),
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) await _addPendingOperationsTable(db);
-        if (oldVersion < 3) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool(needsHydrationResetKey, true);
-        }
-      },
+      onUpgrade: applyUpgrades,
     );
+  }
+
+  /// Applies incremental schema upgrades from [oldVersion] to [newVersion].
+  /// Extracted from `onUpgrade` so it can be exercised by unit tests against
+  /// an in-memory database without touching the rest of `_open`.
+  @visibleForTesting
+  static Future<void> applyUpgrades(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2) await _addPendingOperationsTable(db);
+    if (oldVersion < 3) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(needsHydrationResetKey, true);
+    }
   }
 
   static String _generateKey() {

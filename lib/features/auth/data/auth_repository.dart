@@ -49,6 +49,8 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         throw const AuthFailure('No se pudo iniciar sesión');
       }
       return _mapUser(response.user!);
+    } on AppFailure {
+      rethrow;
     } on AuthException catch (e) {
       throw AuthFailure(_mapAuthError(e.message));
     } catch (e) {
@@ -72,6 +74,8 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         throw const AuthFailure('No se pudo crear la cuenta');
       }
       return _mapUser(response.user!);
+    } on AppFailure {
+      rethrow;
     } on AuthException catch (e) {
       throw AuthFailure(_mapAuthError(e.message));
     } catch (e) {

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Simple sliding-window rate limiter for AI parse calls (voice + image).
 ///
 /// Shared singleton so both voice and image parsing count toward the same
@@ -22,4 +24,9 @@ class AiRateLimiter {
     _timestamps.add(now);
     return true;
   }
+
+  /// Clears the recorded timestamps. Test-only hook so a singleton's
+  /// state doesn't leak between tests in the same process.
+  @visibleForTesting
+  void reset() => _timestamps.clear();
 }

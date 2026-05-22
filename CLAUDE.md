@@ -26,9 +26,10 @@ flutter gen-l10n   # regenerate localization from .arb files
 
 **Tests:**
 ```bash
-flutter test                              # all tests
-flutter test test/features/transactions/  # single feature
-flutter test test/unit/some_test.dart     # single file
+fvm flutter test                              # all tests
+fvm flutter test test/features/transactions/  # single feature
+fvm flutter test test/unit/some_test.dart     # single file
+bash tool/coverage.sh                         # coverage report (lcov + per-file %)
 ```
 
 **Lint:**
@@ -128,3 +129,16 @@ Google Mobile Ads (`google_mobile_ads: ^8.0.0`) with `app_tracking_transparency`
 ### Code Generation Files
 
 `*.freezed.dart` and `*.g.dart` are generated — do not edit manually. Run `build_runner` after any changes to `@freezed` data classes or `@riverpod` annotated providers/notifiers.
+
+### Testing
+
+Full conventions live in `test/README.md`. Key points for new tests:
+
+- **Mocks** are centralised in `test/helpers/mocks.dart`. Add new mocks there rather than declaring one-off mocks inside test files. Call `registerCommonFallbacks()` once in `setUpAll` when using `any()` with `DateTime`/`Duration`/`Package`/maps.
+- **Riverpod**: build containers with `makeContainer([overrides])` from `helpers/provider_container_helper.dart` — it auto-disposes. Override the repository provider, not the notifier.
+- **SQLite**: `await useInMemoryDatabase()` in `setUp` (from `helpers/local_db_helper.dart`) opens an in-memory DB, creates the schema, and registers tear-down.
+- **Supabase Edge Functions**: stub `SupabaseClient.functions.invoke(...)` via `stubFunctionInvoke()` + `okFunctionResponse()` from `helpers/supabase_function_helper.dart`. The AI parsers (`voice_transaction_parser`, `image_transaction_parser`) and `chat_repository` all go through this path.
+- **Time**: production code should depend on `package:clock` and call `clock.now()` (not `DateTime.now()`). Tests pin time with `withFixedClock()` / `withFakeAsyncAndClock()` from `helpers/clock_helper.dart`.
+- **Widget tests**: use `pumpWithProviders` / `pumpScreen` from `helpers/pump_app.dart` for `ProviderScope` + `MaterialApp` + l10n preloaded.
+
+Don't hit the real network, RevenueCat, or platform channels from `test/` — those belong in `integration_test/` (planned, not yet present).

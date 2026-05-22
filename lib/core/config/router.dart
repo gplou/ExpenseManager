@@ -57,6 +57,33 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   }
 }
 
+/// Pure redirect logic, extracted so it can be unit-tested without pumping
+/// the full router (which would require mocking every screen's providers).
+///
+/// Returns the path to redirect to, or `null` to allow the navigation.
+@visibleForTesting
+String? resolveRedirect({
+  required Uri uri,
+  required String matchedLocation,
+  required bool isLoggedIn,
+}) {
+  // expensemanager://widget/* originates from the home-screen widget.
+  // The action was already captured in main.dart via pendingWidgetActionProvider;
+  // here we just bounce to the dashboard so GoRouter doesn't treat the URI
+  // as an unknown route. Any other host/path is rejected to prevent abuse.
+  if (uri.scheme == 'expensemanager') {
+    if (uri.host == 'widget') return AppRoutes.dashboard;
+    return AppRoutes.login;
+  }
+
+  final isAuthRoute = matchedLocation == AppRoutes.login ||
+      matchedLocation == AppRoutes.register;
+
+  if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
+  if (isLoggedIn && isAuthRoute) return AppRoutes.dashboard;
+  return null;
+}
+
 @Riverpod(keepAlive: true)
 GoRouter router(Ref ref) {
   final authRepo = ref.read(authRepositoryProvider);
@@ -67,24 +94,11 @@ GoRouter router(Ref ref) {
     observers: [AnalyticsRouteObserver()],
     // Al cambiar el auth state, GoRouter re-evalúa redirect sin recrearse
     refreshListenable: _RouterRefreshNotifier(authRepo.authStateChanges),
-    redirect: (context, state) {
-      // Solo las URIs expensemanager://widget/* provienen del widget de pantalla de inicio.
-      // La acción ya fue capturada en main.dart via pendingWidgetActionProvider;
-      // aquí solo redirigimos al dashboard para que GoRouter no las trate como rutas.
-      // Cualquier otro host/path del esquema se ignora para evitar abusos vía intent.
-      if (state.uri.scheme == 'expensemanager') {
-        if (state.uri.host == 'widget') return AppRoutes.dashboard;
-        return AppRoutes.login;
-      }
-
-      final isLoggedIn = authRepo.currentUser != null;
-      final isAuthRoute = state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.register;
-
-      if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
-      if (isLoggedIn && isAuthRoute) return AppRoutes.dashboard;
-      return null;
-    },
+    redirect: (context, state) => resolveRedirect(
+      uri: state.uri,
+      matchedLocation: state.matchedLocation,
+      isLoggedIn: authRepo.currentUser != null,
+    ),
     routes: [
       GoRoute(
         path: AppRoutes.login,
