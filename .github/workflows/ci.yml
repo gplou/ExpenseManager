@@ -100,10 +100,10 @@ jobs:
       # Threshold is intentionally just below the current value so the
       # green build catches regressions without blocking merges every
       # time we add untested code. Raise it as new test phases land.
-      - name: Enforce coverage threshold (55%)
+      - name: Enforce coverage threshold (60%)
         run: |
           PCT="${{ steps.coverage.outputs.pct }}"
-          THRESHOLD=55.0
+          THRESHOLD=60.0
           awk -v p="$PCT" -v t="$THRESHOLD" 'BEGIN {
             if (p+0 < t+0) {
               printf "Coverage %s%% is below threshold %s%%\n", p, t

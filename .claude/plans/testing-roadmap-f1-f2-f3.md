@@ -1,6 +1,6 @@
 # Plan: Testing roadmap F1 + F2 + F3
 
-**Status:** awaiting user adjustments before execution.
+**Status:** ready to execute (F1 next).
 **Author:** Claude session, 2026-05-22.
 **Goal:** raise coverage from 57.53% to ~78% across three independent phases.
 
@@ -8,7 +8,11 @@
 
 - **Delivery**: one commit per phase, on the current branch (no separate PRs).
 - **CI gate**: raise threshold after each phase (55 → 60 → 70 → 76).
-- **Plan status**: user wants to adjust scope/details before kicking off.
+- **Order**: F1 → F2 → F3.
+- **F1 scope**: minimal — only the callsites needed for the new tests.
+- **F2 depth**: smoke + key interactions per screen (not deep).
+- **F3 extras**: include subcategories flow in `add_transaction`; also extract
+  and test `_SpotlightPainter` from `tutorial_overlay`.
 
 ## Coverage math
 
@@ -79,14 +83,25 @@ final purchasesGatewayProvider =
 **Existing tests to update:** `test/features/subscription/subscription_notifier_test.dart`
 must pass the gateway into the manual notifier constructions.
 
-### F1.3 — Validation
+### F1.3 — Validation (actual results — 2026-05-22)
 
-- `fvm flutter analyze` clean
-- `fvm flutter test` passes (897 existing + ~25 new)
-- `bash tool/coverage.sh` ≥ 63%
-- Bump CI threshold: 55 → 60
-- Commit message draft:
-  `test(subscription): inject PurchasesGateway and cover SubscriptionNotifier.build`
+- `fvm flutter analyze` ✅ 0 issues
+- `fvm flutter test` ✅ 917 passing (was 897, +20 new)
+- `bash tool/coverage.sh` → **60.55%** (target was 63%; minimal scope landed
+  ~3pp short because the notifier's action methods — `purchase`,
+  `restorePurchases`, `startFreeTrial`, `redeemPromoCode` — still aren't
+  exercised end-to-end. Those are out of F1 minimal scope.)
+- CI threshold raised: 55 → **60** (matches actual baseline).
+- Commit pending (waiting on user confirmation).
+
+**Per-file deltas:**
+
+| File | Before | After |
+| --- | ---: | ---: |
+| `subscription_repository.dart` | 5.71% | **30.56%** |
+| `subscription_provider.dart` | 13.13% | **36.18%** |
+| `pro_screen.dart` | 0.90% | **49.70%** |
+| `purchases_gateway.dart` (new) | — | **52.63%** |
 
 ---
 
@@ -219,17 +234,10 @@ useful improvement (subscription covered) without touching the dashboard.
 | `dashboard_screen` tests become fragile from too many overrides | Build `helpers/dashboard_overrides.dart` with a fluent override builder. |
 | `_FakeTransactionsNotifier` must mirror the real notifier API | Subclass + override only methods used in tests. Riverpod 3 supports this. |
 
-## Open questions for the user (the "adjustments" you asked about)
+## Open questions — resolved 2026-05-22
 
-1. **F1 scope**: minimal (only what tests require) vs. opportunistic (clean up
-   every static `Purchases.*` callsite in the codebase)?
-2. **F2 dashboard depth**: pure smoke tests (renders without crashing) vs.
-   deep interaction tests (taps, dialogs, navigation)?
-3. **F3 add_transaction**: also cover the subcategory flow (which needs
-   `subcategoriesProvider` family override + `CreateSubcategoryDialog`)?
-4. **Tutorial spotlight painter**: extract and test, or skip? Paint code adds
-   % but little real confidence.
-5. **Phase order**: keep F1→F2→F3, or reorder (e.g. F3 first since it needs
-   no production refactor)?
-
-Answer these (or say "use defaults") and the plan is ready to execute.
+1. **F1 scope** → minimal.
+2. **F2 dashboard depth** → smoke + key interactions.
+3. **F3 add_transaction subcategories** → include.
+4. **Tutorial spotlight painter** → extract and test.
+5. **Phase order** → F1 → F2 → F3.

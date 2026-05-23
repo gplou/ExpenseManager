@@ -3,6 +3,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/network/supabase_client.dart';
+import 'data/purchases_gateway.dart';
 import 'data/revenue_cat_adapter.dart';
 import 'domain/subscription_repository_contract.dart';
 
@@ -22,8 +23,9 @@ const kSubscriptionDays = 30;
 /// Raw data access: Supabase reads/writes and RevenueCat store interactions.
 /// Business logic lives in SubscriptionNotifier, not here.
 class SubscriptionRepository implements SubscriptionRepositoryContract {
-  SubscriptionRepository(this._client);
+  SubscriptionRepository(this._client, this._purchases);
   final SupabaseClient _client;
+  final PurchasesGateway _purchases;
 
   // ── Supabase ─────────────────────────────────────────────────────────────
 
@@ -144,8 +146,8 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
   @override
   Future<RCPurchaseResult> purchaseProPlan(Package package) async {
     try {
-      final result = await Purchases.purchase(PurchaseParams.package(package));
-      return RevenueCatAdapter.fromCustomerInfo(result.customerInfo);
+      final info = await _purchases.purchasePackage(package);
+      return RevenueCatAdapter.fromCustomerInfo(info);
     } on PurchasesError catch (e) {
       if (e.code == PurchasesErrorCode.purchaseCancelledError) {
         throw const RCPurchaseCancelledException();
@@ -157,7 +159,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
   @override
   Future<RCPurchaseResult> restoreProPlan() async {
     try {
-      final customerInfo = await Purchases.restorePurchases();
+      final customerInfo = await _purchases.restorePurchases();
       return RevenueCatAdapter.fromCustomerInfo(customerInfo);
     } on PurchasesError catch (e) {
       throw RCPurchaseException(e.message);
@@ -167,7 +169,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
   @override
   Future<RCPurchaseResult?> getCurrentRCStatus() async {
     try {
-      final customerInfo = await Purchases.getCustomerInfo();
+      final customerInfo = await _purchases.getCustomerInfo();
       return RevenueCatAdapter.fromCustomerInfo(customerInfo);
     } catch (_) {
       return null;
@@ -229,5 +231,8 @@ class PromoCodeException implements Exception {
 
 final subscriptionRepositoryProvider =
     Provider<SubscriptionRepositoryContract>((ref) {
-  return SubscriptionRepository(ref.watch(supabaseClientProvider));
+  return SubscriptionRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(purchasesGatewayProvider),
+  );
 });

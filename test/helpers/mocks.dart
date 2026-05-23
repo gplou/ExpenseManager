@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
 import 'package:expense_manager/features/chat/data/chat_repository.dart';
+import 'package:expense_manager/features/subscription/data/purchases_gateway.dart';
 import 'package:expense_manager/features/subscription/domain/subscription_repository_contract.dart';
 import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
@@ -76,6 +77,8 @@ class MockSupabaseSubscription extends Mock
     implements SupabaseSubscriptionContract {}
 
 class MockRevenueCat extends Mock implements RevenueCatContract {}
+
+class MockPurchasesGateway extends Mock implements PurchasesGateway {}
 
 class MockPackage extends Mock implements Package {}
 

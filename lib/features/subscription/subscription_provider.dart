@@ -4,6 +4,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/security/secure_storage.dart';
 import '../../core/services/analytics_service.dart';
 import '../auth/presentation/providers/auth_provider.dart';
+import 'data/purchases_gateway.dart';
 import 'data/revenue_cat_adapter.dart';
 import 'domain/subscription_expiry_calculator.dart';
 import 'subscription_repository.dart';
@@ -53,9 +54,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
   @override
   Future<SubscriptionState> build() async {
+    final purchases = ref.read(purchasesGatewayProvider);
     // Rebuild when the logged-in user changes so stale cache is never reused.
     final user = ref.watch(currentUserProvider);
-    _syncRevenueCatIdentity(user?.id);
+    _syncRevenueCatIdentity(purchases, user?.id);
 
     if (user != null) {
       AnalyticsService.identify(
@@ -66,14 +68,14 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
     // Listen to RC CustomerInfo updates (background renewals, cancellations).
     void onRCUpdate(CustomerInfo info) => _handleRCUpdate(info);
-    Purchases.addCustomerInfoUpdateListener(onRCUpdate);
+    purchases.addCustomerInfoUpdateListener(onRCUpdate);
     ref.onDispose(() {
-      Purchases.removeCustomerInfoUpdateListener(onRCUpdate);
+      purchases.removeCustomerInfoUpdateListener(onRCUpdate);
       // Release the RC identity on provider disposal so the next app session
       // starts clean. We intentionally do NOT gate on `user == null` here:
       // that captured the build-time value, not the current one.
       if (_rcIdentityUserId != null) {
-        Purchases.logOut().ignore();
+        purchases.logOut();
         _rcIdentityUserId = null;
       }
     });
@@ -85,13 +87,13 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// Called from [build] every time `currentUserProvider` emits; the
   /// [_rcIdentityUserId] field makes the transitions idempotent so we only
   /// hit the RC SDK when the identity actually changed.
-  void _syncRevenueCatIdentity(String? newUserId) {
+  void _syncRevenueCatIdentity(PurchasesGateway purchases, String? newUserId) {
     if (_rcIdentityUserId == newUserId) return;
     if (_rcIdentityUserId != null && newUserId != _rcIdentityUserId) {
-      Purchases.logOut().ignore();
+      purchases.logOut();
     }
     if (newUserId != null) {
-      Purchases.logIn(newUserId).ignore();
+      purchases.logIn(newUserId);
     }
     _rcIdentityUserId = newUserId;
   }
@@ -483,6 +485,6 @@ final isProProvider = Provider<bool>((ref) {
 /// Loads the current RevenueCat offering with real store prices.
 /// Auto-disposed: fetched fresh each time the paywall opens.
 final offeringsProvider = FutureProvider.autoDispose<Offering?>((ref) async {
-  final offerings = await Purchases.getOfferings();
+  final offerings = await ref.read(purchasesGatewayProvider).getOfferings();
   return offerings.current;
 });
