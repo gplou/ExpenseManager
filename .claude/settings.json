@@ -34,7 +34,9 @@
       "Bash(kill 4672)",
       "Bash(ps -p 4672 -o pid=)",
       "WebFetch(domain:pub.dev)",
-      "Bash(./gradlew :app:dependencies --configuration releaseRuntimeClasspath)"
+      "Bash(./gradlew :app:dependencies --configuration releaseRuntimeClasspath)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "/tmp/gs_extract"

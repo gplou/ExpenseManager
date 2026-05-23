@@ -70,7 +70,9 @@
       "Bash(export JAVA_HOME=$\\(/usr/libexec/java_home \\))",
       "Read(//usr/libexec/**)",
       "Read(//Library/Java/JavaVirtualMachines/**)",
-      "Bash(flutter config *)"
+      "Bash(flutter config *)",
+      "Bash(awk -F: ' *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
