@@ -14,6 +14,15 @@ if (keyPropertiesFile.exists()) {
     keyProperties.load(FileInputStream(keyPropertiesFile))
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "androidx.glance") {
+            useVersion("1.1.1")
+            because("home_widget requests glance-appwidget:1.+, which now resolves to 1.3.0-alpha01 and requires AGP 9 / compileSdk 37")
+        }
+    }
+}
+
 android {
     namespace = "com.gpm.expensemanager_app"
     compileSdk = maxOf(flutter.compileSdkVersion, 35)

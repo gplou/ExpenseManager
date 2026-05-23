@@ -32,7 +32,9 @@
       "Bash(osascript)",
       "Bash(sips --resampleHeightWidthMax 1800 /tmp/eom-04.png)",
       "Bash(kill 4672)",
-      "Bash(ps -p 4672 -o pid=)"
+      "Bash(ps -p 4672 -o pid=)",
+      "WebFetch(domain:pub.dev)",
+      "Bash(./gradlew :app:dependencies --configuration releaseRuntimeClasspath)"
     ],
     "additionalDirectories": [
       "/tmp/gs_extract"
