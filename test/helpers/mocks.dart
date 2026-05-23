@@ -3,6 +3,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:expense_manager/core/services/home_widget_gateway.dart';
+import 'package:expense_manager/core/services/image_input_gateway.dart';
+import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
 import 'package:expense_manager/features/chat/data/chat_repository.dart';
 import 'package:expense_manager/features/subscription/data/purchases_gateway.dart';
@@ -33,6 +36,14 @@ class MockAuthResponse extends Mock implements AuthResponse {}
 class MockHttpClient extends Mock implements http.Client {}
 
 class MockHttpResponse extends Mock implements http.Response {}
+
+// ── Platform gateways ────────────────────────────────────────────────────────
+
+class MockHomeWidgetGateway extends Mock implements HomeWidgetGateway {}
+
+class MockVoiceInputGateway extends Mock implements VoiceInputGateway {}
+
+class MockImageInputGateway extends Mock implements ImageInputGateway {}
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 

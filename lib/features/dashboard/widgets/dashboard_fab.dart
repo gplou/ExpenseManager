@@ -6,11 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../../core/config/router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/widget_action_provider.dart';
+import '../../../core/services/image_input_gateway.dart';
+import '../../../core/services/voice_input_gateway.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_elevation.dart';
 import '../../../core/widgets/neo_card.dart';
@@ -40,14 +41,16 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
   VoiceInputState _voiceState = VoiceInputState.idle;
   bool _handledInitialWidgetAction = false;
 
-  final _speech = SpeechToText();
+  late final VoiceInputGateway _speech;
   late final VoiceTransactionParser _parser;
-  final _imagePicker = ImagePicker();
+  late final ImageInputGateway _imagePicker;
   late final ImageTransactionParser _imageParser;
 
   @override
   void initState() {
     super.initState();
+    _speech = ref.read(voiceInputGatewayProvider);
+    _imagePicker = ref.read(imageInputGatewayProvider);
     _parser = ref.read(voiceTransactionParserProvider);
     _imageParser = ref.read(imageTransactionParserProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {

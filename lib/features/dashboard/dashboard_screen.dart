@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:home_widget/home_widget.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/config/router.dart';
@@ -12,6 +11,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/providers/currency_provider.dart';
 import '../../core/providers/number_format_provider.dart';
 import '../../core/providers/widget_action_provider.dart';
+import '../../core/services/home_widget_gateway.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/extensions.dart';
 import '../../core/widgets/ad_banner_footer.dart';
@@ -48,7 +48,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _widgetClickedSub = HomeWidget.widgetClicked.listen((uri) {
+    _widgetClickedSub = ref.read(homeWidgetGatewayProvider).widgetClicked.listen((uri) {
       if (uri == null || !mounted) return;
       final segments = uri.pathSegments;
       if (segments.isEmpty) return;

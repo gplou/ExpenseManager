@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../../../core/config/router.dart';
+import '../../../../core/services/voice_input_gateway.dart';
 import '../../data/voice_transaction_parser.dart';
 import '../../domain/parsed_voice_transaction.dart';
 
@@ -20,7 +20,7 @@ class VoiceTransactionButton extends ConsumerStatefulWidget {
 
 class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
     with SingleTickerProviderStateMixin {
-  final _speech = SpeechToText();
+  late final VoiceInputGateway _speech;
   late final VoiceTransactionParser _parser;
   _VoiceState _state = _VoiceState.idle;
 
@@ -30,6 +30,7 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
   @override
   void initState() {
     super.initState();
+    _speech = ref.read(voiceInputGatewayProvider);
     _parser = ref.read(voiceTransactionParserProvider);
     _pulseController = AnimationController(
       vsync: this,
