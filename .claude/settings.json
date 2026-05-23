@@ -18,7 +18,24 @@
       "Bash(chmod +x /Users/guillermo/Workspace/ExpenseManager/tool/coverage.sh)",
       "Bash(find ~/.pub-cache/hosted/pub.dev/flutter_riverpod-3* -name \"*.dart\")",
       "Bash(find ~/.pub-cache/hosted/pub.dev/riverpod-3* -name \"*.dart\")",
-      "Bash(bash tool/coverage.sh)"
+      "Bash(bash tool/coverage.sh)",
+      "Bash(curl -sS -L -o general-sans.zip \"https://api.fontshare.com/v2/fonts/download/general-sans\")",
+      "Bash(unzip -l general-sans.zip)",
+      "Bash(unzip -j -o general-sans.zip \"GeneralSans_Complete/Fonts/TTF/GeneralSans-Regular.ttf\" \"GeneralSans_Complete/Fonts/TTF/GeneralSans-Medium.ttf\" \"GeneralSans_Complete/Fonts/TTF/GeneralSans-Semibold.ttf\" \"GeneralSans_Complete/Fonts/TTF/GeneralSans-Bold.ttf\" -d /tmp/gs_extract)",
+      "Bash(unzip -j -o general-sans.zip \"GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Regular.ttf\" \"GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Medium.ttf\" \"GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Semibold.ttf\" \"GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Bold.ttf\" \"GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Light.ttf\" -d /tmp/gs_extract)",
+      "Bash(ls /Users/guillermo/Workspace/ExpenseManager/assets/fonts/ && echo \"---\" && cp /tmp/gs_extract/*.ttf /Users/guillermo/Workspace/ExpenseManager/assets/fonts/ && ls /Users/guillermo/Workspace/ExpenseManager/assets/fonts/)",
+      "Bash(xargs sed -i '' \"s/'Sora'/'GeneralSans'/g\")",
+      "Bash(xargs sed -i '' \"s/FontWeight\\\\.w800/FontWeight.w700/g; s/FontWeight\\\\.w900/FontWeight.w700/g\")",
+      "Bash(xcrun simctl *)",
+      "Bash(open -a Simulator)",
+      "Bash(tee /tmp/flutter-run.log)",
+      "Bash(osascript)",
+      "Bash(sips --resampleHeightWidthMax 1800 /tmp/eom-04.png)",
+      "Bash(kill 4672)",
+      "Bash(ps -p 4672 -o pid=)"
+    ],
+    "additionalDirectories": [
+      "/tmp/gs_extract"
     ]
   }
 }

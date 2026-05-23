@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../domain/chat_message.dart';
 
+/// Burbuja editorial: usuario en ink azul, asistente en superficie con
+/// hairline. Esquinas asimétricas marcan el origen.
 class ChatBubble extends StatelessWidget {
   const ChatBubble({super.key, required this.message});
 
@@ -12,18 +15,21 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUser = message.isUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
-    final bgColor = isUser
-        ? AppColors.dustyTeal
-        : isDark
-            ? AppColors.darkSurfaceHigh
-            : AppColors.surfaceElevated;
+    final Color bgColor;
+    final Color textColor;
+    final Color? borderColor;
 
-    final textColor = isUser
-        ? Colors.white
-        : isDark
-            ? AppColors.darkText
-            : AppColors.textDark;
+    if (isUser) {
+      bgColor = cs.primary;
+      textColor = cs.onPrimary;
+      borderColor = null;
+    } else {
+      bgColor = isDark ? AppColors.raisedDark : AppColors.raised;
+      textColor = isDark ? AppColors.inkDark : AppColors.ink;
+      borderColor = isDark ? AppColors.dividerDark : AppColors.divider;
+    }
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -36,23 +42,28 @@ class ChatBubble extends StatelessWidget {
           right: isUser ? 0 : 48,
           bottom: 8,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isUser ? 16 : 4),
-            bottomRight: Radius.circular(isUser ? 4 : 16),
+            topLeft: const Radius.circular(AppRadius.lg),
+            topRight: const Radius.circular(AppRadius.lg),
+            bottomLeft: Radius.circular(isUser ? AppRadius.lg : AppRadius.xs),
+            bottomRight: Radius.circular(isUser ? AppRadius.xs : AppRadius.lg),
           ),
+          border: borderColor != null
+              ? Border.all(color: borderColor, width: 1)
+              : null,
         ),
         child: Text(
           message.content,
           style: TextStyle(
-            fontFamily: 'Sora',
+            fontFamily: 'GeneralSans',
             fontSize: 14,
+            fontWeight: FontWeight.w400,
             color: textColor,
-            height: 1.4,
+            height: 1.5,
+            letterSpacing: -0.05,
           ),
         ),
       ),

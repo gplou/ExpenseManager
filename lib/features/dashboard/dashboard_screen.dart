@@ -171,16 +171,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               l10n.greeting(
                 user?.name?.split(' ').first ?? l10n.defaultUser,
               ),
-              style: context.textTheme.titleLarge,
+              style: context.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.2,
+              ),
             ),
+            const Gap(2),
             Text(
               DateTime.now().formattedDate,
-              style: TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: cs.onSurface.withValues(alpha: 0.38),
-                letterSpacing: 0.3,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: cs.onSurface.withValues(alpha: 0.55),
+                letterSpacing: 0,
               ),
             ),
           ],
@@ -189,7 +190,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           if (ref.watch(isProProvider))
             IconButton(
               key: TutorialKeys.chatBtnKey,
-              icon: const Icon(Icons.auto_awesome, color: AppColors.dustyTeal),
+              icon: Icon(Icons.auto_awesome_outlined, color: cs.onSurface),
               tooltip: l10n.chatTitle,
               onPressed: () => context.push(AppRoutes.chat),
             ),
@@ -198,7 +199,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       body: Stack(
         children: [
           RefreshIndicator(
-        color: AppColors.dustyTeal,
+        color: cs.primary,
         backgroundColor: cs.surface,
         onRefresh: () async {
           // Invalida la fuente de verdad → los providers derivados
@@ -279,50 +280,56 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     const Gap(12),
 
                     // ── Recent transactions ──────────────────────────────────
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Semantics(
-                          header: true,
-                          child: Text(
-                            l10n.recent.toUpperCase(),
-                            style: TextStyle(
-                              fontFamily: 'Sora',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: cs.onSurface.withValues(alpha: 0.4),
-                              letterSpacing: 1.5,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Semantics(
+                            header: true,
+                            child: Text(
+                              l10n.recent.toUpperCase(),
+                              style: context.textTheme.labelMedium?.copyWith(
+                                color: cs.onSurface.withValues(alpha: 0.55),
+                              ),
                             ),
                           ),
-                        ),
-                        Semantics(
-                          button: true,
-                          label: l10n.seeAll,
-                          child: InkWell(
-                            key: TutorialKeys.seeAllBtnKey,
-                            onTap: () => context.push(AppRoutes.transactions),
-                            borderRadius: BorderRadius.circular(100),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: AppColors.dustyTealLight,
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              child: Text(
-                                l10n.seeAll,
-                                style: const TextStyle(
-                                  fontFamily: 'Sora',
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.dustyTeal,
+                          Semantics(
+                            button: true,
+                            label: l10n.seeAll,
+                            child: InkWell(
+                              key: TutorialKeys.seeAllBtnKey,
+                              onTap: () => context.push(AppRoutes.transactions),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 4),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      l10n.seeAll,
+                                      style: context.textTheme.labelLarge
+                                          ?.copyWith(
+                                        color: cs.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const Gap(2),
+                                    Icon(
+                                      Icons.arrow_forward_rounded,
+                                      size: 14,
+                                      color: cs.primary,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const Gap(8),
+                    const Gap(4),
                     recentAsync.when(
                       skipLoadingOnReload: true,
                       loading: () => const _RecentTransactionsShimmer(),
@@ -333,10 +340,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             onAdd: () => context.push(AppRoutes.addTransaction),
                           );
                         }
+                        final isDark =
+                            Theme.of(context).brightness == Brightness.dark;
+                        final dividerColor = isDark
+                            ? AppColors.dividerDark
+                            : AppColors.divider;
                         return Column(
-                          children: transactions
-                              .map((t) => RecentTransactionTile(transaction: t))
-                              .toList(),
+                          children: [
+                            for (int i = 0; i < transactions.length; i++) ...[
+                              if (i > 0)
+                                Container(
+                                  height: 1,
+                                  color: dividerColor,
+                                ),
+                              RecentTransactionTile(
+                                  transaction: transactions[i]),
+                            ],
+                          ],
                         );
                       },
                     ),
@@ -392,65 +412,59 @@ class _RecentTransactionsShimmer extends StatelessWidget {
 class _ShimmerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final cs = context.colors;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            // Icono
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor =
+        isDark ? AppColors.dividerDark : AppColors.divider;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
             ),
-            const Gap(12),
-            // Texto
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    height: 12,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+          ),
+          const Gap(14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  height: 12,
+                  width: 110,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  const Gap(6),
-                  Container(
-                    height: 10,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+                ),
+                const Gap(6),
+                Container(
+                  height: 10,
+                  width: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            // Importe
-            Container(
-              height: 12,
-              width: 55,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-              ),
+          ),
+          Container(
+            height: 12,
+            width: 60,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -466,59 +480,59 @@ class _EmptyTransactions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 72,
-              height: 72,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: AppColors.dustyTealLight.withValues(alpha: 0.5),
+                color: isDark ? AppColors.raisedDark : AppColors.raised,
                 shape: BoxShape.circle,
               ),
-              child: const Center(
-                child: Text('\u{1f4ed}', style: TextStyle(fontSize: 32)),
+              child: Icon(
+                Icons.inbox_outlined,
+                size: 24,
+                color: cs.onSurface.withValues(alpha: 0.5),
               ),
             ),
             const Gap(16),
             Text(
               l10n.noTransactionsPeriod,
-              style: TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 14,
-                color: cs.onSurface.withValues(alpha: 0.45),
-                fontWeight: FontWeight.w500,
+              textAlign: TextAlign.center,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurface.withValues(alpha: 0.55),
               ),
             ),
-            const Gap(8),
+            const Gap(14),
             Semantics(
               button: true,
               label: l10n.newTransaction,
               child: InkWell(
                 onTap: onAdd,
                 borderRadius: BorderRadius.circular(100),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.dustyTealLight,
-                    borderRadius: BorderRadius.circular(100),
-                  ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 6, vertical: 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.add, size: 16, color: AppColors.dustyTeal),
-                      const Gap(4),
                       Text(
                         l10n.newTransaction,
-                        style: const TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 12,
+                        style: context.textTheme.labelLarge?.copyWith(
+                          color: cs.primary,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.dustyTeal,
                         ),
+                      ),
+                      const Gap(2),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 14,
+                        color: cs.primary,
                       ),
                     ],
                   ),

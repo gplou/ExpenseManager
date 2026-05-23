@@ -3,27 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../core/providers/number_format_provider.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../transactions/domain/transaction_categories.dart';
 import '../../../transactions/domain/transaction_model.dart';
 
 // ── Colors ───────────────────────────────────────────────────────────────────
-
-const _baseChartColors = [
-  Color(0xFF6366F1),
-  Color(0xFF10B981),
-  Color(0xFFF59E0B),
-  Color(0xFFEF4444),
-  Color(0xFF3B82F6),
-  Color(0xFF8B5CF6),
-  Color(0xFFEC4899),
-  Color(0xFF14B8A6),
-  Color(0xFFF97316),
-];
+//
+// Paleta curada Quiet Wealth — todos los colores con saturación moderada para
+// convivir en charts sin chillar. Misma escala que se usa en el resto del UI.
 
 List<Color> generateChartColors(int count) =>
-    List.generate(count, (i) => _baseChartColors[i % _baseChartColors.length]);
+    List.generate(count,
+        (i) => AppColors.categoryScale[i % AppColors.categoryScale.length]);
 
 // ── Pie chart ────────────────────────────────────────────────────────────────
 
@@ -45,8 +38,9 @@ class ChartPieSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return SizedBox(
-      height: 240,
+      height: 260,
       child: PieChart(
         PieChartData(
           pieTouchData: PieTouchData(
@@ -60,8 +54,9 @@ class ChartPieSection extends StatelessWidget {
               onTouch(response.touchedSection!.touchedSectionIndex);
             },
           ),
-          sectionsSpace: 2,
-          centerSpaceRadius: 48,
+          sectionsSpace: 3,
+          centerSpaceRadius: 70,
+          startDegreeOffset: -90,
           sections: List.generate(entries.length, (i) {
             final isTouched = touchedIndex == i;
             final pct = (entries[i].value / total * 100).toStringAsFixed(1);
@@ -69,15 +64,19 @@ class ChartPieSection extends StatelessWidget {
               color: colors[i],
               value: entries[i].value,
               title: isTouched ? '$pct%' : '',
-              radius: isTouched ? 80 : 64,
-              titleStyle: const TextStyle(
+              radius: isTouched ? 64 : 52,
+              titleStyle: TextStyle(
+                fontFamily: 'GeneralSans',
                 fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                color: cs.surface,
+                letterSpacing: -0.2,
               ),
             );
           }),
         ),
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
       ),
     );
   }
@@ -107,23 +106,31 @@ class ChartBarSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = context.textTheme;
     final maxY = entries.isEmpty
         ? 100.0
         : entries.map((e) => e.value).reduce((a, b) => a > b ? a : b) * 1.2;
 
     return SizedBox(
-      height: 240,
+      height: 260,
       child: BarChart(
         BarChartData(
           maxY: maxY,
+          alignment: BarChartAlignment.spaceAround,
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
+              tooltipPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               getTooltipItem: (group, groupIndex, rod, rodIndex) =>
                   BarTooltipItem(
                 '$cSymbol${formatAmount(rod.toY, numFmtStyle)}',
-                const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                TextStyle(
+                  fontFamily: 'GeneralSans',
+                  color: cs.surface,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  letterSpacing: -0.1,
                 ),
               ),
             ),
@@ -139,7 +146,6 @@ class ChartBarSection extends StatelessWidget {
                     return const SizedBox.shrink();
                   }
                   if (isSubcategoryView) {
-                    // For subcategories, show abbreviated text
                     final name = entries[i].key;
                     final short =
                         name.length > 4 ? '${name.substring(0, 4)}.' : name;
@@ -147,9 +153,9 @@ class ChartBarSection extends StatelessWidget {
                       meta: meta,
                       child: Text(
                         short,
-                        style: TextStyle(
-                          fontSize: 9,
+                        style: tt.labelSmall?.copyWith(
                           color: colors[i],
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     );
@@ -174,10 +180,10 @@ class ChartBarSection extends StatelessWidget {
                     meta: meta,
                     child: Text(
                       '$cSymbol${formatAmount(value, numFmtStyle, decimals: 0)}',
-                      style: context.textTheme.bodySmall?.copyWith(
+                      style: tt.bodySmall?.copyWith(
                         fontSize: 10,
-                        color:
-                            context.colors.onSurface.withValues(alpha: 0.5),
+                        color: cs.onSurface.withValues(alpha: 0.5),
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   );
@@ -192,8 +198,9 @@ class ChartBarSection extends StatelessWidget {
           gridData: FlGridData(
             drawVerticalLine: false,
             getDrawingHorizontalLine: (value) => FlLine(
-              color: context.colors.onSurface.withValues(alpha: 0.08),
+              color: cs.onSurface.withValues(alpha: 0.06),
               strokeWidth: 1,
+              dashArray: const [4, 4],
             ),
           ),
           borderData: FlBorderData(show: false),
@@ -205,9 +212,9 @@ class ChartBarSection extends StatelessWidget {
                 BarChartRodData(
                   toY: entries[i].value,
                   color: colors[i],
-                  width: 20,
+                  width: 16,
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(4)),
+                      const BorderRadius.vertical(top: Radius.circular(6)),
                 ),
               ],
             ),
@@ -244,6 +251,11 @@ class ChartLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = context.textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor =
+        isDark ? AppColors.dividerDark : AppColors.divider;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -253,33 +265,50 @@ class ChartLegend extends StatelessWidget {
           final name = isSubcategoryView
               ? entry.key
               : TransactionCategories.localizedName(entry.key, l10n);
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+          final isLast = i == entries.length - 1;
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              border: isLast
+                  ? null
+                  : Border(
+                      bottom: BorderSide(color: dividerColor, width: 1),
+                    ),
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 12,
-                  height: 12,
+                  width: 10,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: colors[i],
                     shape: BoxShape.circle,
                   ),
                 ),
-                const Gap(10),
+                const Gap(12),
                 Expanded(
-                  child: Text(name, style: context.textTheme.bodyMedium),
+                  child: Text(
+                    name,
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
                 ),
                 Text(
                   '$pct%',
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: context.colors.onSurface.withValues(alpha: 0.5),
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurface.withValues(alpha: 0.55),
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
-                const Gap(8),
+                const Gap(12),
                 Text(
                   '$cSymbol${formatAmount(entry.value, numFmtStyle)}',
-                  style: context.textTheme.bodyMedium?.copyWith(
+                  style: tt.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
+                    letterSpacing: -0.1,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],

@@ -222,7 +222,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                               Text(
                                 '${currencySymbol(currency)} ',
                                 style: TextStyle(
-                                  fontFamily: 'Sora',
+                                  fontFamily: 'GeneralSans',
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                   color: _accent.withValues(alpha: 0.55),
@@ -235,9 +235,9 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                                   child: Text(
                                     hasValue ? _keypad.current : '0',
                                     style: TextStyle(
-                                      fontFamily: 'Sora',
+                                      fontFamily: 'GeneralSans',
                                       fontSize: 28,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w700,
                                       color: hasValue
                                           ? _accent
                                           : _accent.withValues(alpha: 0.25),
@@ -253,7 +253,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                             Text(
                               _amountError!,
                               style: const TextStyle(
-                                fontFamily: 'Sora',
+                                fontFamily: 'GeneralSans',
                                 fontSize: 12,
                                 color: AppColors.mutedTerra,
                               ),
@@ -330,6 +330,7 @@ class _ShortcutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
       label: label,
@@ -342,12 +343,9 @@ class _ShortcutButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm, vertical: AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.dustyTealLight.withValues(alpha: 0.4),
+            color: cs.surfaceContainerHigh,
             borderRadius: AppRadius.radiusMd,
-            border: Border.all(
-              color: AppColors.dustyTeal.withValues(alpha: 0.2),
-              width: 1,
-            ),
+            border: Border.all(color: cs.outline, width: 1),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -355,7 +353,11 @@ class _ShortcutButton extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(icon, size: 22, color: AppColors.dustyTeal),
+                  Icon(
+                    icon,
+                    size: 22,
+                    color: cs.onSurface.withValues(alpha: 0.85),
+                  ),
                   if (proGated)
                     Positioned(
                       top: -6,
@@ -370,9 +372,9 @@ class _ShortcutButton extends StatelessWidget {
                         child: const Text(
                           'PRO',
                           style: TextStyle(
-                            fontFamily: 'Sora',
+                            fontFamily: 'GeneralSans',
                             fontSize: 8,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.pureWhite,
                           ),
                         ),
@@ -384,10 +386,11 @@ class _ShortcutButton extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: cs.onSurface.withValues(alpha: 0.85),
+                  letterSpacing: 0.1,
                 ),
               ),
             ],
@@ -445,7 +448,7 @@ class _MiniTypeToggle extends StatelessWidget {
                       Text(
                         t.l10nLabel(l10n),
                         style: TextStyle(
-                          fontFamily: 'Sora',
+                          fontFamily: 'GeneralSans',
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: isSel ? color : AppColors.textMuted,

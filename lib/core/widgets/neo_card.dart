@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_elevation.dart';
+import '../theme/app_spacing.dart';
 
-/// Tarjeta "Calm Card": fondo blanco, sombra difusa suave, sin borde duro.
-/// El accentColor se usa como pequeño indicador visual (borde superior o glow).
+/// "Calm Card": hairline 1px sobre la superficie, sin sombra dura.
+/// El accentColor queda disponible para descendientes que decoren un detalle.
 class NeoCard extends StatelessWidget {
   const NeoCard({
     super.key,
     required this.child,
-    this.accentColor = AppColors.dustyTeal,
-    this.padding = const EdgeInsets.all(20),
-    this.borderRadius = 20,
+    this.accentColor = AppColors.inkBlue,
+    this.padding = const EdgeInsets.all(AppSpacing.xl),
+    this.borderRadius = AppRadius.lg,
     this.shadowOffset = const Offset(0, 4),
     this.onTap,
   });
@@ -34,7 +37,7 @@ class NeoCard extends StatelessWidget {
           color: cs.surface,
           borderRadius: BorderRadius.circular(borderRadius),
           border: Border.all(
-            color: isDark ? cs.outline : AppColors.borderLight,
+            color: isDark ? AppColors.dividerDark : AppColors.divider,
             width: 1,
           ),
         ),
@@ -44,14 +47,15 @@ class NeoCard extends StatelessWidget {
   }
 }
 
-/// Botón primario con efecto "press" suave (escala leve al pulsar).
+/// Botón primario con micro-press (escala 0.97 + haptic light).
+/// Sombra tinted muy sutil — presencia sin ruido.
 class NeoBrutalButton extends StatefulWidget {
   const NeoBrutalButton({
     super.key,
     required this.label,
     required this.onTap,
-    this.backgroundColor = AppColors.dustyTeal,
-    this.foregroundColor = AppColors.pureWhite,
+    this.backgroundColor = AppColors.inkBlue,
+    this.foregroundColor = AppColors.paper,
     this.width = double.infinity,
     this.height = 56.0,
     this.isLoading = false,
@@ -80,7 +84,10 @@ class _NeoBrutalButtonState extends State<NeoBrutalButton> {
 
   void _onTapUp(TapUpDetails _) {
     setState(() => _pressed = false);
-    if (!widget.disabled && !widget.isLoading) widget.onTap?.call();
+    if (!widget.disabled && !widget.isLoading) {
+      HapticFeedback.lightImpact();
+      widget.onTap?.call();
+    }
   }
 
   void _onTapCancel() => setState(() => _pressed = false);
@@ -88,33 +95,28 @@ class _NeoBrutalButtonState extends State<NeoBrutalButton> {
   @override
   Widget build(BuildContext context) {
     final isActive = !widget.disabled && !widget.isLoading;
-    final bg = widget.disabled ? AppColors.surfaceElevated : widget.backgroundColor;
-    final fg = widget.disabled ? AppColors.textSubtle : widget.foregroundColor;
+    final bg = widget.disabled ? AppColors.raised : widget.backgroundColor;
+    final fg = widget.disabled ? AppColors.graphiteSoft : widget.foregroundColor;
 
     return GestureDetector(
       onTapDown: isActive ? _onTapDown : null,
       onTapUp: isActive ? _onTapUp : null,
       onTapCancel: isActive ? _onTapCancel : null,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
         width: widget.width,
         height: widget.height,
         transform: (_pressed && isActive)
-            ? (Matrix4.diagonal3Values(0.97, 0.97, 1.0))
+            ? Matrix4.diagonal3Values(0.98, 0.98, 1.0)
             : Matrix4.identity(),
         transformAlignment: Alignment.center,
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           boxShadow: (_pressed || widget.disabled)
-              ? []
-              : [
-                  BoxShadow(
-                    color: bg.withValues(alpha: 0.35),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+              ? const []
+              : AppElevation.tinted(bg, opacity: 0.20),
         ),
         child: Center(
           child: widget.isLoading
@@ -136,11 +138,11 @@ class _NeoBrutalButtonState extends State<NeoBrutalButton> {
                     Text(
                       widget.label,
                       style: TextStyle(
-                        fontFamily: 'Sora',
+                        fontFamily: 'GeneralSans',
                         fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: fg,
-                        letterSpacing: 0.3,
+                        letterSpacing: 0.1,
                       ),
                     ),
                   ],
@@ -151,14 +153,14 @@ class _NeoBrutalButtonState extends State<NeoBrutalButton> {
   }
 }
 
-/// FAB circular con efecto spring al pulsar.
+/// FAB circular con micro-spring al pulsar. Halo tinted de baja opacidad.
 class NeoFab extends StatefulWidget {
   const NeoFab({
     super.key,
     required this.onTap,
     this.icon = Icons.add,
-    this.accentColor = AppColors.dustyTeal,
-    this.size = 64.0,
+    this.accentColor = AppColors.inkBlue,
+    this.size = 60.0,
     this.heroTag,
   });
 
@@ -181,10 +183,10 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 140),
     );
-    _scale = Tween(begin: 1.0, end: 0.88).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
+    _scale = Tween(begin: 1.0, end: 0.94).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
     );
   }
 
@@ -195,6 +197,7 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
   }
 
   Future<void> _handleTap() async {
+    HapticFeedback.lightImpact();
     await _ctrl.forward();
     await _ctrl.reverse();
     widget.onTap();
@@ -215,18 +218,12 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
             shape: BoxShape.circle,
             boxShadow: isDark
                 ? null
-                : [
-                    BoxShadow(
-                      color: widget.accentColor.withValues(alpha: 0.4),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                : AppElevation.tinted(widget.accentColor, opacity: 0.24),
           ),
           child: Icon(
             widget.icon,
-            color: AppColors.pureWhite,
-            size: 28,
+            color: AppColors.paper,
+            size: 26,
           ),
         ),
       ),

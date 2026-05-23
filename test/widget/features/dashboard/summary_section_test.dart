@@ -17,7 +17,7 @@ void main() {
   // ── SummarySection ──────────────────────────────────────────────────────
 
   group('SummarySection', () {
-    testWidgets('positive balance shows trending_up icon', (tester) async {
+    testWidgets('positive balance shows an upward arrow', (tester) async {
       await tester.pumpWidget(_wrap(
         SummarySection(
           summary: const TransactionsSummary(income: 200, expense: 100),
@@ -28,11 +28,11 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.trending_up_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.trending_down_rounded), findsNothing);
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_downward_rounded), findsNothing);
     });
 
-    testWidgets('negative balance shows trending_down icon', (tester) async {
+    testWidgets('negative balance shows a downward arrow', (tester) async {
       await tester.pumpWidget(_wrap(
         SummarySection(
           summary: const TransactionsSummary(income: 50, expense: 200),
@@ -43,25 +43,11 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.trending_down_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsNothing);
     });
 
-    testWidgets('income and expense icons are always rendered', (tester) async {
-      await tester.pumpWidget(_wrap(
-        SummarySection(
-          summary: const TransactionsSummary(income: 10, expense: 20),
-          cSymbol: r'$',
-          numFmtStyle: NumberFormatStyle.dotDecimal,
-          onViewCharts: () {},
-        ),
-      ));
-      await tester.pumpAndSettle();
-
-      expect(find.byIcon(Icons.south_west_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.north_east_rounded), findsOneWidget);
-    });
-
-    testWidgets('view charts button invokes the callback', (tester) async {
+    testWidgets('view charts link invokes the callback', (tester) async {
       var taps = 0;
       await tester.pumpWidget(_wrap(
         SummarySection(
@@ -73,7 +59,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.pie_chart_outline));
+      await tester.tap(find.byIcon(Icons.arrow_forward_rounded));
       await tester.pumpAndSettle();
       expect(taps, 1);
     });

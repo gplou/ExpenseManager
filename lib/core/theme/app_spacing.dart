@@ -46,11 +46,11 @@ class AppRadius {
 
   static const double xs = 8.0;       // badges, mini-icons
   static const double sm = 10.0;      // small icon containers
-  static const double md = 12.0;      // segmented buttons, small chips
-  static const double lg = 16.0;      // cards, inputs (default)
-  static const double xl = 20.0;      // hero cards
-  static const double xxl = 24.0;     // dialogs
-  static const double sheet = 28.0;   // bottom sheets
+  static const double md = 14.0;      // segmented buttons, small chips, buttons
+  static const double lg = 20.0;      // cards, inputs (default) — generoso
+  static const double xl = 28.0;      // hero cards, dialogs
+  static const double xxl = 32.0;     // bottom sheets, big surfaces
+  static const double sheet = 32.0;   // bottom sheets
   static const double pill = 100.0;   // chips, pills
 
   static const BorderRadius radiusXs = BorderRadius.all(Radius.circular(xs));

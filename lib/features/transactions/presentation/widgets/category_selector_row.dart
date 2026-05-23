@@ -97,7 +97,7 @@ class CategorySelectorRow extends StatelessWidget {
                         selectedCategory!, l10n)
                     : l10n.selectCategoryPrompt,
                 style: TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: hasSelection ? accentColor : AppColors.textMuted,

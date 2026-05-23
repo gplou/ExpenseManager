@@ -224,7 +224,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
               child: Text(
                 '${widget.stepIndex + 1} / ${widget.totalSteps}',
                 style: const TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -253,7 +253,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
               child: Text(
                 AppLocalizations.of(context).tutorialSkip,
                 style: const TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
@@ -467,7 +467,7 @@ class _TooltipCard extends StatelessWidget {
                   child: Text(
                     step.title,
                     style: TextStyle(
-                      fontFamily: 'Sora',
+                      fontFamily: 'GeneralSans',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: textColor,
@@ -482,7 +482,7 @@ class _TooltipCard extends StatelessWidget {
             Text(
               step.body,
               style: TextStyle(
-                fontFamily: 'Sora',
+                fontFamily: 'GeneralSans',
                 fontSize: 13,
                 height: 1.55,
                 color: subColor,
@@ -515,7 +515,7 @@ class _TooltipCard extends StatelessWidget {
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       textStyle: const TextStyle(
-                        fontFamily: 'Sora',
+                        fontFamily: 'GeneralSans',
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -545,7 +545,7 @@ class _TooltipCard extends StatelessWidget {
                     ),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     textStyle: const TextStyle(
-                      fontFamily: 'Sora',
+                      fontFamily: 'GeneralSans',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),

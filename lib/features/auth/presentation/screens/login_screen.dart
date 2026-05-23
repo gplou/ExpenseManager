@@ -104,16 +104,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // Logo / Brand element
                 Center(
                   child: Container(
-                    width: 80,
-                    height: 80,
+                    width: 72,
+                    height: 72,
                     decoration: const BoxDecoration(
-                      color: AppColors.dustyTeal,
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                      color: AppColors.inkBlue,
+                      shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      color: Colors.white,
-                      size: 40,
+                      Icons.account_balance_wallet_outlined,
+                      color: AppColors.paper,
+                      size: 30,
                     ),
                   ),
                 ),

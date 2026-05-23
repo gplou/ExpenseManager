@@ -142,7 +142,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Text(
               l10n.chatWelcomeTitle,
               style: TextStyle(
-                fontFamily: 'Sora',
+                fontFamily: 'GeneralSans',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? AppColors.darkText : AppColors.textDark,
@@ -153,7 +153,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               l10n.chatWelcomeSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Sora',
+                fontFamily: 'GeneralSans',
                 fontSize: 13,
                 color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
               ),
@@ -181,7 +181,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       label: Text(
         text,
         style: const TextStyle(
-          fontFamily: 'Sora',
+          fontFamily: 'GeneralSans',
           fontSize: 12,
           color: AppColors.dustyTeal,
         ),
@@ -279,14 +279,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               maxLines: 3,
               minLines: 1,
               style: TextStyle(
-                fontFamily: 'Sora',
+                fontFamily: 'GeneralSans',
                 fontSize: 14,
                 color: isDark ? AppColors.darkText : AppColors.textDark,
               ),
               decoration: InputDecoration(
                 hintText: l10n.chatPlaceholder,
                 hintStyle: TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontSize: 14,
                   color: isDark ? AppColors.darkTextMuted : AppColors.textSubtle,
                 ),

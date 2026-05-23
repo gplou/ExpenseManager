@@ -389,12 +389,14 @@ class _KeypadKeyState extends State<_KeypadKey> {
               }
             : null,
         child: AnimatedContainer(
-          duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 120),
-          curve: Curves.easeOut,
-          height: 52,
+          duration: reduceMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 140),
+          curve: Curves.easeOutCubic,
+          height: 56,
           decoration: BoxDecoration(
-            color: _pressed ? bg.withValues(alpha: 0.7) : bg,
-            borderRadius: AppRadius.radiusMd,
+            color: _pressed ? bg.withValues(alpha: 0.75) : bg,
+            borderRadius: AppRadius.radiusLg,
           ),
           alignment: Alignment.center,
           child: widget.icon != null
@@ -402,12 +404,12 @@ class _KeypadKeyState extends State<_KeypadKey> {
               : Text(
                   widget.label!,
                   style: TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 22,
-                    fontWeight: widget.filled ? FontWeight.w800 : FontWeight.w600,
-                    color: widget.enabled
-                        ? fg
-                        : fg.withValues(alpha: 0.4),
+                    fontWeight:
+                        widget.filled ? FontWeight.w600 : FontWeight.w500,
+                    letterSpacing: -0.3,
+                    color: widget.enabled ? fg : fg.withValues(alpha: 0.4),
                   ),
                 ),
         ),

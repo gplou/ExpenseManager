@@ -24,10 +24,10 @@ void main() {
     });
 
     test('cycles through the palette when count > palette length', () {
-      final colors = generateChartColors(20);
-      // Position 9 wraps back to position 0 (palette is 9 colors)
-      expect(colors[0], colors[9]);
-      expect(colors[1], colors[10]);
+      final colors = generateChartColors(30);
+      // Position 14 wraps back to position 0 (palette is 14 colors)
+      expect(colors[0], colors[14]);
+      expect(colors[1], colors[15]);
     });
   });
 

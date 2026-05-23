@@ -107,7 +107,7 @@ class _RecurringFrequencyPicker extends StatelessWidget {
                 child: Text(
                   l10n.nextRepetition(dayStr, freq),
                   style: const TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: AppColors.dustyTeal,
@@ -680,7 +680,7 @@ class _TypeToggle extends StatelessWidget {
                       Text(
                         type.l10nLabel(l10n),
                         style: TextStyle(
-                          fontFamily: 'Sora',
+                          fontFamily: 'GeneralSans',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: isSelected ? color : AppColors.textMuted,
@@ -740,7 +740,7 @@ class _AmountDisplay extends StatelessWidget {
                     '$previous $pendingOp',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Sora',
+                      fontFamily: 'GeneralSans',
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: accent.withValues(alpha: 0.65),
@@ -753,7 +753,7 @@ class _AmountDisplay extends StatelessWidget {
                   Text(
                     '${currencySymbol(currencyCode)} ',
                     style: TextStyle(
-                      fontFamily: 'Sora',
+                      fontFamily: 'GeneralSans',
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
                       color: accent.withValues(alpha: 0.55),
@@ -766,9 +766,9 @@ class _AmountDisplay extends StatelessWidget {
                       child: Text(
                         hasValue ? controller.current : '0',
                         style: TextStyle(
-                          fontFamily: 'Sora',
+                          fontFamily: 'GeneralSans',
                           fontSize: 36,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           color: hasValue
                               ? accent
                               : accent.withValues(alpha: 0.25),
@@ -789,7 +789,7 @@ class _AmountDisplay extends StatelessWidget {
                     child: Text(
                       currencyCode,
                       style: TextStyle(
-                        fontFamily: 'Sora',
+                        fontFamily: 'GeneralSans',
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: accent,
@@ -811,7 +811,7 @@ class _AmountDisplay extends StatelessWidget {
                     Text(
                       error!,
                       style: const TextStyle(
-                        fontFamily: 'Sora',
+                        fontFamily: 'GeneralSans',
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: AppColors.mutedTerra,
@@ -951,7 +951,7 @@ class _DateChip extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: active ? accent : AppColors.textMuted,
@@ -1136,7 +1136,7 @@ class _DetailsBlock extends StatelessWidget {
             child: Text(
               l10n.descriptionOptional.toUpperCase(),
               style: const TextStyle(
-                fontFamily: 'Sora',
+                fontFamily: 'GeneralSans',
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
@@ -1153,7 +1153,7 @@ class _DetailsBlock extends StatelessWidget {
             onTapOutside: (_) => descriptionFocus.unfocus(),
             onEditingComplete: descriptionFocus.unfocus,
             style: TextStyle(
-              fontFamily: 'Sora',
+              fontFamily: 'GeneralSans',
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: cs.onSurface,
@@ -1163,7 +1163,7 @@ class _DetailsBlock extends StatelessWidget {
                   color: AppColors.textMuted),
               hintText: '—',
               hintStyle: const TextStyle(
-                fontFamily: 'Sora',
+                fontFamily: 'GeneralSans',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
                 color: AppColors.textTertiary,
@@ -1223,7 +1223,7 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                 Text(
                   l10n.subcategory.toUpperCase(),
                   style: const TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
@@ -1279,7 +1279,7 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                             child: Text(
                               name,
                               style: TextStyle(
-                                fontFamily: 'Sora',
+                                fontFamily: 'GeneralSans',
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: isSelected
@@ -1352,7 +1352,7 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                         Text(
                           l10n.newSubcategory,
                           style: const TextStyle(
-                            fontFamily: 'Sora',
+                            fontFamily: 'GeneralSans',
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: AppColors.dustyTeal,

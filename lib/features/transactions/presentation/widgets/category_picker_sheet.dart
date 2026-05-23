@@ -82,7 +82,7 @@ class _CategoryPickerContent extends ConsumerWidget {
                 Text(
                   l10n.category.toUpperCase(),
                   style: const TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
@@ -109,7 +109,7 @@ class _CategoryPickerContent extends ConsumerWidget {
                       Text(
                         l10n.newCategory,
                         style: const TextStyle(
-                          fontFamily: 'Sora',
+                          fontFamily: 'GeneralSans',
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.dustyTeal,
@@ -178,7 +178,7 @@ class _CategoryPickerContent extends ConsumerWidget {
                                 TransactionCategories.localizedName(
                                     cat.name, l10n),
                                 style: TextStyle(
-                                  fontFamily: 'Sora',
+                                  fontFamily: 'GeneralSans',
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: isSelected

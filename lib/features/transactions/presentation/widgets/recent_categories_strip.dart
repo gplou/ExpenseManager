@@ -137,7 +137,7 @@ class _RecentChip extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: isSelected ? accentColor : AppColors.textMuted,

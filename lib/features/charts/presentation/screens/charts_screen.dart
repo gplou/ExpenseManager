@@ -163,7 +163,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                                   _buildTotalLabel(
                                       l10n, type, selectedCategory),
                                   style: const TextStyle(
-                                    fontFamily: 'Sora',
+                                    fontFamily: 'GeneralSans',
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.textMuted,
@@ -175,9 +175,9 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                                   loading: () => Text(
                                     '...',
                                     style: TextStyle(
-                                      fontFamily: 'Sora',
+                                      fontFamily: 'GeneralSans',
                                       fontSize: 18,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w700,
                                       color: accentColor,
                                     ),
                                   ),
@@ -189,9 +189,9 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                                   data: (total) => Text(
                                     '$cSymbol${formatAmount(total, numFmt)}',
                                     style: TextStyle(
-                                      fontFamily: 'Sora',
+                                      fontFamily: 'GeneralSans',
                                       fontSize: 18,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w700,
                                       color: accentColor,
                                     ),
                                   ),
@@ -595,7 +595,7 @@ class _TypeTab extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Sora',
+                fontFamily: 'GeneralSans',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: isSelected ? Colors.white : AppColors.textMuted,
@@ -659,7 +659,7 @@ class _FilterDropdown extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontSize: 12,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   color: isActive ? accentColor : AppColors.textMuted,
@@ -727,7 +727,7 @@ class _PickerOption extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected

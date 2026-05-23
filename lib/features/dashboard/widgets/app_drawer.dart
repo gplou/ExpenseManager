@@ -335,7 +335,7 @@ class _DrawerHeader extends StatelessWidget {
               child: Text(
                 initials,
                 style: const TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   fontWeight: FontWeight.w700,
                   fontSize: 20,
                   color: AppColors.pureWhite,
@@ -569,7 +569,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.error,
                   fontSize: 12,
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                 ),
               ),
             ),

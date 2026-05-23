@@ -131,7 +131,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         title: _isSelecting
             ? Text(
                 l10n.selectedCount(_selectedIds.length),
-                style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w600),
+                style: const TextStyle(fontFamily: 'GeneralSans', fontWeight: FontWeight.w600),
               )
             : Text(l10n.history),
         actions: [
@@ -182,7 +182,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                         Text(
                           l10n.allCategories,
                           style: TextStyle(
-                            fontFamily: 'Sora',
+                            fontFamily: 'GeneralSans',
                             fontWeight: _selectedCategory == null
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -212,7 +212,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                         Text(
                           TransactionCategories.localizedName(cat, l10n),
                           style: TextStyle(
-                            fontFamily: 'Sora',
+                            fontFamily: 'GeneralSans',
                             fontWeight: cat == _selectedCategory
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -232,45 +232,65 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       ),
       body: transactionsAsync.when(
         skipLoadingOnReload: true,
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.dustyTeal),
+        loading: () => Center(
+          child: CircularProgressIndicator(color: cs.primary),
         ),
         error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('⚠️', style: TextStyle(fontSize: 48)),
-              const Gap(12),
-              Text(
-                l10n.errorLoading,
-                style: TextStyle(
-                  fontFamily: 'Sora',
-                  fontSize: 16,
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Gap(16),
-              GestureDetector(
-                onTap: () => ref.invalidate(allTransactionsProvider),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.dustyTealLight,
-                    borderRadius: BorderRadius.circular(100),
+                    color: AppColors.negativeSoft,
+                    shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    l10n.retry,
-                    style: const TextStyle(
-                      fontFamily: 'Sora',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: AppColors.dustyTeal,
+                  child: const Icon(
+                    Icons.error_outline_rounded,
+                    color: AppColors.negative,
+                    size: 24,
+                  ),
+                ),
+                const Gap(16),
+                Text(
+                  l10n.errorLoading,
+                  textAlign: TextAlign.center,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: cs.onSurface,
+                  ),
+                ),
+                const Gap(14),
+                InkWell(
+                  onTap: () => ref.invalidate(allTransactionsProvider),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.retry,
+                          style: context.textTheme.labelLarge?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Gap(4),
+                        Icon(
+                          Icons.refresh_rounded,
+                          size: 14,
+                          color: cs.primary,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         data: (allTx) {
@@ -278,41 +298,45 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ? allTx
               : allTx.where((t) => t.category == _selectedCategory).toList();
           if (transactions.isEmpty) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
             return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      color: AppColors.dustyTealLight.withValues(alpha: 0.5),
-                      shape: BoxShape.circle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.raisedDark : AppColors.raised,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.inbox_outlined,
+                        size: 26,
+                        color: cs.onSurface.withValues(alpha: 0.5),
+                      ),
                     ),
-                    child: const Center(
-                      child: Text('\uD83D\uDCED', style: TextStyle(fontSize: 40)),
+                    const Gap(16),
+                    Text(
+                      l10n.noTransactions,
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.titleMedium?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  const Gap(20),
-                  Text(
-                    l10n.noTransactions,
-                    style: const TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
+                    const Gap(6),
+                    Text(
+                      l10n.noTransactionsPeriod,
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurface.withValues(alpha: 0.55),
+                      ),
                     ),
-                  ),
-                  const Gap(4),
-                  Text(
-                    l10n.noTransactionsPeriod,
-                    style: const TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 13,
-                      color: AppColors.textSubtle,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }
@@ -383,63 +407,38 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 // ── Export button ─────────────────────────────────────────────────────────────
 
 class _ExportButton extends StatelessWidget {
-  const _ExportButton({required this.onTap, required this.exporting, required this.label});
+  const _ExportButton(
+      {required this.onTap, required this.exporting, required this.label});
   final VoidCallback? onTap;
   final bool exporting;
   final String label;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor =
+        isDark ? AppColors.dividerDark : AppColors.divider;
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
         decoration: BoxDecoration(
           color: context.colors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
-            ),
-          ],
+          border: Border(top: BorderSide(color: dividerColor, width: 1)),
         ),
-        child: GestureDetector(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 52,
-            decoration: BoxDecoration(
-              color: onTap != null ? AppColors.dustyTeal : AppColors.dustyTeal.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (exporting)
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.pureWhite,
-                    ),
-                  )
-                else
-                  const Icon(Icons.download_rounded, color: AppColors.pureWhite, size: 20),
-                const Gap(8),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.pureWhite,
+        child: ElevatedButton.icon(
+          onPressed: onTap,
+          icon: exporting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.paper,
                   ),
-                ),
-              ],
-            ),
-          ),
+                )
+              : const Icon(Icons.download_rounded, size: 18),
+          label: Text(label),
         ),
       ),
     );
@@ -456,48 +455,28 @@ class _DeleteSelectedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor =
+        isDark ? AppColors.dividerDark : AppColors.divider;
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
         decoration: BoxDecoration(
           color: context.colors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
-            ),
-          ],
+          border: Border(top: BorderSide(color: dividerColor, width: 1)),
         ),
-        child: GestureDetector(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 52,
-            decoration: BoxDecoration(
-              color: onTap != null
-                  ? AppColors.mutedTerra
-                  : AppColors.mutedTerra.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.delete_outline_rounded, color: AppColors.pureWhite, size: 20),
-                const Gap(8),
-                Text(
-                  '${l10n.delete} ($count)',
-                  style: const TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.pureWhite,
-                  ),
-                ),
-              ],
-            ),
+        child: ElevatedButton.icon(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.negative,
+            foregroundColor: AppColors.paper,
+            disabledBackgroundColor:
+                AppColors.negative.withValues(alpha: 0.4),
+            disabledForegroundColor: AppColors.paper,
           ),
+          icon: const Icon(Icons.delete_outline_rounded, size: 18),
+          label: Text('${l10n.delete} ($count)'),
         ),
       ),
     );
@@ -528,21 +507,21 @@ class _DateHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor =
+        isDark ? AppColors.dividerDark : AppColors.divider;
     return Row(
       children: [
         Text(
-          _label(),
-          style: const TextStyle(
-            fontFamily: 'Sora',
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textMuted,
-            letterSpacing: 0.2,
+          _label().toUpperCase(),
+          style: context.textTheme.labelMedium?.copyWith(
+            color: cs.onSurface.withValues(alpha: 0.55),
           ),
         ),
-        const Gap(10),
-        const Expanded(
-          child: Divider(color: AppColors.borderLight, thickness: 1),
+        const Gap(12),
+        Expanded(
+          child: Container(height: 1, color: dividerColor),
         ),
       ],
     );
@@ -569,14 +548,24 @@ class _TransactionTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
+    final tt = context.textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isIncome = transaction.type.isIncome;
-    final accentColor = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
-    final accentLight = isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
+    final amountColor = isIncome ? AppColors.positive : AppColors.negative;
+    final avatarBg = isDark ? AppColors.raisedDark : AppColors.raised;
+    final secondaryText =
+        isDark ? AppColors.graphiteDark : AppColors.graphite;
+    final dividerColor =
+        isDark ? AppColors.dividerDark : AppColors.divider;
     final emoji = _emojiForCategory(transaction.category, isIncome);
-    final customCats = ref.watch(customCategoriesSyncProvider)[transaction.type] ?? const [];
+    final customCats =
+        ref.watch(customCategoriesSyncProvider)[transaction.type] ?? const [];
     TransactionCategory? customCat;
     for (final c in customCats) {
-      if (c.name == transaction.category) { customCat = c; break; }
+      if (c.name == transaction.category) {
+        customCat = c;
+        break;
+      }
     }
 
     void handleTap() {
@@ -591,194 +580,182 @@ class _TransactionTile extends ConsumerWidget {
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+    final amountStr =
+        '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).value ?? 'EUR')}${formatAmount(transaction.amount, ref.watch(numberFormatProvider).value ?? NumberFormatStyle.dotDecimal)}';
+
+    final rowContent = AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      color: isSelected
+          ? cs.primary.withValues(alpha: isDark ? 0.18 : 0.06)
+          : Colors.transparent,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+      child: Row(
+        children: [
+          // ── Avatar / checkbox ─────────────────────────────────────
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isSelecting && isSelected
+                  ? cs.primary
+                  : avatarBg,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: isSelecting
+                  ? Icon(
+                      isSelected
+                          ? Icons.check_rounded
+                          : Icons.circle_outlined,
+                      color: isSelected
+                          ? cs.onPrimary
+                          : cs.onSurface.withValues(alpha: 0.5),
+                      size: 20,
+                    )
+                  : (customCat != null
+                      ? customCat.emojiOverride != null
+                          ? Text(customCat.emojiOverride!,
+                              style: const TextStyle(fontSize: 18))
+                          : Icon(customCat.icon,
+                              size: 18, color: cs.onSurface)
+                      : Text(emoji, style: const TextStyle(fontSize: 18))),
+            ),
+          ),
+          const Gap(14),
+          // ── Texto ─────────────────────────────────────────────────
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  TransactionCategories.localizedName(
+                    transaction.category,
+                    l10n,
+                  ),
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: cs.onSurface,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+                if (transaction.subcategory != null) ...[
+                  const Gap(2),
+                  Text(
+                    transaction.subcategory!,
+                    style: tt.bodySmall?.copyWith(color: secondaryText),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ] else if (transaction.description != null) ...[
+                  const Gap(2),
+                  Text(
+                    transaction.description!,
+                    style: tt.bodySmall?.copyWith(color: secondaryText),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const Gap(12),
+          // ── Importe + fecha ───────────────────────────────────────
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                amountStr,
+                style: tt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: amountColor,
+                  letterSpacing: -0.1,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              const Gap(2),
+              Text(
+                transaction.date.formattedDate,
+                style: tt.bodySmall?.copyWith(
+                  color: secondaryText,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
+      ),
       child: Dismissible(
         key: ValueKey(transaction.id),
-        direction: isSelecting ? DismissDirection.none : DismissDirection.endToStart,
+        direction:
+            isSelecting ? DismissDirection.none : DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 24),
-          decoration: BoxDecoration(
-            color: AppColors.mutedTerraLight,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Icon(Icons.delete_outline_rounded, color: AppColors.mutedTerra, size: 26),
+          color: AppColors.negativeSoft,
+          child: const Icon(Icons.delete_outline_rounded,
+              color: AppColors.negative, size: 22),
         ),
-        confirmDismiss: isSelecting ? null : (_) async {
-          final isRecurring = transaction.recurringTransactionId != null;
-          final String confirmMessage;
-          if (isRecurring) {
-            confirmMessage = transaction.type.isExpense
-                ? l10n.deleteRecurringExpenseConfirm
-                : l10n.deleteRecurringIncomeConfirm;
-          } else {
-            confirmMessage = l10n.deleteTransactionConfirm;
-          }
-          return await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(l10n.delete),
-              content: Text(confirmMessage),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(l10n.cancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(
-                    l10n.delete,
-                    style: const TextStyle(color: AppColors.mutedTerra),
+        confirmDismiss: isSelecting
+            ? null
+            : (_) async {
+                final isRecurring = transaction.recurringTransactionId != null;
+                final String confirmMessage;
+                if (isRecurring) {
+                  confirmMessage = transaction.type.isExpense
+                      ? l10n.deleteRecurringExpenseConfirm
+                      : l10n.deleteRecurringIncomeConfirm;
+                } else {
+                  confirmMessage = l10n.deleteTransactionConfirm;
+                }
+                return await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(l10n.delete),
+                    content: Text(confirmMessage),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(l10n.cancel),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(
+                          l10n.delete,
+                          style:
+                              const TextStyle(color: AppColors.negative),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-        onDismissed: isSelecting ? null : (_) async {
-          await ref
-              .read(transactionsNotifierProvider.notifier)
-              .delete(transaction.id, recurringTransactionId: transaction.recurringTransactionId);
-        },
-        child: GestureDetector(
-          onTap: handleTap,
+                );
+              },
+        onDismissed: isSelecting
+            ? null
+            : (_) async {
+                await ref
+                    .read(transactionsNotifierProvider.notifier)
+                    .delete(transaction.id,
+                        recurringTransactionId:
+                            transaction.recurringTransactionId);
+              },
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            handleTap();
+          },
           onLongPress: onLongPress,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              color: isSelected ? accentLight : cs.surface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: isSelected ? null : AppColors.softShadowSm,
-              border: isSelected
-                  ? Border.all(color: accentColor.withValues(alpha: 0.5), width: 1.5)
-                  : null,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: IntrinsicHeight(
-                child: Row(
-                  children: [
-                    // Barra lateral de acento
-                    Container(
-                      width: 4,
-                      decoration: BoxDecoration(
-                        color: accentColor,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 14, 16, 14),
-                        child: Row(
-                          children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: isSelecting
-                                    ? (isSelected ? accentColor : AppColors.borderLight)
-                                    : accentLight,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: isSelecting
-                                    ? Icon(
-                                        isSelected
-                                            ? Icons.check_rounded
-                                            : Icons.circle_outlined,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : AppColors.textSubtle,
-                                        size: 22,
-                                      )
-                                    : (customCat != null
-                                        ? customCat.emojiOverride != null
-                                            ? Text(customCat.emojiOverride!, style: const TextStyle(fontSize: 22))
-                                            : Icon(customCat.icon, size: 22, color: accentColor)
-                                        : Text(emoji, style: const TextStyle(fontSize: 22))),
-                              ),
-                            ),
-                            const Gap(12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    TransactionCategories.localizedName(
-                                      transaction.category,
-                                      l10n,
-                                    ),
-                                    style: TextStyle(
-                                      fontFamily: 'Sora',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: cs.onSurface,
-                                    ),
-                                  ),
-                                  if (transaction.subcategory != null)
-                                    Text(
-                                      transaction.subcategory!,
-                                      style: const TextStyle(
-                                        fontFamily: 'Sora',
-                                        fontSize: 12,
-                                        color: AppColors.textMuted,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  else if (transaction.description != null)
-                                    Text(
-                                      transaction.description!,
-                                      style: const TextStyle(
-                                        fontFamily: 'Sora',
-                                        fontSize: 12,
-                                        color: AppColors.textMuted,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                ],
-                              ),
-                            ),
-                            const Gap(8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${isIncome ? '+' : '-'}${currencySymbol(ref.watch(currencyProvider).value ?? 'EUR')}${formatAmount(transaction.amount, ref.watch(numberFormatProvider).value ?? NumberFormatStyle.dotDecimal)}',
-                                  style: TextStyle(
-                                    fontFamily: 'Sora',
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: accentColor,
-                                  ),
-                                ),
-                                Text(
-                                  transaction.date.formattedDate,
-                                  style: const TextStyle(
-                                    fontFamily: 'Sora',
-                                    fontSize: 11,
-                                    color: AppColors.textSubtle,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          child: rowContent,
         ),
       ),
     );

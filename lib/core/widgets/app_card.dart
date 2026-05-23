@@ -7,20 +7,13 @@ import '../theme/app_spacing.dart';
 
 /// Variantes de tarjeta unificadas.
 ///
-/// - [outlined]: borde 1.5px sin sombra (default).
-/// - [filled]: superficie acentuada (typically `accentLight`) con borde tinted.
+/// - [outlined]: hairline 1px, sin sombra (default). Sensación editorial.
+/// - [filled]: superficie acentuada con tinte sutil del accent.
 /// - [elevated]: sombra `e1` para reposo o `e2` cuando `selected` es true.
 enum AppCardVariant { outlined, filled, elevated }
 
-/// Tarjeta única que sustituye `NeoCard`, `_CompactCard` y los Container
-/// con `softShadow*` repartidos por las screens.
-///
-/// API mínima: `variant`, `accent`, `padding`, `onTap`. Maneja:
-/// - dark/light mode automáticamente.
-/// - haptic feedback en tap (si `onTap` provisto).
-/// - tap targets >= 48 px lógicos.
-/// - estado disabled (gris atenuado).
-/// - estado selected (accent border + accent label).
+/// Tarjeta única del sistema Quiet Wealth. Hairlines finas, padding generoso,
+/// haptic feedback ligero y feedback de selección por borde tinted + accent.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -61,11 +54,11 @@ class AppCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final radius = borderRadius ?? AppRadius.radiusLg;
 
-    final effectiveAccent = accent ?? AppColors.dustyTeal;
+    final effectiveAccent = accent ?? AppColors.inkBlue;
     final effectiveAccentLight = accentLight ??
         (isDark
-            ? effectiveAccent.withValues(alpha: 0.15)
-            : effectiveAccent.withValues(alpha: 0.08));
+            ? effectiveAccent.withValues(alpha: 0.18)
+            : effectiveAccent.withValues(alpha: 0.06));
 
     final Color bg;
     final Color borderColor;
@@ -76,26 +69,26 @@ class AppCard extends StatelessWidget {
       bg = cs.onSurface.withValues(alpha: 0.04);
       borderColor = cs.onSurface.withValues(alpha: 0.08);
       shadow = AppElevation.e0;
-      borderWidth = 1.5;
+      borderWidth = 1;
     } else {
       switch (variant) {
         case AppCardVariant.outlined:
           bg = selected ? effectiveAccentLight : cs.surface;
           borderColor = selected
               ? effectiveAccent
-              : (isDark ? AppColors.darkBorderColor : AppColors.borderLight);
-          shadow = selected ? AppElevation.e0 : AppElevation.e1;
-          borderWidth = 1.5;
+              : (isDark ? AppColors.dividerDark : AppColors.divider);
+          shadow = AppElevation.e0;
+          borderWidth = selected ? 1.5 : 1;
         case AppCardVariant.filled:
           bg = effectiveAccentLight;
-          borderColor = effectiveAccent.withValues(alpha: isDark ? 0.5 : 0.25);
+          borderColor = Colors.transparent;
           shadow = AppElevation.e0;
-          borderWidth = 1;
+          borderWidth = 0;
         case AppCardVariant.elevated:
           bg = cs.surface;
           borderColor = isDark
-              ? AppColors.darkBorderColor
-              : AppColors.borderLight;
+              ? AppColors.dividerDark
+              : AppColors.divider;
           shadow = selected ? AppElevation.e2 : AppElevation.e1;
           borderWidth = 1;
       }
@@ -104,10 +97,9 @@ class AppCard extends StatelessWidget {
     Widget content;
 
     if (onTap != null && !disabled) {
-      // Material wraps the animated decoration so InkWell ripples paint on top.
       content = AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           border: Border.all(color: borderColor, width: borderWidth),
           borderRadius: radius,
@@ -118,12 +110,12 @@ class AppCard extends StatelessWidget {
           borderRadius: radius,
           child: InkWell(
             onTap: () {
-              HapticFeedback.selectionClick();
+              HapticFeedback.lightImpact();
               onTap!();
             },
             borderRadius: radius,
-            splashColor: effectiveAccent.withValues(alpha: 0.08),
-            highlightColor: effectiveAccent.withValues(alpha: 0.04),
+            splashColor: effectiveAccent.withValues(alpha: 0.06),
+            highlightColor: effectiveAccent.withValues(alpha: 0.03),
             child: ConstrainedBox(
               constraints:
                   const BoxConstraints(minHeight: AppTapTargets.minSize),
@@ -134,8 +126,8 @@ class AppCard extends StatelessWidget {
       );
     } else {
       content = AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         padding: padding,
         decoration: BoxDecoration(
           color: bg,
@@ -162,7 +154,6 @@ class AppCard extends StatelessWidget {
 }
 
 /// Versión compacta para filas tipo "categoría / subcategoría" en formularios.
-/// Mantiene la API mínima: emoji o icon + label + chevron, todo con accent.
 class AppCompactRow extends StatelessWidget {
   const AppCompactRow({
     super.key,
@@ -189,7 +180,7 @@ class AppCompactRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveAccent = accent ?? AppColors.dustyTeal;
+    final effectiveAccent = accent ?? AppColors.inkBlue;
     final cs = Theme.of(context).colorScheme;
 
     return AppCard(
@@ -198,7 +189,7 @@ class AppCompactRow extends StatelessWidget {
       accentLight: accentLight,
       selected: hasValue,
       disabled: disabled,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       onTap: disabled ? null : onTap,
       semanticLabel: semanticLabel ?? label,
       semanticButton: true,
@@ -218,7 +209,7 @@ class AppCompactRow extends StatelessWidget {
                   ? cs.onSurface.withValues(alpha: 0.3)
                   : hasValue
                       ? effectiveAccent
-                      : AppColors.textMuted,
+                      : AppColors.graphite,
             ),
             const SizedBox(width: AppSpacing.sm),
           ],
@@ -228,14 +219,14 @@ class AppCompactRow extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontFamily: 'GeneralSans',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
                 color: disabled
                     ? cs.onSurface.withValues(alpha: 0.4)
                     : hasValue
                         ? effectiveAccent
-                        : AppColors.textMuted,
+                        : AppColors.graphite,
               ),
             ),
           ),
@@ -246,7 +237,7 @@ class AppCompactRow extends StatelessWidget {
                 ? cs.onSurface.withValues(alpha: 0.3)
                 : hasValue
                     ? effectiveAccent
-                    : AppColors.textMuted,
+                    : AppColors.graphite,
           ),
         ],
       ),

@@ -148,7 +148,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
                           sub.discountBonusDays,
                         ),
                         style: const TextStyle(
-                          fontFamily: 'Sora',
+                          fontFamily: 'GeneralSans',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColors.sageGreen,
@@ -187,7 +187,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
               Text(
                 sub.purchaseError!,
                 style: TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   color: cs.error,
                   fontSize: 13,
                 ),
@@ -237,7 +237,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
               child: Text(
                 l10n.proRestorePurchases,
                 style: const TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   color: AppColors.textMuted,
                   fontSize: 13,
                 ),
@@ -255,7 +255,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
               child: Text(
                 l10n.promoCodeTitle,
                 style: const TextStyle(
-                  fontFamily: 'Sora',
+                  fontFamily: 'GeneralSans',
                   color: AppColors.textMuted,
                   fontSize: 13,
                 ),
@@ -278,7 +278,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
           Text(
             l10n.proLegalDisclaimer,
             style: const TextStyle(
-              fontFamily: 'Sora',
+              fontFamily: 'GeneralSans',
               fontSize: 11,
               color: AppColors.textSubtle,
             ),
@@ -360,7 +360,7 @@ class _PlanPicker extends StatelessWidget {
                           Text(
                             _periodLabel(context, pkg),
                             style: TextStyle(
-                              fontFamily: 'Sora',
+                              fontFamily: 'GeneralSans',
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: isSelected
@@ -380,7 +380,7 @@ class _PlanPicker extends StatelessWidget {
                               child: Text(
                                 savingsLabel,
                                 style: const TextStyle(
-                                  fontFamily: 'Sora',
+                                  fontFamily: 'GeneralSans',
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white,
@@ -393,7 +393,7 @@ class _PlanPicker extends StatelessWidget {
                       Text(
                         _perMonthLabel(context, pkg),
                         style: const TextStyle(
-                          fontFamily: 'Sora',
+                          fontFamily: 'GeneralSans',
                           fontSize: 11,
                           color: AppColors.textMuted,
                         ),
@@ -404,9 +404,9 @@ class _PlanPicker extends StatelessWidget {
                 Text(
                   price,
                   style: TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 15,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: isSelected ? AppColors.dustyTeal : null,
                   ),
                 ),
@@ -476,7 +476,7 @@ class _PlanPickerFallback extends StatelessWidget {
           Text(
             l10n.planMonthly,
             style: context.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: AppColors.dustyTeal,
             ),
           ),
@@ -484,7 +484,7 @@ class _PlanPickerFallback extends StatelessWidget {
           Text(
             l10n.proPriceSubtitle,
             style: const TextStyle(
-              fontFamily: 'Sora',
+              fontFamily: 'GeneralSans',
               fontSize: 13,
               color: AppColors.textMuted,
             ),
@@ -543,7 +543,7 @@ class _ProHeader extends StatelessWidget {
         Text(
           isPro ? l10n.proHeaderActiveTitle : l10n.proHeaderInactiveTitle,
           style: context.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
           ),
         ),
@@ -553,7 +553,7 @@ class _ProHeader extends StatelessWidget {
               ? l10n.proHeaderActiveSubtitle
               : l10n.proHeaderInactiveSubtitle,
           style: TextStyle(
-            fontFamily: 'Sora',
+            fontFamily: 'GeneralSans',
             fontSize: 14,
             color: context.colors.onSurface.withValues(alpha: 0.55),
           ),
@@ -605,7 +605,7 @@ class _ActiveProCard extends StatelessWidget {
                 Text(
                   l10n.proActiveCardTitle,
                   style: const TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                     color: AppColors.sageGreen,
@@ -615,7 +615,7 @@ class _ActiveProCard extends StatelessWidget {
                 Text(
                   l10n.proActiveCardExpiry(remaining, sourceLabel),
                   style: const TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 12,
                     color: AppColors.textMuted,
                   ),
@@ -667,7 +667,7 @@ class _BenefitRow extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -675,7 +675,7 @@ class _BenefitRow extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontSize: 12,
                     color: AppColors.textMuted,
                   ),
@@ -726,7 +726,7 @@ class _FreeTrialCard extends ConsumerWidget {
           Text(
             l10n.proFreeTrialSubtitle,
             style: const TextStyle(
-              fontFamily: 'Sora',
+              fontFamily: 'GeneralSans',
               fontSize: 13,
               color: AppColors.textMuted,
             ),
@@ -810,7 +810,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
     return AlertDialog(
       title: Text(
         l10n.promoCodeTitle,
-        style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700),
+        style: const TextStyle(fontFamily: 'GeneralSans', fontWeight: FontWeight.w700),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -821,7 +821,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
             textCapitalization: TextCapitalization.characters,
             decoration: InputDecoration(
               hintText: l10n.promoCodeHint,
-              hintStyle: const TextStyle(fontFamily: 'Sora'),
+              hintStyle: const TextStyle(fontFamily: 'GeneralSans'),
             ),
             onSubmitted: (_) => _apply(),
           ),
@@ -830,7 +830,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
             Text(
               _error!,
               style: TextStyle(
-                fontFamily: 'Sora',
+                fontFamily: 'GeneralSans',
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.error,
               ),
@@ -843,7 +843,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
           onPressed: _loading ? null : () => Navigator.of(context).pop(),
           child: Text(
             l10n.cancel,
-            style: const TextStyle(fontFamily: 'Sora', color: AppColors.textMuted),
+            style: const TextStyle(fontFamily: 'GeneralSans', color: AppColors.textMuted),
           ),
         ),
         TextButton(
@@ -860,7 +860,7 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
               : Text(
                   l10n.apply,
                   style: const TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'GeneralSans',
                     fontWeight: FontWeight.w700,
                     color: AppColors.dustyTeal,
                   ),

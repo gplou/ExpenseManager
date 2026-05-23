@@ -12,6 +12,7 @@ import '../../../core/config/router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/widget_action_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_elevation.dart';
 import '../../../core/widgets/neo_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../subscription/subscription_provider.dart';
@@ -561,11 +562,30 @@ class _MiniDialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Sobre el scrim del speed dial (0x52/255 ≈ 32 % de negro), el botón debe
+    // tener presencia propia sin saturar — en light mantenemos paper, en dark
+    // usamos surfaceDarkMode con halo para que flote sobre la atmósfera.
+    final circleColor = isDark ? AppColors.inkBlueLight : AppColors.inkBlue;
+    final iconColor = isDark ? AppColors.paperDark : AppColors.paper;
+    final pillBg = isDark ? AppColors.surfaceDarkMode : AppColors.surface;
+    final pillBorder = isDark ? AppColors.dividerDark : AppColors.divider;
+    final pillText = isDark ? AppColors.inkDark : AppColors.ink;
+    final circleShadow =
+        AppElevation.tinted(circleColor, opacity: isDark ? 0.32 : 0.22);
+    final pillShadow = isDark
+        ? AppElevation.tinted(AppColors.paperDark, opacity: 0.45)
+        : AppElevation.e1;
+
     return Semantics(
       button: true,
       label: label,
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
         borderRadius: BorderRadius.circular(25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -574,39 +594,30 @@ class _MiniDialButton extends StatelessWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: AppColors.dustyTeal,
+                color: circleColor,
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.dustyTeal.withValues(alpha: 0.35),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                boxShadow: circleShadow,
               ),
-              child: Icon(icon, color: Colors.white, size: 22),
+              child: Icon(icon, color: iconColor, size: 22),
             ),
-            const Gap(4),
+            const Gap(8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x20000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+                color: pillBg,
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(color: pillBorder, width: 1),
+                boxShadow: pillShadow,
               ),
               child: Text(
                 label,
-                style: const TextStyle(
-                  fontFamily: 'Sora',
+                style: TextStyle(
+                  fontFamily: 'GeneralSans',
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
+                  fontWeight: FontWeight.w500,
+                  color: pillText,
+                  letterSpacing: 0,
                 ),
               ),
             ),

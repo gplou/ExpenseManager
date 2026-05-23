@@ -4,6 +4,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../core/providers/number_format_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../transactions/domain/transactions_repository_contract.dart';
@@ -58,6 +59,8 @@ class _AnimatedAmountState extends State<AnimatedAmount> {
   }
 }
 
+/// Hero summary editorial Quiet Wealth: eyebrow + número gigante + bento
+/// 2-col plano con income/gastos. Sin barra de proporción, sin botón CTA.
 class SummarySection extends StatelessWidget {
   const SummarySection({
     super.key,
@@ -71,228 +74,201 @@ class SummarySection extends StatelessWidget {
   final NumberFormatStyle numFmtStyle;
   final VoidCallback onViewCharts;
 
+  // Números tabulares (mismas anchuras de dígito) para que la columna no baile.
+  static const _tabularFigures = [
+    FontFeature.tabularFigures(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
+    final tt = context.textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final balance = summary.balance;
     final isPositive = balance >= 0;
-    final accentColor = isPositive ? AppColors.sageGreen : AppColors.mutedTerra;
-    final total = summary.income + summary.expense;
-    final incomePercent = total > 0 ? (summary.income / total * 100).round() : 0;
-    final expensePercent = total > 0 ? (summary.expense / total * 100).round() : 0;
 
-    return Column(
-      children: [
-        Container(
-          key: TutorialKeys.balanceCardKey,
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.pureWhite,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark ? AppColors.darkBorderColor : AppColors.borderLight,
-              width: 1,
+    final dividerColor = isDark
+        ? AppColors.dividerDark
+        : AppColors.divider;
+
+    return Container(
+      key: TutorialKeys.balanceCardKey,
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: dividerColor, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Eyebrow: BALANCE ──────────────────────────────────────────
+          Text(
+            l10n.balance.toUpperCase(),
+            style: tt.labelMedium?.copyWith(
+              color: isDark ? AppColors.graphiteDark : AppColors.graphite,
             ),
           ),
-          child: Column(
+          const Gap(10),
+
+          // ── Número hero ───────────────────────────────────────────────
+          AnimatedAmount(
+            value: balance,
+            formatter: (v) =>
+                '${v < 0 ? '-' : ''}$cSymbol${formatAmount(v.abs(), numFmtStyle)}',
+            style: tt.displaySmall!.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -1.2,
+              fontFeatures: _tabularFigures,
+            ),
+          ),
+          const Gap(6),
+
+          // ── Indicador inline ──────────────────────────────────────────
+          Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: isDark ? 0.2 : 0.12),
-                  borderRadius: BorderRadius.circular(100),
+              Icon(
+                isPositive
+                    ? Icons.arrow_upward_rounded
+                    : Icons.arrow_downward_rounded,
+                size: 14,
+                color: isPositive
+                    ? AppColors.positive
+                    : AppColors.negative,
+              ),
+              const Gap(4),
+              Text(
+                isPositive ? l10n.income : l10n.expenses,
+                style: tt.bodySmall?.copyWith(
+                  color: isPositive
+                      ? AppColors.positive
+                      : AppColors.negative,
+                  fontWeight: FontWeight.w500,
                 ),
+              ),
+            ],
+          ),
+          const Gap(20),
+
+          // ── Hairline divider ──────────────────────────────────────────
+          Container(height: 1, color: dividerColor),
+          const Gap(18),
+
+          // ── Bento 2-col: income / expense ─────────────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _SummaryCell(
+                  label: l10n.income,
+                  amount: summary.income,
+                  cSymbol: cSymbol,
+                  numFmtStyle: numFmtStyle,
+                  amountColor: AppColors.positive,
+                  prefix: '+',
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                color: dividerColor,
+              ),
+              Expanded(
+                child: _SummaryCell(
+                  label: l10n.expenses,
+                  amount: summary.expense,
+                  cSymbol: cSymbol,
+                  numFmtStyle: numFmtStyle,
+                  amountColor: AppColors.negative,
+                  prefix: '-',
+                ),
+              ),
+            ],
+          ),
+
+          const Gap(18),
+
+          // ── Link a charts (discreto, no botón outlined) ───────────────
+          Align(
+            alignment: Alignment.centerLeft,
+            child: InkWell(
+              key: TutorialKeys.chartsBtnKey,
+              onTap: onViewCharts,
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                      size: 14,
-                      color: accentColor,
+                    Text(
+                      l10n.viewCharts,
+                      style: tt.labelLarge?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const Gap(4),
-                    Text(
-                      l10n.balance.toUpperCase(),
-                      style: TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.5,
-                        color: accentColor,
-                      ),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: cs.primary,
                     ),
                   ],
                 ),
               ),
-              const Gap(10),
-              AnimatedAmount(
-                value: balance,
-                formatter: (v) => '${v < 0 ? '-' : ''}$cSymbol${formatAmount(v.abs(), numFmtStyle)}',
-                style: context.textTheme.headlineLarge!.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              if (total > 0) ...[
-                const Gap(12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: SizedBox(
-                    height: 5,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: incomePercent.clamp(1, 99),
-                          child: Container(color: AppColors.sageGreen),
-                        ),
-                        const Gap(2),
-                        Expanded(
-                          flex: expensePercent.clamp(1, 99),
-                          child: Container(color: AppColors.mutedTerra),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              const Gap(12),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isDark
-                    ? AppColors.darkBorderColor.withValues(alpha: 0.5)
-                    : AppColors.borderLight.withValues(alpha: 0.7),
-              ),
-              const Gap(12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.sageGreen.withValues(alpha: isDark ? 0.15 : 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.south_west_rounded,
-                            size: 16,
-                            color: AppColors.sageGreen,
-                          ),
-                        ),
-                        const Gap(10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.income,
-                                style: TextStyle(
-                                  fontFamily: 'Sora',
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: cs.onSurface.withValues(alpha: 0.5),
-                                ),
-                              ),
-                              AnimatedAmount(
-                                value: summary.income,
-                                formatter: (v) =>
-                                    '$cSymbol${formatAmount(v, numFmtStyle)}',
-                                style: const TextStyle(
-                                  fontFamily: 'Sora',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.sageGreen,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    color: isDark
-                        ? AppColors.darkBorderColor.withValues(alpha: 0.5)
-                        : AppColors.borderLight.withValues(alpha: 0.7),
-                  ),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.mutedTerra.withValues(alpha: isDark ? 0.15 : 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.north_east_rounded,
-                            size: 16,
-                            color: AppColors.mutedTerra,
-                          ),
-                        ),
-                        const Gap(10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.expenses,
-                                style: TextStyle(
-                                  fontFamily: 'Sora',
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: cs.onSurface.withValues(alpha: 0.5),
-                                ),
-                              ),
-                              AnimatedAmount(
-                                value: summary.expense,
-                                formatter: (v) =>
-                                    '$cSymbol${formatAmount(v, numFmtStyle)}',
-                                style: const TextStyle(
-                                  fontFamily: 'Sora',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.mutedTerra,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryCell extends StatelessWidget {
+  const _SummaryCell({
+    required this.label,
+    required this.amount,
+    required this.cSymbol,
+    required this.numFmtStyle,
+    required this.amountColor,
+    required this.prefix,
+  });
+
+  final String label;
+  final double amount;
+  final String cSymbol;
+  final NumberFormatStyle numFmtStyle;
+  final Color amountColor;
+  final String prefix;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = context.textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: tt.labelMedium?.copyWith(
+            color: isDark ? AppColors.graphiteDark : AppColors.graphite,
           ),
         ),
-        const Gap(12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            key: TutorialKeys.chartsBtnKey,
-            onPressed: onViewCharts,
-            icon: const Icon(Icons.pie_chart_outline, size: 18),
-            label: Text(l10n.viewCharts),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.dustyTeal,
-              side: const BorderSide(color: AppColors.dustyTeal, width: 1.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
+        const Gap(6),
+        AnimatedAmount(
+          value: amount,
+          formatter: (v) =>
+              '$prefix$cSymbol${formatAmount(v, numFmtStyle)}',
+          style: tt.titleLarge!.copyWith(
+            color: amountColor,
+            fontWeight: FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
+            letterSpacing: -0.2,
           ),
         ),
       ],
@@ -307,32 +283,21 @@ class SummaryShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? AppColors.darkSurfaceHigh : const Color(0xFFECEAE4);
-    final highlightColor = isDark ? AppColors.darkSurface.withValues(alpha: 0.7) : const Color(0xFFF8F7F2);
+    final baseColor = isDark ? AppColors.raisedDark : const Color(0xFFECEAE4);
+    final highlightColor = isDark
+        ? AppColors.surfaceDarkMode.withValues(alpha: 0.7)
+        : const Color(0xFFF8F7F2);
 
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            height: 185,
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(24),
-            ),
-          ),
-          const Gap(12),
-          Container(
-            width: double.infinity,
-            height: 48,
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        ],
+      child: Container(
+        width: double.infinity,
+        height: 220,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
       ),
     );
   }
