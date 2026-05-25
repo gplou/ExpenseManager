@@ -72,7 +72,8 @@
       "Read(//Library/Java/JavaVirtualMachines/**)",
       "Bash(flutter config *)",
       "Bash(awk -F: ' *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile expense tracker two-step form wizard\" --stack flutter -n 8)"
     ]
   }
 }

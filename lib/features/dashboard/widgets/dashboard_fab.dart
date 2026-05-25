@@ -23,9 +23,9 @@ import '../../../core/services/analytics_service.dart';
 import '../../transactions/data/image_transaction_parser.dart';
 import '../../transactions/data/voice_transaction_parser.dart';
 import '../../transactions/domain/parsed_voice_transaction.dart';
+import '../../transactions/presentation/screens/add_transaction_screen.dart';
 import '../../tutorial/tutorial_keys.dart';
 import '../../tutorial/tutorial_notifier.dart';
-import 'quick_add_sheet.dart';
 
 enum VoiceInputState { idle, listening, processing, cameraProcessing }
 
@@ -97,7 +97,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       if (!_requirePro()) return;
       _startVoice();
     } else if (action == WidgetActions.add) {
-      context.push(AppRoutes.addTransaction);
+      showAddTransactionSheet(context);
     } else if (action == WidgetActions.chat) {
       if (!_requirePro()) return;
       context.push(AppRoutes.chat);
@@ -120,29 +120,11 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       return;
     }
     HapticFeedback.lightImpact();
-    _openQuickAddSheet();
+    showAddTransactionSheet(context);
   }
 
   void _closeDial() {
     if (_open) setState(() => _open = false);
-  }
-
-  Future<void> _openQuickAddSheet() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => QuickAddSheet(
-        onVoiceTap: () {
-          if (!_requirePro()) return;
-          _startVoice();
-        },
-        onCameraTap: () {
-          if (!_requirePro()) return;
-          _startCamera();
-        },
-      ),
-    );
   }
 
   Future<void> _startVoice() async {
@@ -208,7 +190,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     await _speech.stop();
     setState(() => _voiceState = VoiceInputState.idle);
     if (!mounted) return;
-    context.push(AppRoutes.addTransaction, extra: parsed);
+    showAddTransactionSheet(context, voiceData: parsed);
   }
 
   Future<void> _startCamera() async {
@@ -280,7 +262,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
         );
         return;
       }
-      context.push(AppRoutes.addTransaction, extra: parsed);
+      showAddTransactionSheet(context, voiceData: parsed);
     } catch (e) {
       if (mounted) {
         setState(() => _voiceState = VoiceInputState.idle);
@@ -429,7 +411,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
                     target: _pencilTarget,
                     onTap: () {
                       _closeDial();
-                      context.push(AppRoutes.addTransaction);
+                      showAddTransactionSheet(context);
                     },
                   ),
                   _radialButton(

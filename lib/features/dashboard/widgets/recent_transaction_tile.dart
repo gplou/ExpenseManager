@@ -53,11 +53,7 @@ class RecentTransactionTile extends ConsumerWidget {
     return InkWell(
       onTap: () {
         HapticFeedback.selectionClick();
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => AddTransactionScreen(transaction: transaction),
-          ),
-        );
+        showAddTransactionSheet(context, transaction: transaction);
       },
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Padding(

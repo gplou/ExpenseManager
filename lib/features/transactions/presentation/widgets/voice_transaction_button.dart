@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/config/router.dart';
 import '../../../../core/services/voice_input_gateway.dart';
 import '../../data/voice_transaction_parser.dart';
 import '../../domain/parsed_voice_transaction.dart';
+import '../screens/add_transaction_screen.dart';
 
 enum _VoiceState { idle, listening, processing }
 
@@ -114,7 +113,7 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
       return;
     }
 
-    context.push(AppRoutes.addTransaction, extra: parsed);
+    showAddTransactionSheet(context, voiceData: parsed);
   }
 
   @override

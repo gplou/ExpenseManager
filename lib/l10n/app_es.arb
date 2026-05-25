@@ -64,6 +64,12 @@
   "@saveExpense": {},
   "saveIncome": "Guardar ingreso",
   "@saveIncome": {},
+  "continueAction": "Continuar",
+  "@continueAction": {},
+  "stepAmount": "Importe",
+  "@stepAmount": {},
+  "stepDetails": "Detalles",
+  "@stepDetails": {},
   "nextRepetition": "La próxima repetición será el {date} y cada {frequency} a partir de entonces.",
   "@nextRepetition": {
     "placeholders": {

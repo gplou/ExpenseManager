@@ -572,11 +572,7 @@ class _TransactionTile extends ConsumerWidget {
       if (onSelectTap != null) {
         onSelectTap!();
       } else {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => AddTransactionScreen(transaction: transaction),
-          ),
-        );
+        showAddTransactionSheet(context, transaction: transaction);
       }
     }
 

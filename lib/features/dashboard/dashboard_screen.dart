@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/config/router.dart';
+import '../transactions/presentation/screens/add_transaction_screen.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/currency_provider.dart';
 import '../../core/providers/number_format_provider.dart';
@@ -337,7 +338,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       data: (transactions) {
                         if (transactions.isEmpty) {
                           return _EmptyTransactions(
-                            onAdd: () => context.push(AppRoutes.addTransaction),
+                            onAdd: () => showAddTransactionSheet(context),
                           );
                         }
                         final isDark =

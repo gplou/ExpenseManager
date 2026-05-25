@@ -179,6 +179,7 @@ class NumericKeypad extends StatelessWidget {
     this.decimalSeparator,
     this.submitLabel,
     this.canSubmit = true,
+    this.fillVertical = false,
   });
 
   final AmountKeypadController controller;
@@ -189,6 +190,10 @@ class NumericKeypad extends StatelessWidget {
   final String? decimalSeparator;
   final String? submitLabel;
   final bool canSubmit;
+
+  /// When true, the keypad expands rows/keys to fill all available vertical
+  /// space. Use inside an `Expanded` so the parent provides bounded height.
+  final bool fillVertical;
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +211,8 @@ class NumericKeypad extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize:
+                fillVertical ? MainAxisSize.max : MainAxisSize.min,
             children: [
               // Fila 1: 7 8 9 ⌫
               _row([
@@ -249,7 +255,7 @@ class NumericKeypad extends StatelessWidget {
   }
 
   Widget _row(List<Widget> children) {
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
         children: children
@@ -262,15 +268,18 @@ class NumericKeypad extends StatelessWidget {
             .toList(),
       ),
     );
+    return fillVertical ? Expanded(child: row) : row;
   }
 
   Widget _digit(String d) => _KeypadKey(
         label: d,
+        fill: fillVertical,
         onTap: () => controller.pressDigit(d),
       );
 
   Widget _decimal(String separator) => _KeypadKey(
         label: separator,
+        fill: fillVertical,
         onTap: () => controller.pressDecimal(separator),
       );
 
@@ -283,6 +292,7 @@ class NumericKeypad extends StatelessWidget {
     return _KeypadKey(
       icon: icon,
       semanticLabel: semanticLabel,
+      fill: fillVertical,
       onTap: onTap,
       onLongPress: onLongPress,
     );
@@ -292,6 +302,7 @@ class NumericKeypad extends StatelessWidget {
     return _KeypadKey(
       label: symbol,
       foreground: accent,
+      fill: fillVertical,
       onTap: () => switch (op) {
         _Op.add => controller.pressAdd(),
         _Op.sub => controller.pressSubtract(),
@@ -303,6 +314,7 @@ class NumericKeypad extends StatelessWidget {
     return _KeypadKey(
       label: '=',
       foreground: accent,
+      fill: fillVertical,
       onTap: controller.pressEquals,
     );
   }
@@ -312,6 +324,7 @@ class NumericKeypad extends StatelessWidget {
       label: submitLabel ?? 'OK',
       icon: Icons.check_rounded,
       filled: true,
+      fill: fillVertical,
       backgroundColor: accent,
       foreground: AppColors.pureWhite,
       enabled: canSubmit,
@@ -337,6 +350,7 @@ class _KeypadKey extends StatefulWidget {
     this.backgroundColor,
     this.filled = false,
     this.enabled = true,
+    this.fill = false,
   }) : assert(label != null || icon != null);
 
   final String? label;
@@ -348,6 +362,10 @@ class _KeypadKey extends StatefulWidget {
   final Color? backgroundColor;
   final bool filled;
   final bool enabled;
+
+  /// When true, the key grows to fill the parent's vertical constraint
+  /// instead of using its default 56 px height.
+  final bool fill;
 
   @override
   State<_KeypadKey> createState() => _KeypadKeyState();
@@ -393,7 +411,7 @@ class _KeypadKeyState extends State<_KeypadKey> {
               ? Duration.zero
               : const Duration(milliseconds: 140),
           curve: Curves.easeOutCubic,
-          height: 56,
+          height: widget.fill ? double.infinity : 56,
           decoration: BoxDecoration(
             color: _pressed ? bg.withValues(alpha: 0.75) : bg,
             borderRadius: AppRadius.radiusLg,

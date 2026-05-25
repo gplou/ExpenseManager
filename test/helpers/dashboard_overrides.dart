@@ -18,7 +18,7 @@ import 'package:expense_manager/features/transactions/presentation/providers/tra
 import 'mocks.dart';
 
 /// Builds the long list of overrides needed to render Dashboard / Drawer
-/// / QuickAddSheet without crashing in widget tests.
+/// / AddTransactionScreen without crashing in widget tests.
 ///
 /// Defaults are tuned for the most common smoke scenarios: PRO user (so
 /// the ad banner is hidden), no signed-in user, empty data. Pass specific

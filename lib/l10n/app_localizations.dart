@@ -276,6 +276,24 @@ abstract class AppLocalizations {
   /// **'Guardar ingreso'**
   String get saveIncome;
 
+  /// No description provided for @continueAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get continueAction;
+
+  /// No description provided for @stepAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Importe'**
+  String get stepAmount;
+
+  /// No description provided for @stepDetails.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalles'**
+  String get stepDetails;
+
   /// No description provided for @nextRepetition.
   ///
   /// In es, this message translates to:

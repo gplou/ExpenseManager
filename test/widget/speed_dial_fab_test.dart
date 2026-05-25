@@ -41,7 +41,7 @@ class _FakeLocaleNotifier extends LocaleNotifier {
 }
 
 /// Forces the tutorial to be active so the FAB renders the radial dial path
-/// (outside tutorial, the FAB now opens a `QuickAddSheet` bottom sheet, which
+/// (outside tutorial, the FAB pushes the AddTransactionScreen directly, which
 /// these accessibility tests don't exercise).
 class _ActiveTutorialNotifier extends TutorialNotifier {
   @override

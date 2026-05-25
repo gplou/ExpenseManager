@@ -1,10 +1,18 @@
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/config/router.dart';
 import '../../../../core/providers/currency_provider.dart';
+import '../../../../core/providers/locale_provider.dart';
+import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/image_input_gateway.dart';
+import '../../../../core/services/voice_input_gateway.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_elevation.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -14,8 +22,10 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/numeric_keypad.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../subscription/subscription_provider.dart';
+import '../../data/image_transaction_parser.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../data/subcategories_repository.dart';
+import '../../data/voice_transaction_parser.dart';
 import '../../domain/parsed_voice_transaction.dart';
 import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
@@ -26,6 +36,35 @@ import '../providers/transactions_provider.dart';
 import '../widgets/category_picker_sheet.dart';
 import '../widgets/create_subcategory_dialog.dart';
 import '../widgets/recent_categories_strip.dart';
+
+enum _CaptureState { idle, listening, voiceProcessing, imageProcessing }
+
+/// Presents [AddTransactionScreen] as a draggable bottom sheet covering ~94%
+/// of the screen height with rounded top corners. Used as the default entry
+/// point for adding/editing transactions throughout the app.
+Future<void> showAddTransactionSheet(
+  BuildContext context, {
+  TransactionModel? transaction,
+  ParsedVoiceTransaction? voiceData,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.45),
+    builder: (_) => FractionallySizedBox(
+      heightFactor: 0.94,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: AddTransactionScreen(
+          transaction: transaction,
+          voiceData: voiceData,
+        ),
+      ),
+    ),
+  );
+}
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key, this.transaction, this.voiceData});
@@ -137,7 +176,26 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   RecurrenceType? _recurrenceType;
   String? _amountError;
 
+  late final PageController _pageController;
+  int _currentPage = 0;
+  static const Duration _pageAnim = Duration(milliseconds: 250);
+
+  late final VoiceInputGateway _speech;
+  late final VoiceTransactionParser _voiceParser;
+  late final ImageInputGateway _imagePicker;
+  late final ImageTransactionParser _imageParser;
+  _CaptureState _capture = _CaptureState.idle;
+
   bool get _isEditing => widget.transaction != null;
+  bool get _isCapturing => _capture != _CaptureState.idle;
+
+  static String _speechLocaleId(String code) => switch (code) {
+        'es' => 'es_ES',
+        'en' => 'en_US',
+        'fr' => 'fr_FR',
+        'de' => 'de_DE',
+        _ => 'en_US',
+      };
 
   @override
   void initState() {
@@ -147,7 +205,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     _type = t?.type ?? v?.type ?? TransactionType.expense;
     _keypadController = AmountKeypadController();
     final initialAmount = t?.amount ?? v?.amount;
-    if (initialAmount != null && initialAmount > 0) {
+    final hasInitialAmount = initialAmount != null && initialAmount > 0;
+    if (hasInitialAmount) {
       _keypadController.setValue(initialAmount);
     }
     _descriptionController =
@@ -155,6 +214,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     _selectedCategory = t?.category ?? v?.category;
     _selectedSubcategory = t?.subcategory ?? v?.subcategory;
     _selectedDate = t?.date ?? v?.date ?? DateTime.now();
+
+    // Skip directly to the details step when we already have an amount
+    // (editing existing tx or voice-parsed data).
+    _currentPage = (_isEditing || hasInitialAmount) ? 1 : 0;
+    _pageController = PageController(initialPage: _currentPage);
+
+    _speech = ref.read(voiceInputGatewayProvider);
+    _voiceParser = ref.read(voiceTransactionParserProvider);
+    _imagePicker = ref.read(imageInputGatewayProvider);
+    _imageParser = ref.read(imageTransactionParserProvider);
 
     if (v?.isRecurring == true) {
       _isRecurring = true;
@@ -202,10 +271,256 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   @override
   void dispose() {
+    _speech.stop();
     _keypadController.dispose();
     _descriptionController.dispose();
     _descriptionFocus.dispose();
+    _pageController.dispose();
     super.dispose();
+  }
+
+  // ── AI capture (voice + photo) ─────────────────────────────────────────────
+
+  bool _requirePro() {
+    if (ref.read(isProProvider)) return true;
+    context.push(AppRoutes.pro);
+    return false;
+  }
+
+  Future<void> _startVoice() async {
+    if (_isCapturing) return;
+    if (!_requirePro()) return;
+
+    final available = await _speech.initialize(
+      onError: (_) {
+        if (mounted) setState(() => _capture = _CaptureState.idle);
+      },
+    );
+    if (!available) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.micUnavailable)),
+        );
+      }
+      return;
+    }
+
+    setState(() => _capture = _CaptureState.listening);
+    AnalyticsService.track(AnalyticsService.voiceUsed);
+    final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
+    await _speech.listen(
+      localeId: _speechLocaleId(langCode),
+      onResult: (result) {
+        if (result.finalResult) _processVoice(result.recognizedWords);
+      },
+    );
+  }
+
+  Future<void> _processVoice(String text) async {
+    if (text.trim().isEmpty) {
+      if (mounted) setState(() => _capture = _CaptureState.idle);
+      return;
+    }
+    setState(() => _capture = _CaptureState.voiceProcessing);
+    ParsedVoiceTransaction? parsed;
+    try {
+      parsed = await _voiceParser.parse(text);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _capture = _CaptureState.idle);
+      final info = e.toString().split('\n').first;
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(l10n.voiceAiError(e.runtimeType.toString(), info)),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    if (parsed == null) {
+      setState(() => _capture = _CaptureState.idle);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).voiceInterpretError),
+        ),
+      );
+      return;
+    }
+    await _speech.stop();
+    if (!mounted) return;
+    setState(() => _capture = _CaptureState.idle);
+    await _applyParsed(parsed);
+  }
+
+  Future<void> _startCamera() async {
+    if (_isCapturing) return;
+    if (!_requirePro()) return;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt_outlined),
+                  title: Text(l10n.cameraOption),
+                  onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library_outlined),
+                  title: Text(l10n.galleryOption),
+                  onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (source == null || !mounted) return;
+
+    final XFile? picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+    AnalyticsService.track(AnalyticsService.photoUsed, {'source': source.name});
+    await _processImage(picked);
+  }
+
+  Future<void> _processImage(XFile pickedFile) async {
+    if (!mounted) return;
+    setState(() => _capture = _CaptureState.imageProcessing);
+
+    File? tempFile;
+    try {
+      tempFile = File(pickedFile.path);
+      final bytes = await tempFile.readAsBytes();
+      final parsed = await _imageParser.parse(bytes);
+      if (!mounted) return;
+      setState(() => _capture = _CaptureState.idle);
+      if (parsed == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).imageTransactionNotDetected,
+            ),
+          ),
+        );
+        return;
+      }
+      await _applyParsed(parsed);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _capture = _CaptureState.idle);
+        final info = e.toString().split('\n').first;
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(l10n.imageAiError(e.runtimeType.toString(), info)),
+          ),
+        );
+      }
+    } finally {
+      try {
+        if (tempFile != null && await tempFile.exists()) {
+          await tempFile.delete();
+        }
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _applyParsed(ParsedVoiceTransaction parsed) async {
+    final hasAmount = parsed.amount > 0;
+    setState(() {
+      _type = parsed.type;
+      _selectedCategory = parsed.category;
+      _selectedSubcategory = parsed.subcategory;
+      if (parsed.description != null && parsed.description!.isNotEmpty) {
+        _descriptionController.text = parsed.description!;
+      }
+      if (parsed.date != null) _selectedDate = parsed.date!;
+      if (parsed.isRecurring) {
+        _isRecurring = true;
+        _recurrenceType = switch (parsed.recurrenceType) {
+          'weekly' => RecurrenceType.weekly,
+          'annual' => RecurrenceType.annual,
+          _ => RecurrenceType.monthly,
+        };
+      }
+      if (hasAmount) {
+        _keypadController.setValue(parsed.amount);
+        _amountError = null;
+      }
+    });
+    if (parsed.subcategory != null && parsed.subcategory!.isNotEmpty) {
+      try {
+        final repo = ref.read(subcategoriesRepositoryProvider);
+        final existing =
+            await repo.getForCategory(parsed.category, parsed.type);
+        if (!existing.contains(parsed.subcategory)) {
+          await repo.add(parsed.category, parsed.type, parsed.subcategory!);
+        }
+        ref.invalidate(subcategoriesProvider(
+          (category: parsed.category, type: parsed.type),
+        ));
+      } catch (e, st) {
+        developer.log(
+          'Failed to ensure parsed subcategory',
+          error: e,
+          stackTrace: st,
+        );
+      }
+    }
+    if (hasAmount && mounted && _currentPage == 0) {
+      await _pageController.animateToPage(
+        1,
+        duration: _pageAnim,
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  Future<void> _goToDetails() async {
+    final l10n = AppLocalizations.of(context);
+    final amount = _keypadController.resolve();
+    if (amount == null || amount <= 0) {
+      setState(() => _amountError = l10n.invalidAmount);
+      HapticFeedback.heavyImpact();
+      return;
+    }
+    setState(() => _amountError = null);
+    FocusScope.of(context).unfocus();
+    HapticFeedback.selectionClick();
+    await _pageController.animateToPage(
+      1,
+      duration: _pageAnim,
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _goToAmount() {
+    FocusScope.of(context).unfocus();
+    HapticFeedback.selectionClick();
+    _pageController.animateToPage(
+      0,
+      duration: _pageAnim,
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> _openCategoryPicker() async {
@@ -229,27 +544,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
   }
 
-  Future<void> _pickDate() async {
-    final cs = context.colors;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: cs.copyWith(
-            primary: AppColors.dustyTeal,
-            onPrimary: AppColors.pureWhite,
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (picked != null && mounted) setState(() => _selectedDate = picked);
-  }
-
-  Future<void> _save() async {
+Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final currentCurrency = ref.read(currencyProvider).value ?? 'EUR';
     final amount = _keypadController.resolve();
@@ -438,189 +733,280 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
 
     final isPro = ref.watch(isProProvider);
+    final currencyCode = ref.watch(currencyProvider).value ?? 'EUR';
+    final isDetailsStep = _currentPage == 1;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
-        actions: [
-          if (_isEditing)
-            IconButton(
-              tooltip: l10n.delete,
-              onPressed: _delete,
-              icon: const Icon(
-                Icons.delete_outline_rounded,
-                color: AppColors.mutedTerra,
+    return PopScope(
+      canPop: _currentPage == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _currentPage == 1) {
+          _goToAmount();
+        }
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          leading: isDetailsStep
+              ? IconButton(
+                  tooltip: l10n.stepAmount,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: _goToAmount,
+                )
+              : null,
+          title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
+          actions: [
+            if (isDetailsStep)
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
+                child: Center(
+                  child: _AmountPill(
+                    controller: _keypadController,
+                    type: _type,
+                    accent: accentColor,
+                    accentLight: accentLight,
+                    currencyCode: currencyCode,
+                    onTap: _goToAmount,
+                  ),
+                ),
+              ),
+            if (_isEditing && !isDetailsStep)
+              IconButton(
+                tooltip: l10n.delete,
+                onPressed: _delete,
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.mutedTerra,
+                ),
+              ),
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildBottomAction(l10n, accentColor),
+                if (!isPro) const AdBannerFooter(),
+              ],
+            ),
+          ),
+        ),
+        body: Stack(
+          children: [
+            GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                        AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
+                    child: _StepIndicator(
+                      currentStep: _currentPage,
+                      accent: accentColor,
+                    ),
+                  ),
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const ClampingScrollPhysics(),
+                      onPageChanged: (i) {
+                        if (!mounted) return;
+                        setState(() => _currentPage = i);
+                      },
+                      children: [
+                        _buildAmountStep(accentColor, currencyCode),
+                        _buildDetailsStep(
+                          l10n: l10n,
+                          accentColor: accentColor,
+                          accentLight: accentLight,
+                          customCats: customCats,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
+            if (_isCapturing)
+              _CaptureOverlay(
+                state: _capture,
+                onStop: () async {
+                  await _speech.stop();
+                  if (mounted) {
+                    setState(() => _capture = _CaptureState.idle);
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Step 1: type + amount ──────────────────────────────────────────────────
+  Widget _buildAmountStep(Color accentColor, String currencyCode) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TypeToggle(
+            value: _type,
+            onChanged: (next) {
+              HapticFeedback.selectionClick();
+              setState(() {
+                _type = next;
+                _selectedCategory = null;
+                _selectedSubcategory = null;
+              });
+            },
+          ),
+          if (!_isEditing) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _AiShortcutsRow(
+              voiceLabel: l10n.labelVoice,
+              photoLabel: l10n.labelPhoto,
+              disabled: _isCapturing,
+              onVoiceTap: _startVoice,
+              onPhotoTap: _startCamera,
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          _AmountDisplay(
+            controller: _keypadController,
+            accent: accentColor,
+            currencyCode: currencyCode,
+            error: _amountError,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Expanded(
+            child: NumericKeypad(
+              controller: _keypadController,
+              accent: accentColor,
+              submitLabel: l10n.continueAction,
+              canSubmit: !_isSaving,
+              onSubmit: _goToDetails,
+              fillVertical: true,
+            ),
+          ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListenableBuilder(
-                listenable: _descriptionFocus,
-                builder: (context, _) {
-                  final focused = _descriptionFocus.hasFocus;
-                  final label = _isEditing
-                      ? l10n.saveChanges
-                      : (_type.isIncome ? l10n.saveIncome : l10n.saveExpense);
-                  if (focused) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
-                          AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
-                      child: ElevatedButton.icon(
-                        onPressed: _isSaving ? null : _save,
-                        icon: const Icon(Icons.check_rounded),
-                        label: Text(label),
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: accentColor),
-                      ),
-                    );
-                  }
-                  return NumericKeypad(
-                    controller: _keypadController,
-                    accent: accentColor,
-                    submitLabel: label,
-                    canSubmit: !_isSaving,
-                    onSubmit: _save,
-                  );
-                },
-              ),
-              if (!isPro) const AdBannerFooter(),
-            ],
+    );
+  }
+
+  // ── Step 2: category, subcategory, date, description, recurring ────────────
+  Widget _buildDetailsStep({
+    required AppLocalizations l10n,
+    required Color accentColor,
+    required Color accentLight,
+    required List<TransactionCategory> customCats,
+  }) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RecentCategoriesStrip(
+            type: _type,
+            selected: _selectedCategory,
+            accentColor: accentColor,
+            accentLight: accentLight,
+            onSelect: (cat) {
+              setState(() {
+                _selectedCategory = cat;
+                _selectedSubcategory = null;
+              });
+            },
           ),
-        ),
-      ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.opaque,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xs),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: AppSpacing.sm),
+          _CategoryBlock(
+            type: _type,
+            selectedCategory: _selectedCategory,
+            selectedSubcategory: _selectedSubcategory,
+            accentColor: accentColor,
+            accentLight: accentLight,
+            customCats: customCats,
+            onCategoryTap: _openCategoryPicker,
+            onSubcategorySelected: (sub) =>
+                setState(() => _selectedSubcategory = sub),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _InlineDatePicker(
+            selected: _selectedDate,
+            accent: accentColor,
+            onDateChanged: (d) => setState(() => _selectedDate = d),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _TypeToggle(
-                value: _type,
-                onChanged: (next) {
-                  HapticFeedback.selectionClick();
-                  setState(() {
-                    _type = next;
-                    _selectedCategory = null;
-                    _selectedSubcategory = null;
-                  });
-                },
+              Expanded(
+                child: _DetailsBlock(
+                  descriptionController: _descriptionController,
+                  descriptionFocus: _descriptionFocus,
+                ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              _AmountDisplay(
-                controller: _keypadController,
+              const SizedBox(width: AppSpacing.sm),
+              _RecurringToggleCompact(
+                isRecurring: _isRecurring,
+                recurrenceType: _recurrenceType,
+                date: _selectedDate,
                 accent: accentColor,
-                currencyCode: ref.watch(currencyProvider).value ?? 'EUR',
-                error: _amountError,
+                onToggle: (v) => setState(() {
+                  _isRecurring = v;
+                  _recurrenceType = v ? RecurrenceType.monthly : null;
+                }),
+                onChangeFrequency: (t) =>
+                    setState(() => _recurrenceType = t),
               ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // Categorías frecuentes (1-tap selection).
-              RecentCategoriesStrip(
-                type: _type,
-                selected: _selectedCategory,
-                accentColor: accentColor,
-                accentLight: accentLight,
-                onSelect: (cat) {
-                  setState(() {
-                    _selectedCategory = cat;
-                    _selectedSubcategory = null;
-                  });
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // Category + Date en la misma fila
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: _CategoryBlock(
-                      type: _type,
-                      selectedCategory: _selectedCategory,
-                      selectedSubcategory: _selectedSubcategory,
-                      accentColor: accentColor,
-                      accentLight: accentLight,
-                      customCats: customCats,
-                      onCategoryTap: _openCategoryPicker,
-                      onSubcategorySelected: (sub) =>
-                          setState(() => _selectedSubcategory = sub),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    flex: 2,
-                    child: _DateQuickPicker(
-                      selected: _selectedDate,
-                      accent: accentColor,
-                      accentLight: accentLight,
-                      onSelect: (d) => setState(() => _selectedDate = d),
-                      onPickCustom: _pickDate,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // Description + Recurring en la misma fila
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: _DetailsBlock(
-                      descriptionController: _descriptionController,
-                      descriptionFocus: _descriptionFocus,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _RecurringToggleCompact(
-                    isRecurring: _isRecurring,
-                    recurrenceType: _recurrenceType,
-                    date: _selectedDate,
-                    accent: accentColor,
-                    onToggle: (v) => setState(() {
-                      _isRecurring = v;
-                      _recurrenceType = v ? RecurrenceType.monthly : null;
-                    }),
-                    onChangeFrequency: (t) =>
-                        setState(() => _recurrenceType = t),
-                  ),
-                ],
-              ),
-
-              // Frecuencia — solo visible cuando recurring está activo
-              AnimatedSize(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                child: _isRecurring
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.sm),
-                        child: _RecurringFrequencyPicker(
-                          recurrenceType: _recurrenceType,
-                          date: _selectedDate,
-                          accent: accentColor,
-                          onChangeFrequency: (t) =>
-                              setState(() => _recurrenceType = t),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              const SizedBox(height: AppSpacing.sm),
             ],
           ),
-        ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            child: _isRecurring
+                ? Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.sm),
+                    child: _RecurringFrequencyPicker(
+                      recurrenceType: _recurrenceType,
+                      date: _selectedDate,
+                      accent: accentColor,
+                      onChangeFrequency: (t) =>
+                          setState(() => _recurrenceType = t),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomAction(AppLocalizations l10n, Color accentColor) {
+    final isAmountStep = _currentPage == 0;
+    // Step 1 renders the keypad inline in the body so the amount card and
+    // the numbers sit visually adjacent. No bottom action needed.
+    if (isAmountStep) return const SizedBox.shrink();
+
+    final label = _isEditing
+        ? l10n.saveChanges
+        : (_type.isIncome ? l10n.saveIncome : l10n.saveExpense);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
+      child: ElevatedButton.icon(
+        onPressed: _isSaving ? null : _save,
+        icon: const Icon(Icons.check_rounded),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(backgroundColor: accentColor),
       ),
     );
   }
@@ -828,138 +1214,54 @@ class _AmountDisplay extends StatelessWidget {
   }
 }
 
-// ── Date quick picker (Today / Yesterday / Other) ────────────────────────────
+// ── Inline calendar date picker ───────────────────────────────────────────────
 
-class _DateQuickPicker extends StatelessWidget {
-  const _DateQuickPicker({
+class _InlineDatePicker extends StatelessWidget {
+  const _InlineDatePicker({
     required this.selected,
     required this.accent,
-    required this.accentLight,
-    required this.onSelect,
-    required this.onPickCustom,
+    required this.onDateChanged,
   });
 
   final DateTime selected;
   final Color accent;
-  final Color accentLight;
-  final ValueChanged<DateTime> onSelect;
-  final VoidCallback onPickCustom;
+  final ValueChanged<DateTime> onDateChanged;
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final today = _normalize(DateTime.now());
-    final yesterday = today.subtract(const Duration(days: 1));
-    final selectedDay = _normalize(selected);
-
-    final isToday = selectedDay == today;
-    final isYesterday = selectedDay == yesterday;
-    final isOther = !isToday && !isYesterday;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _DateChip(
-          label: l10n.today,
-          active: isToday,
-          accent: accent,
-          accentLight: accentLight,
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onSelect(today);
-          },
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _DateChip(
-          label: l10n.yesterday,
-          active: isYesterday,
-          accent: accent,
-          accentLight: accentLight,
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onSelect(yesterday);
-          },
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _DateChip(
-          label: isOther ? selected.formattedDate : '…',
-          icon: Icons.calendar_today_rounded,
-          active: isOther,
-          accent: accent,
-          accentLight: accentLight,
-          onTap: onPickCustom,
-        ),
-      ],
-    );
-  }
-
-  DateTime _normalize(DateTime d) => DateTime(d.year, d.month, d.day);
-}
-
-class _DateChip extends StatelessWidget {
-  const _DateChip({
-    required this.label,
-    required this.active,
-    required this.accent,
-    required this.accentLight,
-    required this.onTap,
-    this.icon,
-  });
-
-  final String label;
-  final bool active;
-  final Color accent;
-  final Color accentLight;
-  final VoidCallback onTap;
-  final IconData? icon;
+  static const double _scale = 0.78;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Semantics(
-      button: true,
-      selected: active,
-      label: label,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md, vertical: 12),
-          decoration: BoxDecoration(
-            color: active ? accentLight : cs.surface,
-            borderRadius: AppRadius.radiusMd,
-            border: Border.all(
-              color: active ? accent : AppColors.borderLight,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 14,
-                  color: active ? accent : AppColors.textMuted,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-              ],
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'GeneralSans',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: active ? accent : AppColors.textMuted,
-                    letterSpacing: 0.4,
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: AppColors.borderLight, width: 1.5),
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.radiusLg,
+        child: ClipRect(
+          child: Align(
+            alignment: Alignment.topCenter,
+            heightFactor: _scale,
+            child: Transform.scale(
+              scale: _scale,
+              alignment: Alignment.topCenter,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: cs.copyWith(
+                    primary: accent,
+                    onPrimary: AppColors.pureWhite,
                   ),
                 ),
+                child: CalendarDatePicker(
+                  initialDate: selected,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                  onDateChanged: onDateChanged,
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -998,7 +1300,7 @@ class _RecurringToggleCompact extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          padding: const EdgeInsets.all(AppSpacing.sm + 2),
           decoration: BoxDecoration(
             color: isRecurring
                 ? AppColors.dustyTealLight
@@ -1124,56 +1426,45 @@ class _DetailsBlock extends StatelessWidget {
     final cs = context.colors;
     return AppCard(
       variant: AppCardVariant.outlined,
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(
-                left: AppSpacing.xl + AppSpacing.sm,
-                top: AppSpacing.xs + 2),
-            child: Text(
-              l10n.descriptionOptional.toUpperCase(),
-              style: const TextStyle(
-                fontFamily: 'GeneralSans',
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ),
-          TextFormField(
-            controller: descriptionController,
-            focusNode: descriptionFocus,
-            maxLines: 1,
-            maxLength: 50,
-            textInputAction: TextInputAction.done,
-            onTapOutside: (_) => descriptionFocus.unfocus(),
-            onEditingComplete: descriptionFocus.unfocus,
-            style: TextStyle(
-              fontFamily: 'GeneralSans',
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: cs.onSurface,
-            ),
-            decoration: InputDecoration(
-              icon: const Icon(Icons.edit_note_rounded,
-                  color: AppColors.textMuted),
-              hintText: '—',
-              hintStyle: const TextStyle(
+          const Icon(Icons.edit_note_rounded,
+              size: 18, color: AppColors.textMuted),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: TextFormField(
+              controller: descriptionController,
+              focusNode: descriptionFocus,
+              maxLines: 1,
+              maxLength: 100,
+              textInputAction: TextInputAction.done,
+              onTapOutside: (_) => descriptionFocus.unfocus(),
+              onEditingComplete: descriptionFocus.unfocus,
+              style: TextStyle(
                 fontFamily: 'GeneralSans',
                 fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w500,
+                color: cs.onSurface,
               ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              counterText: '',
-              contentPadding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.sm),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: l10n.descriptionOptional,
+                hintStyle: const TextStyle(
+                  fontFamily: 'GeneralSans',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textTertiary,
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                counterText: '',
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.sm),
+              ),
             ),
           ),
         ],
@@ -1403,6 +1694,328 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
         .remove(category, type, name);
     ref.invalidate(
       subcategoriesProvider((category: category, type: type)),
+    );
+  }
+}
+
+// ── Step indicator (two segmented capsule bars) ──────────────────────────────
+
+class _StepIndicator extends StatelessWidget {
+  const _StepIndicator({
+    required this.currentStep,
+    required this.accent,
+  });
+
+  final int currentStep;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _Bar(active: true, accent: accent)),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(child: _Bar(active: currentStep >= 1, accent: accent)),
+      ],
+    );
+  }
+}
+
+class _Bar extends StatelessWidget {
+  const _Bar({required this.active, required this.accent});
+
+  final bool active;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      height: 4,
+      decoration: BoxDecoration(
+        color: active ? accent : AppColors.borderLight,
+        borderRadius: AppRadius.radiusPill,
+      ),
+    );
+  }
+}
+
+// ── Amount pill (AppBar action in step 2) ─────────────────────────────────────
+
+class _AmountPill extends StatelessWidget {
+  const _AmountPill({
+    required this.controller,
+    required this.type,
+    required this.accent,
+    required this.accentLight,
+    required this.currencyCode,
+    required this.onTap,
+  });
+
+  final AmountKeypadController controller;
+  final TransactionType type;
+  final Color accent;
+  final Color accentLight;
+  final String currencyCode;
+  final VoidCallback onTap;
+
+  String _format(double v) {
+    if (v == v.truncateToDouble()) return v.toStringAsFixed(0);
+    return v.toStringAsFixed(2).replaceAll('.', ',');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final value = controller.resolve() ?? 0;
+        final amountStr = _format(value);
+        final icon = type.isIncome
+            ? Icons.trending_up_rounded
+            : Icons.trending_down_rounded;
+        return Semantics(
+          button: true,
+          label: '${type.isIncome ? "+" : "-"}$amountStr $currencyCode',
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: AppRadius.radiusPill,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: accentLight,
+                  borderRadius: AppRadius.radiusPill,
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.4),
+                    width: 1.2,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, size: 14, color: accent),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${currencySymbol(currencyCode)} $amountStr',
+                      style: TextStyle(
+                        fontFamily: 'GeneralSans',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.edit_rounded,
+                      size: 11,
+                      color: accent.withValues(alpha: 0.65),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── AI shortcuts row (voice + photo buttons in step 1) ──────────────────────
+
+class _AiShortcutsRow extends StatelessWidget {
+  const _AiShortcutsRow({
+    required this.voiceLabel,
+    required this.photoLabel,
+    required this.disabled,
+    required this.onVoiceTap,
+    required this.onPhotoTap,
+  });
+
+  final String voiceLabel;
+  final String photoLabel;
+  final bool disabled;
+  final VoidCallback onVoiceTap;
+  final VoidCallback onPhotoTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _AiShortcutButton(
+            icon: Icons.mic_rounded,
+            label: voiceLabel,
+            disabled: disabled,
+            onTap: onVoiceTap,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _AiShortcutButton(
+            icon: Icons.camera_alt_outlined,
+            label: photoLabel,
+            disabled: disabled,
+            onTap: onPhotoTap,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AiShortcutButton extends StatelessWidget {
+  const _AiShortcutButton({
+    required this.icon,
+    required this.label,
+    required this.disabled,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool disabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = AppColors.dustyTeal;
+    final bg = AppColors.dustyTealLight;
+    final opacity = disabled ? 0.45 : 1.0;
+    return Opacity(
+      opacity: opacity,
+      child: Semantics(
+        button: true,
+        label: label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: disabled ? null : onTap,
+            borderRadius: AppRadius.radiusMd,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md, vertical: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: AppRadius.radiusMd,
+                border: Border.all(
+                  color: color.withValues(alpha: 0.35),
+                  width: 1.2,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 20, color: color),
+                  const SizedBox(width: AppSpacing.xs + 2),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'GeneralSans',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Capture overlay (voice listening / AI processing) ────────────────────────
+
+class _CaptureOverlay extends StatelessWidget {
+  const _CaptureOverlay({required this.state, required this.onStop});
+
+  final _CaptureState state;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final isListening = state == _CaptureState.listening;
+    final label = switch (state) {
+      _CaptureState.listening => l10n.voiceListening,
+      _CaptureState.voiceProcessing => l10n.voiceProcessing,
+      _CaptureState.imageProcessing => l10n.imageProcessing,
+      _CaptureState.idle => '',
+    };
+
+    return Positioned.fill(
+      child: Semantics(
+        liveRegion: true,
+        label: label,
+        child: GestureDetector(
+          onTap: isListening ? onStop : null,
+          behavior: HitTestBehavior.opaque,
+          child: ColoredBox(
+            color: Colors.black.withValues(alpha: 0.45),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isListening)
+                    GestureDetector(
+                      onTap: onStop,
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.stop_rounded,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: const BoxDecoration(
+                        color: AppColors.dustyTeal,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.8,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontFamily: 'GeneralSans',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

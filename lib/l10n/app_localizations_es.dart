@@ -98,6 +98,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveIncome => 'Guardar ingreso';
 
   @override
+  String get continueAction => 'Continuar';
+
+  @override
+  String get stepAmount => 'Importe';
+
+  @override
+  String get stepDetails => 'Detalles';
+
+  @override
   String nextRepetition(String date, String frequency) {
     return 'La próxima repetición será el $date y cada $frequency a partir de entonces.';
   }

@@ -1,16 +1,40 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:expense_manager/core/services/image_input_gateway.dart';
+import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
+import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
+import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
 class _MockSubRepo extends Mock implements SubcategoriesRepository {}
+
+class _FakeVoiceGateway extends Fake implements VoiceInputGateway {
+  @override
+  Future<void> stop() async {}
+}
+
+class _FakeImageGateway extends Fake implements ImageInputGateway {}
+
+class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
+  @override
+  Future<ParsedVoiceTransaction?> parse(String transcription) async => null;
+}
+
+class _FakeImageParser extends Fake implements ImageTransactionParser {
+  @override
+  Future<ParsedVoiceTransaction?> parse(Uint8List imageBytes) async => null;
+}
 
 Widget _wrap({TransactionModel? transaction}) {
   SharedPreferences.setMockInitialValues({});
@@ -21,6 +45,10 @@ Widget _wrap({TransactionModel? transaction}) {
     overrides: [
       isProProvider.overrideWithValue(true), // hide ad banner
       subcategoriesRepositoryProvider.overrideWithValue(repo),
+      voiceInputGatewayProvider.overrideWithValue(_FakeVoiceGateway()),
+      imageInputGatewayProvider.overrideWithValue(_FakeImageGateway()),
+      voiceTransactionParserProvider.overrideWithValue(_FakeVoiceParser()),
+      imageTransactionParserProvider.overrideWithValue(_FakeImageParser()),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
