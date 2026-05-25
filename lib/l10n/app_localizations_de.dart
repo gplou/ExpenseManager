@@ -703,7 +703,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tutorialAddBody =>
-      'Tippen Sie auf die +-Schaltfläche, um die Aufzeichnungsoptionen aufzuklappen. Sie können per Sprache, manuell oder durch Fotografieren eines Belegs hinzufügen.';
+      'Tippen Sie auf die +-Schaltfläche, um das Formular zu öffnen. Dort können Sie die Transaktion manuell erfassen, per Sprache 🎤 diktieren oder einen Beleg fotografieren 📷 — die KI ergänzt den Rest.';
 
   @override
   String get tutorialVoiceStepTitle => '🎤 Per Sprache hinzufügen';

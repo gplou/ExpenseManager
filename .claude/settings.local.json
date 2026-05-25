@@ -73,7 +73,9 @@
       "Bash(flutter config *)",
       "Bash(awk -F: ' *)",
       "Bash(git commit -m ' *)",
-      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile expense tracker two-step form wizard\" --stack flutter -n 8)"
+      "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile expense tracker two-step form wizard\" --stack flutter -n 8)",
+      "Bash(python3 scripts/search.py \"fintech personal finance expense tracker elegant minimal\" --design-system -f markdown)",
+      "Bash(python3 scripts/search.py \"donut pie chart legend data visualization\" --domain chart)"
     ]
   }
 }

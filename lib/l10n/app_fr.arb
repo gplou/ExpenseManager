@@ -272,7 +272,7 @@
   "@tutorialFinish": {},
   "tutorialAddTitle": "Ajouter des transactions",
   "@tutorialAddTitle": {},
-  "tutorialAddBody": "Appuyez sur le bouton + pour afficher les options d'enregistrement. Vous pouvez ajouter par la voix, manuellement ou en photographiant un reçu.",
+  "tutorialAddBody": "Appuyez sur le bouton + pour ouvrir le formulaire. Vous pouvez ensuite enregistrer la transaction manuellement, la dicter à la voix 🎤 ou photographier un reçu 📷 — l'IA s'occupe du reste.",
   "@tutorialAddBody": {},
   "tutorialVoiceStepTitle": "🎤 Ajouter par la voix",
   "@tutorialVoiceStepTitle": {},

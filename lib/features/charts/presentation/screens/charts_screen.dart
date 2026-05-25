@@ -6,7 +6,7 @@ import 'package:gap/gap.dart';
 import '../../../../core/providers/currency_provider.dart';
 import '../../../../core/providers/number_format_provider.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/extensions.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/ad_banner_footer.dart';
 import '../../../../core/widgets/custom_date_range_picker.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -48,8 +48,6 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
         NumberFormatStyle.dotDecimal;
     final accentColor =
         type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
-    final accentLight =
-        type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
 
     final builtIn = TransactionCategories.forType(type);
     final allCats = <TransactionCategory>[...builtIn, ...(customCats[type] ?? [])];
@@ -63,13 +61,13 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
       bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
         title: Text(l10n.charts),
-        centerTitle: true,
       ),
       body: Column(
         children: [
-          // ── Filters section ─────────────────────────────────────────
+          // ── Filters + Stat section ─────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl, AppSpacing.md, AppSpacing.xl, 0),
             child: Column(
               children: [
                 // Row 1: Income/Expense toggle (full width)
@@ -85,24 +83,22 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   },
                 ),
 
-                const Gap(10),
+                const Gap(AppSpacing.sm),
 
                 // Row 2: Period dropdown + Category dropdown (side by side)
                 Row(
                   children: [
-                    // Period dropdown
                     Expanded(
                       child: _FilterDropdown(
                         icon: Icons.calendar_today_rounded,
                         label: periodLabel,
-                        accentColor: AppColors.dustyTeal,
+                        accentColor: AppColors.inkBlue,
                         isActive: customRange != null,
                         onTap: () => _showPeriodPicker(
                             context, ref, l10n, period, customRange),
                       ),
                     ),
-                    const Gap(10),
-                    // Category dropdown
+                    const Gap(AppSpacing.sm),
                     Expanded(
                       child: _FilterDropdown(
                         icon: selectedCategory != null
@@ -130,116 +126,28 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   ],
                 ),
 
-                const Gap(10),
+                const Gap(AppSpacing.md),
 
-                // Row 3: Total card + chart mode toggle
-                Row(
-                  children: [
-                    // Total amount
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: accentLight,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              type.isIncome
-                                  ? Icons.arrow_downward_rounded
-                                  : Icons.arrow_upward_rounded,
-                              color: accentColor,
-                              size: 18,
-                            ),
-                          ),
-                          const Gap(10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _buildTotalLabel(
-                                      l10n, type, selectedCategory),
-                                  style: const TextStyle(
-                                    fontFamily: 'GeneralSans',
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.textMuted,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                asyncTotal.when(
-                                  loading: () => Text(
-                                    '...',
-                                    style: TextStyle(
-                                      fontFamily: 'GeneralSans',
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: accentColor,
-                                    ),
-                                  ),
-                                  error: (_, __) => Text(
-                                    l10n.errorLoading,
-                                    style: TextStyle(
-                                        color: accentColor, fontSize: 12),
-                                  ),
-                                  data: (total) => Text(
-                                    '$cSymbol${formatAmount(total, numFmt)}',
-                                    style: TextStyle(
-                                      fontFamily: 'GeneralSans',
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: accentColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Chart mode toggle (compact icon buttons)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: context.colors.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.all(3),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _ChartModeButton(
-                            icon: Icons.pie_chart_rounded,
-                            isSelected: _mode == _ChartMode.pie,
-                            accentColor: accentColor,
-                            onTap: () => setState(() {
-                              _mode = _ChartMode.pie;
-                              _touchedIndex = null;
-                            }),
-                          ),
-                          const Gap(2),
-                          _ChartModeButton(
-                            icon: Icons.bar_chart_rounded,
-                            isSelected: _mode == _ChartMode.bar,
-                            accentColor: accentColor,
-                            onTap: () => setState(() {
-                              _mode = _ChartMode.bar;
-                              _touchedIndex = null;
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                // Row 3: Stat card (eyebrow + hero number) + chart mode toggle
+                _ChartStatCard(
+                  eyebrow: _buildEyebrow(
+                      l10n, type, selectedCategory, periodLabel),
+                  amountAsync: asyncTotal,
+                  cSymbol: cSymbol,
+                  numFmt: numFmt,
+                  accentColor: accentColor,
+                  isIncome: type.isIncome,
+                  l10n: l10n,
+                  mode: _mode,
+                  onModeChanged: (m) => setState(() {
+                    _mode = m;
+                    _touchedIndex = null;
+                  }),
                 ),
               ],
             ),
           ),
-          const Gap(8),
+          const Gap(AppSpacing.md),
 
           // ── Chart + Legend ─────────────────────────────────────────────
           Expanded(
@@ -316,12 +224,16 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
     );
   }
 
-  String _buildTotalLabel(
-      AppLocalizations l10n, TransactionType type, String? category) {
-    if (category != null) {
-      return TransactionCategories.localizedName(category, l10n);
-    }
-    return type.isIncome ? l10n.typeIncome : l10n.typeExpense;
+  String _buildEyebrow(
+    AppLocalizations l10n,
+    TransactionType type,
+    String? category,
+    String periodLabel,
+  ) {
+    final main = category != null
+        ? TransactionCategories.localizedName(category, l10n)
+        : (type.isIncome ? l10n.typeIncome : l10n.typeExpense);
+    return '${main.toUpperCase()} · ${periodLabel.toUpperCase()}';
   }
 
   // ── Period picker bottom sheet ──────────────────────────────────────────────
@@ -338,26 +250,29 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
       backgroundColor: Colors.transparent,
       showDragHandle: false,
       builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(20)),
+            color: isDark ? AppColors.surfaceDarkMode : AppColors.surface,
+            borderRadius: AppRadius.radiusSheet,
           ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Handle bar
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.borderMedium,
-                  borderRadius: BorderRadius.circular(2),
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.dividerDark : AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              const Gap(16),
+              const Gap(AppSpacing.xl),
               ...TransactionPeriod.values.map((p) {
                 final isSelected =
                     p == currentPeriod && currentCustomRange == null;
@@ -365,7 +280,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   icon: _periodIcon(p),
                   label: p.l10nLabel(l10n),
                   isSelected: isSelected,
-                  accentColor: AppColors.dustyTeal,
+                  accentColor: AppColors.inkBlue,
                   onTap: () {
                     ref.read(selectedPeriodProvider.notifier).state = p;
                     ref.read(customDateRangeProvider.notifier).state = null;
@@ -379,7 +294,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                     ? '${currentCustomRange.start.day}/${currentCustomRange.start.month}/${currentCustomRange.start.year} – ${currentCustomRange.end.day}/${currentCustomRange.end.month}/${currentCustomRange.end.year}'
                     : l10n.customRange,
                 isSelected: currentCustomRange != null,
-                accentColor: AppColors.warmAmber,
+                accentColor: AppColors.warning,
                 onTap: () async {
                   Navigator.pop(ctx);
                   final range = await showCustomDateRangePicker(
@@ -432,29 +347,43 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
       isScrollControlled: true,
       showDragHandle: false,
       builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.55,
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
           ),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(20)),
+            color: isDark ? AppColors.surfaceDarkMode : AppColors.surface,
+            borderRadius: AppRadius.radiusSheet,
           ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Handle bar
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.borderMedium,
-                  borderRadius: BorderRadius.circular(2),
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.dividerDark : AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              const Gap(16),
+              const Gap(AppSpacing.lg),
+              Text(
+                l10n.category.toUpperCase(),
+                style: TextStyle(
+                  fontFamily: 'GeneralSans',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.graphiteDark : AppColors.graphite,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const Gap(AppSpacing.md),
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
@@ -505,6 +434,220 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
   }
 }
 
+// ── Stat card (eyebrow + hero number + chart mode toggle) ─────────────────────
+
+class _ChartStatCard extends StatelessWidget {
+  const _ChartStatCard({
+    required this.eyebrow,
+    required this.amountAsync,
+    required this.cSymbol,
+    required this.numFmt,
+    required this.accentColor,
+    required this.isIncome,
+    required this.l10n,
+    required this.mode,
+    required this.onModeChanged,
+  });
+
+  final String eyebrow;
+  final AsyncValue<double> amountAsync;
+  final String cSymbol;
+  final NumberFormatStyle numFmt;
+  final Color accentColor;
+  final bool isIncome;
+  final AppLocalizations l10n;
+  final _ChartMode mode;
+  final ValueChanged<_ChartMode> onModeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.surfaceDarkMode : AppColors.surface;
+    final borderColor = isDark ? AppColors.dividerDark : AppColors.divider;
+    final eyebrowColor = isDark ? AppColors.graphiteDark : AppColors.graphite;
+    final inkColor = isDark ? AppColors.inkDark : AppColors.ink;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl, AppSpacing.lg, AppSpacing.md, AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: borderColor, width: 1),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  eyebrow,
+                  style: TextStyle(
+                    fontFamily: 'GeneralSans',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: eyebrowColor,
+                    letterSpacing: 1.2,
+                    height: 1.0,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Gap(AppSpacing.sm),
+                amountAsync.when(
+                  loading: () => Text(
+                    '...',
+                    style: TextStyle(
+                      fontFamily: 'GeneralSans',
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: inkColor,
+                      letterSpacing: -0.6,
+                      height: 1.1,
+                    ),
+                  ),
+                  error: (_, __) => Text(
+                    l10n.errorLoading,
+                    style: TextStyle(
+                      fontFamily: 'GeneralSans',
+                      fontSize: 13,
+                      color: accentColor,
+                    ),
+                  ),
+                  data: (total) => Text(
+                    '$cSymbol${formatAmount(total, numFmt)}',
+                    style: TextStyle(
+                      fontFamily: 'GeneralSans',
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: inkColor,
+                      letterSpacing: -0.6,
+                      height: 1.1,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Gap(AppSpacing.xs),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isIncome
+                          ? Icons.arrow_downward_rounded
+                          : Icons.arrow_upward_rounded,
+                      size: 13,
+                      color: accentColor,
+                    ),
+                    const Gap(AppSpacing.xs),
+                    Text(
+                      isIncome ? l10n.typeIncome : l10n.typeExpense,
+                      style: TextStyle(
+                        fontFamily: 'GeneralSans',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: accentColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Gap(AppSpacing.sm),
+          _ChartModeSwitch(
+            mode: mode,
+            onChanged: onModeChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Chart mode switch (pie/bar, vertical compact) ─────────────────────────────
+
+class _ChartModeSwitch extends StatelessWidget {
+  const _ChartModeSwitch({required this.mode, required this.onChanged});
+
+  final _ChartMode mode;
+  final ValueChanged<_ChartMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.raisedDark : AppColors.raised,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ChartModeIcon(
+            icon: Icons.pie_chart_rounded,
+            isSelected: mode == _ChartMode.pie,
+            onTap: () => onChanged(_ChartMode.pie),
+          ),
+          const Gap(2),
+          _ChartModeIcon(
+            icon: Icons.bar_chart_rounded,
+            isSelected: mode == _ChartMode.bar,
+            onTap: () => onChanged(_ChartMode.bar),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChartModeIcon extends StatelessWidget {
+  const _ChartModeIcon({
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? AppColors.surfaceDarkMode : AppColors.surface)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.md - 3),
+          boxShadow: isSelected && !isDark ? AppColors.softShadowSm : null,
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: isSelected
+              ? (isDark ? AppColors.inkDark : AppColors.ink)
+              : (isDark ? AppColors.graphiteDark : AppColors.graphite),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Type toggle (Income / Expense) — full width ───────────────────────────────
 
 class _TypeToggle extends StatelessWidget {
@@ -520,10 +663,11 @@ class _TypeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(14),
+        color: isDark ? AppColors.raisedDark : AppColors.raised,
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       padding: const EdgeInsets.all(3),
       child: Row(
@@ -533,7 +677,7 @@ class _TypeToggle extends StatelessWidget {
               label: l10n.typeIncome,
               icon: Icons.arrow_downward_rounded,
               isSelected: type.isIncome,
-              selectedColor: AppColors.sageGreen,
+              selectedColor: AppColors.positive,
               onTap: () => onChanged(TransactionType.income),
             ),
           ),
@@ -543,7 +687,7 @@ class _TypeToggle extends StatelessWidget {
               label: l10n.typeExpense,
               icon: Icons.arrow_upward_rounded,
               isSelected: !type.isIncome,
-              selectedColor: AppColors.mutedTerra,
+              selectedColor: AppColors.negative,
               onTap: () => onChanged(TransactionType.expense),
             ),
           ),
@@ -581,7 +725,7 @@ class _TypeTab extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? selectedColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(11),
+          borderRadius: BorderRadius.circular(AppRadius.md - 3),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -589,7 +733,7 @@ class _TypeTab extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : AppColors.textMuted,
+              color: isSelected ? AppColors.paper : AppColors.graphite,
             ),
             const Gap(6),
             Text(
@@ -598,7 +742,8 @@ class _TypeTab extends StatelessWidget {
                 fontFamily: 'GeneralSans',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AppColors.textMuted,
+                letterSpacing: -0.1,
+                color: isSelected ? AppColors.paper : AppColors.graphite,
               ),
             ),
           ],
@@ -627,6 +772,7 @@ class _FilterDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -634,17 +780,16 @@ class _FilterDropdown extends StatelessWidget {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding:
+            const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 11),
         decoration: BoxDecoration(
-          color: isActive
-              ? accentColor.withValues(alpha: 0.1)
-              : context.colors.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
+          color: isDark ? AppColors.surfaceDarkMode : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
             color: isActive
-                ? accentColor.withValues(alpha: 0.4)
-                : Colors.transparent,
-            width: 1.2,
+                ? accentColor
+                : (isDark ? AppColors.dividerDark : AppColors.divider),
+            width: 1,
           ),
         ),
         child: Row(
@@ -652,27 +797,34 @@ class _FilterDropdown extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: isActive ? accentColor : AppColors.textMuted,
+              color: isActive
+                  ? accentColor
+                  : (isDark ? AppColors.graphiteDark : AppColors.graphite),
             ),
-            const Gap(8),
+            const Gap(AppSpacing.sm),
             Expanded(
               child: Text(
                 label,
                 style: TextStyle(
                   fontFamily: 'GeneralSans',
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                  color: isActive ? accentColor : AppColors.textMuted,
+                  letterSpacing: -0.1,
+                  color: isActive
+                      ? accentColor
+                      : (isDark ? AppColors.inkDark : AppColors.ink),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Gap(4),
+            const Gap(AppSpacing.xs),
             Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 18,
-              color: isActive ? accentColor : AppColors.textSubtle,
+              color: isActive
+                  ? accentColor
+                  : (isDark ? AppColors.graphiteSoftDark : AppColors.graphiteSoft),
             ),
           ],
         ),
@@ -700,6 +852,7 @@ class _PickerOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -707,22 +860,25 @@ class _PickerOption extends StatelessWidget {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        margin: const EdgeInsets.only(bottom: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: 14),
         decoration: BoxDecoration(
           color: isSelected
               ? accentColor.withValues(alpha: 0.1)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
           children: [
             Icon(
               icon,
               size: 20,
-              color: isSelected ? accentColor : AppColors.textMuted,
+              color: isSelected
+                  ? accentColor
+                  : (isDark ? AppColors.graphiteDark : AppColors.graphite),
             ),
-            const Gap(14),
+            const Gap(AppSpacing.md),
             Expanded(
               child: Text(
                 label,
@@ -730,16 +886,17 @@ class _PickerOption extends StatelessWidget {
                   fontFamily: 'GeneralSans',
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: -0.1,
                   color: isSelected
                       ? accentColor
-                      : context.colors.onSurface,
+                      : (isDark ? AppColors.inkDark : AppColors.ink),
                 ),
               ),
             ),
             if (isSelected)
               Icon(
                 Icons.check_rounded,
-                size: 20,
+                size: 18,
                 color: accentColor,
               ),
           ],
@@ -749,41 +906,3 @@ class _PickerOption extends StatelessWidget {
   }
 }
 
-// ── Chart mode button ─────────────────────────────────────────────────────────
-
-class _ChartModeButton extends StatelessWidget {
-  const _ChartModeButton({
-    required this.icon,
-    required this.isSelected,
-    required this.accentColor,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final bool isSelected;
-  final Color accentColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected ? accentColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: isSelected ? Colors.white : AppColors.textMuted,
-        ),
-      ),
-    );
-  }
-}

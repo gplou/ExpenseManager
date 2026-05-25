@@ -102,16 +102,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
 
       // Start the fade-in immediately so the dark backdrop appears at once.
       _ctrl.forward();
-
-      // Delay the spotlight measurement for widgets that animate into place
-      // (e.g. SpeedDial mini-buttons need ~300 ms to reach their final position).
-      if (widget.step.measureDelay == Duration.zero) {
-        _measureTarget();
-      } else {
-        Future.delayed(widget.step.measureDelay, () {
-          if (mounted) _measureTarget();
-        });
-      }
+      _measureTarget();
     });
   }
 

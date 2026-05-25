@@ -481,7 +481,7 @@
   "@tutorialFinish": {},
   "tutorialAddTitle": "Añade transacciones",
   "@tutorialAddTitle": {},
-  "tutorialAddBody": "Toca el botón + para desplegar las opciones de registro. Puedes añadir con voz, manualmente o fotografiando un recibo.",
+  "tutorialAddBody": "Toca el botón + para abrir el formulario. Desde ahí puedes registrar la transacción manualmente, dictarla con voz 🎤 o fotografiar un recibo 📷 — la IA rellena el resto.",
   "@tutorialAddBody": {},
   "tutorialVoiceStepTitle": "🎤 Añadir con voz",
   "@tutorialVoiceStepTitle": {},

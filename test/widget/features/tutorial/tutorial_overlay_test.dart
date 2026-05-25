@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/features/tutorial/tutorial_notifier.dart';
 import 'package:expense_manager/features/tutorial/tutorial_overlay.dart';
+import 'package:expense_manager/features/tutorial/tutorial_step.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
 Widget _wrap(Widget child) {
@@ -67,7 +68,7 @@ void main() {
 
     final n = container.read(tutorialProvider.notifier);
     n.start();
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < kTutorialStepCount - 1; i++) {
       n.next();
     }
     expect(container.read(tutorialProvider).isLastStep, isTrue);

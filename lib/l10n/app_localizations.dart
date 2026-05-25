@@ -1395,7 +1395,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialAddBody.
   ///
   /// In es, this message translates to:
-  /// **'Toca el botón + para desplegar las opciones de registro. Puedes añadir con voz, manualmente o fotografiando un recibo.'**
+  /// **'Toca el botón + para abrir el formulario. Desde ahí puedes registrar la transacción manualmente, dictarla con voz 🎤 o fotografiar un recibo 📷 — la IA rellena el resto.'**
   String get tutorialAddBody;
 
   /// No description provided for @tutorialVoiceStepTitle.

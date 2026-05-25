@@ -270,7 +270,7 @@
 
   "tutorialFinish": "Finish",
   "tutorialAddTitle": "Add transactions",
-  "tutorialAddBody": "Tap the + button to expand the recording options. You can add by voice, manually, or by photographing a receipt.",
+  "tutorialAddBody": "Tap the + button to open the form. From there you can record the transaction manually, dictate it by voice 🎤, or photograph a receipt 📷 — the AI fills in the rest.",
   "tutorialVoiceStepTitle": "🎤 Add by voice",
   "tutorialVoiceStepBody": "Say the amount, category, subcategory and a description aloud. Mentioning the word \"category\" or \"subcategory\" before the name (e.g. \"category Food, subcategory restaurant\") helps the AI record the transaction correctly.",
   "tutorialManualStepTitle": "✏️ Add manually",

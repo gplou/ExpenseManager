@@ -692,7 +692,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialAddBody =>
-      'Tap the + button to expand the recording options. You can add by voice, manually, or by photographing a receipt.';
+      'Tap the + button to open the form. From there you can record the transaction manually, dictate it by voice 🎤, or photograph a receipt 📷 — the AI fills in the rest.';
 
   @override
   String get tutorialVoiceStepTitle => '🎤 Add by voice';

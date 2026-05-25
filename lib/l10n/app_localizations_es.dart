@@ -695,7 +695,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialAddBody =>
-      'Toca el botón + para desplegar las opciones de registro. Puedes añadir con voz, manualmente o fotografiando un recibo.';
+      'Toca el botón + para abrir el formulario. Desde ahí puedes registrar la transacción manualmente, dictarla con voz 🎤 o fotografiar un recibo 📷 — la IA rellena el resto.';
 
   @override
   String get tutorialVoiceStepTitle => '🎤 Añadir con voz';

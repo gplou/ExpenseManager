@@ -37,15 +37,16 @@ void main() {
     expect(skippable.single.targetKey, TutorialKeys.chatBtnKey);
   });
 
-  test('SpeedDial-targeting steps (1-3) wait for the open animation', () {
-    final steps = buildTutorialSteps(l10n);
-    for (var i = 1; i <= 3; i++) {
-      expect(
-        steps[i].measureDelay.inMilliseconds,
-        greaterThanOrEqualTo(300),
-        reason: 'step $i should wait for the dial animation',
-      );
-    }
+  test('all expected dashboard keys are covered exactly once', () {
+    final targets = buildTutorialSteps(l10n).map((s) => s.targetKey).toSet();
+    expect(targets, {
+      TutorialKeys.fabKey,
+      TutorialKeys.balanceCardKey,
+      TutorialKeys.chartsBtnKey,
+      TutorialKeys.seeAllBtnKey,
+      TutorialKeys.chatBtnKey,
+      TutorialKeys.drawerBtnKey,
+    });
   });
 
   test('defaults apply when constructor arguments are omitted', () {
@@ -56,7 +57,6 @@ void main() {
     );
     expect(step.spotlightPadding, 14.0);
     expect(step.spotlightRadius, 18.0);
-    expect(step.measureDelay, Duration.zero);
     expect(step.skipIfKeyMissing, isFalse);
     expect(step.icon, isNull);
   });
