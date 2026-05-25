@@ -37,12 +37,20 @@ class _FakeLocaleNotifier extends LocaleNotifier {
 
 class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
   @override
-  Future<ParsedVoiceTransaction?> parse(String transcription) async => null;
+  Future<ParsedVoiceTransaction?> parse(
+    String transcription, {
+    List<Map<String, String>> subcategories = const [],
+  }) async =>
+      null;
 }
 
 class _FakeImageParser extends Fake implements ImageTransactionParser {
   @override
-  Future<ParsedVoiceTransaction?> parse(Uint8List imageBytes) async => null;
+  Future<ParsedVoiceTransaction?> parse(
+    Uint8List imageBytes, {
+    List<Map<String, String>> subcategories = const [],
+  }) async =>
+      null;
 }
 
 // ── Widget builder ────────────────────────────────────────────────────────────
