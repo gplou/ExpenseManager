@@ -209,6 +209,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           final existing = await repo.getForCategory(v!.category, v.type);
           if (!existing.contains(v.subcategory)) {
             await repo.add(v.category, v.type, v.subcategory!);
+            ref.invalidate(allSubcategoriesProvider);
           }
           ref.invalidate(subcategoriesProvider(
             (category: v.category, type: v.type),

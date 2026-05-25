@@ -12,3 +12,11 @@ final subcategoriesProvider = FutureProvider.autoDispose
     return repo.getForCategory(params.category, params.type);
   },
 );
+
+/// All user subcategories as `[{category, type, name}]`, fetched once and
+/// cached for the lifetime of the provider. Invalidate after add/remove.
+final allSubcategoriesProvider =
+    FutureProvider<List<Map<String, String>>>((ref) {
+  final repo = ref.watch(subcategoriesRepositoryProvider);
+  return repo.getAll();
+});

@@ -16,7 +16,10 @@ class VoiceTransactionParser {
   final SupabaseClient _client;
   static const String _function = 'parse-voice-transaction';
 
-  Future<ParsedVoiceTransaction?> parse(String transcription) async {
+  Future<ParsedVoiceTransaction?> parse(
+    String transcription, {
+    List<Map<String, String>> subcategories = const [],
+  }) async {
     if (!AiRateLimiter.instance.tryConsume()) {
       throw const RateLimitFailure(
         'Rate limit reached: max ${AiRateLimiter.maxPerMinute} uses per minute. Please wait.',
@@ -26,7 +29,10 @@ class VoiceTransactionParser {
       final response = await _client.functions
           .invoke(
             _function,
-            body: {'transcription': transcription},
+            body: {
+              'transcription': transcription,
+              if (subcategories.isNotEmpty) 'subcategories': subcategories,
+            },
           )
           .timeout(
             const Duration(seconds: 15),

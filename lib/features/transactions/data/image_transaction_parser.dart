@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/failures.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/utils/ai_rate_limiter.dart';
+import '../../../core/utils/image_compressor.dart';
 import '../../../core/utils/image_mime_detector.dart';
 import 'ai_response_parser.dart';
 import '../domain/parsed_voice_transaction.dart';
@@ -18,7 +19,10 @@ class ImageTransactionParser {
   final SupabaseClient _client;
   static const String _function = 'parse-image-transaction';
 
-  Future<ParsedVoiceTransaction?> parse(Uint8List imageBytes) async {
+  Future<ParsedVoiceTransaction?> parse(
+    Uint8List imageBytes, {
+    List<Map<String, String>> subcategories = const [],
+  }) async {
     if (!AiRateLimiter.instance.tryConsume()) {
       throw const RateLimitFailure(
         'Rate limit reached: max ${AiRateLimiter.maxPerMinute} uses per minute. Please wait.',
@@ -28,8 +32,9 @@ class ImageTransactionParser {
     if (!ImageMimeDetector.isValidImage(imageBytes)) return null;
 
     try {
-      final base64Image = base64Encode(imageBytes);
-      final mimeType = ImageMimeDetector.detect(imageBytes) ?? 'image/jpeg';
+      final compressed = await ImageCompressor.compress(imageBytes);
+      final base64Image = base64Encode(compressed);
+      final mimeType = ImageMimeDetector.detect(compressed) ?? 'image/jpeg';
 
       final response = await _client.functions
           .invoke(
@@ -37,6 +42,7 @@ class ImageTransactionParser {
             body: {
               'image_base64': base64Image,
               'mime_type': mimeType,
+              if (subcategories.isNotEmpty) 'subcategories': subcategories,
             },
           )
           .timeout(

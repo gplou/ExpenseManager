@@ -6,26 +6,17 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 
 function sanitizeInput(input: string): string {
-  // Remove characters that could be used for prompt injection
   return input
-    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '') // control chars
-    .replace(/```/g, '')  // code fences
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '')
+    .replace(/```/g, '')
     .trim()
 }
 
-function buildPrompt(transcription: string, subcatBlock: string, todayDate: string): string {
-  const sanitized = sanitizeInput(transcription)
-  return `You are a transaction parser for a personal finance app.
-Extract transaction details from this text (may be in Spanish or English):
-"${sanitized}"
-
-Today's date is ${todayDate}.
+const SYSTEM_INSTRUCTION = `You are a transaction parser for a personal finance app.
+Extract transaction details from user input (may be in Spanish or English).
 
 Available expense categories: Comida, Transporte, Vivienda, Ocio, Salud, Educación, Ropa, Tecnología, Otros
 Available income categories: Salario, Freelance, Inversión, Regalo, Otros
-
-The user has these existing subcategories:
-${subcatBlock}
 
 Return ONLY valid JSON (no explanation):
 {"amount": <positive number>, "type": "expense" or "income", "category": "<exact category name>", "subcategory": "<subcategory or null>", "is_new_subcategory": <boolean>, "description": "<brief description or empty string>", "date": "<YYYY-MM-DD or null>", "is_recurring": <boolean>, "recurrence_type": "<weekly|monthly|annual or null>"}
@@ -43,6 +34,26 @@ Rules:
 - is_recurring: true if the user mentions the transaction is recurring (e.g. "recurrente", "cada mes", "cada semana", "mensual", "semanal", "anual"). Default false.
 - recurrence_type: if is_recurring is true, detect the frequency: "weekly" (cada semana, semanal), "monthly" (cada mes, mensual, or just "recurrente"), "annual" (cada año, anual). If is_recurring is true but no specific frequency is mentioned, default to "monthly". If is_recurring is false, return null.
 - Example: "He salido a cenar mexicano" → category: "Comida", subcategory: "Cena", description: "Mexicano", date: null, is_recurring: false, recurrence_type: null`
+
+function buildUserMessage(transcription: string, subcatBlock: string, todayDate: string): string {
+  const sanitized = sanitizeInput(transcription)
+  return `Today's date is ${todayDate}.
+
+User's existing subcategories:
+${subcatBlock}
+
+Transaction text: "${sanitized}"`
+}
+
+function buildSubcatBlock(subcategories: Array<{ category: string; type: string; name: string }> | null): string {
+  if (!subcategories || subcategories.length === 0) return 'None yet.'
+  const map: Record<string, string[]> = {}
+  for (const row of subcategories) {
+    const key = `${row.type} - ${row.category}`
+    if (!map[key]) map[key] = []
+    map[key].push(row.name)
+  }
+  return Object.entries(map).map(([k, v]) => `${k}: ${v.join(', ')}`).join('\n')
 }
 
 const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') ?? ''
@@ -102,45 +113,39 @@ serve(async (req: Request) => {
     )
   }
 
-  // ── 3. Fetch user's subcategories ─────────────────────────────────────────
-  let subcatBlock = 'None yet.'
-  try {
-    const { data: subcatRows } = await supabase
-      .from('subcategories')
-      .select('category, type, name')
-      .eq('user_id', user.id)
-
-    if (subcatRows && subcatRows.length > 0) {
-      const subcatMap: Record<string, string[]> = {}
-      for (const row of subcatRows) {
-        const key = `${row.type} - ${row.category}`
-        if (!subcatMap[key]) subcatMap[key] = []
-        subcatMap[key].push(row.name)
-      }
-      subcatBlock = Object.entries(subcatMap)
-        .map(([k, v]) => `${k}: ${v.join(', ')}`)
-        .join('\n')
-    }
-  } catch {
-    // If subcategory fetch fails, proceed without them
-  }
-
-  // ── 4. Validate request body ──────────────────────────────────────────────
+  // ── 3. Validate request body ──────────────────────────────────────────────
   let transcription: string
+  let clientSubcategories: Array<{ category: string; type: string; name: string }> | null = null
+
   try {
     const body = await req.json()
     transcription = body?.transcription
     if (!transcription || typeof transcription !== 'string' || transcription.trim().length === 0) {
       throw new Error('invalid')
     }
-    if (transcription.length > 500) {
-      transcription = transcription.slice(0, 500)
-    }
+    if (transcription.length > 500) transcription = transcription.slice(0, 500)
+    if (Array.isArray(body?.subcategories)) clientSubcategories = body.subcategories
   } catch {
     return new Response(
       JSON.stringify({ error: 'Bad request: transcription is required' }),
       { status: 400, headers: { ...corsHeaders, 'content-type': 'application/json' } }
     )
+  }
+
+  // ── 4. Resolve subcategories (client-sent or DB fallback) ─────────────────
+  let subcatBlock = 'None yet.'
+  if (clientSubcategories !== null) {
+    subcatBlock = buildSubcatBlock(clientSubcategories)
+  } else {
+    try {
+      const { data: subcatRows } = await supabase
+        .from('subcategories')
+        .select('category, type, name')
+        .eq('user_id', user.id)
+      subcatBlock = buildSubcatBlock(subcatRows ?? [])
+    } catch {
+      // proceed without subcategories
+    }
   }
 
   // ── 5. Call Gemini API ────────────────────────────────────────────────────
@@ -152,7 +157,7 @@ serve(async (req: Request) => {
   }
 
   const todayDate = new Date().toISOString().slice(0, 10)
-  const prompt = buildPrompt(transcription, subcatBlock, todayDate)
+  const userMessage = buildUserMessage(transcription, subcatBlock, todayDate)
 
   const geminiRes = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`,
@@ -160,8 +165,9 @@ serve(async (req: Request) => {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-goog-api-key': GOOGLE_AI_KEY },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 400, temperature: 0 },
+        systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+        contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+        generationConfig: { maxOutputTokens: 250, temperature: 0 },
       }),
     }
   )
@@ -177,8 +183,6 @@ serve(async (req: Request) => {
   // ── 6. Return only the parsed result to the client ────────────────────────
   const geminiData = await geminiRes.json()
   let text: string = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-
-  // Strip markdown code fences Gemini sometimes adds (```json ... ```)
   text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
 
   return new Response(

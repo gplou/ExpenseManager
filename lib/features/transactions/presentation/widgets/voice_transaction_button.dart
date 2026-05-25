@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/voice_input_gateway.dart';
 import '../../data/voice_transaction_parser.dart';
 import '../../domain/parsed_voice_transaction.dart';
+import '../providers/subcategories_provider.dart';
 import '../screens/add_transaction_screen.dart';
 
 enum _VoiceState { idle, listening, processing }
@@ -91,7 +92,8 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
 
     ParsedVoiceTransaction? parsed;
     try {
-      parsed = await _parser.parse(text);
+      final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
+      parsed = await _parser.parse(text, subcategories: subcats);
     } catch (e) {
       if (!mounted) return;
       setState(() => _state = _VoiceState.idle);

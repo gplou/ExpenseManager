@@ -22,6 +22,7 @@ import '../../../core/services/analytics_service.dart';
 import '../../transactions/data/image_transaction_parser.dart';
 import '../../transactions/data/voice_transaction_parser.dart';
 import '../../transactions/domain/parsed_voice_transaction.dart';
+import '../../transactions/presentation/providers/subcategories_provider.dart';
 import '../../transactions/presentation/screens/add_transaction_screen.dart';
 import '../../tutorial/tutorial_keys.dart';
 import '../../tutorial/tutorial_notifier.dart';
@@ -166,7 +167,8 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     setState(() => _voiceState = VoiceInputState.processing);
     ParsedVoiceTransaction? parsed;
     try {
-      parsed = await _parser.parse(text);
+      final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
+      parsed = await _parser.parse(text, subcategories: subcats);
     } catch (e) {
       if (!mounted) return;
       setState(() => _voiceState = VoiceInputState.idle);
@@ -247,7 +249,8 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       tempFile = File(pickedFile.path);
       final imageBytes = await tempFile.readAsBytes();
 
-      final ParsedVoiceTransaction? parsed = await _imageParser.parse(imageBytes);
+      final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
+      final ParsedVoiceTransaction? parsed = await _imageParser.parse(imageBytes, subcategories: subcats);
 
       if (!mounted) return;
       setState(() => _voiceState = VoiceInputState.idle);

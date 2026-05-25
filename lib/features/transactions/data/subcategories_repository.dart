@@ -24,6 +24,21 @@ class SubcategoriesRepository with AuthenticatedRepository {
     return (response as List).map((e) => e['name'] as String).toList();
   }
 
+  Future<List<Map<String, String>>> getAll() async {
+    final response = await _client
+        .from('subcategories')
+        .select('category, type, name')
+        .eq('user_id', userId)
+        .order('created_at');
+    return (response as List)
+        .map((e) => {
+              'category': e['category'] as String,
+              'type': e['type'] as String,
+              'name': e['name'] as String,
+            })
+        .toList();
+  }
+
   Future<void> add(
       String category, TransactionType type, String name) async {
     await _client.from('subcategories').insert({
