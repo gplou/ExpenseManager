@@ -1668,6 +1668,42 @@ abstract class AppLocalizations {
   /// **'Cerrar menú de acciones'**
   String get fabCloseMenu;
 
+  /// No description provided for @voiceHintStartListening.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para grabar tu gasto'**
+  String get voiceHintStartListening;
+
+  /// No description provided for @photoHintStartCamera.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para escanear un ticket'**
+  String get photoHintStartCamera;
+
+  /// No description provided for @emptyStateVoiceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Habla tu primer gasto'**
+  String get emptyStateVoiceTitle;
+
+  /// No description provided for @emptyStateVoiceExample.
+  ///
+  /// In es, this message translates to:
+  /// **'\"café 3.50\"'**
+  String get emptyStateVoiceExample;
+
+  /// No description provided for @emptyStatePhotoTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto del ticket'**
+  String get emptyStatePhotoTitle;
+
+  /// No description provided for @emptyStateManualTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir manualmente'**
+  String get emptyStateManualTitle;
+
   /// No description provided for @voiceListening.
   ///
   /// In es, this message translates to:

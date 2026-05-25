@@ -859,6 +859,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fabCloseMenu => 'Aktionsmenü schließen';
 
   @override
+  String get voiceHintStartListening => 'Tippe, um deine Ausgabe aufzuzeichnen';
+
+  @override
+  String get photoHintStartCamera => 'Tippe, um einen Beleg zu scannen';
+
+  @override
+  String get emptyStateVoiceTitle => 'Sprich deine erste Ausgabe';
+
+  @override
+  String get emptyStateVoiceExample => '„Kaffee 3,50“';
+
+  @override
+  String get emptyStatePhotoTitle => 'Foto des Belegs';
+
+  @override
+  String get emptyStateManualTitle => 'Manuell hinzufügen';
+
+  @override
   String get voiceListening => 'Hört zu, antippen zum Stoppen';
 
   @override

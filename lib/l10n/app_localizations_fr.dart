@@ -854,6 +854,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fabCloseMenu => 'Fermer le menu d\'actions';
 
   @override
+  String get voiceHintStartListening =>
+      'Touchez pour enregistrer votre dépense';
+
+  @override
+  String get photoHintStartCamera => 'Touchez pour scanner un ticket';
+
+  @override
+  String get emptyStateVoiceTitle => 'Dictez votre première dépense';
+
+  @override
+  String get emptyStateVoiceExample => '« café 3,50 »';
+
+  @override
+  String get emptyStatePhotoTitle => 'Photo du ticket';
+
+  @override
+  String get emptyStateManualTitle => 'Ajouter manuellement';
+
+  @override
   String get voiceListening => 'Écoute en cours, touchez pour arrêter';
 
   @override

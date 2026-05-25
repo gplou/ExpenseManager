@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/config/router.dart';
-import '../transactions/presentation/screens/add_transaction_screen.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/currency_provider.dart';
 import '../../core/providers/number_format_provider.dart';
@@ -337,9 +336,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       error: (e, _) => Text(e.toString()),
                       data: (transactions) {
                         if (transactions.isEmpty) {
-                          return _EmptyTransactions(
-                            onAdd: () => showAddTransactionSheet(context),
-                          );
+                          return const _EmptyTransactions();
                         }
                         final isDark =
                             Theme.of(context).brightness == Brightness.dark;
@@ -473,74 +470,147 @@ class _ShimmerTile extends StatelessWidget {
 
 // ── Empty state ──────────────────────────────────────────────────────────────
 
-class _EmptyTransactions extends StatelessWidget {
-  const _EmptyTransactions({required this.onAdd});
-  final VoidCallback onAdd;
+class _EmptyTransactions extends ConsumerWidget {
+  const _EmptyTransactions();
+
+  void _dispatch(WidgetRef ref, String action) {
+    ref.read(pendingWidgetActionProvider.notifier).state = action;
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.raisedDark : AppColors.raised,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.inbox_outlined,
-                size: 24,
-                color: cs.onSurface.withValues(alpha: 0.5),
-              ),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.raisedDark : AppColors.raised,
+              shape: BoxShape.circle,
             ),
-            const Gap(16),
-            Text(
-              l10n.noTransactionsPeriod,
-              textAlign: TextAlign.center,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: cs.onSurface.withValues(alpha: 0.55),
-              ),
+            child: Icon(
+              Icons.inbox_outlined,
+              size: 24,
+              color: cs.onSurface.withValues(alpha: 0.5),
             ),
-            const Gap(14),
-            Semantics(
-              button: true,
-              label: l10n.newTransaction,
-              child: InkWell(
-                onTap: onAdd,
-                borderRadius: BorderRadius.circular(100),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 4),
-                  child: Row(
+          ),
+          const Gap(12),
+          Text(
+            l10n.noTransactionsPeriod,
+            textAlign: TextAlign.center,
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: cs.onSurface.withValues(alpha: 0.55),
+            ),
+          ),
+          const Gap(20),
+          _EmptyStateAction(
+            icon: Icons.mic_rounded,
+            title: l10n.emptyStateVoiceTitle,
+            subtitle: l10n.emptyStateVoiceExample,
+            tint: AppColors.dustyTeal,
+            onTap: () => _dispatch(ref, WidgetActions.voice),
+          ),
+          const Gap(10),
+          _EmptyStateAction(
+            icon: Icons.camera_alt_rounded,
+            title: l10n.emptyStatePhotoTitle,
+            tint: AppColors.dustyTeal,
+            onTap: () => _dispatch(ref, WidgetActions.photo),
+          ),
+          const Gap(10),
+          _EmptyStateAction(
+            icon: Icons.edit_rounded,
+            title: l10n.emptyStateManualTitle,
+            tint: cs.onSurface.withValues(alpha: 0.7),
+            onTap: () => _dispatch(ref, WidgetActions.add),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyStateAction extends StatelessWidget {
+  const _EmptyStateAction({
+    required this.icon,
+    required this.title,
+    required this.tint,
+    required this.onTap,
+    this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final Color tint;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.raisedDark : AppColors.raised;
+    return Semantics(
+      button: true,
+      label: subtitle == null ? title : '$title. $subtitle',
+      child: Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: tint.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 20, color: tint),
+                ),
+                const Gap(12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        l10n.newTransaction,
+                        title,
                         style: context.textTheme.labelLarge?.copyWith(
-                          color: cs.primary,
+                          color: cs.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const Gap(2),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 14,
-                        color: cs.primary,
-                      ),
+                      if (subtitle != null) ...[
+                        const Gap(2),
+                        Text(
+                          subtitle!,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
-              ),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 18,
+                  color: cs.onSurface.withValues(alpha: 0.4),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

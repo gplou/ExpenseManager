@@ -1,18 +1,10 @@
 import 'dart:developer' as developer;
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
-import '../../../../core/config/router.dart';
 import '../../../../core/providers/currency_provider.dart';
-import '../../../../core/providers/locale_provider.dart';
-import '../../../../core/services/analytics_service.dart';
-import '../../../../core/services/image_input_gateway.dart';
-import '../../../../core/services/voice_input_gateway.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_elevation.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -22,10 +14,8 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/numeric_keypad.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../subscription/subscription_provider.dart';
-import '../../data/image_transaction_parser.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../data/subcategories_repository.dart';
-import '../../data/voice_transaction_parser.dart';
 import '../../domain/parsed_voice_transaction.dart';
 import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_categories.dart';
@@ -36,8 +26,6 @@ import '../providers/transactions_provider.dart';
 import '../widgets/category_picker_sheet.dart';
 import '../widgets/create_subcategory_dialog.dart';
 import '../widgets/recent_categories_strip.dart';
-
-enum _CaptureState { idle, listening, voiceProcessing, imageProcessing }
 
 /// Presents [AddTransactionScreen] as a draggable bottom sheet covering ~94%
 /// of the screen height with rounded top corners. Used as the default entry
@@ -180,22 +168,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   int _currentPage = 0;
   static const Duration _pageAnim = Duration(milliseconds: 250);
 
-  late final VoiceInputGateway _speech;
-  late final VoiceTransactionParser _voiceParser;
-  late final ImageInputGateway _imagePicker;
-  late final ImageTransactionParser _imageParser;
-  _CaptureState _capture = _CaptureState.idle;
-
   bool get _isEditing => widget.transaction != null;
-  bool get _isCapturing => _capture != _CaptureState.idle;
-
-  static String _speechLocaleId(String code) => switch (code) {
-        'es' => 'es_ES',
-        'en' => 'en_US',
-        'fr' => 'fr_FR',
-        'de' => 'de_DE',
-        _ => 'en_US',
-      };
 
   @override
   void initState() {
@@ -219,11 +192,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     // (editing existing tx or voice-parsed data).
     _currentPage = (_isEditing || hasInitialAmount) ? 1 : 0;
     _pageController = PageController(initialPage: _currentPage);
-
-    _speech = ref.read(voiceInputGatewayProvider);
-    _voiceParser = ref.read(voiceTransactionParserProvider);
-    _imagePicker = ref.read(imageInputGatewayProvider);
-    _imageParser = ref.read(imageTransactionParserProvider);
 
     if (v?.isRecurring == true) {
       _isRecurring = true;
@@ -271,228 +239,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   @override
   void dispose() {
-    _speech.stop();
     _keypadController.dispose();
     _descriptionController.dispose();
     _descriptionFocus.dispose();
     _pageController.dispose();
     super.dispose();
-  }
-
-  // ── AI capture (voice + photo) ─────────────────────────────────────────────
-
-  bool _requirePro() {
-    if (ref.read(isProProvider)) return true;
-    context.push(AppRoutes.pro);
-    return false;
-  }
-
-  Future<void> _startVoice() async {
-    if (_isCapturing) return;
-    if (!_requirePro()) return;
-
-    final available = await _speech.initialize(
-      onError: (_) {
-        if (mounted) setState(() => _capture = _CaptureState.idle);
-      },
-    );
-    if (!available) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.micUnavailable)),
-        );
-      }
-      return;
-    }
-
-    setState(() => _capture = _CaptureState.listening);
-    AnalyticsService.track(AnalyticsService.voiceUsed);
-    final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
-    await _speech.listen(
-      localeId: _speechLocaleId(langCode),
-      onResult: (result) {
-        if (result.finalResult) _processVoice(result.recognizedWords);
-      },
-    );
-  }
-
-  Future<void> _processVoice(String text) async {
-    if (text.trim().isEmpty) {
-      if (mounted) setState(() => _capture = _CaptureState.idle);
-      return;
-    }
-    setState(() => _capture = _CaptureState.voiceProcessing);
-    ParsedVoiceTransaction? parsed;
-    try {
-      parsed = await _voiceParser.parse(text);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _capture = _CaptureState.idle);
-      final info = e.toString().split('\n').first;
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text(l10n.voiceAiError(e.runtimeType.toString(), info)),
-        ),
-      );
-      return;
-    }
-    if (!mounted) return;
-    if (parsed == null) {
-      setState(() => _capture = _CaptureState.idle);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).voiceInterpretError),
-        ),
-      );
-      return;
-    }
-    await _speech.stop();
-    if (!mounted) return;
-    setState(() => _capture = _CaptureState.idle);
-    await _applyParsed(parsed);
-  }
-
-  Future<void> _startCamera() async {
-    if (_isCapturing) return;
-    if (!_requirePro()) return;
-
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        final l10n = AppLocalizations.of(ctx);
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.camera_alt_outlined),
-                  title: Text(l10n.cameraOption),
-                  onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.photo_library_outlined),
-                  title: Text(l10n.galleryOption),
-                  onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    if (source == null || !mounted) return;
-
-    final XFile? picked = await _imagePicker.pickImage(
-      source: source,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 85,
-    );
-    if (picked == null || !mounted) return;
-    AnalyticsService.track(AnalyticsService.photoUsed, {'source': source.name});
-    await _processImage(picked);
-  }
-
-  Future<void> _processImage(XFile pickedFile) async {
-    if (!mounted) return;
-    setState(() => _capture = _CaptureState.imageProcessing);
-
-    File? tempFile;
-    try {
-      tempFile = File(pickedFile.path);
-      final bytes = await tempFile.readAsBytes();
-      final parsed = await _imageParser.parse(bytes);
-      if (!mounted) return;
-      setState(() => _capture = _CaptureState.idle);
-      if (parsed == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).imageTransactionNotDetected,
-            ),
-          ),
-        );
-        return;
-      }
-      await _applyParsed(parsed);
-    } catch (e) {
-      if (mounted) {
-        setState(() => _capture = _CaptureState.idle);
-        final info = e.toString().split('\n').first;
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text(l10n.imageAiError(e.runtimeType.toString(), info)),
-          ),
-        );
-      }
-    } finally {
-      try {
-        if (tempFile != null && await tempFile.exists()) {
-          await tempFile.delete();
-        }
-      } catch (_) {}
-    }
-  }
-
-  Future<void> _applyParsed(ParsedVoiceTransaction parsed) async {
-    final hasAmount = parsed.amount > 0;
-    setState(() {
-      _type = parsed.type;
-      _selectedCategory = parsed.category;
-      _selectedSubcategory = parsed.subcategory;
-      if (parsed.description != null && parsed.description!.isNotEmpty) {
-        _descriptionController.text = parsed.description!;
-      }
-      if (parsed.date != null) _selectedDate = parsed.date!;
-      if (parsed.isRecurring) {
-        _isRecurring = true;
-        _recurrenceType = switch (parsed.recurrenceType) {
-          'weekly' => RecurrenceType.weekly,
-          'annual' => RecurrenceType.annual,
-          _ => RecurrenceType.monthly,
-        };
-      }
-      if (hasAmount) {
-        _keypadController.setValue(parsed.amount);
-        _amountError = null;
-      }
-    });
-    if (parsed.subcategory != null && parsed.subcategory!.isNotEmpty) {
-      try {
-        final repo = ref.read(subcategoriesRepositoryProvider);
-        final existing =
-            await repo.getForCategory(parsed.category, parsed.type);
-        if (!existing.contains(parsed.subcategory)) {
-          await repo.add(parsed.category, parsed.type, parsed.subcategory!);
-        }
-        ref.invalidate(subcategoriesProvider(
-          (category: parsed.category, type: parsed.type),
-        ));
-      } catch (e, st) {
-        developer.log(
-          'Failed to ensure parsed subcategory',
-          error: e,
-          stackTrace: st,
-        );
-      }
-    }
-    if (hasAmount && mounted && _currentPage == 0) {
-      await _pageController.animateToPage(
-        1,
-        duration: _pageAnim,
-        curve: Curves.easeOut,
-      );
-    }
   }
 
   Future<void> _goToDetails() async {
@@ -831,16 +582,6 @@ Future<void> _save() async {
                 ],
               ),
             ),
-            if (_isCapturing)
-              _CaptureOverlay(
-                state: _capture,
-                onStop: () async {
-                  await _speech.stop();
-                  if (mounted) {
-                    setState(() => _capture = _CaptureState.idle);
-                  }
-                },
-              ),
           ],
         ),
       ),
@@ -868,16 +609,6 @@ Future<void> _save() async {
               });
             },
           ),
-          if (!_isEditing) ...[
-            const SizedBox(height: AppSpacing.sm),
-            _AiShortcutsRow(
-              voiceLabel: l10n.labelVoice,
-              photoLabel: l10n.labelPhoto,
-              disabled: _isCapturing,
-              onVoiceTap: _startVoice,
-              onPhotoTap: _startCamera,
-            ),
-          ],
           const SizedBox(height: AppSpacing.sm),
           _AmountDisplay(
             controller: _keypadController,
@@ -1113,7 +844,7 @@ class _AmountDisplay extends StatelessWidget {
           variant: AppCardVariant.outlined,
           accent: accent,
           padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+              horizontal: AppSpacing.lg, vertical: AppSpacing.xxl),
           semanticLabel:
               '${l10n.amountHint}: ${hasValue ? controller.current : "0"} $currencyCode',
           child: Column(
@@ -1140,7 +871,7 @@ class _AmountDisplay extends StatelessWidget {
                     '${currencySymbol(currencyCode)} ',
                     style: TextStyle(
                       fontFamily: 'GeneralSans',
-                      fontSize: 22,
+                      fontSize: 28,
                       fontWeight: FontWeight.w600,
                       color: accent.withValues(alpha: 0.55),
                     ),
@@ -1153,7 +884,7 @@ class _AmountDisplay extends StatelessWidget {
                         hasValue ? controller.current : '0',
                         style: TextStyle(
                           fontFamily: 'GeneralSans',
-                          fontSize: 36,
+                          fontSize: 48,
                           fontWeight: FontWeight.w700,
                           color: hasValue
                               ? accent
@@ -1825,197 +1556,3 @@ class _AmountPill extends StatelessWidget {
   }
 }
 
-// ── AI shortcuts row (voice + photo buttons in step 1) ──────────────────────
-
-class _AiShortcutsRow extends StatelessWidget {
-  const _AiShortcutsRow({
-    required this.voiceLabel,
-    required this.photoLabel,
-    required this.disabled,
-    required this.onVoiceTap,
-    required this.onPhotoTap,
-  });
-
-  final String voiceLabel;
-  final String photoLabel;
-  final bool disabled;
-  final VoidCallback onVoiceTap;
-  final VoidCallback onPhotoTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _AiShortcutButton(
-            icon: Icons.mic_rounded,
-            label: voiceLabel,
-            disabled: disabled,
-            onTap: onVoiceTap,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _AiShortcutButton(
-            icon: Icons.camera_alt_outlined,
-            label: photoLabel,
-            disabled: disabled,
-            onTap: onPhotoTap,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AiShortcutButton extends StatelessWidget {
-  const _AiShortcutButton({
-    required this.icon,
-    required this.label,
-    required this.disabled,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool disabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = AppColors.dustyTeal;
-    final bg = AppColors.dustyTealLight;
-    final opacity = disabled ? 0.45 : 1.0;
-    return Opacity(
-      opacity: opacity,
-      child: Semantics(
-        button: true,
-        label: label,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: disabled ? null : onTap,
-            borderRadius: AppRadius.radiusMd,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md, vertical: AppSpacing.md),
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: AppRadius.radiusMd,
-                border: Border.all(
-                  color: color.withValues(alpha: 0.35),
-                  width: 1.2,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 20, color: color),
-                  const SizedBox(width: AppSpacing.xs + 2),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontFamily: 'GeneralSans',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Capture overlay (voice listening / AI processing) ────────────────────────
-
-class _CaptureOverlay extends StatelessWidget {
-  const _CaptureOverlay({required this.state, required this.onStop});
-
-  final _CaptureState state;
-  final VoidCallback onStop;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final isListening = state == _CaptureState.listening;
-    final label = switch (state) {
-      _CaptureState.listening => l10n.voiceListening,
-      _CaptureState.voiceProcessing => l10n.voiceProcessing,
-      _CaptureState.imageProcessing => l10n.imageProcessing,
-      _CaptureState.idle => '',
-    };
-
-    return Positioned.fill(
-      child: Semantics(
-        liveRegion: true,
-        label: label,
-        child: GestureDetector(
-          onTap: isListening ? onStop : null,
-          behavior: HitTestBehavior.opaque,
-          child: ColoredBox(
-            color: Colors.black.withValues(alpha: 0.45),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isListening)
-                    GestureDetector(
-                      onTap: onStop,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.stop_rounded,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: const BoxDecoration(
-                        color: AppColors.dustyTeal,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.8,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontFamily: 'GeneralSans',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

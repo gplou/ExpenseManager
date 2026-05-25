@@ -423,7 +423,7 @@ class _KeypadKeyState extends State<_KeypadKey> {
                   widget.label!,
                   style: TextStyle(
                     fontFamily: 'GeneralSans',
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight:
                         widget.filled ? FontWeight.w600 : FontWeight.w500,
                     letterSpacing: -0.3,

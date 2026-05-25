@@ -847,6 +847,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fabCloseMenu => 'Close actions menu';
 
   @override
+  String get voiceHintStartListening => 'Tap to record your expense';
+
+  @override
+  String get photoHintStartCamera => 'Tap to scan a receipt';
+
+  @override
+  String get emptyStateVoiceTitle => 'Speak your first expense';
+
+  @override
+  String get emptyStateVoiceExample => '\"coffee 3.50\"';
+
+  @override
+  String get emptyStatePhotoTitle => 'Photo of the receipt';
+
+  @override
+  String get emptyStateManualTitle => 'Add manually';
+
+  @override
   String get voiceListening => 'Listening, tap to stop';
 
   @override

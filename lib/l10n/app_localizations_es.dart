@@ -851,6 +851,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get fabCloseMenu => 'Cerrar menú de acciones';
 
   @override
+  String get voiceHintStartListening => 'Toca para grabar tu gasto';
+
+  @override
+  String get photoHintStartCamera => 'Toca para escanear un ticket';
+
+  @override
+  String get emptyStateVoiceTitle => 'Habla tu primer gasto';
+
+  @override
+  String get emptyStateVoiceExample => '\"café 3.50\"';
+
+  @override
+  String get emptyStatePhotoTitle => 'Foto del ticket';
+
+  @override
+  String get emptyStateManualTitle => 'Añadir manualmente';
+
+  @override
   String get voiceListening => 'Escuchando, toca para detener';
 
   @override

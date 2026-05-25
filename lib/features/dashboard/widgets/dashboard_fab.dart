@@ -12,6 +12,7 @@ import '../../../core/providers/widget_action_provider.dart';
 import '../../../core/services/image_input_gateway.dart';
 import '../../../core/services/voice_input_gateway.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_elevation.dart';
 import '../../../core/widgets/neo_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../subscription/subscription_provider.dart';
@@ -50,6 +51,8 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
   late final ImageTransactionParser _imageParser;
 
   static const double _fabSize = 64;
+  static const double _miniFabSize = 48;
+  static const double _clusterSpacing = 24;
 
   @override
   void initState() {
@@ -114,6 +117,16 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
   void _openAddSheet() {
     HapticFeedback.lightImpact();
     showAddTransactionSheet(context);
+  }
+
+  void _onTapVoice() {
+    if (!_requirePro()) return;
+    _startVoice();
+  }
+
+  void _onTapPhoto() {
+    if (!_requirePro()) return;
+    _startCamera();
   }
 
   Future<void> _startVoice() async {
@@ -318,18 +331,38 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
           left: 0,
           right: 0,
           child: Center(
-            child: Semantics(
-              button: true,
-              label: l10n.fabOpenMenu,
-              child: SizedBox(
-                key: TutorialKeys.fabKey,
-                width: _fabSize,
-                height: _fabSize,
-                child: NeoFab(
-                  icon: Icons.add,
-                  onTap: _openAddSheet,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _MiniFab(
+                  icon: Icons.mic_rounded,
+                  label: l10n.labelVoice,
+                  hint: l10n.voiceHintStartListening,
+                  onTap: _onTapVoice,
                 ),
-              ),
+                const SizedBox(width: _clusterSpacing),
+                Semantics(
+                  button: true,
+                  label: l10n.fabOpenMenu,
+                  child: SizedBox(
+                    key: TutorialKeys.fabKey,
+                    width: _fabSize,
+                    height: _fabSize,
+                    child: NeoFab(
+                      icon: Icons.add,
+                      onTap: _openAddSheet,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: _clusterSpacing),
+                _MiniFab(
+                  icon: Icons.camera_alt_rounded,
+                  label: l10n.labelPhoto,
+                  hint: l10n.photoHintStartCamera,
+                  onTap: _onTapPhoto,
+                ),
+              ],
             ),
           ),
         ),
@@ -385,6 +418,97 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.stop_rounded, color: Colors.white, size: 28),
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniFab extends StatefulWidget {
+  const _MiniFab({
+    required this.icon,
+    required this.label,
+    required this.hint,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String hint;
+  final VoidCallback onTap;
+
+  @override
+  State<_MiniFab> createState() => _MiniFabState();
+}
+
+class _MiniFabState extends State<_MiniFab>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 140),
+    );
+    _scale = Tween(begin: 1.0, end: 0.92).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleTap() async {
+    HapticFeedback.lightImpact();
+    await _ctrl.forward();
+    await _ctrl.reverse();
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark
+        ? AppColors.dustyTeal.withValues(alpha: 0.22)
+        : AppColors.dustyTealLight;
+    return Semantics(
+      button: true,
+      label: widget.label,
+      hint: widget.hint,
+      child: Tooltip(
+        message: widget.label,
+        child: SizedBox(
+          width: _SpeedDialFabState._miniFabSize,
+          height: _SpeedDialFabState._miniFabSize,
+          child: GestureDetector(
+            onTap: _handleTap,
+            child: ScaleTransition(
+              scale: _scale,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: bg,
+                  shape: BoxShape.circle,
+                  boxShadow: isDark
+                      ? null
+                      : AppElevation.tinted(
+                          AppColors.dustyTeal,
+                          opacity: 0.14,
+                        ),
+                ),
+                child: Icon(
+                  widget.icon,
+                  color: AppColors.dustyTeal,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
