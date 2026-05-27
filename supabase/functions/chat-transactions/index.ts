@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import * as Sentry from 'npm:@sentry/deno'
 
 const GOOGLE_AI_KEY = Deno.env.get('GOOGLE_AI_KEY') ?? ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -8,6 +9,12 @@ const MODEL = 'gemini-2.5-flash-lite'
 const CACHE_TTL_SECONDS = 600
 
 const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') ?? ''
+
+Sentry.init({
+  dsn: Deno.env.get('SENTRY_DSN_EDGE') ?? '',
+  environment: Deno.env.get('SENTRY_ENVIRONMENT') ?? 'production',
+  tracesSampleRate: 0.2,
+})
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin') ?? ''
@@ -195,6 +202,7 @@ async function getOrCreateUserCache(
 }
 
 serve(async (req: Request) => {
+  try {
   const corsHeaders = getCorsHeaders(req)
 
   if (req.method === 'OPTIONS') {
@@ -327,4 +335,11 @@ serve(async (req: Request) => {
   const text: string = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 
   return jsonResponse({ reply: text.trim() }, 200, corsHeaders)
+  } catch (error) {
+    Sentry.captureException(error)
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    })
+  }
 })

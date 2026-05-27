@@ -83,7 +83,17 @@
       "Bash(supabase secrets *)",
       "Bash(python3 -c \"import secrets; print\\(secrets.token_urlsafe\\(48\\)\\)\")",
       "mcp__claude_ai_Supabase__execute_sql",
-      "mcp__claude_ai_Supabase__get_advisors"
+      "mcp__claude_ai_Supabase__get_advisors",
+      "Bash(xargs cat)",
+      "Bash(sed -n '70,75p' /Users/guillermo/Workspace/ExpenseManager/supabase/functions/parse-voice-transaction/index.ts)",
+      "Bash(sed -n '53,58p' /Users/guillermo/Workspace/ExpenseManager/supabase/functions/parse-image-transaction/index.ts)",
+      "Bash(sed -n '197,202p' /Users/guillermo/Workspace/ExpenseManager/supabase/functions/chat-transactions/index.ts)",
+      "Bash(command -v sentry-cli)",
+      "Bash(sentry-cli --version)",
+      "Bash(brew install *)",
+      "mcp__claude_ai_Sentry__find_organizations",
+      "mcp__claude_ai_Sentry__find_projects",
+      "Bash(sentry-cli info *)"
     ]
   }
 }

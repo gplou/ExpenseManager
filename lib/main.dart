@@ -12,12 +12,14 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/analytics_service.dart';
+import 'core/services/sentry_provider_observer.dart';
 import 'core/config/router.dart';
 import 'core/local_db/local_database.dart';
 import 'core/providers/locale_provider.dart' show localeProvider, kLocaleKey, supportedLocales;
@@ -136,20 +138,31 @@ Future<void> main() async {
 
     step = '10 - PackageInfo';
     final packageInfo = await PackageInfo.fromPlatform();
+
+    step = '10.5 - Sentry';
+    try {
+      await _initSentry(packageInfo);
+      debugPrint('[main] 10.5 - sentry ok');
+    } catch (e) {
+      debugPrint('[main] Sentry initialization failed — continuing without error tracking: $e');
+    }
     AnalyticsService.track(AnalyticsService.appOpened, {'version': packageInfo.version});
 
     step = '11 - runApp';
     runApp(
-      ProviderScope(
-        overrides: [
-          if (initialWidgetAction != null)
-            pendingWidgetActionProvider.overrideWith(
-              (ref) => initialWidgetAction,
-            ),
-        ],
-        child: MyApp(
-          initialTheme: initialTheme,
-          initialLocale: initialLocale,
+      SentryWidget(
+        child: ProviderScope(
+          observers: [SentryProviderObserver()],
+          overrides: [
+            if (initialWidgetAction != null)
+              pendingWidgetActionProvider.overrideWith(
+                (ref) => initialWidgetAction,
+              ),
+          ],
+          child: MyApp(
+            initialTheme: initialTheme,
+            initialLocale: initialLocale,
+          ),
         ),
       ),
     );
@@ -182,6 +195,20 @@ Future<void> _initRevenueCat() async {
         : AppConfig.revenueCatIosKey,
   );
   await Purchases.configure(config);
+}
+
+Future<void> _initSentry(PackageInfo packageInfo) async {
+  if (AppConfig.sentryDsn.isEmpty) return;
+  await SentryFlutter.init((options) {
+    options.dsn = AppConfig.sentryDsn;
+    options.environment = AppConfig.sentryEnvironment;
+    options.release =
+        '${packageInfo.packageName}@${packageInfo.version}+${packageInfo.buildNumber}';
+    options.tracesSampleRate = AppConfig.isDevelopment ? 1.0 : 0.2;
+    options.attachScreenshot = false;
+    options.sendDefaultPii = false;
+    options.debug = AppConfig.isDevelopment;
+  });
 }
 
 Future<void> _initPostHog() async {

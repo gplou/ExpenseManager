@@ -14,10 +14,17 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import * as Sentry from 'npm:@sentry/deno'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const WEBHOOK_SECRET = Deno.env.get('REVENUECAT_WEBHOOK_SECRET') ?? ''
+
+Sentry.init({
+  dsn: Deno.env.get('SENTRY_DSN_EDGE') ?? '',
+  environment: Deno.env.get('SENTRY_ENVIRONMENT') ?? 'production',
+  tracesSampleRate: 0.2,
+})
 
 // Use the service-role client — bypasses RLS, can write to subscriptions
 // directly. We never log the user's data or the raw event body.
@@ -49,6 +56,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 serve(async (req: Request) => {
+  try {
   if (req.method !== 'POST') {
     return new Response('method not allowed', { status: 405 })
   }
@@ -167,4 +175,11 @@ serve(async (req: Request) => {
     status: 200,
     headers: { 'content-type': 'application/json' },
   })
+  } catch (error) {
+    Sentry.captureException(error)
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    })
+  }
 })

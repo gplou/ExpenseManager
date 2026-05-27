@@ -1,9 +1,16 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import * as Sentry from 'npm:@sentry/deno'
 
 const GOOGLE_AI_KEY = Deno.env.get('GOOGLE_AI_KEY') ?? ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+
+Sentry.init({
+  dsn: Deno.env.get('SENTRY_DSN_EDGE') ?? '',
+  environment: Deno.env.get('SENTRY_ENVIRONMENT') ?? 'production',
+  tracesSampleRate: 0.2,
+})
 
 function sanitizeInput(input: string): string {
   return input
@@ -68,6 +75,7 @@ function getCorsHeaders(req: Request) {
 }
 
 serve(async (req: Request) => {
+  try {
   const corsHeaders = getCorsHeaders(req)
 
   if (req.method === 'OPTIONS') {
@@ -189,4 +197,11 @@ serve(async (req: Request) => {
     JSON.stringify({ result: text }),
     { status: 200, headers: { ...corsHeaders, 'content-type': 'application/json' } }
   )
+  } catch (error) {
+    Sentry.captureException(error)
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    })
+  }
 })

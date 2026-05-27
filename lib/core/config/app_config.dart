@@ -46,6 +46,13 @@ class AppConfig {
     defaultValue: 'https://eu.i.posthog.com',
   );
 
+  // Sentry
+  static const String sentryDsn = String.fromEnvironment('SENTRY_DSN');
+  static const String sentryEnvironment = String.fromEnvironment(
+    'SENTRY_ENVIRONMENT',
+    defaultValue: 'development',
+  );
+
   // Entorno
   static const bool isProduction = bool.fromEnvironment('dart.vm.product');
   static const bool isDevelopment = !isProduction;

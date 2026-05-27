@@ -7,5 +7,7 @@
   "REVENUECAT_IOS_KEY": "appl_your-revenuecat-ios-key",
   "POSTHOG_API_KEY": "phc_your-posthog-api-key",
   "ADMOB_ANDROID_BANNER_UNIT_ID": "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX",
-  "ADMOB_IOS_BANNER_UNIT_ID": "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+  "ADMOB_IOS_BANNER_UNIT_ID": "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX",
+  "SENTRY_DSN": "https://your-key@your-org.ingest.sentry.io/your-project",
+  "SENTRY_ENVIRONMENT": "development"
 }

@@ -8,6 +8,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../features/auth/data/auth_repository.dart';
 import '../../features/subscription/subscription_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
 import '../services/analytics_route_observer.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -91,7 +93,7 @@ GoRouter router(Ref ref) {
   return GoRouter(
     initialLocation: AppRoutes.dashboard,
     debugLogDiagnostics: kDebugMode,
-    observers: [AnalyticsRouteObserver()],
+    observers: [AnalyticsRouteObserver(), SentryNavigatorObserver()],
     // Al cambiar el auth state, GoRouter re-evalúa redirect sin recrearse
     refreshListenable: _RouterRefreshNotifier(authRepo.authStateChanges),
     redirect: (context, state) => resolveRedirect(

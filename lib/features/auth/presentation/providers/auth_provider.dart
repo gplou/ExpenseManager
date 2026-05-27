@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/supabase_client.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/sentry_service.dart';
 import '../../data/auth_repository.dart';
 import '../../domain/user_model.dart';
 import '../../../subscription/subscription_provider.dart';
@@ -123,6 +124,7 @@ class AuthNotifier extends _$AuthNotifier {
   Future<void> signOut() async {
     Purchases.logOut().ignore();
     AnalyticsService.reset();
+    SentryService.clearUser();
     await ref.read(authRepositoryProvider).signOut();
     state = Idle();
   }
@@ -132,6 +134,7 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       Purchases.logOut().ignore();
       AnalyticsService.reset();
+      SentryService.clearUser();
       await ref.read(authRepositoryProvider).deleteAccount();
       state = Idle();
       return true;
@@ -146,8 +149,10 @@ class AuthNotifier extends _$AuthNotifier {
   void _identifyCurrentUser() {
     final user = ref.read(authRepositoryProvider).currentUser;
     if (user != null) {
+      final isPro = ref.read(isProProvider);
       Purchases.logIn(user.id).ignore();
-      AnalyticsService.identify(user.id, isPro: ref.read(isProProvider));
+      AnalyticsService.identify(user.id, isPro: isPro);
+      SentryService.setUser(user.id, isPro: isPro);
     }
   }
 }
