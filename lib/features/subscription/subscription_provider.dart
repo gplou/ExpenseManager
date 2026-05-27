@@ -161,13 +161,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       _promoCooldownUntil = null;
 
       if (result.isSubscription) {
-        final now = DateTime.now();
-        final current = state.value;
-        final base = (current?.isPro == true) ? current!.expiresAt! : now;
-        final expiresAt = base.add(Duration(days: result.durationDays));
+        // The server-side RPC already wrote the subscriptions row with the
+        // stacked expiry. We just read back the authoritative value — the
+        // client never decides the final expires_at.
+        final expiresAt = result.expiresAt ??
+            DateTime.now().add(Duration(days: result.durationDays));
 
-        await repo.upsertSubscription(
-            expiresAt: expiresAt, source: 'promo_code');
         await _persistCache(expiresAt: expiresAt, source: 'promo_code');
 
         state = AsyncData(

@@ -75,7 +75,15 @@
       "Bash(git commit -m ' *)",
       "Bash(python3 /Users/guillermo/.claude/skills/ui-ux-pro-max/scripts/search.py \"mobile expense tracker two-step form wizard\" --stack flutter -n 8)",
       "Bash(python3 scripts/search.py \"fintech personal finance expense tracker elegant minimal\" --design-system -f markdown)",
-      "Bash(python3 scripts/search.py \"donut pie chart legend data visualization\" --domain chart)"
+      "Bash(python3 scripts/search.py \"donut pie chart legend data visualization\" --domain chart)",
+      "Bash(git mv *)",
+      "Bash(supabase migration *)",
+      "Bash(supabase db *)",
+      "Bash(supabase functions *)",
+      "Bash(supabase secrets *)",
+      "Bash(python3 -c \"import secrets; print\\(secrets.token_urlsafe\\(48\\)\\)\")",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "mcp__claude_ai_Supabase__get_advisors"
     ]
   }
 }

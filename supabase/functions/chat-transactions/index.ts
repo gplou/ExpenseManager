@@ -245,13 +245,24 @@ serve(async (req: Request) => {
   try {
     const body = await req.json()
     message = body?.message
-    history = body?.history ?? []
-    locale = body?.locale ?? 'es'
+    const rawHistory = Array.isArray(body?.history) ? body.history : []
+    locale = typeof body?.locale === 'string' ? body.locale.slice(0, 10) : 'es'
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       throw new Error('invalid')
     }
     if (message.length > 500) message = message.slice(0, 500)
-    if (history.length > 10) history = history.slice(-10)
+    // Sanitise each history entry: clamp shape, types, and content length so a
+    // malformed client cannot push arbitrary fields or massive strings into the
+    // Gemini request body.
+    history = rawHistory
+      .filter((m: unknown): m is Record<string, unknown> =>
+        m !== null && typeof m === 'object')
+      .map((m: Record<string, unknown>): ChatMessage => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: typeof m.content === 'string' ? m.content.slice(0, 1000) : '',
+      }))
+      .filter((m: ChatMessage) => m.content.length > 0)
+      .slice(-10)
   } catch {
     return jsonResponse({ error: 'Bad request: message is required' }, 400, corsHeaders)
   }

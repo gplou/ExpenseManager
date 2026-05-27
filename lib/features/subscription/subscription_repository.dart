@@ -48,31 +48,22 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     );
   }
 
-  /// Upsert subscription row. Called after a successful RC purchase or promo code.
-  ///
-  // SECURITY: Receipt validation for store purchases is handled server-side by
-  // RevenueCat — this client-side upsert only mirrors the state into Supabase
-  // for fast reads. The `subscriptions` table MUST have Row Level Security (RLS)
-  // enabled so that each user can only INSERT/UPDATE their own row
-  // (e.g. `auth.uid() = user_id`). Without RLS, a malicious client could
-  // overwrite another user's subscription status.
+  // SECURITY: The `subscriptions` table is locked down — clients can SELECT
+  // their own row but cannot INSERT/UPDATE. All writes go through SECURITY
+  // DEFINER RPCs that enforce server-side invariants (whitelisted sources,
+  // bounded expires_at, idempotent trial activation). See
+  // supabase/migrations/20260526_subscriptions_security.sql.
   @override
   Future<void> upsertSubscription({
     required DateTime expiresAt,
     required String source,
     String? storeTxId,
   }) async {
-    final userId = _client.auth.currentUser!.id;
-    await _client.from('subscriptions').upsert(
-      {
-        'user_id': userId,
-        'expires_at': expiresAt.toUtc().toIso8601String(),
-        'source': source,
-        if (storeTxId != null) 'store_tx_id': storeTxId,
-        'cancelled': false,
-      },
-      onConflict: 'user_id',
-    );
+    await _client.rpc('apply_rc_entitlement', params: {
+      'p_expires_at': expiresAt.toUtc().toIso8601String(),
+      'p_source': source,
+      'p_store_tx_id': storeTxId,
+    });
   }
 
   // ── Free trial ──────────────────────────────────────────────────────────
@@ -97,43 +88,37 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
 
   @override
   Future<DateTime> startFreeTrial() async {
-    final userId = _client.auth.currentUser!.id;
-    final now = DateTime.now();
-    final expiresAt =
-        DateTime(now.year, now.month, now.day).add(const Duration(days: kFreeTrialDays));
-
-    await _client.from('subscriptions').upsert(
-      {
-        'user_id': userId,
-        'expires_at': expiresAt.toUtc().toIso8601String(),
-        'source': 'free_trial',
-        'trial_used_at': now.toUtc().toIso8601String(),
-        'cancelled': false,
-      },
-      onConflict: 'user_id',
-    );
-
-    return expiresAt;
+    // Atomic, idempotent activation via SECURITY DEFINER RPC. The server
+    // enforces "trial never used" and computes its own expires_at — the
+    // client cannot pick the duration.
+    final result = await _client.rpc('start_free_trial');
+    return DateTime.parse(result as String).toLocal();
   }
 
   // ── Promo codes ──────────────────────────────────────────────────────────
 
   @override
   Future<PromoResult> redeemPromoCode(String code) async {
-    // Validation, redemption insert, and use_count increment are handled
-    // atomically by the redeem_promo_code Postgres function (FOR UPDATE lock).
-    // This prevents the race condition where two concurrent clients could both
-    // read the same use_count and both write count+1, bypassing max_uses.
+    // The RPC handles everything server-side in one transaction:
+    //   - validates code (active, not expired, max_uses not reached)
+    //   - inserts redemption (unique constraint blocks re-redeem)
+    //   - increments use_count
+    //   - stacks subscription expiry server-side and writes the row
+    // The client cannot influence the final expires_at — it just reads the
+    // value the function already persisted.
     try {
       final result = await _client.rpc(
         'redeem_promo_code',
-        params: {'code': code.toUpperCase().trim()},
+        params: {'p_code': code.toUpperCase().trim()},
       ) as Map<String, dynamic>;
 
       return PromoResult(
         type: (result['type'] as String?) ?? 'subscription',
         durationDays: (result['duration_days'] as int?) ?? 30,
         discountPercentage: result['discount_percentage'] as int?,
+        expiresAt: result['expires_at'] != null
+            ? DateTime.parse(result['expires_at'] as String).toLocal()
+            : null,
       );
     } on PostgrestException catch (e) {
       // The RPC raises P0001 with user-facing messages in Spanish.
@@ -212,11 +197,16 @@ class PromoResult {
     required this.type,
     required this.durationDays,
     this.discountPercentage,
+    this.expiresAt,
   });
 
   final String type;
   final int durationDays;
   final int? discountPercentage;
+
+  /// Authoritative expiry written by the server-side redeem_promo_code RPC.
+  /// Only set for subscription-type promos. Discount promos leave this null.
+  final DateTime? expiresAt;
 
   bool get isSubscription => type == 'subscription';
   bool get isDiscount => type == 'discount';
