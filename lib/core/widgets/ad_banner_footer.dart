@@ -9,7 +9,8 @@ import '../config/app_config.dart';
 import '../network/connectivity_service.dart';
 
 /// Banner de publicidad fijo en la parte inferior de la pantalla.
-/// Se oculta automáticamente para usuarios PRO y cuando no hay conexión.
+/// Se oculta automáticamente para usuarios PRO.
+/// Cuando no hay conexión muestra un banner propio de promoción PRO.
 class AdBannerFooter extends ConsumerStatefulWidget {
   const AdBannerFooter({super.key});
 
@@ -28,9 +29,7 @@ class _AdBannerFooterState extends ConsumerState<AdBannerFooter> {
   @override
   void initState() {
     super.initState();
-    if (ref.read(isOnlineProvider)) {
-      _loadAd();
-    }
+    _loadAd();
   }
 
   void _loadAd() {
@@ -62,21 +61,63 @@ class _AdBannerFooterState extends ConsumerState<AdBannerFooter> {
   Widget build(BuildContext context) {
     if (ref.watch(isProProvider)) return const SizedBox.shrink();
 
-    // Retry loading the ad when connectivity is restored.
+    final isOnline = ref.watch(isOnlineProvider);
+
+    // Retry loading the AdMob banner when connectivity is restored.
     ref.listen(isOnlineProvider, (previous, next) {
       if (next && !_isLoaded && _bannerAd == null) {
         _loadAd();
       }
     });
 
-    if (!_isLoaded || _bannerAd == null) return const SizedBox.shrink();
+    if (_isLoaded && _bannerAd != null) {
+      return SafeArea(
+        top: false,
+        child: SizedBox(
+          width: _bannerAd!.size.width.toDouble(),
+          height: _bannerAd!.size.height.toDouble(),
+          child: AdWidget(ad: _bannerAd!),
+        ),
+      );
+    }
 
+    // AdMob requires internet — show a house ad when offline.
+    if (!isOnline) {
+      return const _HouseAdBanner();
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+class _HouseAdBanner extends StatelessWidget {
+  const _HouseAdBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SafeArea(
       top: false,
-      child: SizedBox(
-        width: _bannerAd!.size.width.toDouble(),
-        height: _bannerAd!.size.height.toDouble(),
-        child: AdWidget(ad: _bannerAd!),
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        color: colorScheme.primaryContainer,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.workspace_premium,
+                size: 18, color: colorScheme.onPrimaryContainer),
+            const SizedBox(width: 8),
+            Text(
+              '¡Pásate a PRO y elimina los anuncios!',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
