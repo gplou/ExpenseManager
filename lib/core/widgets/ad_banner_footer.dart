@@ -6,9 +6,10 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../features/subscription/subscription_provider.dart';
 import '../config/app_config.dart';
+import '../network/connectivity_service.dart';
 
 /// Banner de publicidad fijo en la parte inferior de la pantalla.
-/// Se oculta automáticamente para usuarios PRO.
+/// Se oculta automáticamente para usuarios PRO y cuando no hay conexión.
 class AdBannerFooter extends ConsumerStatefulWidget {
   const AdBannerFooter({super.key});
 
@@ -27,7 +28,9 @@ class _AdBannerFooterState extends ConsumerState<AdBannerFooter> {
   @override
   void initState() {
     super.initState();
-    _loadAd();
+    if (ref.read(isOnlineProvider)) {
+      _loadAd();
+    }
   }
 
   void _loadAd() {
@@ -58,6 +61,14 @@ class _AdBannerFooterState extends ConsumerState<AdBannerFooter> {
   @override
   Widget build(BuildContext context) {
     if (ref.watch(isProProvider)) return const SizedBox.shrink();
+
+    // Retry loading the ad when connectivity is restored.
+    ref.listen(isOnlineProvider, (previous, next) {
+      if (next && !_isLoaded && _bannerAd == null) {
+        _loadAd();
+      }
+    });
+
     if (!_isLoaded || _bannerAd == null) return const SizedBox.shrink();
 
     return SafeArea(
