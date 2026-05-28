@@ -43,12 +43,6 @@ void main() {
         .thenAnswer((_) async => (expiresAt: null, source: null));
     when(() => repo.checkTrialUsed()).thenAnswer((_) async => false);
     when(() => repo.getCurrentRCStatus()).thenAnswer((_) async => null);
-    when(() => repo.upsertSubscription(
-          expiresAt: any(named: 'expiresAt'),
-          source: any(named: 'source'),
-          storeTxId: any(named: 'storeTxId'),
-        )).thenAnswer((_) async {});
-
     // Mock platform channels that the notifier touches transitively.
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_secureStorageChannel, (call) async {
@@ -182,13 +176,11 @@ void main() {
       final state = await container.read(subscriptionProvider.future);
 
       expect(state.isPro, isTrue);
-      // Notifier should pick the RC expiry (later than Supabase) and write it
-      // back via upsertSubscription.
-      verify(() => repo.upsertSubscription(
-            expiresAt: rcExpiry,
-            source: 'app_store',
-            storeTxId: any(named: 'storeTxId'),
-          )).called(1);
+      // Notifier picks the RC expiry (later than Supabase) for local display.
+      // It no longer writes back to Supabase — the revenuecat-webhook is the
+      // authoritative writer (see migration 20260528000001).
+      expect(state.expiresAt, rcExpiry);
+      expect(state.source, 'app_store');
     });
   });
 }
