@@ -48,24 +48,6 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     );
   }
 
-  // SECURITY: The `subscriptions` table is locked down — clients can SELECT
-  // their own row but cannot INSERT/UPDATE. All writes go through SECURITY
-  // DEFINER RPCs that enforce server-side invariants (whitelisted sources,
-  // bounded expires_at, idempotent trial activation). See
-  // supabase/migrations/20260526_subscriptions_security.sql.
-  @override
-  Future<void> upsertSubscription({
-    required DateTime expiresAt,
-    required String source,
-    String? storeTxId,
-  }) async {
-    await _client.rpc('apply_rc_entitlement', params: {
-      'p_expires_at': expiresAt.toUtc().toIso8601String(),
-      'p_source': source,
-      'p_store_tx_id': storeTxId,
-    });
-  }
-
   // ── Free trial ──────────────────────────────────────────────────────────
 
   @override
