@@ -32,7 +32,6 @@ for Phase 4 and will live in `integration_test/` at the repo root.
 | `helpers/supabase_function_helper.dart` | `stubFunctionInvoke()` + `okFunctionResponse(...)` for tests of code that calls `SupabaseClient.functions.invoke(...)` (AI parsers, chat). |
 | `helpers/clock_helper.dart` | `withFixedClock()`, `withFakeAsyncAndClock()` for deterministic time. Production code should call `clock.now()` instead of `DateTime.now()`. |
 | `helpers/provider_container_helper.dart` | `makeContainer([overrides])` creates a `ProviderContainer` with auto-`dispose` via `addTearDown`. |
-| `helpers/pump_app.dart` | `pumpWithProviders()` / `pumpScreen()` for widget tests with `ProviderScope` + `MaterialApp` + l10n preloaded. |
 
 ## Conventions
 
@@ -85,11 +84,13 @@ setUp(() async {
 ```
 
 ### Widget tests
-- Always pump via `pumpWithProviders` / `pumpScreen` to get
-  `AppLocalizations` and `ProviderScope` for free.
+- Wrap the widget under test in `ProviderScope` + `MaterialApp` with
+  `AppLocalizations.localizationsDelegates` / `supportedLocales` so `AppLocalizations`
+  resolves. Each test file defines its own small builder (e.g. `wrap(...)`,
+  `buildSubject()`).
 - Stub network providers (`chatRepositoryProvider`,
-  `voiceTransactionParserProvider`, etc.) via the `overrides` parameter —
-  the helper does **not** auto-inject fakes.
+  `voiceTransactionParserProvider`, etc.) via the `ProviderScope` `overrides` —
+  nothing auto-injects fakes.
 
 ### Don't
 - Don't hit the real network, RevenueCat, or device platform channels
