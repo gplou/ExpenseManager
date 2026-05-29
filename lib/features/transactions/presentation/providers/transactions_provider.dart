@@ -150,12 +150,17 @@ class AllTransactionsNotifier
         // que aparezca después (creada por el usuario mientras el fetch estaba
         // en vuelo) se conservará aunque no esté en cloudIds ni en pendingIds.
         // Sin este snapshot la creación se borraba al hacer deleteByDateRange.
-        final preFetchLocalIds = (await localRepo.getTransactions(
-          from: range.from,
-          to: range.to,
-        ))
-            .map((t) => t.id)
-            .toSet();
+        // Lectura best-effort: si SQLite falla seguimos con un snapshot vacío
+        // en lugar de abortar el refresh y perder los datos frescos del cloud.
+        Set<String> preFetchLocalIds = {};
+        try {
+          preFetchLocalIds = (await localRepo.getTransactions(
+            from: range.from,
+            to: range.to,
+          ))
+              .map((t) => t.id)
+              .toSet();
+        } catch (_) {}
 
         final fresh = await cloudRepo.getTransactions(
           from: range.from,
@@ -167,44 +172,50 @@ class AllTransactionsNotifier
         if (_generation != generation) return;
 
         // Preserve locally-created transactions not yet synced to the cloud
-        // (offline creates or failed upserts sitting in the pending queue).
-        final queue = SyncQueueRepository(userId: localRepo.userId);
-        final pending = await queue.getPending();
-        final pendingIds = pending.map((op) => op.entityId).toSet();
-        final cloudIds = fresh.map((t) => t.id).toSet();
+        // (offline creates or failed upserts sitting in the pending queue, o
+        // txs creadas DURANTE este refresh). Lectura local best-effort: si la
+        // caché es ilegible confiamos solo en el snapshot del cloud en vez de
+        // descartar datos frescos.
+        List<TransactionModel> localToKeep = [];
+        try {
+          final queue = SyncQueueRepository(userId: localRepo.userId);
+          final pending = await queue.getPending();
+          final pendingIds = pending.map((op) => op.entityId).toSet();
+          final cloudIds = fresh.map((t) => t.id).toSet();
 
-        final localInRange =
-            await localRepo.getTransactions(from: range.from, to: range.to);
-        // Conservar txs locales que no están en el cloud y son:
-        //  - operaciones pendientes de subida, o
-        //  - txs nuevas creadas DURANTE este refresh (no existían en el snapshot
-        //    pre-fetch). Esto cierra la carrera entre crear una transacción y
-        //    un refresh ya en vuelo que la borraría al hacer deleteByDateRange.
-        final localToKeep = localInRange.where((t) {
-          if (cloudIds.contains(t.id)) return false;
-          if (pendingIds.contains(t.id)) return true;
-          return !preFetchLocalIds.contains(t.id);
-        }).toList();
+          final localInRange =
+              await localRepo.getTransactions(from: range.from, to: range.to);
+          localToKeep = localInRange.where((t) {
+            if (cloudIds.contains(t.id)) return false;
+            if (pendingIds.contains(t.id)) return true;
+            return !preFetchLocalIds.contains(t.id);
+          }).toList();
+        } catch (_) {}
 
-        // Sincroniza la caché: elimina el rango y reinserta datos frescos +
-        // transacciones locales conservadas, para gestionar correctamente las
-        // borradas en la nube sin perder creadas offline ni recién añadidas.
-        await localRepo.deleteByDateRange(range.from, range.to);
         final merged = [...fresh, ...localToKeep]
           ..sort((a, b) {
             final cmp = b.date.compareTo(a.date);
             return cmp != 0 ? cmp : b.createdAt.compareTo(a.createdAt);
           });
-        await localRepo.insertAll(merged);
 
         if (_generation != generation) return;
 
-        // Actualización silenciosa: la UI recibe los datos frescos sin mostrar
-        // ningún indicador de carga.
+        // Actualización silenciosa de la UI con los datos frescos del cloud,
+        // ANTES de persistir en caché: así un fallo de escritura local (p. ej.
+        // SQLCipher/Keystore) nunca puede ocultar transacciones que ya existen
+        // en Supabase.
         state = AsyncData(merged);
+
+        // Sincroniza la caché como paso best-effort: elimina el rango y
+        // reinserta datos frescos + locales conservados. Si falla, la UI ya
+        // refleja el cloud y reintentaremos en el próximo refresh.
+        try {
+          await localRepo.deleteByDateRange(range.from, range.to);
+          await localRepo.insertAll(merged);
+        } catch (_) {}
       } catch (_) {
-        // El refresh de fondo falla silenciosamente; el usuario sigue viendo
-        // la caché sin ninguna interrupción.
+        // El refresh de fondo falló antes de obtener datos del cloud; el
+        // usuario sigue viendo la caché sin ninguna interrupción.
       } finally {
         keepAlive.close();
       }

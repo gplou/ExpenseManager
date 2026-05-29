@@ -93,7 +93,10 @@
       "Bash(brew install *)",
       "mcp__claude_ai_Sentry__find_organizations",
       "mcp__claude_ai_Sentry__find_projects",
-      "Bash(sentry-cli info *)"
+      "Bash(sentry-cli info *)",
+      "Bash(git rm *)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__list_tables"
     ]
   }
 }
