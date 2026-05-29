@@ -70,11 +70,6 @@ void main() {
           storeTxId: 'tx_1',
         ),
       );
-      when(() => mockRepo.upsertSubscription(
-            expiresAt: any(named: 'expiresAt'),
-            source: any(named: 'source'),
-            storeTxId: any(named: 'storeTxId'),
-          )).thenAnswer((_) async {});
 
       final result = await mockRepo.purchaseProPlan(MockPackage());
 
@@ -135,11 +130,6 @@ void main() {
           storeTxId: 'tx_restore',
         ),
       );
-      when(() => mockRepo.upsertSubscription(
-            expiresAt: any(named: 'expiresAt'),
-            source: any(named: 'source'),
-            storeTxId: any(named: 'storeTxId'),
-          )).thenAnswer((_) async {});
 
       final result = await mockRepo.restoreProPlan();
 
@@ -216,11 +206,6 @@ void main() {
       when(() => mockRepo.redeemPromoCode(any())).thenAnswer(
         (_) async => const PromoResult(type: 'subscription', durationDays: 30),
       );
-      when(() => mockRepo.upsertSubscription(
-            expiresAt: any(named: 'expiresAt'),
-            source: any(named: 'source'),
-            storeTxId: any(named: 'storeTxId'),
-          )).thenAnswer((_) async {});
 
       final result = await mockRepo.redeemPromoCode('TEST30');
 
@@ -324,11 +309,6 @@ void main() {
           storeTxId: 'tx_rc',
         ),
       );
-      when(() => mockRepo.upsertSubscription(
-            expiresAt: any(named: 'expiresAt'),
-            source: any(named: 'source'),
-            storeTxId: any(named: 'storeTxId'),
-          )).thenAnswer((_) async {});
 
       final remote = await mockRepo.fetchRemoteSubscription();
       final rcStatus = await mockRepo.getCurrentRCStatus();

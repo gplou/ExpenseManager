@@ -7,14 +7,11 @@ import '../subscription_repository.dart';
 /// Contract for Supabase-backed subscription persistence operations.
 /// Implementations of this interface must only interact with Supabase;
 /// they must not depend on any IAP SDK.
+///
+/// NOTE: Subscriptions are written exclusively by the revenuecat-webhook Edge
+/// Function (service_role). The client only reads subscription state.
 abstract class SupabaseSubscriptionContract {
   Future<({DateTime? expiresAt, String? source})> fetchRemoteSubscription();
-
-  Future<void> upsertSubscription({
-    required DateTime expiresAt,
-    required String source,
-    String? storeTxId,
-  });
 
   Future<bool> checkTrialUsed();
 

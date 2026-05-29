@@ -287,7 +287,8 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   }
 
   /// Checks Supabase (covers promo/trial) and RC (covers store subscriptions).
-  /// If RC shows a later active entitlement it is synced back to Supabase.
+  /// Uses the later of the two expiries for local display; the
+  /// revenuecat-webhook is the authoritative Supabase writer.
   Future<SubscriptionState> _fetchRemote() async {
     final repo = ref.read(subscriptionRepositoryProvider);
     final remote = await repo.fetchRemoteSubscription();
@@ -296,19 +297,14 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     DateTime? expiresAt = remote.expiresAt;
     String? source = remote.source;
 
-    // Reconcile with RC: if RC has an active entitlement with a later expiry,
-    // sync it to Supabase so all sources stay consistent.
+    // If RC has an active entitlement with a later expiry, use it locally.
+    // We no longer write to Supabase from the client — the webhook handles that.
     final rcStatus = await repo.getCurrentRCStatus();
     if (rcStatus != null && rcStatus.isPro && rcStatus.expiresAt != null) {
       final rcExpiry = rcStatus.expiresAt!;
       if (expiresAt == null || rcExpiry.isAfter(expiresAt)) {
         expiresAt = rcExpiry;
         source = rcStatus.source;
-        await repo.upsertSubscription(
-          expiresAt: expiresAt,
-          source: source,
-          storeTxId: rcStatus.storeTxId,
-        );
       }
     }
 
@@ -321,26 +317,22 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// Handles a RevenueCat CustomerInfo update pushed by the SDK
   /// (e.g. subscription renewed or cancelled by the store).
   Future<void> _handleRCUpdate(CustomerInfo info) async {
-    // An explicit purchase/restore flow is running: it will apply the
-    // authoritative result (including any pending discount bonus days) via
-    // [_applyRCResult]. Skipping here prevents a double upsert that would
-    // race the bonus-days logic and occasionally persist the store expiry
-    // without the extra days the user was promised.
+    // An explicit purchase/restore flow is running — skip to avoid racing
+    // with the bonus-days logic in _applyRCResult.
     if (_purchaseInFlight) return;
 
-    // No Supabase session (e.g. listener fires mid-logout). Bail out rather
-    // than crashing on the non-null assertion inside upsertSubscription.
+    // No Supabase session (e.g. listener fires mid-logout). Bail out.
     if (ref.read(currentUserProvider) == null) return;
 
     final result = RevenueCatAdapter.fromCustomerInfo(info);
-    // not PRO or no expiry — let the next cache-TTL check handle the expiry
+    // Not PRO or no expiry — let the next cache-TTL check handle it.
     if (!result.isPro || result.expiresAt == null) return;
 
     final expiresAt = result.expiresAt!;
     final source = result.source;
 
-    final repo = ref.read(subscriptionRepositoryProvider);
-    await repo.upsertSubscription(expiresAt: expiresAt, source: source);
+    // Update local state from RC. The revenuecat-webhook will have already
+    // written (or will write) the authoritative Supabase row.
     await _persistCache(expiresAt: expiresAt, source: source);
 
     state = AsyncData(
@@ -352,8 +344,13 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     );
   }
 
-  /// Applies a successful purchase/restore result: upserts Supabase, updates
-  /// cache and state, and fires the appropriate PostHog event.
+  /// Applies a successful purchase/restore result: updates cache and state
+  /// from RC data immediately, then polls Supabase in the background for the
+  /// webhook confirmation.
+  ///
+  /// The client no longer writes to Supabase directly — the revenuecat-webhook
+  /// Edge Function is the authoritative writer. See migration
+  /// 20260528000001_lock_apply_rc_entitlement.sql.
   Future<void> _applyRCResult(
     RCPurchaseResult result, {
     required bool isRestore,
@@ -378,14 +375,9 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       fallbackPeriodDays: kSubscriptionDays,
     );
 
-    final repo = ref.read(subscriptionRepositoryProvider);
-    await repo.upsertSubscription(
-      expiresAt: expiresAt,
-      source: result.source,
-      storeTxId: result.storeTxId,
-    );
+    // Update state immediately from RC data (optimistic). This lets the user
+    // see PRO features right away without waiting for the webhook.
     await _persistCache(expiresAt: expiresAt, source: result.source);
-
     state = AsyncData(
       SubscriptionState(
         expiresAt: expiresAt,
@@ -407,6 +399,40 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     if (userId != null) {
       AnalyticsService.identify(userId, isPro: true);
     }
+
+    // Poll Supabase in the background until the revenuecat-webhook confirms
+    // the purchase (typically arrives within a few seconds).
+    _pollForWebhookConfirmation(purchasedAt: DateTime.now());
+  }
+
+  /// Polls Supabase every 5 seconds (up to 10 attempts = 50s) waiting for the
+  /// revenuecat-webhook to write the authoritative subscription row.
+  /// Silently updates state + cache when confirmation arrives.
+  void _pollForWebhookConfirmation({required DateTime purchasedAt}) {
+    Future(() async {
+      final repo = ref.read(subscriptionRepositoryProvider);
+      for (var i = 0; i < 10; i++) {
+        await Future.delayed(const Duration(seconds: 5));
+        try {
+          final remote = await repo.fetchRemoteSubscription();
+          if (remote.expiresAt != null &&
+              remote.expiresAt!.isAfter(purchasedAt)) {
+            await _persistCache(
+                expiresAt: remote.expiresAt, source: remote.source);
+            state = AsyncData(
+              SubscriptionState(
+                expiresAt: remote.expiresAt,
+                source: remote.source,
+                trialUsed: state.value?.trialUsed ?? false,
+              ),
+            );
+            return;
+          }
+        } catch (_) {
+          // Silently retry — RC optimistic state is already in state.
+        }
+      }
+    });
   }
 
   // SECURITY: The subscription cache (including expiresAt) is stored in
