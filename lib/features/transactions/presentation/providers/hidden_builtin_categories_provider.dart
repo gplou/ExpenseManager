@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/services/sentry_service.dart';
 import '../../domain/transaction_model.dart';
 
 class HiddenBuiltInCategoriesNotifier
@@ -32,7 +33,9 @@ class HiddenBuiltInCategoriesNotifier
     try {
       final list = jsonDecode(raw) as List<dynamic>;
       return list.cast<String>().toSet();
-    } catch (_) {
+    } catch (e) {
+      SentryService.addBreadcrumb(
+          'hidden categories decode failed: $e', category: 'prefs');
       return {};
     }
   }

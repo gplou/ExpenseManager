@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/sentry_service.dart';
 import '../../../core/network/authenticated_repository.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/utils/date_helpers.dart';
@@ -119,7 +120,11 @@ class RecurringTransactionsRepository
           .update({'recurring_transaction_id': null})
           .eq('recurring_transaction_id', id)
           .eq('user_id', userId);
-    } catch (_) {}
+    } catch (e) {
+      SentryService.addBreadcrumb(
+          'detach transactions from recurring failed: $e',
+          category: 'recurring');
+    }
     await _client
         .from('recurring_transactions')
         .delete()

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/services/sentry_service.dart';
 import '../../data/custom_categories_repository.dart';
 import '../../domain/custom_categories_repository_contract.dart';
 import '../../domain/transaction_categories.dart';
@@ -43,8 +44,12 @@ class CustomCategoriesNotifier extends AsyncNotifier<
       for (final cat in cats) {
         try {
           await repo.add(type, cat);
-        } catch (_) {
-          // UNIQUE constraint → already exists, skip
+        } catch (e) {
+          // Usually a UNIQUE constraint (category already exists) → skip.
+          // Breadcrumb so non-duplicate failures are still diagnosable.
+          SentryService.addBreadcrumb(
+              'custom category migration add skipped: $e',
+              category: 'migration');
         }
       }
       await prefs.remove(key);

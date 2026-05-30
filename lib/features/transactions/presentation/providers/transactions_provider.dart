@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/sentry_service.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../subscription/subscription_provider.dart';
@@ -161,7 +162,10 @@ class AllTransactionsNotifier
           ))
               .map((t) => t.id)
               .toSet();
-        } catch (_) {}
+        } catch (e) {
+          SentryService.addBreadcrumb(
+              'preFetch local read failed: $e', category: 'sync');
+        }
 
         final fresh = await cloudRepo.getTransactions(
           from: range.from,
@@ -191,7 +195,10 @@ class AllTransactionsNotifier
             if (pendingIds.contains(t.id)) return true;
             return !preFetchLocalIds.contains(t.id);
           }).toList();
-        } catch (_) {}
+        } catch (e) {
+          SentryService.addBreadcrumb(
+              'localToKeep merge read failed: $e', category: 'sync');
+        }
 
         final merged = [...fresh, ...localToKeep]
           ..sort((a, b) {
@@ -213,10 +220,15 @@ class AllTransactionsNotifier
         try {
           await localRepo.deleteByDateRange(range.from, range.to);
           await localRepo.insertAll(merged);
-        } catch (_) {}
-      } catch (_) {
+        } catch (e) {
+          SentryService.addBreadcrumb(
+              'local cache sync write failed: $e', category: 'sync');
+        }
+      } catch (e) {
         // El refresh de fondo falló antes de obtener datos del cloud; el
         // usuario sigue viendo la caché sin ninguna interrupción.
+        SentryService.addBreadcrumb(
+            'background refresh failed: $e', category: 'sync');
       } finally {
         keepAlive.close();
       }
