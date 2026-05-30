@@ -96,7 +96,9 @@
       "Bash(sentry-cli info *)",
       "Bash(git rm *)",
       "mcp__claude_ai_Supabase__list_projects",
-      "mcp__claude_ai_Supabase__list_tables"
+      "mcp__claude_ai_Supabase__list_tables",
+      "mcp__claude_ai_Sentry__get_sentry_resource",
+      "mcp__claude_ai_Sentry__search_issue_events"
     ]
   }
 }
