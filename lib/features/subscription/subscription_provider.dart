@@ -412,7 +412,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     Future(() async {
       final repo = ref.read(subscriptionRepositoryProvider);
       for (var i = 0; i < 10; i++) {
-        await Future.delayed(const Duration(seconds: 5));
+        await Future<void>.delayed(const Duration(seconds: 5));
         try {
           final remote = await repo.fetchRemoteSubscription();
           if (remote.expiresAt != null &&

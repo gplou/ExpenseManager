@@ -314,7 +314,7 @@ void main() {
   group('deleteAccount (error paths)', () {
     test('wraps AuthException into a localized AuthFailure', () async {
       when(() => auth.currentUser).thenReturn(_userFixture(id: 'u-1'));
-      when(() => supabase.rpc(any())).thenThrow(AuthException('boom'));
+      when(() => supabase.rpc<dynamic>(any())).thenThrow(AuthException('boom'));
 
       await expectLater(
         () => repo.deleteAccount(),
@@ -324,7 +324,7 @@ void main() {
 
     test('wraps unexpected errors into UnexpectedFailure', () async {
       when(() => auth.currentUser).thenReturn(_userFixture(id: 'u-1'));
-      when(() => supabase.rpc(any())).thenThrow(StateError('boom'));
+      when(() => supabase.rpc<dynamic>(any())).thenThrow(StateError('boom'));
 
       await expectLater(
         () => repo.deleteAccount(),

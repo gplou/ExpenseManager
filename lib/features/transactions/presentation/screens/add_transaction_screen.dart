@@ -252,12 +252,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final amount = _keypadController.resolve();
     if (amount == null || amount <= 0) {
       setState(() => _amountError = l10n.invalidAmount);
-      HapticFeedback.heavyImpact();
+      HapticFeedback.heavyImpact().ignore();
       return;
     }
     setState(() => _amountError = null);
     FocusScope.of(context).unfocus();
-    HapticFeedback.selectionClick();
+    HapticFeedback.selectionClick().ignore();
     await _pageController.animateToPage(
       1,
       duration: _pageAnim,
@@ -267,7 +267,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   void _goToAmount() {
     FocusScope.of(context).unfocus();
-    HapticFeedback.selectionClick();
+    HapticFeedback.selectionClick().ignore();
     _pageController.animateToPage(
       0,
       duration: _pageAnim,
@@ -303,7 +303,7 @@ Future<void> _save() async {
 
     if (amount == null || amount <= 0) {
       setState(() => _amountError = l10n.invalidAmount);
-      HapticFeedback.heavyImpact();
+      HapticFeedback.heavyImpact().ignore();
       return;
     }
     setState(() => _amountError = null);
@@ -413,7 +413,7 @@ Future<void> _save() async {
             .create(transaction);
       }
       if (mounted) {
-        HapticFeedback.heavyImpact();
+        HapticFeedback.heavyImpact().ignore();
         Navigator.of(context).pop();
       }
     } catch (e, st) {
@@ -1315,7 +1315,7 @@ class _SubcategoryPickerSheet extends ConsumerWidget {
                         const SizedBox(width: AppSpacing.xs + 2),
                         GestureDetector(
                           onTap: () {
-                            HapticFeedback.heavyImpact();
+                            HapticFeedback.heavyImpact().ignore();
                             _confirmDeleteSubcategory(context, ref, name);
                           },
                           behavior: HitTestBehavior.opaque,

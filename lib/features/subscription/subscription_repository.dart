@@ -73,7 +73,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     // Atomic, idempotent activation via SECURITY DEFINER RPC. The server
     // enforces "trial never used" and computes its own expires_at — the
     // client cannot pick the duration.
-    final result = await _client.rpc('start_free_trial');
+    final result = await _client.rpc<dynamic>('start_free_trial');
     return DateTime.parse(result as String).toLocal();
   }
 
@@ -89,7 +89,7 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
     // The client cannot influence the final expires_at — it just reads the
     // value the function already persisted.
     try {
-      final result = await _client.rpc(
+      final result = await _client.rpc<dynamic>(
         'redeem_promo_code',
         params: {'p_code': code.toUpperCase().trim()},
       ) as Map<String, dynamic>;

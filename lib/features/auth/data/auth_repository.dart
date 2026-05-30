@@ -220,7 +220,7 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
     final userId = _client.auth.currentUser?.id;
     try {
       // 1. Borra datos remotos + cuenta en Supabase
-      await _client.rpc('delete_user_account');
+      await _client.rpc<dynamic>('delete_user_account');
       // 2. Borra datos locales del usuario (otros usuarios no se ven afectados)
       if (userId != null) {
         await LocalDatabase.instance.clearUserData(userId);

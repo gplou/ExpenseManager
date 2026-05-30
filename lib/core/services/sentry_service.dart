@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -9,26 +11,31 @@ class SentryService {
   SentryService._();
 
   /// Call after login. Uses only the Supabase UUID — no email or name.
-  static Future<void> setUser(String userId, {bool isPro = false}) async {
-    try {
-      await Sentry.configureScope((scope) async {
-        await scope.setUser(SentryUser(
-          id: userId,
-          data: {'is_pro': isPro},
-        ));
-      });
-    } catch (e) {
-      debugPrint('[Sentry] setUser error: $e');
-    }
+  /// Fire-and-forget: returns `void`.
+  static void setUser(String userId, {bool isPro = false}) {
+    unawaited(() async {
+      try {
+        await Sentry.configureScope((scope) async {
+          await scope.setUser(SentryUser(
+            id: userId,
+            data: {'is_pro': isPro},
+          ));
+        });
+      } catch (e) {
+        debugPrint('[Sentry] setUser error: $e');
+      }
+    }());
   }
 
   /// Call after logout to disassociate subsequent events from the user.
-  static Future<void> clearUser() async {
-    try {
-      await Sentry.configureScope((scope) => scope.setUser(null));
-    } catch (e) {
-      debugPrint('[Sentry] clearUser error: $e');
-    }
+  static void clearUser() {
+    unawaited(() async {
+      try {
+        await Sentry.configureScope((scope) => scope.setUser(null));
+      } catch (e) {
+        debugPrint('[Sentry] clearUser error: $e');
+      }
+    }());
   }
 
   /// Reports an AppFailure to Sentry with a tag for the failure type.

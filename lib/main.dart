@@ -35,7 +35,7 @@ Future<void> main() async {
   FlutterNativeSplash.preserve(widgetsBinding: binding);
 
   if (Platform.isAndroid) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge).ignore();
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
@@ -48,7 +48,7 @@ Future<void> main() async {
 
     // Detectar si la app fue lanzada desde un widget de pantalla de inicio
     step = '1 - HomeWidget';
-    HomeWidget.setAppGroupId('group.com.gpm.expensemanagerapp');
+    HomeWidget.setAppGroupId('group.com.gpm.expensemanagerapp').ignore();
     final widgetLaunchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
     final initialWidgetAction = _extractWidgetAction(widgetLaunchUri);
 

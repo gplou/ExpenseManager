@@ -245,7 +245,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
     TransactionPeriod currentPeriod,
     DateTimeRange? currentCustomRange,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       showDragHandle: false,
@@ -341,7 +341,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
     List<TransactionCategory> allCats,
     Color accentColor,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

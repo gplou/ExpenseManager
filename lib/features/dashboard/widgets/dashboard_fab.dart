@@ -103,15 +103,15 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
 
     if (action == WidgetActions.voice) {
       if (!_requirePro()) return;
-      _startVoice();
+      _startVoice().ignore();
     } else if (action == WidgetActions.add) {
-      showAddTransactionSheet(context);
+      showAddTransactionSheet(context).ignore();
     } else if (action == WidgetActions.chat) {
       if (!_requirePro()) return;
-      context.push(AppRoutes.chat);
+      context.push(AppRoutes.chat).ignore();
     } else if (action == WidgetActions.photo) {
       if (!_requirePro()) return;
-      _startCamera();
+      _startCamera().ignore();
     }
   }
 
@@ -192,7 +192,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     await _speech.stop();
     setState(() => _voiceState = VoiceInputState.idle);
     if (!mounted) return;
-    showAddTransactionSheet(context, voiceData: parsed);
+    showAddTransactionSheet(context, voiceData: parsed).ignore();
   }
 
   Future<void> _startCamera() async {
@@ -263,7 +263,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
         );
         return;
       }
-      showAddTransactionSheet(context, voiceData: parsed);
+      showAddTransactionSheet(context, voiceData: parsed).ignore();
     } catch (e) {
       if (mounted) {
         setState(() => _voiceState = VoiceInputState.idle);
@@ -468,7 +468,7 @@ class _MiniFabState extends State<_MiniFab>
   }
 
   Future<void> _handleTap() async {
-    HapticFeedback.lightImpact();
+    HapticFeedback.lightImpact().ignore();
     await _ctrl.forward();
     await _ctrl.reverse();
     widget.onTap();
