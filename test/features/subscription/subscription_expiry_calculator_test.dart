@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:expense_manager/features/subscription/domain/subscription_expiry_calculator.dart';
 
+import '../../helpers/clock_helper.dart';
+
 /// Pure unit tests for [SubscriptionExpiryCalculator].
 ///
 /// These tests lock in the contract that fixes the production bug where a
@@ -87,6 +89,22 @@ void main() {
         now: now,
       );
       expect(a, b);
+    });
+
+    test('default `now` resolves from the ambient clock (clock.now())', () {
+      // Demonstrates the package:clock migration: when `now` is omitted the
+      // calculator reads `clock.now()`, so a pinned clock makes the fallback
+      // window fully deterministic without passing `now` explicitly.
+      final fixed = DateTime.utc(2026, 4, 1, 9, 30);
+      final result = withFixedClock(
+        fixed,
+        () => SubscriptionExpiryCalculator.effectiveExpiry(
+          storeExpiry: null,
+          bonusDays: 0,
+          fallbackPeriodDays: 30,
+        ),
+      );
+      expect(result, DateTime.utc(2026, 5, 1, 9, 30));
     });
 
     // ── Defensive contracts (assert in debug) ───────────────────────────────

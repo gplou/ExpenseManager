@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -111,7 +112,7 @@ class AppDrawer extends ConsumerWidget {
                           isPro && sub?.expiresAt != null
                               ? l10n.proActiveStatus(
                                   sub!.expiresAt!
-                                      .difference(DateTime.now())
+                                      .difference(clock.now())
                                       .inDays,
                                 )
                               : l10n.proDrawerSubtitle,

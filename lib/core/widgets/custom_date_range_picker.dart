@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -59,7 +60,7 @@ class _CustomDateRangePickerDialogState
       _end = init.end;
       _displayedMonth = DateTime(init.start.year, init.start.month);
     } else {
-      final now = DateTime.now();
+      final now = clock.now();
       _displayedMonth = DateTime(now.year, now.month);
     }
     _monthGridYear = _displayedMonth.year;
@@ -500,7 +501,7 @@ class _MonthGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final now = DateTime.now();
+    final now = clock.now();
 
     return GridView.builder(
       shrinkWrap: true,

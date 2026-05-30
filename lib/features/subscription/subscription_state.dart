@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'subscription_repository.dart' show kSubscriptionDays;
 
 /// Immutable state for the PRO subscription.
@@ -29,7 +30,7 @@ class SubscriptionState {
   final bool trialUsed;
 
   bool get isPro =>
-      expiresAt != null && expiresAt!.isAfter(DateTime.now());
+      expiresAt != null && expiresAt!.isAfter(clock.now());
 
   /// Whether the user can start a free trial (never been PRO and never used trial).
   bool get canStartTrial => !isPro && !trialUsed;

@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,7 +25,7 @@ class RecurringTransactionsRepository
   /// Devuelve las recurrentes cuya [next_occurrence] ya ha llegado.
   @override
   Future<List<RecurringTransactionModel>> getDueRecurring() async {
-    final today = dateToString(DateTime.now());
+    final today = dateToString(clock.now());
     final response = await _client
         .from('recurring_transactions')
         .select()

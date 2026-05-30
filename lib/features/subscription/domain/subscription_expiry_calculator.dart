@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 /// Pure domain helper that decides the effective `expires_at` for a PRO
 /// subscription, combining the store-reported expiry with any bonus days
 /// granted by a pending discount promo code.
@@ -27,7 +28,7 @@ class SubscriptionExpiryCalculator {
     assert(bonusDays >= 0, 'bonusDays must be non-negative');
     assert(fallbackPeriodDays > 0, 'fallbackPeriodDays must be positive');
 
-    final reference = now ?? DateTime.now();
+    final reference = now ?? clock.now();
     final base =
         storeExpiry ?? reference.add(Duration(days: fallbackPeriodDays));
     if (bonusDays == 0) return base;

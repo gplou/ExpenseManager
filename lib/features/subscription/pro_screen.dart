@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -578,7 +579,7 @@ class _ActiveProCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final remaining = expiresAt.difference(DateTime.now()).inDays;
+    final remaining = expiresAt.difference(clock.now()).inDays;
     final sourceLabel = switch (source) {
       'play_store' => l10n.proSourceGooglePlay,
       'app_store' => l10n.proSourceAppStore,

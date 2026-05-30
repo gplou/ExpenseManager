@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -145,9 +146,9 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// Redeems a promo code with client-side rate limiting.
   Future<void> redeemPromoCode(String code) async {
     if (_promoCooldownUntil != null &&
-        DateTime.now().isBefore(_promoCooldownUntil!)) {
+        clock.now().isBefore(_promoCooldownUntil!)) {
       final remaining =
-          _promoCooldownUntil!.difference(DateTime.now()).inSeconds;
+          _promoCooldownUntil!.difference(clock.now()).inSeconds;
       throw PromoCodeException(
           'Demasiados intentos. Espera $remaining segundos.');
     }
@@ -165,7 +166,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
         // stacked expiry. We just read back the authoritative value — the
         // client never decides the final expires_at.
         final expiresAt = result.expiresAt ??
-            DateTime.now().add(Duration(days: result.durationDays));
+            clock.now().add(Duration(days: result.durationDays));
 
         await _persistCache(expiresAt: expiresAt, source: 'promo_code');
 
@@ -194,7 +195,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     } on PromoCodeException {
       _promoFailedAttempts++;
       if (_promoFailedAttempts >= _kMaxPromoAttempts) {
-        _promoCooldownUntil = DateTime.now().add(_kPromoCooldown);
+        _promoCooldownUntil = clock.now().add(_kPromoCooldown);
         _promoFailedAttempts = 0;
       }
       rethrow;
@@ -266,7 +267,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     bool cacheStale = true;
     if (cachedCheckedAt != null) {
       final checkedAt = DateTime.parse(cachedCheckedAt);
-      cacheStale = DateTime.now().difference(checkedAt) > _kCacheTtl;
+      cacheStale = clock.now().difference(checkedAt) > _kCacheTtl;
     }
 
     if (!cacheStale) return fast;
@@ -402,7 +403,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
     // Poll Supabase in the background until the revenuecat-webhook confirms
     // the purchase (typically arrives within a few seconds).
-    _pollForWebhookConfirmation(purchasedAt: DateTime.now());
+    _pollForWebhookConfirmation(purchasedAt: clock.now());
   }
 
   /// Polls Supabase every 5 seconds (up to 10 attempts = 50s) waiting for the
@@ -455,7 +456,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       await storage.delete(_kCacheExpiresAtKey);
     }
     await storage.write(
-        _kCacheCheckedAtKey, DateTime.now().toUtc().toIso8601String());
+        _kCacheCheckedAtKey, clock.now().toUtc().toIso8601String());
     if (source != null) {
       await storage.write(_kCacheSourceKey, source);
     } else {

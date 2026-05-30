@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -178,7 +179,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
             const Gap(2),
             Text(
-              DateTime.now().formattedDate,
+              clock.now().formattedDate,
               style: context.textTheme.bodySmall?.copyWith(
                 color: cs.onSurface.withValues(alpha: 0.55),
                 letterSpacing: 0,
@@ -248,7 +249,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               final range = await showCustomDateRangePicker(
                                 context: context,
                                 firstDate: DateTime(2020),
-                                lastDate: DateTime.now(),
+                                lastDate: clock.now(),
                                 initialDateRange: customRange ??
                                     DateTimeRange(
                                       start: period.dateRange.from,

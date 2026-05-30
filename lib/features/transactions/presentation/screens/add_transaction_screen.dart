@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
@@ -186,7 +187,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         TextEditingController(text: t?.description ?? v?.description ?? '');
     _selectedCategory = t?.category ?? v?.category;
     _selectedSubcategory = t?.subcategory ?? v?.subcategory;
-    _selectedDate = t?.date ?? v?.date ?? DateTime.now();
+    _selectedDate = t?.date ?? v?.date ?? clock.now();
 
     // Skip directly to the details step when we already have an amount
     // (editing existing tx or voice-parsed data).
@@ -404,7 +405,7 @@ Future<void> _save() async {
           subcategory: _selectedSubcategory,
           description: desc,
           date: _selectedDate,
-          createdAt: DateTime.now(),
+          createdAt: clock.now(),
           recurringTransactionId: recurringId,
           currency: currentCurrency,
         );

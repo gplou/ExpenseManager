@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
 /// Simple sliding-window rate limiter for AI parse calls (voice + image).
@@ -18,7 +19,7 @@ class AiRateLimiter {
 
   /// Returns `true` if the call is allowed, `false` if rate-limited.
   bool tryConsume() {
-    final now = DateTime.now();
+    final now = clock.now();
     _timestamps.removeWhere((t) => now.difference(t) > _window);
     if (_timestamps.length >= maxPerMinute) return false;
     _timestamps.add(now);

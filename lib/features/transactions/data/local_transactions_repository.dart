@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -62,7 +63,7 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
       final model = transaction.copyWith(
         id: id,
         userId: userId,
-        createdAt: DateTime.now(),
+        createdAt: clock.now(),
       );
       await db.insert(
         'transactions',

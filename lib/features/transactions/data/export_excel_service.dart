@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -82,7 +83,7 @@ class ExportExcelService {
     final bytes = excel.encode();
     if (bytes == null) throw Exception('Could not encode Excel file');
 
-    final fileName = 'ExpenseManager_${DateFormat('yyyyMMdd').format(DateTime.now())}.xlsx';
+    final fileName = 'ExpenseManager_${DateFormat('yyyyMMdd').format(clock.now())}.xlsx';
 
     // Save to temp dir then open system share sheet
     final dir = await getTemporaryDirectory();

@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -300,7 +301,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   final range = await showCustomDateRangePicker(
                     context: context,
                     firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
+                    lastDate: clock.now(),
                     initialDateRange: currentCustomRange ??
                         DateTimeRange(
                           start: currentPeriod.dateRange.from,

@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -32,7 +33,7 @@ extension TransactionPeriodX on TransactionPeriod {
   }
 
   ({DateTime from, DateTime to}) get dateRange {
-    final now = DateTime.now();
+    final now = clock.now();
     final today = DateTime(now.year, now.month, now.day);
     switch (this) {
       case TransactionPeriod.week:
