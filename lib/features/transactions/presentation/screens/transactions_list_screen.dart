@@ -146,12 +146,12 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ) ?? const SizedBox.shrink()
           else
           transactionsAsync.whenOrNull(
-            data: (transactions) {
-              final categories = transactions
-                  .map((t) => t.category)
-                  .toSet()
-                  .toList()
-                ..sort();
+            data: (_) {
+              // Distinct, sorted categories come pre-computed from a memoized
+              // provider — no per-rebuild distinct+sort here.
+              final categories =
+                  ref.watch(transactionCategoryOptionsProvider).value ??
+                      const <String>[];
               if (categories.isEmpty) return const SizedBox.shrink();
               final isActive = _selectedCategory != null;
               return PopupMenuButton<String?>(

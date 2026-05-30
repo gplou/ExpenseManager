@@ -38,7 +38,10 @@ final chartDistributionProvider =
     }
   }
 
-  return map;
+  // Return value-descending so consumers (charts/legend) don't re-sort in build.
+  final sortedEntries = map.entries.toList()
+    ..sort((a, b) => b.value.compareTo(a.value));
+  return {for (final e in sortedEntries) e.key: e.value};
 });
 
 // ── Filtered total ───────────────────────────────────────────────────────────

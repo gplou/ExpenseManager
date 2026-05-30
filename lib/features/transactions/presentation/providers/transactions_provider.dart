@@ -285,6 +285,17 @@ final categoryDistributionProvider = FutureProvider.autoDispose
   return map;
 });
 
+// ── Category options (for the history filter menu) ───────────────────────────
+
+/// Distinct categories present in the current period, sorted alphabetically.
+/// Memoized so the list screen doesn't recompute (distinct + sort) on every
+/// rebuild (e.g. multi-select toggles).
+final transactionCategoryOptionsProvider =
+    FutureProvider.autoDispose<List<String>>((ref) async {
+  final transactions = await ref.watch(allTransactionsProvider.future);
+  return transactions.map((t) => t.category).toSet().toList()..sort();
+});
+
 // ── Notifier (CRUD) ───────────────────────────────────────────────────────────
 
 class TransactionsNotifier extends Notifier<void> {
