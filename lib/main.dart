@@ -20,6 +20,8 @@ import 'core/config/app_config.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/sentry_provider_observer.dart';
+import 'core/services/sentry_service.dart';
+import 'core/theme/app_colors.dart';
 import 'core/config/router.dart';
 import 'core/local_db/local_database.dart';
 import 'core/providers/locale_provider.dart' show localeProvider, kLocaleKey, supportedLocales;
@@ -33,6 +35,23 @@ import 'l10n/app_localizations.dart';
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: binding);
+
+  // ── Global error capture ───────────────────────────────────────────────────
+  // Set BEFORE Sentry.init so Sentry's integrations chain on top of these, and
+  // so framework/async errors are still logged when SENTRY_DSN is empty.
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('[FlutterError] ${details.exceptionAsString()}');
+  };
+  binding.platformDispatcher.onError = (error, stack) {
+    debugPrint('[PlatformDispatcher] uncaught: $error\n$stack');
+    return true;
+  };
+  // Release-only: replace Flutter's default grey error box with a neutral
+  // fallback. Debug keeps the detailed red box for diagnosis.
+  if (!kDebugMode) {
+    ErrorWidget.builder = _releaseErrorWidget;
+  }
 
   if (Platform.isAndroid) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge).ignore();
@@ -169,9 +188,25 @@ Future<void> main() async {
     debugPrint('[main] 10 - runApp ok');
   } catch (e, stack) {
     debugPrint('[main] Fatal initialization error at step "$step": $e\n$stack');
+    // Report the init-phase fatal (no-op if Sentry never initialized).
+    await SentryService.captureException(e, stackTrace: stack);
     FlutterNativeSplash.remove();
     runApp(_InitErrorApp(error: e, step: step));
   }
+}
+
+/// Release-only fallback for widget build/layout/paint errors. Avoids Flutter's
+/// default grey box; renders a neutral surface without needing a theme/context.
+Widget _releaseErrorWidget(FlutterErrorDetails details) {
+  return const Directionality(
+    textDirection: TextDirection.ltr,
+    child: ColoredBox(
+      color: AppColors.paper,
+      child: Center(
+        child: Icon(Icons.error_outline, color: AppColors.graphite, size: 40),
+      ),
+    ),
+  );
 }
 
 Future<void> _requestTrackingAuthorization() async {
