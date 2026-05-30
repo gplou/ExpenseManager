@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../core/config/router.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/failure_localizations.dart';
 import '../../../../core/network/supabase_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
@@ -86,7 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     ref.listen(authProvider, (_, next) {
       if (next is Failure) {
-        context.showSnackbar(next.failure.userMessage, isError: true);
+        context.showSnackbar(next.failure.localizedMessage(l10n), isError: true);
         ref.read(authProvider.notifier).reset();
       }
     });

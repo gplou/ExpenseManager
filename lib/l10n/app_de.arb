@@ -420,5 +420,26 @@
   "planPerMonth": "{price} / Monat",
   "@planPerMonth": {
     "placeholders": { "price": { "type": "String" } }
-  }
+  },
+  "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  "errorNetwork": "Verbindungsfehler. Prüfe dein Netzwerk und versuche es erneut.",
+  "errorServer": "Serverfehler. Bitte versuche es später erneut.",
+  "errorCache": "Zugriff auf den lokalen Speicher nicht möglich.",
+  "errorRateLimit": "Zu viele Anfragen. Warte einen Moment und versuche es erneut.",
+  "errorValidation": "Ungültige Daten. Bitte überprüfe deine Eingaben.",
+  "errorAuthInvalidCredentials": "E-Mail oder Passwort ist falsch.",
+  "errorAuthEmailNotConfirmed": "Du musst deine E-Mail bestätigen, bevor du dich anmeldest.",
+  "errorAuthEmailAlreadyRegistered": "Diese E-Mail ist bereits registriert.",
+  "errorAuthRateLimit": "Zu viele Versuche. Warte ein paar Minuten und versuche es erneut.",
+  "errorAuthCancelled": "Anmeldung abgebrochen.",
+  "errorAuthNoConnection": "Keine Verbindung. Prüfe dein Netzwerk und versuche es erneut.",
+  "errorAuthGoogleFailed": "Anmeldung mit Google fehlgeschlagen. Bitte versuche es erneut.",
+  "errorAuthAppleFailed": "Anmeldung mit Apple fehlgeschlagen. Bitte versuche es erneut.",
+  "errorAuthSignInFailed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+  "errorAuthSignUpFailed": "Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
+  "errorAuthGeneric": "Authentifizierungsfehler. Bitte versuche es erneut.",
+  "errorFreeTrialFailed": "Kostenlose Testphase konnte nicht aktiviert werden. Bitte versuche es erneut.",
+  "errorPurchaseGeneric": "Kauf konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
+  "errorRestoreGeneric": "Deine Käufe konnten nicht wiederhergestellt werden. Bitte versuche es erneut.",
+  "errorPromoTooManyAttempts": "Zu viele Versuche. Warte {seconds} Sekunden."
 }

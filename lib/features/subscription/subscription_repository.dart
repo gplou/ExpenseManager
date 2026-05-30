@@ -199,6 +199,13 @@ class PromoCodeException implements Exception {
   final String message;
 }
 
+/// Thrown when the client-side promo rate limit is active. Carries the
+/// remaining cooldown so the UI can render a localized message.
+class PromoCooldownException implements Exception {
+  const PromoCooldownException(this.remainingSeconds);
+  final int remainingSeconds;
+}
+
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 final subscriptionRepositoryProvider =

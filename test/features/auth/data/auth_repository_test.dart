@@ -129,7 +129,7 @@ void main() {
       );
     });
 
-    test('maps Invalid login credentials into a localized message', () async {
+    test('maps Invalid login credentials to invalidCredentials code', () async {
       when(() => auth.signInWithPassword(
             email: any(named: 'email'),
             password: any(named: 'password'),
@@ -139,15 +139,15 @@ void main() {
         () => repo.signInWithEmail(email: 'a@b.com', password: 'wrong'),
         throwsA(
           isA<AuthFailure>().having(
-            (f) => f.message,
-            'message',
-            'Email o contraseña incorrectos',
+            (f) => f.code,
+            'code',
+            AuthErrorCode.invalidCredentials,
           ),
         ),
       );
     });
 
-    test('maps rate-limit errors to a friendly message', () async {
+    test('maps rate-limit errors to the rateLimit code', () async {
       when(() => auth.signInWithPassword(
             email: any(named: 'email'),
             password: any(named: 'password'),
@@ -157,15 +157,18 @@ void main() {
         () => repo.signInWithEmail(email: 'a@b.com', password: 'p'),
         throwsA(
           isA<AuthFailure>().having(
-            (f) => f.message,
-            'message',
-            'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
+            (f) => f.code,
+            'code',
+            AuthErrorCode.rateLimit,
           ),
         ),
       );
     });
 
-    test('never leaks raw server error messages', () async {
+    test('unknown server errors map to the generic code (no leak to UI)',
+        () async {
+      // The raw message is kept on the failure for logging, but the UI maps
+      // the *code* (generic) to a localized string — the raw text is never shown.
       when(() => auth.signInWithPassword(
             email: any(named: 'email'),
             password: any(named: 'password'),
@@ -175,9 +178,9 @@ void main() {
         () => repo.signInWithEmail(email: 'a@b.com', password: 'p'),
         throwsA(
           isA<AuthFailure>().having(
-            (f) => f.message,
-            'message',
-            'Error de autenticación. Inténtalo de nuevo.',
+            (f) => f.code,
+            'code',
+            AuthErrorCode.generic,
           ),
         ),
       );
@@ -220,7 +223,7 @@ void main() {
       expect(result.name, 'New');
     });
 
-    test('maps User already registered into a friendly message', () async {
+    test('maps User already registered to emailAlreadyRegistered code', () async {
       when(() => auth.signUp(
             email: any(named: 'email'),
             password: any(named: 'password'),
@@ -231,9 +234,9 @@ void main() {
         () => repo.signUpWithEmail(email: 'x@x.com', password: 'p'),
         throwsA(
           isA<AuthFailure>().having(
-            (f) => f.message,
-            'message',
-            'Este email ya está registrado',
+            (f) => f.code,
+            'code',
+            AuthErrorCode.emailAlreadyRegistered,
           ),
         ),
       );

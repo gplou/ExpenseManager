@@ -532,7 +532,16 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
           behavior: SnackBarBehavior.floating,
         ),
       );
+    } on PromoCooldownException catch (e) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        setState(() {
+          _error = l10n.errorPromoTooManyAttempts(e.remainingSeconds);
+          _loading = false;
+        });
+      }
     } on PromoCodeException catch (e) {
+      // Server-driven message (invalid/expired code) — surfaced as-is.
       if (mounted) setState(() { _error = e.message; _loading = false; });
     } catch (_) {
       if (mounted) {

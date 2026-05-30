@@ -10,9 +10,27 @@ sealed class AppFailure {
   String toString() => message;
 }
 
+/// Distinct authentication error cases. The data layer sets these so the
+/// presentation layer can map each to a localized message — instead of baking
+/// user-facing strings into the repository. [message] is kept for logging.
+enum AuthErrorCode {
+  invalidCredentials,
+  emailNotConfirmed,
+  emailAlreadyRegistered,
+  rateLimit,
+  cancelled,
+  noConnection,
+  googleFailed,
+  appleFailed,
+  signInFailed,
+  signUpFailed,
+  generic,
+}
+
 /// Error de autenticación (credenciales, sesión expirada, etc.)
 final class AuthFailure extends AppFailure {
-  const AuthFailure(super.message);
+  final AuthErrorCode code;
+  const AuthFailure(super.message, {this.code = AuthErrorCode.generic});
 }
 
 /// Error de red o API

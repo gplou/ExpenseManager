@@ -907,4 +907,82 @@ class AppLocalizationsFr extends AppLocalizations {
   String planPerMonth(String price) {
     return '$price / mois';
   }
+
+  @override
+  String get errorGeneric => 'Une erreur s\'est produite. Réessaie.';
+
+  @override
+  String get errorNetwork =>
+      'Erreur de connexion. Vérifie ton réseau et réessaie.';
+
+  @override
+  String get errorServer => 'Erreur du serveur. Réessaie plus tard.';
+
+  @override
+  String get errorCache => 'Impossible d\'accéder au stockage local.';
+
+  @override
+  String get errorRateLimit =>
+      'Trop de requêtes. Patiente un instant et réessaie.';
+
+  @override
+  String get errorValidation =>
+      'Données non valides. Vérifie les informations saisies.';
+
+  @override
+  String get errorAuthInvalidCredentials => 'E-mail ou mot de passe incorrect.';
+
+  @override
+  String get errorAuthEmailNotConfirmed =>
+      'Tu dois vérifier ton e-mail avant de te connecter.';
+
+  @override
+  String get errorAuthEmailAlreadyRegistered =>
+      'Cet e-mail est déjà enregistré.';
+
+  @override
+  String get errorAuthRateLimit =>
+      'Trop de tentatives. Patiente quelques minutes et réessaie.';
+
+  @override
+  String get errorAuthCancelled => 'Connexion annulée.';
+
+  @override
+  String get errorAuthNoConnection =>
+      'Pas de connexion. Vérifie ton réseau et réessaie.';
+
+  @override
+  String get errorAuthGoogleFailed =>
+      'Connexion avec Google impossible. Réessaie.';
+
+  @override
+  String get errorAuthAppleFailed =>
+      'Connexion avec Apple impossible. Réessaie.';
+
+  @override
+  String get errorAuthSignInFailed => 'Connexion impossible. Réessaie.';
+
+  @override
+  String get errorAuthSignUpFailed =>
+      'Impossible de créer le compte. Réessaie.';
+
+  @override
+  String get errorAuthGeneric => 'Erreur d\'authentification. Réessaie.';
+
+  @override
+  String get errorFreeTrialFailed =>
+      'Impossible d\'activer l\'essai gratuit. Réessaie.';
+
+  @override
+  String get errorPurchaseGeneric =>
+      'Impossible de finaliser l\'achat. Réessaie.';
+
+  @override
+  String get errorRestoreGeneric =>
+      'Impossible de restaurer tes achats. Réessaie.';
+
+  @override
+  String errorPromoTooManyAttempts(int seconds) {
+    return 'Trop de tentatives. Patiente $seconds secondes.';
+  }
 }

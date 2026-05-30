@@ -903,4 +903,83 @@ class AppLocalizationsEs extends AppLocalizations {
   String planPerMonth(String price) {
     return '$price / mes';
   }
+
+  @override
+  String get errorGeneric => 'Algo salió mal. Inténtalo de nuevo.';
+
+  @override
+  String get errorNetwork =>
+      'Error de conexión. Revisa tu red e inténtalo de nuevo.';
+
+  @override
+  String get errorServer => 'Error del servidor. Inténtalo más tarde.';
+
+  @override
+  String get errorCache => 'No se pudo acceder al almacenamiento local.';
+
+  @override
+  String get errorRateLimit =>
+      'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.';
+
+  @override
+  String get errorValidation =>
+      'Datos no válidos. Revisa la información introducida.';
+
+  @override
+  String get errorAuthInvalidCredentials => 'Email o contraseña incorrectos.';
+
+  @override
+  String get errorAuthEmailNotConfirmed =>
+      'Debes verificar tu email antes de iniciar sesión.';
+
+  @override
+  String get errorAuthEmailAlreadyRegistered =>
+      'Este email ya está registrado.';
+
+  @override
+  String get errorAuthRateLimit =>
+      'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+
+  @override
+  String get errorAuthCancelled => 'Inicio de sesión cancelado.';
+
+  @override
+  String get errorAuthNoConnection =>
+      'Sin conexión. Revisa tu red e inténtalo de nuevo.';
+
+  @override
+  String get errorAuthGoogleFailed =>
+      'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
+
+  @override
+  String get errorAuthAppleFailed =>
+      'No se pudo iniciar sesión con Apple. Inténtalo de nuevo.';
+
+  @override
+  String get errorAuthSignInFailed =>
+      'No se pudo iniciar sesión. Inténtalo de nuevo.';
+
+  @override
+  String get errorAuthSignUpFailed =>
+      'No se pudo crear la cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get errorAuthGeneric => 'Error de autenticación. Inténtalo de nuevo.';
+
+  @override
+  String get errorFreeTrialFailed =>
+      'No se pudo activar la prueba gratuita. Inténtalo de nuevo.';
+
+  @override
+  String get errorPurchaseGeneric =>
+      'No se pudo completar la compra. Inténtalo de nuevo.';
+
+  @override
+  String get errorRestoreGeneric =>
+      'No se pudieron restaurar tus compras. Inténtalo de nuevo.';
+
+  @override
+  String errorPromoTooManyAttempts(int seconds) {
+    return 'Demasiados intentos. Espera $seconds segundos.';
+  }
 }

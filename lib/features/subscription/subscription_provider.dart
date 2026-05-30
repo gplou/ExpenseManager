@@ -4,6 +4,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../core/security/secure_storage.dart';
 import '../../core/services/analytics_service.dart';
+import '../../core/services/sentry_service.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import 'data/purchases_gateway.dart';
 import 'data/revenue_cat_adapter.dart';
@@ -115,7 +116,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       state = AsyncData(current.copyWith(isLoading: false, clearError: true));
       AnalyticsService.track(AnalyticsService.purchaseCancelled);
     } on RCPurchaseException catch (e) {
-      _setError(e.message);
+      _setError(SubscriptionErrorCode.purchaseFailed);
       AnalyticsService.track(AnalyticsService.purchaseError, {
         'error': e.message,
       });
@@ -133,7 +134,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
           await ref.read(subscriptionRepositoryProvider).restoreProPlan();
       await _applyRCResult(result, isRestore: true);
     } on RCPurchaseException catch (e) {
-      _setError(e.message);
+      _setError(SubscriptionErrorCode.restoreFailed);
       AnalyticsService.track(AnalyticsService.purchaseError, {
         'error': e.message,
         'flow': 'restore',
@@ -149,8 +150,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
         clock.now().isBefore(_promoCooldownUntil!)) {
       final remaining =
           _promoCooldownUntil!.difference(clock.now()).inSeconds;
-      throw PromoCodeException(
-          'Demasiados intentos. Espera $remaining segundos.');
+      throw PromoCooldownException(remaining);
     }
 
     final repo = ref.read(subscriptionRepositoryProvider);
@@ -224,8 +224,9 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       AnalyticsService.track(AnalyticsService.freeTrialStarted, {
         'expires_at': expiresAt.toIso8601String(),
       });
-    } catch (e) {
-      _setError('Error al activar la prueba gratuita');
+    } catch (e, st) {
+      await SentryService.captureException(e, stackTrace: st);
+      _setError(SubscriptionErrorCode.trialFailed);
     }
   }
 
@@ -486,10 +487,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     state = AsyncData(current.copyWith(isLoading: loading, clearError: true));
   }
 
-  void _setError(String message) {
+  void _setError(SubscriptionErrorCode code) {
     final current = state.value ?? const SubscriptionState();
     state =
-        AsyncData(current.copyWith(isLoading: false, purchaseError: message));
+        AsyncData(current.copyWith(isLoading: false, errorCode: code));
   }
 }
 

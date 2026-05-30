@@ -899,4 +899,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String planPerMonth(String price) {
     return '$price / month';
   }
+
+  @override
+  String get errorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get errorNetwork =>
+      'Connection error. Check your network and try again.';
+
+  @override
+  String get errorServer => 'Server error. Please try again later.';
+
+  @override
+  String get errorCache => 'Couldn\'t access local storage.';
+
+  @override
+  String get errorRateLimit =>
+      'Too many requests. Wait a moment and try again.';
+
+  @override
+  String get errorValidation =>
+      'Invalid data. Please review the information entered.';
+
+  @override
+  String get errorAuthInvalidCredentials => 'Incorrect email or password.';
+
+  @override
+  String get errorAuthEmailNotConfirmed =>
+      'You must verify your email before signing in.';
+
+  @override
+  String get errorAuthEmailAlreadyRegistered =>
+      'This email is already registered.';
+
+  @override
+  String get errorAuthRateLimit =>
+      'Too many attempts. Wait a few minutes and try again.';
+
+  @override
+  String get errorAuthCancelled => 'Sign-in cancelled.';
+
+  @override
+  String get errorAuthNoConnection =>
+      'No connection. Check your network and try again.';
+
+  @override
+  String get errorAuthGoogleFailed =>
+      'Couldn\'t sign in with Google. Please try again.';
+
+  @override
+  String get errorAuthAppleFailed =>
+      'Couldn\'t sign in with Apple. Please try again.';
+
+  @override
+  String get errorAuthSignInFailed => 'Couldn\'t sign in. Please try again.';
+
+  @override
+  String get errorAuthSignUpFailed =>
+      'Couldn\'t create the account. Please try again.';
+
+  @override
+  String get errorAuthGeneric => 'Authentication error. Please try again.';
+
+  @override
+  String get errorFreeTrialFailed =>
+      'Couldn\'t start the free trial. Please try again.';
+
+  @override
+  String get errorPurchaseGeneric =>
+      'Couldn\'t complete the purchase. Please try again.';
+
+  @override
+  String get errorRestoreGeneric =>
+      'Couldn\'t restore your purchases. Please try again.';
+
+  @override
+  String errorPromoTooManyAttempts(int seconds) {
+    return 'Too many attempts. Wait $seconds seconds.';
+  }
 }

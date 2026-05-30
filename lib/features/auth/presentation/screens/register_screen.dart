@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../core/config/router.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/failure_localizations.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
@@ -55,7 +55,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     ref.listen(authProvider, (_, next) {
       if (next is Failure) {
-        context.showSnackbar(next.failure.userMessage, isError: true);
+        context.showSnackbar(next.failure.localizedMessage(l10n), isError: true);
         ref.read(authProvider.notifier).reset();
       }
     });

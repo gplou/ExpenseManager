@@ -1763,6 +1763,132 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{price} / mes'**
   String planPerMonth(String price);
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In es, this message translates to:
+  /// **'Algo salió mal. Inténtalo de nuevo.'**
+  String get errorGeneric;
+
+  /// No description provided for @errorNetwork.
+  ///
+  /// In es, this message translates to:
+  /// **'Error de conexión. Revisa tu red e inténtalo de nuevo.'**
+  String get errorNetwork;
+
+  /// No description provided for @errorServer.
+  ///
+  /// In es, this message translates to:
+  /// **'Error del servidor. Inténtalo más tarde.'**
+  String get errorServer;
+
+  /// No description provided for @errorCache.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo acceder al almacenamiento local.'**
+  String get errorCache;
+
+  /// No description provided for @errorRateLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.'**
+  String get errorRateLimit;
+
+  /// No description provided for @errorValidation.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos no válidos. Revisa la información introducida.'**
+  String get errorValidation;
+
+  /// No description provided for @errorAuthInvalidCredentials.
+  ///
+  /// In es, this message translates to:
+  /// **'Email o contraseña incorrectos.'**
+  String get errorAuthInvalidCredentials;
+
+  /// No description provided for @errorAuthEmailNotConfirmed.
+  ///
+  /// In es, this message translates to:
+  /// **'Debes verificar tu email antes de iniciar sesión.'**
+  String get errorAuthEmailNotConfirmed;
+
+  /// No description provided for @errorAuthEmailAlreadyRegistered.
+  ///
+  /// In es, this message translates to:
+  /// **'Este email ya está registrado.'**
+  String get errorAuthEmailAlreadyRegistered;
+
+  /// No description provided for @errorAuthRateLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.'**
+  String get errorAuthRateLimit;
+
+  /// No description provided for @errorAuthCancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicio de sesión cancelado.'**
+  String get errorAuthCancelled;
+
+  /// No description provided for @errorAuthNoConnection.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión. Revisa tu red e inténtalo de nuevo.'**
+  String get errorAuthNoConnection;
+
+  /// No description provided for @errorAuthGoogleFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo iniciar sesión con Google. Inténtalo de nuevo.'**
+  String get errorAuthGoogleFailed;
+
+  /// No description provided for @errorAuthAppleFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo iniciar sesión con Apple. Inténtalo de nuevo.'**
+  String get errorAuthAppleFailed;
+
+  /// No description provided for @errorAuthSignInFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo iniciar sesión. Inténtalo de nuevo.'**
+  String get errorAuthSignInFailed;
+
+  /// No description provided for @errorAuthSignUpFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo crear la cuenta. Inténtalo de nuevo.'**
+  String get errorAuthSignUpFailed;
+
+  /// No description provided for @errorAuthGeneric.
+  ///
+  /// In es, this message translates to:
+  /// **'Error de autenticación. Inténtalo de nuevo.'**
+  String get errorAuthGeneric;
+
+  /// No description provided for @errorFreeTrialFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo activar la prueba gratuita. Inténtalo de nuevo.'**
+  String get errorFreeTrialFailed;
+
+  /// No description provided for @errorPurchaseGeneric.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar la compra. Inténtalo de nuevo.'**
+  String get errorPurchaseGeneric;
+
+  /// No description provided for @errorRestoreGeneric.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron restaurar tus compras. Inténtalo de nuevo.'**
+  String get errorRestoreGeneric;
+
+  /// No description provided for @errorPromoTooManyAttempts.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiados intentos. Espera {seconds} segundos.'**
+  String errorPromoTooManyAttempts(int seconds);
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,10 @@
 import 'package:clock/clock.dart';
 import 'subscription_repository.dart' show kSubscriptionDays;
 
+/// User-facing subscription error cases. The notifier sets the code; the
+/// presentation layer maps it to a localized message (no baked-in strings).
+enum SubscriptionErrorCode { purchaseFailed, restoreFailed, trialFailed }
+
 /// Immutable state for the PRO subscription.
 ///
 /// [isPro] is a derived getter: true when [expiresAt] is in the future.
@@ -8,7 +12,7 @@ class SubscriptionState {
   const SubscriptionState({
     this.expiresAt,
     this.isLoading = false,
-    this.purchaseError,
+    this.errorCode,
     this.source,
     this.pendingDiscountPercentage,
     this.trialUsed = false,
@@ -16,7 +20,10 @@ class SubscriptionState {
 
   final DateTime? expiresAt;
   final bool isLoading;
-  final String? purchaseError;
+
+  /// Non-null when the last purchase/restore/trial action failed. Mapped to a
+  /// localized message at display time.
+  final SubscriptionErrorCode? errorCode;
 
   /// 'play_store' | 'app_store' | 'promo_code' | 'free_trial'
   final String? source;
@@ -48,7 +55,7 @@ class SubscriptionState {
     DateTime? expiresAt,
     bool clearExpiry = false,
     bool? isLoading,
-    String? purchaseError,
+    SubscriptionErrorCode? errorCode,
     bool clearError = false,
     String? source,
     int? pendingDiscountPercentage,
@@ -58,7 +65,7 @@ class SubscriptionState {
     return SubscriptionState(
       expiresAt: clearExpiry ? null : (expiresAt ?? this.expiresAt),
       isLoading: isLoading ?? this.isLoading,
-      purchaseError: clearError ? null : (purchaseError ?? this.purchaseError),
+      errorCode: clearError ? null : (errorCode ?? this.errorCode),
       source: source ?? this.source,
       pendingDiscountPercentage: clearDiscount
           ? null

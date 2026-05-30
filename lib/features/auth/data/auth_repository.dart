@@ -46,13 +46,16 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         password: password,
       );
       if (response.user == null) {
-        throw const AuthFailure('No se pudo iniciar sesión');
+        throw const AuthFailure(
+          'Sign-in returned a null user',
+          code: AuthErrorCode.signInFailed,
+        );
       }
       return _mapUser(response.user!);
     } on AppFailure {
       rethrow;
     } on AuthException catch (e) {
-      throw AuthFailure(_mapAuthError(e.message));
+      throw AuthFailure(e.message, code: _mapAuthError(e.message));
     } catch (e) {
       throw const UnexpectedFailure();
     }
@@ -71,13 +74,16 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         data: name != null ? {'name': name} : null,
       );
       if (response.user == null) {
-        throw const AuthFailure('No se pudo crear la cuenta');
+        throw const AuthFailure(
+          'Sign-up returned a null user',
+          code: AuthErrorCode.signUpFailed,
+        );
       }
       return _mapUser(response.user!);
     } on AppFailure {
       rethrow;
     } on AuthException catch (e) {
-      throw AuthFailure(_mapAuthError(e.message));
+      throw AuthFailure(e.message, code: _mapAuthError(e.message));
     } catch (e) {
       throw const UnexpectedFailure();
     }
@@ -112,7 +118,8 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
     try {
       if (AppConfig.googleWebClientId.isEmpty) {
         throw const AuthFailure(
-          'Falta configurar GOOGLE_WEB_CLIENT_ID en AppConfig.',
+          'Missing GOOGLE_WEB_CLIENT_ID in AppConfig.',
+          code: AuthErrorCode.googleFailed,
         );
       }
 
@@ -126,8 +133,9 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
       final idToken = googleUser.authentication.idToken;
       if (idToken == null) {
         throw const AuthFailure(
-          'idToken nulo: verifica que GOOGLE_WEB_CLIENT_ID sea el '
-          'Web Client ID (no el de Android/iOS) de Google Cloud Console.',
+          'Google idToken null: verify GOOGLE_WEB_CLIENT_ID is the Web Client '
+          'ID (not the Android/iOS one) from Google Cloud Console.',
+          code: AuthErrorCode.googleFailed,
         );
       }
       final authorization = await googleUser.authorizationClient
@@ -138,30 +146,39 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         accessToken: authorization?.accessToken,
       );
       if (response.user == null) {
-        throw const AuthFailure('No se pudo iniciar sesión con Google');
+        throw const AuthFailure(
+          'Google sign-in returned a null user',
+          code: AuthErrorCode.googleFailed,
+        );
       }
       return _mapUser(response.user!);
     } on AuthFailure {
       rethrow;
     } on AuthException catch (e) {
       debugPrint('[GoogleSignIn] AuthException: ${e.message} | statusCode: ${e.statusCode}');
-      throw AuthFailure(_mapAuthError(e.message));
+      throw AuthFailure(e.message, code: _mapAuthError(e.message));
     } on PlatformException catch (e) {
       if (e.code == 'sign_in_canceled') {
-        throw const AuthFailure('Inicio de sesión cancelado');
+        throw const AuthFailure(
+          'Google sign-in cancelled',
+          code: AuthErrorCode.cancelled,
+        );
       }
       if (e.code == 'network_error') {
-        throw const AuthFailure('Sin conexión. Revisa tu red e intenta de nuevo.');
+        throw const AuthFailure(
+          'Network error during Google sign-in',
+          code: AuthErrorCode.noConnection,
+        );
       }
       throw AuthFailure(
-        kDebugMode
-            ? 'Google PlatformException [${e.code}]: ${e.message}'
-            : 'Error al iniciar sesión con Google',
+        'Google PlatformException [${e.code}]: ${e.message}',
+        code: AuthErrorCode.googleFailed,
       );
     } catch (e) {
       debugPrint('[GoogleSignIn] unexpected error: $e');
       throw AuthFailure(
-        kDebugMode ? 'Error inesperado: $e' : 'Error al iniciar sesión con Google',
+        'Unexpected Google sign-in error: $e',
+        code: AuthErrorCode.googleFailed,
       );
     }
   }
@@ -181,7 +198,10 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
       );
       final idToken = credential.identityToken;
       if (idToken == null) {
-        throw const AuthFailure('No se pudo obtener el token de Apple');
+        throw const AuthFailure(
+          'Apple identityToken was null',
+          code: AuthErrorCode.appleFailed,
+        );
       }
       final response = await _client.auth.signInWithIdToken(
         provider: OAuthProvider.apple,
@@ -189,18 +209,24 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         nonce: rawNonce,
       );
       if (response.user == null) {
-        throw const AuthFailure('No se pudo iniciar sesión con Apple');
+        throw const AuthFailure(
+          'Apple sign-in returned a null user',
+          code: AuthErrorCode.appleFailed,
+        );
       }
       return _mapUser(response.user!);
     } on AuthFailure {
       rethrow;
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) {
-        throw const AuthFailure('Inicio de sesión cancelado');
+        throw const AuthFailure(
+          'Apple sign-in cancelled',
+          code: AuthErrorCode.cancelled,
+        );
       }
-      throw AuthFailure(e.message);
+      throw AuthFailure(e.message, code: AuthErrorCode.appleFailed);
     } on AuthException catch (e) {
-      throw AuthFailure(_mapAuthError(e.message));
+      throw AuthFailure(e.message, code: _mapAuthError(e.message));
     } catch (e) {
       throw const UnexpectedFailure();
     }
@@ -211,7 +237,7 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
     try {
       await _client.auth.resetPasswordForEmail(email);
     } on AuthException catch (e) {
-      throw AuthFailure(e.message);
+      throw AuthFailure(e.message, code: _mapAuthError(e.message));
     }
   }
 
@@ -228,7 +254,7 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
       // 3. Limpia la sesión local → dispara authStateChanges → router redirige al login
       await _client.auth.signOut();
     } on AuthException catch (e) {
-      throw AuthFailure(_mapAuthError(e.message));
+      throw AuthFailure(e.message, code: _mapAuthError(e.message));
     } catch (e) {
       throw const UnexpectedFailure();
     }
@@ -260,21 +286,23 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         createdAt: DateTime.parse(user.createdAt),
       );
 
-  String _mapAuthError(String message) {
+  /// Maps a raw Supabase auth error message to a stable [AuthErrorCode].
+  /// The presentation layer turns the code into a localized message; the raw
+  /// message is never shown to the user.
+  AuthErrorCode _mapAuthError(String message) {
     if (message.contains('Invalid login credentials')) {
-      return 'Email o contraseña incorrectos';
+      return AuthErrorCode.invalidCredentials;
     }
     if (message.contains('Email not confirmed')) {
-      return 'Debes verificar tu email antes de iniciar sesión';
+      return AuthErrorCode.emailNotConfirmed;
     }
     if (message.contains('User already registered')) {
-      return 'Este email ya está registrado';
+      return AuthErrorCode.emailAlreadyRegistered;
     }
     if (message.contains('rate limit') || message.contains('too many')) {
-      return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+      return AuthErrorCode.rateLimit;
     }
-    // Never expose raw Supabase/server error messages to the user.
-    return 'Error de autenticación. Inténtalo de nuevo.';
+    return AuthErrorCode.generic;
   }
 }
 

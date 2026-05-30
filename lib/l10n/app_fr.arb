@@ -420,5 +420,26 @@
   "planPerMonth": "{price} / mois",
   "@planPerMonth": {
     "placeholders": { "price": { "type": "String" } }
-  }
+  },
+  "errorGeneric": "Une erreur s'est produite. Réessaie.",
+  "errorNetwork": "Erreur de connexion. Vérifie ton réseau et réessaie.",
+  "errorServer": "Erreur du serveur. Réessaie plus tard.",
+  "errorCache": "Impossible d'accéder au stockage local.",
+  "errorRateLimit": "Trop de requêtes. Patiente un instant et réessaie.",
+  "errorValidation": "Données non valides. Vérifie les informations saisies.",
+  "errorAuthInvalidCredentials": "E-mail ou mot de passe incorrect.",
+  "errorAuthEmailNotConfirmed": "Tu dois vérifier ton e-mail avant de te connecter.",
+  "errorAuthEmailAlreadyRegistered": "Cet e-mail est déjà enregistré.",
+  "errorAuthRateLimit": "Trop de tentatives. Patiente quelques minutes et réessaie.",
+  "errorAuthCancelled": "Connexion annulée.",
+  "errorAuthNoConnection": "Pas de connexion. Vérifie ton réseau et réessaie.",
+  "errorAuthGoogleFailed": "Connexion avec Google impossible. Réessaie.",
+  "errorAuthAppleFailed": "Connexion avec Apple impossible. Réessaie.",
+  "errorAuthSignInFailed": "Connexion impossible. Réessaie.",
+  "errorAuthSignUpFailed": "Impossible de créer le compte. Réessaie.",
+  "errorAuthGeneric": "Erreur d'authentification. Réessaie.",
+  "errorFreeTrialFailed": "Impossible d'activer l'essai gratuit. Réessaie.",
+  "errorPurchaseGeneric": "Impossible de finaliser l'achat. Réessaie.",
+  "errorRestoreGeneric": "Impossible de restaurer tes achats. Réessaie.",
+  "errorPromoTooManyAttempts": "Trop de tentatives. Patiente {seconds} secondes."
 }

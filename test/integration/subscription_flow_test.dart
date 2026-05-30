@@ -55,20 +55,20 @@ void main() {
         source: 'google_play',
       );
       final withError = proState.copyWith(
-        purchaseError: 'Payment failed',
+        errorCode: SubscriptionErrorCode.purchaseFailed,
       );
       expect(withError.isPro, isTrue); // Still PRO
-      expect(withError.purchaseError, 'Payment failed');
+      expect(withError.errorCode, SubscriptionErrorCode.purchaseFailed);
     });
 
     test('clearing error preserves subscription data', () {
       final errorState = SubscriptionState(
         expiresAt: DateTime.now().add(const Duration(days: 15)),
-        purchaseError: 'Network error',
+        errorCode: SubscriptionErrorCode.purchaseFailed,
         source: 'google_play',
       );
       final cleared = errorState.copyWith(clearError: true);
-      expect(cleared.purchaseError, isNull);
+      expect(cleared.errorCode, isNull);
       expect(cleared.isPro, isTrue);
       expect(cleared.source, 'google_play');
     });

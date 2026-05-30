@@ -47,13 +47,6 @@ extension DateTimeExtensions on DateTime {
 
   bool get isOverdue => isBefore(clock.now());
 
-  String get relativeDate {
-    if (isToday) return 'Hoy';
-    if (isTomorrow) return 'Mañana';
-    if (isOverdue) return 'Vencida';
-    return formattedDate;
-  }
-
   String relativeDateL10n(AppLocalizations l10n) {
     if (isToday) return l10n.relToday;
     if (isTomorrow) return l10n.relTomorrow;

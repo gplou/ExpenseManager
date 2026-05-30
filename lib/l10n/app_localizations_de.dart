@@ -911,4 +911,85 @@ class AppLocalizationsDe extends AppLocalizations {
   String planPerMonth(String price) {
     return '$price / Monat';
   }
+
+  @override
+  String get errorGeneric =>
+      'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
+
+  @override
+  String get errorNetwork =>
+      'Verbindungsfehler. Prüfe dein Netzwerk und versuche es erneut.';
+
+  @override
+  String get errorServer => 'Serverfehler. Bitte versuche es später erneut.';
+
+  @override
+  String get errorCache => 'Zugriff auf den lokalen Speicher nicht möglich.';
+
+  @override
+  String get errorRateLimit =>
+      'Zu viele Anfragen. Warte einen Moment und versuche es erneut.';
+
+  @override
+  String get errorValidation =>
+      'Ungültige Daten. Bitte überprüfe deine Eingaben.';
+
+  @override
+  String get errorAuthInvalidCredentials => 'E-Mail oder Passwort ist falsch.';
+
+  @override
+  String get errorAuthEmailNotConfirmed =>
+      'Du musst deine E-Mail bestätigen, bevor du dich anmeldest.';
+
+  @override
+  String get errorAuthEmailAlreadyRegistered =>
+      'Diese E-Mail ist bereits registriert.';
+
+  @override
+  String get errorAuthRateLimit =>
+      'Zu viele Versuche. Warte ein paar Minuten und versuche es erneut.';
+
+  @override
+  String get errorAuthCancelled => 'Anmeldung abgebrochen.';
+
+  @override
+  String get errorAuthNoConnection =>
+      'Keine Verbindung. Prüfe dein Netzwerk und versuche es erneut.';
+
+  @override
+  String get errorAuthGoogleFailed =>
+      'Anmeldung mit Google fehlgeschlagen. Bitte versuche es erneut.';
+
+  @override
+  String get errorAuthAppleFailed =>
+      'Anmeldung mit Apple fehlgeschlagen. Bitte versuche es erneut.';
+
+  @override
+  String get errorAuthSignInFailed =>
+      'Anmeldung fehlgeschlagen. Bitte versuche es erneut.';
+
+  @override
+  String get errorAuthSignUpFailed =>
+      'Konto konnte nicht erstellt werden. Bitte versuche es erneut.';
+
+  @override
+  String get errorAuthGeneric =>
+      'Authentifizierungsfehler. Bitte versuche es erneut.';
+
+  @override
+  String get errorFreeTrialFailed =>
+      'Kostenlose Testphase konnte nicht aktiviert werden. Bitte versuche es erneut.';
+
+  @override
+  String get errorPurchaseGeneric =>
+      'Kauf konnte nicht abgeschlossen werden. Bitte versuche es erneut.';
+
+  @override
+  String get errorRestoreGeneric =>
+      'Deine Käufe konnten nicht wiederhergestellt werden. Bitte versuche es erneut.';
+
+  @override
+  String errorPromoTooManyAttempts(int seconds) {
+    return 'Zu viele Versuche. Warte $seconds Sekunden.';
+  }
 }
