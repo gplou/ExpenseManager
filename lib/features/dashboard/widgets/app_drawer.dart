@@ -299,7 +299,6 @@ class _DrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final name = (user?.name as String?)?.trim();
     final email = user?.email as String?;
 
@@ -315,10 +314,10 @@ class _DrawerHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.pureWhite,
+        color: context.appColors.surface,
         border: Border(
           bottom: BorderSide(
-            color: isDark ? AppColors.darkBorderColor : AppColors.borderLight,
+            color: context.appColors.divider,
             width: 1,
           ),
         ),

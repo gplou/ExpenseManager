@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../utils/extensions.dart';
 
 /// Operadores aritméticos soportados por el keypad.
 enum _Op { add, sub }
@@ -377,12 +378,11 @@ class _KeypadKeyState extends State<_KeypadKey> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     final bg = widget.filled
         ? (widget.backgroundColor ?? AppColors.dustyTeal)
-        : (isDark ? AppColors.darkSurfaceHigh : AppColors.surfaceElevated);
+        : context.appColors.raised;
     final fg = widget.foreground ??
         (widget.filled ? AppColors.pureWhite : cs.onSurface);
 

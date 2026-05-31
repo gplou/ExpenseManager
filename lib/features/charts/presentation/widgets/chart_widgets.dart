@@ -43,10 +43,9 @@ class ChartPieSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final inkColor = isDark ? AppColors.inkDark : AppColors.ink;
-    final mutedColor = isDark ? AppColors.graphiteDark : AppColors.graphite;
-    final paperColor = isDark ? AppColors.paperDark : AppColors.paper;
+    final inkColor = context.appColors.text;
+    final mutedColor = context.appColors.textMuted;
+    final paperColor = context.appColors.background;
 
     final hasTouch = touchedIndex != null &&
         touchedIndex! >= 0 &&
@@ -179,11 +178,11 @@ class ChartBarSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
     final tt = context.textTheme;
-    final mutedColor = isDark ? AppColors.graphiteDark : AppColors.graphite;
-    final softColor = isDark ? AppColors.graphiteSoftDark : AppColors.graphiteSoft;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedColor = context.appColors.textMuted;
+    final softColor = context.appColors.textSoft;
     final trackColor = cs.onSurface.withValues(alpha: isDark ? 0.05 : 0.04);
     final gridColor = cs.onSurface.withValues(alpha: isDark ? 0.06 : 0.04);
 
@@ -208,14 +207,13 @@ class ChartBarSection extends StatelessWidget {
                 color: cs.onSurface.withValues(alpha: 0.08),
                 width: 1,
               ),
-              getTooltipColor: (_) =>
-                  isDark ? AppColors.raisedDark : AppColors.ink,
+              getTooltipColor: (_) => context.appColors.raised,
               getTooltipItem: (group, groupIndex, rod, rodIndex) =>
                   BarTooltipItem(
                 '$cSymbol${formatAmount(rod.toY, numFmtStyle)}',
                 TextStyle(
                   fontFamily: 'GeneralSans',
-                  color: isDark ? AppColors.inkDark : AppColors.paper,
+                  color: context.appColors.background,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                   letterSpacing: -0.1,
@@ -357,13 +355,11 @@ class ChartLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.surfaceDarkMode : AppColors.surface;
-    final dividerColor = isDark ? AppColors.dividerDark : AppColors.divider;
-    final textPrimary = isDark ? AppColors.inkDark : AppColors.ink;
-    final textMuted = isDark ? AppColors.graphiteDark : AppColors.graphite;
-    final textFaint =
-        isDark ? AppColors.graphiteSoftDark : AppColors.graphiteSoft;
+    final cardBg = context.appColors.surface;
+    final dividerColor = context.appColors.divider;
+    final textPrimary = context.appColors.text;
+    final textMuted = context.appColors.textMuted;
+    final textFaint = context.appColors.textSoft;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
