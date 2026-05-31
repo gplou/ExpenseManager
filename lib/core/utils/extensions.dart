@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../theme/app_semantic_colors.dart';
 
 // ── String Extensions ──────────────────────────────────────────────────────────
 
@@ -60,6 +61,11 @@ extension DateTimeExtensions on DateTime {
 extension ContextExtensions on BuildContext {
   ThemeData get theme => Theme.of(this);
   ColorScheme get colors => Theme.of(this).colorScheme;
+
+  /// App semantic color tokens (mode-aware). Use instead of
+  /// `isDark ? AppColors.xDark : AppColors.x`.
+  AppSemanticColors get appColors =>
+      Theme.of(this).extension<AppSemanticColors>()!;
   TextTheme get textTheme => Theme.of(this).textTheme;
   Size get screenSize => MediaQuery.of(this).size;
   double get screenWidth => MediaQuery.of(this).size.width;

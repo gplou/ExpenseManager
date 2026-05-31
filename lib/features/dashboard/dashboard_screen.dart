@@ -339,11 +339,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         if (transactions.isEmpty) {
                           return const _EmptyTransactions();
                         }
-                        final isDark =
-                            Theme.of(context).brightness == Brightness.dark;
-                        final dividerColor = isDark
-                            ? AppColors.dividerDark
-                            : AppColors.divider;
+                        final dividerColor = context.appColors.divider;
                         return Column(
                           children: [
                             for (int i = 0; i < transactions.length; i++) ...[
@@ -411,9 +407,7 @@ class _RecentTransactionsShimmer extends StatelessWidget {
 class _ShimmerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dividerColor =
-        isDark ? AppColors.dividerDark : AppColors.divider;
+    final dividerColor = context.appColors.divider;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
       decoration: BoxDecoration(
@@ -482,7 +476,6 @@ class _EmptyTransactions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       child: Column(
@@ -492,7 +485,7 @@ class _EmptyTransactions extends ConsumerWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: isDark ? AppColors.raisedDark : AppColors.raised,
+              color: context.appColors.raised,
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -555,8 +548,7 @@ class _EmptyStateAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.colors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.raisedDark : AppColors.raised;
+    final bg = context.appColors.raised;
     return Semantics(
       button: true,
       label: subtitle == null ? title : '$title. $subtitle',

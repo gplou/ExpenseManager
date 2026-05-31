@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_elevation.dart';
+import '../../../core/utils/extensions.dart';
 
 /// Chip de período (Hoy / Semana / Mes / Año). Quieto, sin color de marca:
 /// selected = surface elevada con hairline, idle = transparente.
@@ -20,7 +21,6 @@ class PeriodChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
 
     final Color bg;
@@ -30,13 +30,13 @@ class PeriodChip extends StatelessWidget {
 
     if (isSelected) {
       bg = cs.surface;
-      borderColor = isDark ? AppColors.dividerDark : AppColors.divider;
+      borderColor = context.appColors.divider;
       textColor = cs.onSurface;
       weight = FontWeight.w600;
     } else {
       bg = Colors.transparent;
       borderColor = Colors.transparent;
-      textColor = isDark ? AppColors.graphiteDark : AppColors.graphite;
+      textColor = context.appColors.textMuted;
       weight = FontWeight.w500;
     }
 
@@ -87,8 +87,6 @@ class IconChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final Color bg;
     final Color iconColor;
     if (isActive) {
@@ -96,7 +94,7 @@ class IconChip extends StatelessWidget {
       iconColor = AppColors.warning;
     } else {
       bg = Colors.transparent;
-      iconColor = isDark ? AppColors.graphiteDark : AppColors.graphite;
+      iconColor = context.appColors.textMuted;
     }
 
     return GestureDetector(

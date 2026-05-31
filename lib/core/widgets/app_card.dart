@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_elevation.dart';
 import '../theme/app_spacing.dart';
+import '../utils/extensions.dart';
 
 /// Variantes de tarjeta unificadas.
 ///
@@ -74,9 +75,8 @@ class AppCard extends StatelessWidget {
       switch (variant) {
         case AppCardVariant.outlined:
           bg = selected ? effectiveAccentLight : cs.surface;
-          borderColor = selected
-              ? effectiveAccent
-              : (isDark ? AppColors.dividerDark : AppColors.divider);
+          borderColor =
+              selected ? effectiveAccent : context.appColors.divider;
           shadow = AppElevation.e0;
           borderWidth = selected ? 1.5 : 1;
         case AppCardVariant.filled:
@@ -86,9 +86,7 @@ class AppCard extends StatelessWidget {
           borderWidth = 0;
         case AppCardVariant.elevated:
           bg = cs.surface;
-          borderColor = isDark
-              ? AppColors.dividerDark
-              : AppColors.divider;
+          borderColor = context.appColors.divider;
           shadow = selected ? AppElevation.e2 : AppElevation.e1;
           borderWidth = 1;
       }
