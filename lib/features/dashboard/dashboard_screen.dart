@@ -473,33 +473,39 @@ class _EmptyTransactions extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: context.appColors.raised,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.inbox_outlined,
-              size: 24,
-              color: cs.onSurface.withValues(alpha: 0.5),
-            ),
-          ),
-          const Gap(12),
-          Text(
-            l10n.noTransactionsPeriod,
-            textAlign: TextAlign.center,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: cs.onSurface.withValues(alpha: 0.55),
-            ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: context.appColors.raised,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.inbox_outlined,
+                  size: 24,
+                  color: cs.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+              const Gap(12),
+              Text(
+                l10n.noTransactionsPeriod,
+                textAlign: TextAlign.center,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: cs.onSurface.withValues(alpha: 0.55),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 }
+
