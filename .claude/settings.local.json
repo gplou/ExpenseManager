@@ -113,7 +113,11 @@
       "Bash(rg -rn 'class PromoCodeException' lib/)",
       "Bash(rg -rn 'PromoCodeException' lib/)",
       "Bash(sed -n '180,205p' lib/features/subscription/pro_screen.dart)",
-      "Bash(sed -n '735,810p' lib/features/subscription/pro_screen.dart)"
+      "Bash(sed -n '735,810p' lib/features/subscription/pro_screen.dart)",
+      "Bash(grep -vE '\\\\.\\(g|freezed\\)\\\\.dart$|/l10n/')",
+      "Bash(grep -iE \"\\\\.env$|secrets|google-services\\\\.json|GoogleService-Info\")",
+      "mcp__claude_ai_Sentry__whoami",
+      "mcp__claude_ai_Sentry__search_issues"
     ]
   }
 }

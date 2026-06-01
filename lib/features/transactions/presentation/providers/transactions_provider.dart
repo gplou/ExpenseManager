@@ -14,6 +14,7 @@ import '../../data/local_transactions_repository.dart';
 import '../../data/recurring_transactions_repository.dart';
 import '../../data/sync_queue_repository.dart';
 import '../../data/transactions_repository.dart';
+import '../../domain/recurring_transaction_model.dart';
 import '../../domain/transaction_model.dart';
 import '../../domain/transactions_repository_contract.dart';
 
@@ -330,6 +331,85 @@ class TransactionsNotifier extends Notifier<void> {
     }
     ref.invalidate(allTransactionsProvider);
     AnalyticsService.track(AnalyticsService.transactionDeleted);
+  }
+
+  /// Orchestrates create/update of a transaction together with its optional
+  /// recurring schedule. Extracted from the widget layer so the branching logic
+  /// (new vs edit, recurring vs one-off, attach/detach/update schedule) can be
+  /// unit-tested independently of the UI.
+  Future<void> saveWithRecurrence({
+    required TransactionModel transaction,
+    required bool isEditing,
+    required bool isRecurring,
+    required RecurrenceType? recurrenceType,
+    required String currency,
+  }) async {
+    final recurringRepo = ref.read(recurringTransactionsRepositoryProvider);
+
+    if (isEditing) {
+      final existingRecurringId = transaction.recurringTransactionId;
+      if (isRecurring && recurrenceType != null) {
+        final nextDate = nextRecurrenceDate(transaction.date, recurrenceType);
+        if (existingRecurringId != null) {
+          await recurringRepo.updateRecurring(
+            id: existingRecurringId,
+            amount: transaction.amount,
+            type: transaction.type,
+            category: transaction.category,
+            subcategory: transaction.subcategory,
+            description: transaction.description,
+            recurrenceType: recurrenceType,
+            nextOccurrence: nextDate,
+          );
+          await update(transaction);
+        } else {
+          final recurringId = await recurringRepo.createRecurring(
+            amount: transaction.amount,
+            type: transaction.type,
+            category: transaction.category,
+            subcategory: transaction.subcategory,
+            description: transaction.description,
+            recurrenceType: recurrenceType,
+            nextOccurrence: nextDate,
+          );
+          await update(transaction.copyWith(recurringTransactionId: recurringId));
+        }
+      } else {
+        if (existingRecurringId != null) {
+          await recurringRepo.deleteRecurring(existingRecurringId);
+        }
+        await update(transaction.copyWith(recurringTransactionId: null));
+      }
+    } else {
+      String? recurringId;
+      if (isRecurring && recurrenceType != null) {
+        final nextDate = nextRecurrenceDate(transaction.date, recurrenceType);
+        recurringId = await recurringRepo.createRecurring(
+          amount: transaction.amount,
+          type: transaction.type,
+          category: transaction.category,
+          subcategory: transaction.subcategory,
+          description: transaction.description,
+          recurrenceType: recurrenceType,
+          nextOccurrence: nextDate,
+        );
+      }
+      await create(
+        TransactionModel(
+          id: '',
+          userId: '',
+          amount: transaction.amount,
+          type: transaction.type,
+          category: transaction.category,
+          subcategory: transaction.subcategory,
+          description: transaction.description,
+          date: transaction.date,
+          createdAt: clock.now(),
+          recurringTransactionId: recurringId,
+          currency: currency,
+        ),
+      );
+    }
   }
 }
 
