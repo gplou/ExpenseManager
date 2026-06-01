@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'app_colors.dart';
+import 'app_semantic_colors.dart';
 import 'app_spacing.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
@@ -19,6 +20,7 @@ class AppTheme {
   static ThemeData get lightTheme => ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
+        extensions: const [AppSemanticColors.light],
         scaffoldBackgroundColor: AppColors.paper,
         fontFamily: _fontFamily,
         splashFactory: InkSparkle.splashFactory,
@@ -295,6 +297,7 @@ class AppTheme {
   static ThemeData get darkTheme => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
+        extensions: const [AppSemanticColors.dark],
         scaffoldBackgroundColor: AppColors.paperDark,
         fontFamily: _fontFamily,
         splashFactory: InkSparkle.splashFactory,

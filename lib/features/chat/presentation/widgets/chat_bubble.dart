@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../domain/chat_message.dart';
 
 /// Burbuja editorial: usuario en ink azul, asistente en superficie con
@@ -14,7 +14,6 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
 
     final Color bgColor;
@@ -26,9 +25,9 @@ class ChatBubble extends StatelessWidget {
       textColor = cs.onPrimary;
       borderColor = null;
     } else {
-      bgColor = isDark ? AppColors.raisedDark : AppColors.raised;
-      textColor = isDark ? AppColors.inkDark : AppColors.ink;
-      borderColor = isDark ? AppColors.dividerDark : AppColors.divider;
+      bgColor = context.appColors.raised;
+      textColor = context.appColors.text;
+      borderColor = context.appColors.divider;
     }
 
     return Align(

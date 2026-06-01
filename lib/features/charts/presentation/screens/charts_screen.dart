@@ -8,6 +8,7 @@ import '../../../../core/providers/currency_provider.dart';
 import '../../../../core/providers/number_format_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/ad_banner_footer.dart';
 import '../../../../core/widgets/custom_date_range_picker.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -252,10 +253,9 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
       backgroundColor: Colors.transparent,
       showDragHandle: false,
       builder: (ctx) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
           decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDarkMode : AppColors.surface,
+            color: context.appColors.surface,
             borderRadius: AppRadius.radiusSheet,
           ),
           padding: const EdgeInsets.fromLTRB(
@@ -269,7 +269,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.dividerDark : AppColors.divider,
+                    color: context.appColors.divider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -349,13 +349,12 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
       isScrollControlled: true,
       showDragHandle: false,
       builder: (ctx) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.6,
           ),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDarkMode : AppColors.surface,
+            color: context.appColors.surface,
             borderRadius: AppRadius.radiusSheet,
           ),
           padding: const EdgeInsets.fromLTRB(
@@ -369,7 +368,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.dividerDark : AppColors.divider,
+                    color: context.appColors.divider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -381,7 +380,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   fontFamily: 'GeneralSans',
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.graphiteDark : AppColors.graphite,
+                  color: context.appColors.textMuted,
                   letterSpacing: 1.2,
                 ),
               ),
@@ -463,20 +462,14 @@ class _ChartStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.surfaceDarkMode : AppColors.surface;
-    final borderColor = isDark ? AppColors.dividerDark : AppColors.divider;
-    final eyebrowColor = isDark ? AppColors.graphiteDark : AppColors.graphite;
-    final inkColor = isDark ? AppColors.inkDark : AppColors.ink;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.xl, AppSpacing.lg, AppSpacing.md, AppSpacing.lg),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(color: context.appColors.divider, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -492,7 +485,7 @@ class _ChartStatCard extends StatelessWidget {
                     fontFamily: 'GeneralSans',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: eyebrowColor,
+                    color: context.appColors.textMuted,
                     letterSpacing: 1.2,
                     height: 1.0,
                   ),
@@ -507,7 +500,7 @@ class _ChartStatCard extends StatelessWidget {
                       fontFamily: 'GeneralSans',
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: inkColor,
+                      color: context.appColors.text,
                       letterSpacing: -0.6,
                       height: 1.1,
                     ),
@@ -526,7 +519,7 @@ class _ChartStatCard extends StatelessWidget {
                       fontFamily: 'GeneralSans',
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: inkColor,
+                      color: context.appColors.text,
                       letterSpacing: -0.6,
                       height: 1.1,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -582,11 +575,10 @@ class _ChartModeSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.raisedDark : AppColors.raised,
+        color: context.appColors.raised,
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Column(
@@ -632,18 +624,14 @@ class _ChartModeIcon extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? AppColors.surfaceDarkMode : AppColors.surface)
-              : Colors.transparent,
+          color: isSelected ? context.appColors.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.md - 3),
           boxShadow: isSelected && !isDark ? AppColors.softShadowSm : null,
         ),
         child: Icon(
           icon,
           size: 16,
-          color: isSelected
-              ? (isDark ? AppColors.inkDark : AppColors.ink)
-              : (isDark ? AppColors.graphiteDark : AppColors.graphite),
+          color: isSelected ? context.appColors.text : context.appColors.textMuted,
         ),
       ),
     );
@@ -665,10 +653,9 @@ class _TypeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.raisedDark : AppColors.raised,
+        color: context.appColors.raised,
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       padding: const EdgeInsets.all(3),
@@ -774,7 +761,6 @@ class _FilterDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -785,12 +771,10 @@ class _FilterDropdown extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 11),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDarkMode : AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: isActive
-                ? accentColor
-                : (isDark ? AppColors.dividerDark : AppColors.divider),
+            color: isActive ? accentColor : context.appColors.divider,
             width: 1,
           ),
         ),
@@ -799,9 +783,7 @@ class _FilterDropdown extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: isActive
-                  ? accentColor
-                  : (isDark ? AppColors.graphiteDark : AppColors.graphite),
+              color: isActive ? accentColor : context.appColors.textMuted,
             ),
             const Gap(AppSpacing.sm),
             Expanded(
@@ -812,9 +794,7 @@ class _FilterDropdown extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   letterSpacing: -0.1,
-                  color: isActive
-                      ? accentColor
-                      : (isDark ? AppColors.inkDark : AppColors.ink),
+                  color: isActive ? accentColor : context.appColors.text,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -824,9 +804,7 @@ class _FilterDropdown extends StatelessWidget {
             Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 18,
-              color: isActive
-                  ? accentColor
-                  : (isDark ? AppColors.graphiteSoftDark : AppColors.graphiteSoft),
+              color: isActive ? accentColor : context.appColors.textSoft,
             ),
           ],
         ),
@@ -854,7 +832,6 @@ class _PickerOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -876,9 +853,7 @@ class _PickerOption extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: isSelected
-                  ? accentColor
-                  : (isDark ? AppColors.graphiteDark : AppColors.graphite),
+              color: isSelected ? accentColor : context.appColors.textMuted,
             ),
             const Gap(AppSpacing.md),
             Expanded(
@@ -889,9 +864,7 @@ class _PickerOption extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   letterSpacing: -0.1,
-                  color: isSelected
-                      ? accentColor
-                      : (isDark ? AppColors.inkDark : AppColors.ink),
+                  color: isSelected ? accentColor : context.appColors.text,
                 ),
               ),
             ),

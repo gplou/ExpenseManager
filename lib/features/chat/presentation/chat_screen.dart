@@ -61,8 +61,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messages = ref.watch(chatMessagesProvider);
     final isLoading = ref.watch(chatLoadingProvider);
     final cs = context.colors;
-    final isDark = context.isDark;
-
     // Auto-scroll when messages change
     if (messages.isNotEmpty) _scrollToBottom();
 
@@ -97,14 +95,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           // Messages list
           Expanded(
             child: messages.isEmpty
-                ? _buildWelcome(l10n, cs, isDark)
+                ? _buildWelcome(l10n, cs)
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                     itemCount: messages.length + (isLoading ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == messages.length && isLoading) {
-                        return _buildTypingIndicator(isDark);
+                        return _buildTypingIndicator();
                       }
                       return ChatBubble(message: messages[index]);
                     },
@@ -112,13 +110,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
 
           // Input field
-          _buildInput(l10n, cs, isDark, isLoading),
+          _buildInput(l10n, cs, isLoading),
         ],
       ),
     );
   }
 
-  Widget _buildWelcome(AppLocalizations l10n, ColorScheme cs, bool isDark) {
+  Widget _buildWelcome(AppLocalizations l10n, ColorScheme cs) {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -145,7 +143,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 fontFamily: 'GeneralSans',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: isDark ? AppColors.darkText : AppColors.textDark,
+                color: context.appColors.text,
               ),
             ),
             const SizedBox(height: 8),
@@ -155,7 +153,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               style: TextStyle(
                 fontFamily: 'GeneralSans',
                 fontSize: 13,
-                color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+                color: context.appColors.textMuted,
               ),
             ),
             const SizedBox(height: 24),
@@ -165,9 +163,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               runSpacing: 8,
               alignment: WrapAlignment.center,
               children: [
-                _suggestionChip(l10n.chatSuggestion1, isDark),
-                _suggestionChip(l10n.chatSuggestion2, isDark),
-                _suggestionChip(l10n.chatSuggestion3, isDark),
+                _suggestionChip(l10n.chatSuggestion1),
+                _suggestionChip(l10n.chatSuggestion2),
+                _suggestionChip(l10n.chatSuggestion3),
               ],
             ),
           ],
@@ -176,7 +174,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _suggestionChip(String text, bool isDark) {
+  Widget _suggestionChip(String text) {
     return ActionChip(
       label: Text(
         text,
@@ -186,9 +184,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           color: AppColors.dustyTeal,
         ),
       ),
-      backgroundColor: isDark
-          ? AppColors.darkSurfaceHigh
-          : AppColors.dustyTealLight,
+      backgroundColor: context.appColors.raised,
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       onPressed: () {
@@ -198,14 +194,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildTypingIndicator(bool isDark) {
+  Widget _buildTypingIndicator() {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(right: 48, bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceHigh : AppColors.surfaceElevated,
+          color: context.appColors.raised,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
@@ -250,7 +246,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildInput(
     AppLocalizations l10n,
     ColorScheme cs,
-    bool isDark,
     bool isLoading,
   ) {
     return Container(
@@ -261,10 +256,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         MediaQuery.of(context).padding.bottom + 8,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
+        color: context.appColors.surface,
         border: Border(
           top: BorderSide(
-            color: isDark ? AppColors.darkBorderColor : AppColors.borderLight,
+            color: context.appColors.divider,
           ),
         ),
       ),
@@ -281,29 +276,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               style: TextStyle(
                 fontFamily: 'GeneralSans',
                 fontSize: 14,
-                color: isDark ? AppColors.darkText : AppColors.textDark,
+                color: context.appColors.text,
               ),
               decoration: InputDecoration(
                 hintText: l10n.chatPlaceholder,
                 hintStyle: TextStyle(
                   fontFamily: 'GeneralSans',
                   fontSize: 14,
-                  color: isDark ? AppColors.darkTextMuted : AppColors.textSubtle,
+                  color: context.appColors.textMuted,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.darkBorderColor
-                        : AppColors.borderLight,
+                    color: context.appColors.divider,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.darkBorderColor
-                        : AppColors.borderLight,
+                    color: context.appColors.divider,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(

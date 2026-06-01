@@ -299,7 +299,6 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ? allTx
               : allTx.where((t) => t.category == _selectedCategory).toList();
           if (transactions.isEmpty) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
             return Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -310,7 +309,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.raisedDark : AppColors.raised,
+                        color: context.appColors.raised,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -416,16 +415,13 @@ class _ExportButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dividerColor =
-        isDark ? AppColors.dividerDark : AppColors.divider;
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
         decoration: BoxDecoration(
           color: context.colors.surface,
-          border: Border(top: BorderSide(color: dividerColor, width: 1)),
+          border: Border(top: BorderSide(color: context.appColors.divider, width: 1)),
         ),
         child: ElevatedButton.icon(
           onPressed: onTap,
@@ -456,16 +452,13 @@ class _DeleteSelectedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dividerColor =
-        isDark ? AppColors.dividerDark : AppColors.divider;
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
         decoration: BoxDecoration(
           color: context.colors.surface,
-          border: Border(top: BorderSide(color: dividerColor, width: 1)),
+          border: Border(top: BorderSide(color: context.appColors.divider, width: 1)),
         ),
         child: ElevatedButton.icon(
           onPressed: onTap,
@@ -509,9 +502,6 @@ class _DateHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dividerColor =
-        isDark ? AppColors.dividerDark : AppColors.divider;
     return Row(
       children: [
         Text(
@@ -522,7 +512,7 @@ class _DateHeader extends StatelessWidget {
         ),
         const Gap(12),
         Expanded(
-          child: Container(height: 1, color: dividerColor),
+          child: Container(height: 1, color: context.appColors.divider),
         ),
       ],
     );
@@ -550,14 +540,11 @@ class _TransactionTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
     final tt = context.textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isIncome = transaction.type.isIncome;
     final amountColor = isIncome ? AppColors.positive : AppColors.negative;
-    final avatarBg = isDark ? AppColors.raisedDark : AppColors.raised;
-    final secondaryText =
-        isDark ? AppColors.graphiteDark : AppColors.graphite;
-    final dividerColor =
-        isDark ? AppColors.dividerDark : AppColors.divider;
+    final avatarBg = context.appColors.raised;
+    final secondaryText = context.appColors.textMuted;
+    final dividerColor = context.appColors.divider;
     final emoji = _emojiForCategory(transaction.category, isIncome);
     final customCats =
         ref.watch(customCategoriesSyncProvider)[transaction.type] ?? const [];
@@ -584,7 +571,7 @@ class _TransactionTile extends ConsumerWidget {
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
       color: isSelected
-          ? cs.primary.withValues(alpha: isDark ? 0.18 : 0.06)
+          ? cs.primary.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.18 : 0.06)
           : Colors.transparent,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
       child: Row(

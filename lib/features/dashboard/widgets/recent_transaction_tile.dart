@@ -25,16 +25,11 @@ class RecentTransactionTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
     final tt = context.textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isIncome = transaction.type.isIncome;
 
     final amountColor = isIncome ? AppColors.positive : AppColors.negative;
-    final avatarBg = isDark
-        ? AppColors.raisedDark
-        : AppColors.raised;
-    final secondaryText = isDark
-        ? AppColors.graphiteDark
-        : AppColors.graphite;
+    final avatarBg = context.appColors.raised;
+    final secondaryText = context.appColors.textMuted;
 
     final emoji = _emojiForCategory(transaction.category, isIncome);
     final customCats =

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/analytics_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/extensions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/onboarding_provider.dart';
 
@@ -46,15 +47,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.darkBg : AppColors.boneWhite;
 
     return PopScope(
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) await ref.read(onboardingProvider.notifier).markSeen();
       },
       child: Scaffold(
-        backgroundColor: bgColor,
+        backgroundColor: context.appColors.background,
         body: SafeArea(
           child: Column(
             children: [
@@ -69,9 +68,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     Text(
                       '${_currentPage + 1} / $_totalPages',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.textMuted,
+                        color: context.appColors.textMuted,
                       ),
                     ),
                     // Skip button (hidden on last page)
@@ -81,9 +78,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         child: Text(
                           l10n.tutorialSkip,
                           style: TextStyle(
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.textMuted,
+                            color: context.appColors.textMuted,
                           ),
                         ),
                       ),
@@ -97,13 +92,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   controller: _pageController,
                   onPageChanged: (i) => setState(() => _currentPage = i),
                   children: [
-                    _WelcomePage(l10n: l10n, isDark: isDark),
-                    _ManualPage(l10n: l10n, isDark: isDark),
-                    _PhotoPage(l10n: l10n, isDark: isDark),
-                    _VoicePage(l10n: l10n, isDark: isDark),
-                    _ListPage(l10n: l10n, isDark: isDark),
-                    _ChartsPage(l10n: l10n, isDark: isDark),
-                    _DonePage(l10n: l10n, isDark: isDark),
+                    _WelcomePage(l10n: l10n),
+                    _ManualPage(l10n: l10n),
+                    _PhotoPage(l10n: l10n),
+                    _VoicePage(l10n: l10n),
+                    _ListPage(l10n: l10n),
+                    _ChartsPage(l10n: l10n),
+                    _DonePage(l10n: l10n),
                   ],
                 ),
               ),
@@ -117,7 +112,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     _DotsIndicator(
                       total: _totalPages,
                       current: _currentPage,
-                      isDark: isDark,
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
@@ -157,15 +151,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 // ── Dots indicator ─────────────────────────────────────────────────────────────
 
 class _DotsIndicator extends StatelessWidget {
-  const _DotsIndicator({
-    required this.total,
-    required this.current,
-    required this.isDark,
-  });
+  const _DotsIndicator({required this.total, required this.current});
 
   final int total;
   final int current;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -181,9 +170,7 @@ class _DotsIndicator extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive
                 ? AppColors.dustyTeal
-                : (isDark
-                    ? AppColors.darkBorderColor
-                    : AppColors.borderMedium),
+                : context.appColors.borderStrong,
             borderRadius: BorderRadius.circular(3),
           ),
         );
@@ -202,7 +189,6 @@ class _OnboardingPage extends StatelessWidget {
     required this.title,
     required this.body,
     this.extra,
-    required this.isDark,
   });
 
   final IconData icon;
@@ -211,7 +197,6 @@ class _OnboardingPage extends StatelessWidget {
   final String title;
   final String body;
   final Widget? extra;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +223,7 @@ class _OnboardingPage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.darkText : AppColors.textDark,
+              color: context.appColors.text,
             ),
           ),
           const SizedBox(height: 16),
@@ -247,7 +232,7 @@ class _OnboardingPage extends StatelessWidget {
             body,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+              color: context.appColors.textMuted,
               height: 1.5,
             ),
           ),
@@ -264,9 +249,8 @@ class _OnboardingPage extends StatelessWidget {
 // ── Individual pages ───────────────────────────────────────────────────────────
 
 class _WelcomePage extends StatelessWidget {
-  const _WelcomePage({required this.l10n, required this.isDark});
+  const _WelcomePage({required this.l10n});
   final AppLocalizations l10n;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -276,15 +260,13 @@ class _WelcomePage extends StatelessWidget {
       iconBg: AppColors.warmAmberLight,
       title: l10n.onboardingWelcomeTitle,
       body: l10n.onboardingWelcomeBody,
-      isDark: isDark,
     );
   }
 }
 
 class _ManualPage extends StatelessWidget {
-  const _ManualPage({required this.l10n, required this.isDark});
+  const _ManualPage({required this.l10n});
   final AppLocalizations l10n;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -294,15 +276,13 @@ class _ManualPage extends StatelessWidget {
       iconBg: AppColors.dustyTealLight,
       title: l10n.onboardingManualTitle,
       body: l10n.onboardingManualBody,
-      isDark: isDark,
     );
   }
 }
 
 class _PhotoPage extends StatelessWidget {
-  const _PhotoPage({required this.l10n, required this.isDark});
+  const _PhotoPage({required this.l10n});
   final AppLocalizations l10n;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -312,22 +292,19 @@ class _PhotoPage extends StatelessWidget {
       iconBg: AppColors.sageGreenLight,
       title: l10n.onboardingPhotoTitle,
       body: l10n.onboardingPhotoBody,
-      isDark: isDark,
     );
   }
 }
 
 class _VoicePage extends StatelessWidget {
-  const _VoicePage({required this.l10n, required this.isDark});
+  const _VoicePage({required this.l10n});
   final AppLocalizations l10n;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tipBg = isDark ? AppColors.darkSurfaceHigh : AppColors.warmAmberLight;
-    final tipBorder =
-        isDark ? AppColors.darkBorderColor : AppColors.warmAmber.withValues(alpha: 0.4);
+    final tipBg = context.appColors.raised;
+    final tipBorder = context.appColors.borderStrong;
 
     return _OnboardingPage(
       icon: Icons.mic_rounded,
@@ -335,7 +312,6 @@ class _VoicePage extends StatelessWidget {
       iconBg: AppColors.mutedTerraLight,
       title: l10n.onboardingVoiceTitle,
       body: l10n.onboardingVoiceBody,
-      isDark: isDark,
       extra: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -361,37 +337,31 @@ class _VoicePage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            // What to include
             _VoiceBullet(
               icon: Icons.attach_money_rounded,
               text: l10n.onboardingVoiceBulletAmount,
-              isDark: isDark,
               theme: theme,
             ),
             _VoiceBullet(
               icon: Icons.category_rounded,
               text: l10n.onboardingVoiceBulletCategory,
-              isDark: isDark,
               theme: theme,
             ),
             _VoiceBullet(
               icon: Icons.subdirectory_arrow_right_rounded,
               text: l10n.onboardingVoiceBulletSubcategory,
-              isDark: isDark,
               theme: theme,
             ),
             _VoiceBullet(
               icon: Icons.description_rounded,
               text: l10n.onboardingVoiceBulletDescription,
-              isDark: isDark,
               theme: theme,
             ),
             const SizedBox(height: 10),
-            // Example
             Text(
               l10n.onboardingVoiceTip,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark ? AppColors.darkTextMuted : AppColors.textMuted,
+                color: context.appColors.textMuted,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -406,12 +376,10 @@ class _VoiceBullet extends StatelessWidget {
   const _VoiceBullet({
     required this.icon,
     required this.text,
-    required this.isDark,
     required this.theme,
   });
   final IconData icon;
   final String text;
-  final bool isDark;
   final ThemeData theme;
 
   @override
@@ -420,15 +388,13 @@ class _VoiceBullet extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          Icon(icon,
-              size: 16,
-              color: isDark ? AppColors.darkTextMuted : AppColors.textMuted),
+          Icon(icon, size: 16, color: context.appColors.textMuted),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark ? AppColors.darkText : AppColors.textDark,
+                color: context.appColors.text,
               ),
             ),
           ),
@@ -439,9 +405,8 @@ class _VoiceBullet extends StatelessWidget {
 }
 
 class _ListPage extends StatelessWidget {
-  const _ListPage({required this.l10n, required this.isDark});
+  const _ListPage({required this.l10n});
   final AppLocalizations l10n;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -451,15 +416,13 @@ class _ListPage extends StatelessWidget {
       iconBg: AppColors.dustyTealLight,
       title: l10n.onboardingListTitle,
       body: l10n.onboardingListBody,
-      isDark: isDark,
     );
   }
 }
 
 class _ChartsPage extends StatelessWidget {
-  const _ChartsPage({required this.l10n, required this.isDark});
+  const _ChartsPage({required this.l10n});
   final AppLocalizations l10n;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -469,15 +432,13 @@ class _ChartsPage extends StatelessWidget {
       iconBg: AppColors.sageGreenLight,
       title: l10n.onboardingChartsTitle,
       body: l10n.onboardingChartsBody,
-      isDark: isDark,
     );
   }
 }
 
 class _DonePage extends StatelessWidget {
-  const _DonePage({required this.l10n, required this.isDark});
+  const _DonePage({required this.l10n});
   final AppLocalizations l10n;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -487,7 +448,6 @@ class _DonePage extends StatelessWidget {
       iconBg: AppColors.sageGreenLight,
       title: l10n.onboardingDoneTitle,
       body: l10n.onboardingDoneBody,
-      isDark: isDark,
     );
   }
 }

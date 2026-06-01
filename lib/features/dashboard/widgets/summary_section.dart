@@ -84,13 +84,10 @@ class SummarySection extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
     final tt = context.textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final balance = summary.balance;
     final isPositive = balance >= 0;
 
-    final dividerColor = isDark
-        ? AppColors.dividerDark
-        : AppColors.divider;
+    final dividerColor = context.appColors.divider;
 
     return Container(
       key: TutorialKeys.balanceCardKey,
@@ -108,7 +105,7 @@ class SummarySection extends StatelessWidget {
           Text(
             l10n.balance.toUpperCase(),
             style: tt.labelMedium?.copyWith(
-              color: isDark ? AppColors.graphiteDark : AppColors.graphite,
+              color: context.appColors.textMuted,
             ),
           ),
           const Gap(10),
@@ -248,7 +245,6 @@ class _SummaryCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = context.textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -256,7 +252,7 @@ class _SummaryCell extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: tt.labelMedium?.copyWith(
-            color: isDark ? AppColors.graphiteDark : AppColors.graphite,
+            color: context.appColors.textMuted,
           ),
         ),
         const Gap(6),

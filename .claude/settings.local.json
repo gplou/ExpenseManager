@@ -101,7 +101,19 @@
       "mcp__claude_ai_Sentry__search_issue_events",
       "Bash(/Users/guillermo/fvm/default/bin/flutter pub *)",
       "Bash(/Users/guillermo/fvm/versions/stable/bin/flutter pub *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "mcp__claude_ai_Sentry__search_issue_events",
+      "Bash(rg '\\\\.json$')",
+      "Bash(rg -rn 'FlutterError.onError|PlatformDispatcher.instance.onError|ErrorWidget.builder|runZonedGuarded' lib/)",
+      "Bash(git checkout *)",
+      "Bash(grep -oE '• [a-z_]+$')",
+      "Bash(git commit -q -m ' *)",
+      "Bash(python3 -)",
+      "Bash(rg -rn 'class PromoCodeException|PromoCodeException\\(' lib/)",
+      "Bash(rg -rn 'class PromoCodeException' lib/)",
+      "Bash(rg -rn 'PromoCodeException' lib/)",
+      "Bash(sed -n '180,205p' lib/features/subscription/pro_screen.dart)",
+      "Bash(sed -n '735,810p' lib/features/subscription/pro_screen.dart)"
     ]
   }
 }

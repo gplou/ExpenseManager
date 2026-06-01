@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../theme/app_semantic_colors.dart';
 
 // ── String Extensions ──────────────────────────────────────────────────────────
 
@@ -60,6 +61,18 @@ extension DateTimeExtensions on DateTime {
 extension ContextExtensions on BuildContext {
   ThemeData get theme => Theme.of(this);
   ColorScheme get colors => Theme.of(this).colorScheme;
+
+  /// App semantic color tokens (mode-aware). Use instead of
+  /// `isDark ? AppColors.xDark : AppColors.x`.
+  ///
+  /// Falls back to the mode-appropriate constants when the [AppSemanticColors]
+  /// extension is not registered on the current theme (e.g. a widget rendered
+  /// outside the app theme, or a barebones test harness). The fallbacks are
+  /// value-identical to what [AppTheme] registers, so production behavior is
+  /// unchanged — this only avoids a hard null-check crash.
+  AppSemanticColors get appColors =>
+      Theme.of(this).extension<AppSemanticColors>() ??
+      (isDark ? AppSemanticColors.dark : AppSemanticColors.light);
   TextTheme get textTheme => Theme.of(this).textTheme;
   Size get screenSize => MediaQuery.of(this).size;
   double get screenWidth => MediaQuery.of(this).size.width;

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_elevation.dart';
 import '../theme/app_spacing.dart';
+import '../utils/extensions.dart';
 
 /// "Calm Card": hairline 1px sobre la superficie, sin sombra dura.
 /// El accentColor queda disponible para descendientes que decoren un detalle.
@@ -27,7 +28,6 @@ class NeoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: onTap,
@@ -37,7 +37,7 @@ class NeoCard extends StatelessWidget {
           color: cs.surface,
           borderRadius: BorderRadius.circular(borderRadius),
           border: Border.all(
-            color: isDark ? AppColors.dividerDark : AppColors.divider,
+            color: context.appColors.divider,
             width: 1,
           ),
         ),
