@@ -1,6 +1,8 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/sentry_service.dart';
 import '../../../core/network/authenticated_repository.dart';
 import '../../../core/network/supabase_client.dart';
 import '../../../core/utils/date_helpers.dart';
@@ -24,7 +26,7 @@ class RecurringTransactionsRepository
   /// Devuelve las recurrentes cuya [next_occurrence] ya ha llegado.
   @override
   Future<List<RecurringTransactionModel>> getDueRecurring() async {
-    final today = dateToString(DateTime.now());
+    final today = dateToString(clock.now());
     final response = await _client
         .from('recurring_transactions')
         .select()
@@ -118,7 +120,11 @@ class RecurringTransactionsRepository
           .update({'recurring_transaction_id': null})
           .eq('recurring_transaction_id', id)
           .eq('user_id', userId);
-    } catch (_) {}
+    } catch (e) {
+      SentryService.addBreadcrumb(
+          'detach transactions from recurring failed: $e',
+          category: 'recurring');
+    }
     await _client
         .from('recurring_transactions')
         .delete()

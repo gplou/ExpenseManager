@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,12 +146,12 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ) ?? const SizedBox.shrink()
           else
           transactionsAsync.whenOrNull(
-            data: (transactions) {
-              final categories = transactions
-                  .map((t) => t.category)
-                  .toSet()
-                  .toList()
-                ..sort();
+            data: (_) {
+              // Distinct, sorted categories come pre-computed from a memoized
+              // provider — no per-rebuild distinct+sort here.
+              final categories =
+                  ref.watch(transactionCategoryOptionsProvider).value ??
+                      const <String>[];
               if (categories.isEmpty) return const SizedBox.shrink();
               final isActive = _selectedCategory != null;
               return PopupMenuButton<String?>(
@@ -497,7 +498,7 @@ class _DateHeader extends StatelessWidget {
   final AppLocalizations l10n;
 
   String _label() {
-    final now = DateTime.now();
+    final now = clock.now();
     final today = DateTime(now.year, now.month, now.day);
     final d = DateTime(date.year, date.month, date.day);
     if (d == today) return l10n.today;

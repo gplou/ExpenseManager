@@ -197,7 +197,7 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
   }
 
   Future<void> _handleTap() async {
-    HapticFeedback.lightImpact();
+    HapticFeedback.lightImpact().ignore();
     await _ctrl.forward();
     await _ctrl.reverse();
     widget.onTap();

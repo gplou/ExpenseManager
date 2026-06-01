@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
@@ -28,44 +30,51 @@ class AnalyticsService {
   // ── Identity ───────────────────────────────────────────────────────────────
 
   /// Call after login. Sets `is_pro` as a live property so it is always
-  /// up-to-date in PostHog person profiles.
-  static Future<void> identify(
+  /// up-to-date in PostHog person profiles. Fire-and-forget: returns `void`
+  /// so callers don't need to await or wrap in `unawaited`.
+  static void identify(
     String userId, {
     bool isPro = false,
-  }) async {
-    try {
-      await Posthog().identify(
-        userId: userId,
-        userProperties: {'is_pro': isPro},
-      );
-    } catch (e) {
-      debugPrint('[Analytics] identify error: $e');
-    }
+  }) {
+    unawaited(() async {
+      try {
+        await Posthog().identify(
+          userId: userId,
+          userProperties: {'is_pro': isPro},
+        );
+      } catch (e) {
+        debugPrint('[Analytics] identify error: $e');
+      }
+    }());
   }
 
   /// Call after logout to disassociate subsequent events from the user.
-  static Future<void> reset() async {
-    try {
-      await Posthog().reset();
-    } catch (e) {
-      debugPrint('[Analytics] reset error: $e');
-    }
+  static void reset() {
+    unawaited(() async {
+      try {
+        await Posthog().reset();
+      } catch (e) {
+        debugPrint('[Analytics] reset error: $e');
+      }
+    }());
   }
 
   // ── Event tracking ─────────────────────────────────────────────────────────
 
-  /// Track any named event with optional properties.
-  static Future<void> track(
+  /// Track any named event with optional properties. Fire-and-forget.
+  static void track(
     String event, [
     Map<String, Object>? properties,
-  ]) async {
-    try {
-      await Posthog().capture(
-        eventName: event,
-        properties: properties,
-      );
-    } catch (e) {
-      debugPrint('[Analytics] track($event) error: $e');
-    }
+  ]) {
+    unawaited(() async {
+      try {
+        await Posthog().capture(
+          eventName: event,
+          properties: properties,
+        );
+      } catch (e) {
+        debugPrint('[Analytics] track($event) error: $e');
+      }
+    }());
   }
 }

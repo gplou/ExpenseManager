@@ -1,8 +1,10 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../core/security/secure_storage.dart';
 import '../../core/services/analytics_service.dart';
+import '../../core/services/sentry_service.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import 'data/purchases_gateway.dart';
 import 'data/revenue_cat_adapter.dart';
@@ -114,7 +116,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       state = AsyncData(current.copyWith(isLoading: false, clearError: true));
       AnalyticsService.track(AnalyticsService.purchaseCancelled);
     } on RCPurchaseException catch (e) {
-      _setError(e.message);
+      _setError(SubscriptionErrorCode.purchaseFailed);
       AnalyticsService.track(AnalyticsService.purchaseError, {
         'error': e.message,
       });
@@ -132,7 +134,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
           await ref.read(subscriptionRepositoryProvider).restoreProPlan();
       await _applyRCResult(result, isRestore: true);
     } on RCPurchaseException catch (e) {
-      _setError(e.message);
+      _setError(SubscriptionErrorCode.restoreFailed);
       AnalyticsService.track(AnalyticsService.purchaseError, {
         'error': e.message,
         'flow': 'restore',
@@ -145,11 +147,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// Redeems a promo code with client-side rate limiting.
   Future<void> redeemPromoCode(String code) async {
     if (_promoCooldownUntil != null &&
-        DateTime.now().isBefore(_promoCooldownUntil!)) {
+        clock.now().isBefore(_promoCooldownUntil!)) {
       final remaining =
-          _promoCooldownUntil!.difference(DateTime.now()).inSeconds;
-      throw PromoCodeException(
-          'Demasiados intentos. Espera $remaining segundos.');
+          _promoCooldownUntil!.difference(clock.now()).inSeconds;
+      throw PromoCooldownException(remaining);
     }
 
     final repo = ref.read(subscriptionRepositoryProvider);
@@ -165,7 +166,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
         // stacked expiry. We just read back the authoritative value — the
         // client never decides the final expires_at.
         final expiresAt = result.expiresAt ??
-            DateTime.now().add(Duration(days: result.durationDays));
+            clock.now().add(Duration(days: result.durationDays));
 
         await _persistCache(expiresAt: expiresAt, source: 'promo_code');
 
@@ -194,7 +195,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     } on PromoCodeException {
       _promoFailedAttempts++;
       if (_promoFailedAttempts >= _kMaxPromoAttempts) {
-        _promoCooldownUntil = DateTime.now().add(_kPromoCooldown);
+        _promoCooldownUntil = clock.now().add(_kPromoCooldown);
         _promoFailedAttempts = 0;
       }
       rethrow;
@@ -223,8 +224,9 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       AnalyticsService.track(AnalyticsService.freeTrialStarted, {
         'expires_at': expiresAt.toIso8601String(),
       });
-    } catch (e) {
-      _setError('Error al activar la prueba gratuita');
+    } catch (e, st) {
+      await SentryService.captureException(e, stackTrace: st);
+      _setError(SubscriptionErrorCode.trialFailed);
     }
   }
 
@@ -266,7 +268,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     bool cacheStale = true;
     if (cachedCheckedAt != null) {
       final checkedAt = DateTime.parse(cachedCheckedAt);
-      cacheStale = DateTime.now().difference(checkedAt) > _kCacheTtl;
+      cacheStale = clock.now().difference(checkedAt) > _kCacheTtl;
     }
 
     if (!cacheStale) return fast;
@@ -402,7 +404,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
     // Poll Supabase in the background until the revenuecat-webhook confirms
     // the purchase (typically arrives within a few seconds).
-    _pollForWebhookConfirmation(purchasedAt: DateTime.now());
+    _pollForWebhookConfirmation(purchasedAt: clock.now());
   }
 
   /// Polls Supabase every 5 seconds (up to 10 attempts = 50s) waiting for the
@@ -412,7 +414,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     Future(() async {
       final repo = ref.read(subscriptionRepositoryProvider);
       for (var i = 0; i < 10; i++) {
-        await Future.delayed(const Duration(seconds: 5));
+        await Future<void>.delayed(const Duration(seconds: 5));
         try {
           final remote = await repo.fetchRemoteSubscription();
           if (remote.expiresAt != null &&
@@ -455,7 +457,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       await storage.delete(_kCacheExpiresAtKey);
     }
     await storage.write(
-        _kCacheCheckedAtKey, DateTime.now().toUtc().toIso8601String());
+        _kCacheCheckedAtKey, clock.now().toUtc().toIso8601String());
     if (source != null) {
       await storage.write(_kCacheSourceKey, source);
     } else {
@@ -485,10 +487,10 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     state = AsyncData(current.copyWith(isLoading: loading, clearError: true));
   }
 
-  void _setError(String message) {
+  void _setError(SubscriptionErrorCode code) {
     final current = state.value ?? const SubscriptionState();
     state =
-        AsyncData(current.copyWith(isLoading: false, purchaseError: message));
+        AsyncData(current.copyWith(isLoading: false, errorCode: code));
   }
 }
 

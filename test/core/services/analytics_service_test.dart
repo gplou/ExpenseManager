@@ -46,27 +46,26 @@ void main() {
     // not in a pure Dart test runner, because they need the Flutter test
     // bindings to handle platform channel calls gracefully.
 
-    test('track() does not throw even without PostHog initialised', () async {
-      // This verifies the try/catch wrapping in AnalyticsService.track().
-      // In flutter_test, MissingPluginException is caught by the try/catch.
+    test('track() does not throw even without PostHog initialised', () {
+      // These methods are fire-and-forget (return void): they schedule the
+      // PostHog call via unawaited() and absorb any MissingPluginException in
+      // their internal try/catch, so the synchronous call returns normally.
       expect(
-        () async => await AnalyticsService.track('test_event', {'key': 'val'}),
+        () => AnalyticsService.track('test_event', {'key': 'val'}),
         returnsNormally,
       );
     });
 
-    test('identify() does not throw even without PostHog initialised',
-        () async {
+    test('identify() does not throw even without PostHog initialised', () {
       expect(
-        () async =>
-            await AnalyticsService.identify('user_123', isPro: true),
+        () => AnalyticsService.identify('user_123', isPro: true),
         returnsNormally,
       );
     });
 
-    test('reset() does not throw even without PostHog initialised', () async {
+    test('reset() does not throw even without PostHog initialised', () {
       expect(
-        () async => await AnalyticsService.reset(),
+        () => AnalyticsService.reset(),
         returnsNormally,
       );
     });

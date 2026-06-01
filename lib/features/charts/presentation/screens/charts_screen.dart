@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -161,6 +162,8 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                 }
 
                 final isSubView = selectedCategory != null;
+                // `distribution` already arrives value-descending from
+                // chartDistributionProvider; the display remap preserves order.
                 final displayDistribution = <String, double>{};
                 for (final e in distribution.entries) {
                   final key = e.key == '\x00_no_sub'
@@ -169,8 +172,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   displayDistribution[key] = e.value;
                 }
 
-                final entries = displayDistribution.entries.toList()
-                  ..sort((a, b) => b.value.compareTo(a.value));
+                final entries = displayDistribution.entries.toList();
                 final total =
                     entries.fold<double>(0, (sum, e) => sum + e.value);
                 final colors = generateChartColors(entries.length);
@@ -245,7 +247,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
     TransactionPeriod currentPeriod,
     DateTimeRange? currentCustomRange,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       showDragHandle: false,
@@ -300,7 +302,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   final range = await showCustomDateRangePicker(
                     context: context,
                     firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
+                    lastDate: clock.now(),
                     initialDateRange: currentCustomRange ??
                         DateTimeRange(
                           start: currentPeriod.dateRange.from,
@@ -341,7 +343,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
     List<TransactionCategory> allCats,
     Color accentColor,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

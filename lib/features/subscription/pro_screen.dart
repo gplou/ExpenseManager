@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -183,9 +184,9 @@ class _ProBodyState extends ConsumerState<_ProBody> {
             const Gap(20),
 
             // Error message
-            if (sub.purchaseError != null) ...[
+            if (sub.errorCode != null) ...[
               Text(
-                sub.purchaseError!,
+                _subscriptionErrorMessage(l10n, sub.errorCode!),
                 style: TextStyle(
                   fontFamily: 'GeneralSans',
                   color: cs.error,
@@ -578,7 +579,7 @@ class _ActiveProCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final remaining = expiresAt.difference(DateTime.now()).inDays;
+    final remaining = expiresAt.difference(clock.now()).inDays;
     final sourceLabel = switch (source) {
       'play_store' => l10n.proSourceGooglePlay,
       'app_store' => l10n.proSourceAppStore,
@@ -790,7 +791,14 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
           .read(subscriptionProvider.notifier)
           .redeemPromoCode(code);
       if (mounted) Navigator.of(context).pop();
+    } on PromoCooldownException catch (e) {
+      setState(() {
+        _loading = false;
+        _error = AppLocalizations.of(context)
+            .errorPromoTooManyAttempts(e.remainingSeconds);
+      });
     } on PromoCodeException catch (e) {
+      // Server-driven message (invalid/expired code) — surfaced as-is.
       setState(() {
         _loading = false;
         _error = e.message;
@@ -870,3 +878,14 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
     );
   }
 }
+
+/// Maps a [SubscriptionErrorCode] to a localized, user-facing message.
+String _subscriptionErrorMessage(
+  AppLocalizations l10n,
+  SubscriptionErrorCode code,
+) =>
+    switch (code) {
+      SubscriptionErrorCode.purchaseFailed => l10n.errorPurchaseGeneric,
+      SubscriptionErrorCode.restoreFailed => l10n.errorRestoreGeneric,
+      SubscriptionErrorCode.trialFailed => l10n.errorFreeTrialFailed,
+    };

@@ -91,21 +91,21 @@ void main() {
       final afterCancel = current.copyWith(isLoading: false, clearError: true);
 
       expect(afterCancel.isLoading, isFalse);
-      expect(afterCancel.purchaseError, isNull);
+      expect(afterCancel.errorCode, isNull);
       expect(afterCancel.isPro, isFalse);
     });
 
-    test('purchase error sets purchaseError in state', () {
+    test('purchase error sets errorCode in state', () {
       const current = SubscriptionState(isLoading: true);
 
       // Notifier catches RCPurchaseException and does:
       final afterError = current.copyWith(
         isLoading: false,
-        purchaseError: 'Payment failed',
+        errorCode: SubscriptionErrorCode.purchaseFailed,
       );
 
       expect(afterError.isLoading, isFalse);
-      expect(afterError.purchaseError, 'Payment failed');
+      expect(afterError.errorCode, SubscriptionErrorCode.purchaseFailed);
       expect(afterError.isPro, isFalse);
     });
 
@@ -116,7 +116,7 @@ void main() {
       final afterRestore = current.copyWith(isLoading: false, clearError: true);
 
       expect(afterRestore.isLoading, isFalse);
-      expect(afterRestore.purchaseError, isNull);
+      expect(afterRestore.errorCode, isNull);
       expect(afterRestore.isPro, isFalse);
     });
 
@@ -150,7 +150,8 @@ void main() {
       // 100% discount → bonusDays = kSubscriptionDays (30)
       expect(pendingState.discountBonusDays, 30);
 
-      final rcExpiry = DateTime.utc(2026, 5, 1);
+      // Use a future store expiry so the resulting state is active.
+      final rcExpiry = DateTime.now().toUtc().add(const Duration(days: 10));
       final effectiveExpiry = SubscriptionExpiryCalculator.effectiveExpiry(
         storeExpiry: rcExpiry,
         bonusDays: pendingState.discountBonusDays,
@@ -164,7 +165,7 @@ void main() {
       );
 
       expect(newState.isPro, isTrue);
-      expect(effectiveExpiry, DateTime.utc(2026, 5, 31));
+      expect(effectiveExpiry, rcExpiry.add(const Duration(days: 30)));
       expect(
         effectiveExpiry.isAfter(rcExpiry),
         isTrue,
@@ -278,16 +279,16 @@ void main() {
       when(() => mockRepo.startFreeTrial())
           .thenThrow(Exception('DB error'));
 
-      // Simulate: notifier catches and sets error
+      // Simulate: notifier catches and sets the trial-failed error code
       const current = SubscriptionState(isLoading: true);
       final afterError = current.copyWith(
         isLoading: false,
-        purchaseError: 'Error al activar la prueba gratuita',
+        errorCode: SubscriptionErrorCode.trialFailed,
       );
 
       expect(afterError.isPro, isFalse);
       expect(afterError.isLoading, isFalse);
-      expect(afterError.purchaseError, isNotNull);
+      expect(afterError.errorCode, SubscriptionErrorCode.trialFailed);
     });
   });
 

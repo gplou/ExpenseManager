@@ -115,7 +115,7 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
       return;
     }
 
-    showAddTransactionSheet(context, voiceData: parsed);
+    showAddTransactionSheet(context, voiceData: parsed).ignore();
   }
 
   @override

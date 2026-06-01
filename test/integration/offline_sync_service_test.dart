@@ -183,7 +183,7 @@ void main() {
     container.read(_startSyncProvider); // attaches sync listener
     connectivityCtrl.add(false);
     connectivityCtrl.add(true);
-    await Future.delayed(const Duration(milliseconds: 100));
+    await Future<void>.delayed(const Duration(milliseconds: 100));
   }
 
   // ── Tests ──────────────────────────────────────────────────────────────────
@@ -343,7 +343,7 @@ void main() {
 
     // Release the paused cloud call and let everything settle.
     gate.complete();
-    await Future.delayed(const Duration(milliseconds: 100));
+    await Future<void>.delayed(const Duration(milliseconds: 100));
 
     // The op must have been sent exactly once despite two reconnect events.
     expect(

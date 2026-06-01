@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../data/chat_repository.dart';
@@ -27,7 +28,7 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
     final userMsg = ChatMessage(
       content: text,
       isUser: true,
-      timestamp: DateTime.now(),
+      timestamp: clock.now(),
     );
     state = [...state, userMsg];
     _onLoadingChanged(true);
@@ -42,14 +43,14 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
       final aiMsg = ChatMessage(
         content: reply,
         isUser: false,
-        timestamp: DateTime.now(),
+        timestamp: clock.now(),
       );
       state = [...state, aiMsg];
     } catch (e) {
       final errorMsg = ChatMessage(
         content: 'Error: ${e.toString().replaceFirst('Exception: ', '')}',
         isUser: false,
-        timestamp: DateTime.now(),
+        timestamp: clock.now(),
       );
       state = [...state, errorMsg];
     } finally {

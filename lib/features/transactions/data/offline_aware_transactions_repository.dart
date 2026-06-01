@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../core/utils/date_helpers.dart';
@@ -189,7 +190,7 @@ class OfflineAwareTransactionsRepository
         'recurring_transaction_id': t.recurringTransactionId,
         'created_at': t.createdAt.toIso8601String(),
       },
-      createdAt: DateTime.now(),
+      createdAt: clock.now(),
     ));
   }
 
@@ -199,7 +200,7 @@ class OfflineAwareTransactionsRepository
       userId: _local.userId,
       opType: SyncOpType.delete,
       entityId: entityId,
-      createdAt: DateTime.now(),
+      createdAt: clock.now(),
     ));
   }
 }

@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -111,7 +112,7 @@ class AppDrawer extends ConsumerWidget {
                           isPro && sub?.expiresAt != null
                               ? l10n.proActiveStatus(
                                   sub!.expiresAt!
-                                      .difference(DateTime.now())
+                                      .difference(clock.now())
                                       .inDays,
                                 )
                               : l10n.proDrawerSubtitle,
@@ -263,7 +264,7 @@ class AppDrawer extends ConsumerWidget {
     WidgetRef ref,
     String? currentName,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -531,7 +532,16 @@ class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
           behavior: SnackBarBehavior.floating,
         ),
       );
+    } on PromoCooldownException catch (e) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        setState(() {
+          _error = l10n.errorPromoTooManyAttempts(e.remainingSeconds);
+          _loading = false;
+        });
+      }
     } on PromoCodeException catch (e) {
+      // Server-driven message (invalid/expired code) — surfaced as-is.
       if (mounted) setState(() { _error = e.message; _loading = false; });
     } catch (_) {
       if (mounted) {

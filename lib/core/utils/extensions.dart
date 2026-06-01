@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -33,25 +34,18 @@ extension DateTimeExtensions on DateTime {
   String get formattedTime => DateFormat('HH:mm').format(this);
 
   bool get isToday {
-    final now = DateTime.now();
+    final now = clock.now();
     return year == now.year && month == now.month && day == now.day;
   }
 
   bool get isTomorrow {
-    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    final tomorrow = clock.now().add(const Duration(days: 1));
     return year == tomorrow.year &&
         month == tomorrow.month &&
         day == tomorrow.day;
   }
 
-  bool get isOverdue => isBefore(DateTime.now());
-
-  String get relativeDate {
-    if (isToday) return 'Hoy';
-    if (isTomorrow) return 'Mañana';
-    if (isOverdue) return 'Vencida';
-    return formattedDate;
-  }
+  bool get isOverdue => isBefore(clock.now());
 
   String relativeDateL10n(AppLocalizations l10n) {
     if (isToday) return l10n.relToday;

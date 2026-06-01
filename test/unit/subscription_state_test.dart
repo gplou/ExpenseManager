@@ -23,10 +23,13 @@ void main() {
     });
 
     test('copyWith changes fields correctly', () {
-      const original = SubscriptionState(isLoading: true, purchaseError: 'err');
+      const original = SubscriptionState(
+        isLoading: true,
+        errorCode: SubscriptionErrorCode.purchaseFailed,
+      );
       final updated = original.copyWith(isLoading: false, clearError: true);
       expect(updated.isLoading, isFalse);
-      expect(updated.purchaseError, isNull);
+      expect(updated.errorCode, isNull);
     });
 
     test('copyWith preserves expiresAt when not clearing', () {
@@ -47,7 +50,7 @@ void main() {
     test('default state has no error and is not loading', () {
       const state = SubscriptionState();
       expect(state.isLoading, isFalse);
-      expect(state.purchaseError, isNull);
+      expect(state.errorCode, isNull);
       expect(state.source, isNull);
     });
 

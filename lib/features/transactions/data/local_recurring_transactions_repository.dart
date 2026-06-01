@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -20,7 +21,7 @@ class LocalRecurringTransactionsRepository
   Future<List<RecurringTransactionModel>> getDueRecurring() async {
     try {
       final db = await _db;
-      final today = dateToString(DateTime.now());
+      final today = dateToString(clock.now());
       final rows = await db.query(
         'recurring_transactions',
         where: 'user_id = ? AND next_occurrence <= ?',
@@ -58,7 +59,7 @@ class LocalRecurringTransactionsRepository
           'description': description,
           'recurrence_type': recurrenceType.name,
           'next_occurrence': dateToString(nextOccurrence),
-          'created_at': DateTime.now().toIso8601String(),
+          'created_at': clock.now().toIso8601String(),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
