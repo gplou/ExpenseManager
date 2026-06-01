@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 
 import '../security/secure_storage.dart';
 
@@ -21,6 +22,8 @@ class LocalDatabase {
   static final LocalDatabase instance = LocalDatabase._();
 
   Database? _db;
+  // Guards _open() so concurrent callers don't race through the migration path.
+  final _lock = Lock();
 
   static const _keyStorageKey = 'db_encryption_key';
 
@@ -32,8 +35,11 @@ class LocalDatabase {
   static const needsHydrationResetKey = 'needs_hydration_reset_v3';
 
   Future<Database> get db async {
-    _db ??= await _open();
-    return _db!;
+    if (_db != null) return _db!;
+    return _lock.synchronized(() async {
+      _db ??= await _open();
+      return _db!;
+    });
   }
 
   Future<void> close() async {

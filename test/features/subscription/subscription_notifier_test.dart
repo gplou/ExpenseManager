@@ -150,7 +150,8 @@ void main() {
       // 100% discount → bonusDays = kSubscriptionDays (30)
       expect(pendingState.discountBonusDays, 30);
 
-      final rcExpiry = DateTime.utc(2026, 5, 1);
+      // Use a future store expiry so the resulting state is active.
+      final rcExpiry = DateTime.now().toUtc().add(const Duration(days: 10));
       final effectiveExpiry = SubscriptionExpiryCalculator.effectiveExpiry(
         storeExpiry: rcExpiry,
         bonusDays: pendingState.discountBonusDays,
@@ -164,7 +165,7 @@ void main() {
       );
 
       expect(newState.isPro, isTrue);
-      expect(effectiveExpiry, DateTime.utc(2026, 5, 31));
+      expect(effectiveExpiry, rcExpiry.add(const Duration(days: 30)));
       expect(
         effectiveExpiry.isAfter(rcExpiry),
         isTrue,

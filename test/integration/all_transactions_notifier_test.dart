@@ -142,14 +142,22 @@ void main() {
         'updates state with full-year data even when SQLite only has current-month data',
         () async {
       final now = DateTime.now();
+      // A date within the year range but outside the current month.
+      // In January the year and month ranges coincide, so we fall back to the
+      // 1st of the current month (same effect: the cloud data covers the full
+      // year and both transactions end up in the final state).
+      final olderDate = now.month > 1
+          ? DateTime(now.year, 1, 1)
+          : DateTime(now.year, now.month, 1);
       final januaryTx = _tx(
         'jan-tx',
-        DateTime(now.year, 1, 10), // January — outside the month cache
+        olderDate, // outside the current-month cache when month > 1
         TransactionType.expense,
       );
+      // Use the 1st of the current month so it's always within [monthStart, today].
       final currentMonthTx = _tx(
         'month-tx',
-        DateTime(now.year, now.month, 5),
+        DateTime(now.year, now.month, 1),
         TransactionType.income,
       );
 
@@ -193,14 +201,17 @@ void main() {
 
     test('syncs SQLite cache after background refresh', () async {
       final now = DateTime.now();
+      // Use the 1st of the current month — always ≤ today regardless of which
+      // day of the month it is (avoids future-date exclusions on day 1).
+      final monthStart = DateTime(now.year, now.month, 1);
       final cloudOnlyTx = _tx(
         'cloud-only',
-        DateTime(now.year, now.month, 3),
+        monthStart,
         TransactionType.expense,
       );
       final cachedTx = _tx(
         'cached',
-        DateTime(now.year, now.month, 10),
+        monthStart,
         TransactionType.income,
       );
 
@@ -237,8 +248,14 @@ void main() {
     test('does not update state when period changes mid-refresh (generation guard)',
         () async {
       final now = DateTime.now();
-      final monthTx = _tx('month', DateTime(now.year, now.month, 5), TransactionType.expense);
-      final yearTx = _tx('year', DateTime(now.year, 2, 10), TransactionType.income);
+      // Always use the 1st of the month to avoid future-date exclusions.
+      final monthTx = _tx('month', DateTime(now.year, now.month, 1), TransactionType.expense);
+      // A date within the year range but outside the current month.
+      // In January both ranges overlap, so we use the same month-start date.
+      final olderDate = now.month > 1
+          ? DateTime(now.year, 1, 1)
+          : DateTime(now.year, now.month, 1);
+      final yearTx = _tx('year', olderDate, TransactionType.income);
 
       final localRepo = LocalTransactionsRepository(userId: _userId);
       await localRepo.insertAll([monthTx]);
