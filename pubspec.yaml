@@ -76,6 +76,7 @@ dependencies:
   # Utilidades
   intl: ^0.20.2
   clock: ^1.1.1
+  synchronized: ^3.4.0
   gap: ^3.0.1
   flutter_native_splash: ^2.4.1
   sqflite_sqlcipher: ^3.4.0
