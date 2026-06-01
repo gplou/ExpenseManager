@@ -90,7 +90,15 @@ class LocalDatabase {
       // between writing the key and completing the migration cannot leave the
       // DB in an ambiguous state.
       if (await File(path).exists()) {
-        await _migrateToEncrypted(path, key);
+        try {
+          await _migrateToEncrypted(path, key);
+        } catch (_) {
+          // Clean up any partial .enc file so the next launch can retry from
+          // a clean state instead of hitting open_failed on a corrupt file.
+          final encFile = File('$path.enc');
+          if (await encFile.exists()) await encFile.delete();
+          rethrow;
+        }
       }
       await SecureStorageService.instance.write(_keyStorageKey, key);
     }
@@ -131,8 +139,18 @@ class LocalDatabase {
   /// Converts an existing plaintext SQLite file to SQLCipher-encrypted format
   /// using SQLCipher's built-in sqlcipher_export() function, which copies all
   /// pages atomically into a new encrypted file.
+  ///
+  /// Idempotent: if a previous attempt crashed after the rename (leaving no
+  /// plaintext file) this is a no-op. If it crashed before the rename (leaving
+  /// a .enc file alongside the plaintext), the .enc is removed first so the
+  /// export starts from a clean state.
   static Future<void> _migrateToEncrypted(String plainPath, String key) async {
     final encPath = '$plainPath.enc';
+
+    // Remove any leftover .enc from a previously interrupted migration so that
+    // ATTACH DATABASE does not fail trying to open a corrupt/partial file.
+    final encFile = File(encPath);
+    if (await encFile.exists()) await encFile.delete();
 
     // Open the existing plaintext file without a password. SQLCipher treats a
     // missing/empty key as "no encryption", so existing data is accessible.
