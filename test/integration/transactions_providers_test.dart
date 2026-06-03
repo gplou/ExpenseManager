@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +8,7 @@ import 'package:expense_manager/features/auth/presentation/providers/auth_provid
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transactions_repository_contract.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
@@ -389,6 +391,249 @@ void main() {
           .delete('del-3');
 
       verifyNever(() => recurringRepo.deleteRecurring(any()));
+    });
+  });
+
+  // ── TransactionsNotifier.saveWithRecurrence ────────────────────────────────
+
+  group('TransactionsNotifier.saveWithRecurrence', () {
+    setUpAll(() {
+      registerFallbackValue(RecurrenceType.monthly);
+      registerFallbackValue(DateTime(2024));
+      registerFallbackValue(TransactionType.expense);
+    });
+
+    // Fixed clock so nextRecurrenceDate and createdAt are deterministic.
+    final fixedNow = DateTime(2024, 1, 15);
+
+    TransactionModel txInput({
+      String id = '',
+      String? recurringTransactionId,
+      double amount = 100,
+      String category = 'Comida',
+    }) =>
+        TransactionModel(
+          id: id,
+          userId: id.isEmpty ? '' : 'user-1',
+          amount: amount,
+          type: TransactionType.expense,
+          category: category,
+          subcategory: 'Restaurante',
+          description: 'cena',
+          date: DateTime(2024, 1, 15),
+          createdAt: fixedNow,
+          recurringTransactionId: recurringTransactionId,
+        );
+
+    // ── Branch 1: new + non-recurring → only create ──────────────────────────
+    test('new + non-recurring: creates tx without recurring schedule',
+        () async {
+      final repo = _FakeTransactionsRepo();
+      final recurringRepo = _MockRecurringRepo();
+      final container = _makeContainer(repo, recurringRepo: recurringRepo);
+      addTearDown(container.dispose);
+
+      await withClock(Clock.fixed(fixedNow), () async {
+        await container
+            .read(transactionsNotifierProvider.notifier)
+            .saveWithRecurrence(
+              transaction: txInput(),
+              isEditing: false,
+              isRecurring: false,
+              recurrenceType: null,
+              currency: 'USD',
+            );
+      });
+
+      expect(repo.created, hasLength(1));
+      expect(repo.created.single.recurringTransactionId, isNull);
+      expect(repo.created.single.currency, 'USD');
+      expect(repo.created.single.category, 'Comida');
+      // copyWith preserves subcategory/description from the input.
+      expect(repo.created.single.subcategory, 'Restaurante');
+      expect(repo.created.single.description, 'cena');
+      verifyZeroInteractions(recurringRepo);
+    });
+
+    // ── Branch 2: new + recurring → createRecurring + create with link ───────
+    test('new + recurring: creates schedule then links it to the tx',
+        () async {
+      final repo = _FakeTransactionsRepo();
+      final recurringRepo = _MockRecurringRepo();
+      when(() => recurringRepo.createRecurring(
+            amount: any(named: 'amount'),
+            type: any(named: 'type'),
+            category: any(named: 'category'),
+            subcategory: any(named: 'subcategory'),
+            description: any(named: 'description'),
+            recurrenceType: any(named: 'recurrenceType'),
+            nextOccurrence: any(named: 'nextOccurrence'),
+          )).thenAnswer((_) async => 'rec-new');
+
+      final container = _makeContainer(repo, recurringRepo: recurringRepo);
+      addTearDown(container.dispose);
+
+      await withClock(Clock.fixed(fixedNow), () async {
+        await container
+            .read(transactionsNotifierProvider.notifier)
+            .saveWithRecurrence(
+              transaction: txInput(),
+              isEditing: false,
+              isRecurring: true,
+              recurrenceType: RecurrenceType.monthly,
+              currency: 'EUR',
+            );
+      });
+
+      verify(() => recurringRepo.createRecurring(
+            amount: 100,
+            type: TransactionType.expense,
+            category: 'Comida',
+            subcategory: 'Restaurante',
+            description: 'cena',
+            recurrenceType: RecurrenceType.monthly,
+            nextOccurrence: nextRecurrenceDate(
+                DateTime(2024, 1, 15), RecurrenceType.monthly),
+          )).called(1);
+      expect(repo.created, hasLength(1));
+      expect(repo.created.single.recurringTransactionId, 'rec-new');
+    });
+
+    // ── Branch 3: edit + recurring + no existing schedule ────────────────────
+    test('edit + recurring + no existing schedule: creates schedule + update',
+        () async {
+      final repo = _FakeTransactionsRepo();
+      final recurringRepo = _MockRecurringRepo();
+      when(() => recurringRepo.createRecurring(
+            amount: any(named: 'amount'),
+            type: any(named: 'type'),
+            category: any(named: 'category'),
+            subcategory: any(named: 'subcategory'),
+            description: any(named: 'description'),
+            recurrenceType: any(named: 'recurrenceType'),
+            nextOccurrence: any(named: 'nextOccurrence'),
+          )).thenAnswer((_) async => 'rec-created');
+
+      final container = _makeContainer(repo, recurringRepo: recurringRepo);
+      addTearDown(container.dispose);
+
+      await container
+          .read(transactionsNotifierProvider.notifier)
+          .saveWithRecurrence(
+            transaction: txInput(id: 'tx-1'),
+            isEditing: true,
+            isRecurring: true,
+            recurrenceType: RecurrenceType.weekly,
+            currency: 'EUR',
+          );
+
+      verify(() => recurringRepo.createRecurring(
+            amount: any(named: 'amount'),
+            type: any(named: 'type'),
+            category: any(named: 'category'),
+            subcategory: any(named: 'subcategory'),
+            description: any(named: 'description'),
+            recurrenceType: RecurrenceType.weekly,
+            nextOccurrence: any(named: 'nextOccurrence'),
+          )).called(1);
+      expect(repo.updated, hasLength(1));
+      expect(repo.updated.single.recurringTransactionId, 'rec-created');
+    });
+
+    // ── Branch 4: edit + recurring + existing schedule → update both ─────────
+    test('edit + recurring + existing schedule: updates schedule + update',
+        () async {
+      final repo = _FakeTransactionsRepo();
+      final recurringRepo = _MockRecurringRepo();
+      when(() => recurringRepo.updateRecurring(
+            id: any(named: 'id'),
+            amount: any(named: 'amount'),
+            type: any(named: 'type'),
+            category: any(named: 'category'),
+            subcategory: any(named: 'subcategory'),
+            description: any(named: 'description'),
+            recurrenceType: any(named: 'recurrenceType'),
+            nextOccurrence: any(named: 'nextOccurrence'),
+          )).thenAnswer((_) async {});
+
+      final container = _makeContainer(repo, recurringRepo: recurringRepo);
+      addTearDown(container.dispose);
+
+      await container
+          .read(transactionsNotifierProvider.notifier)
+          .saveWithRecurrence(
+            transaction:
+                txInput(id: 'tx-2', recurringTransactionId: 'rec-existing'),
+            isEditing: true,
+            isRecurring: true,
+            recurrenceType: RecurrenceType.monthly,
+            currency: 'EUR',
+          );
+
+      verify(() => recurringRepo.updateRecurring(
+            id: 'rec-existing',
+            amount: any(named: 'amount'),
+            type: any(named: 'type'),
+            category: any(named: 'category'),
+            subcategory: any(named: 'subcategory'),
+            description: any(named: 'description'),
+            recurrenceType: RecurrenceType.monthly,
+            nextOccurrence: any(named: 'nextOccurrence'),
+          )).called(1);
+      // createRecurring was never stubbed; if it had been called the mock
+      // would have thrown, so reaching here proves the update branch was taken.
+      expect(repo.updated, hasLength(1));
+      expect(repo.updated.single.recurringTransactionId, 'rec-existing');
+    });
+
+    // ── Branch 5: edit + non-recurring + existing schedule → delete schedule ─
+    test('edit + non-recurring + existing schedule: deletes schedule + detach',
+        () async {
+      final repo = _FakeTransactionsRepo();
+      final recurringRepo = _MockRecurringRepo();
+      when(() => recurringRepo.deleteRecurring(any()))
+          .thenAnswer((_) async {});
+
+      final container = _makeContainer(repo, recurringRepo: recurringRepo);
+      addTearDown(container.dispose);
+
+      await container
+          .read(transactionsNotifierProvider.notifier)
+          .saveWithRecurrence(
+            transaction:
+                txInput(id: 'tx-3', recurringTransactionId: 'rec-old'),
+            isEditing: true,
+            isRecurring: false,
+            recurrenceType: null,
+            currency: 'EUR',
+          );
+
+      verify(() => recurringRepo.deleteRecurring('rec-old')).called(1);
+      expect(repo.updated, hasLength(1));
+      expect(repo.updated.single.recurringTransactionId, isNull);
+    });
+
+    // ── Branch 6: edit + non-recurring + no existing schedule → just update ──
+    test('edit + non-recurring + no existing schedule: only detaches', () async {
+      final repo = _FakeTransactionsRepo();
+      final recurringRepo = _MockRecurringRepo();
+
+      final container = _makeContainer(repo, recurringRepo: recurringRepo);
+      addTearDown(container.dispose);
+
+      await container
+          .read(transactionsNotifierProvider.notifier)
+          .saveWithRecurrence(
+            transaction: txInput(id: 'tx-4'),
+            isEditing: true,
+            isRecurring: false,
+            recurrenceType: null,
+            currency: 'EUR',
+          );
+
+      verifyZeroInteractions(recurringRepo);
+      expect(repo.updated, hasLength(1));
+      expect(repo.updated.single.recurringTransactionId, isNull);
     });
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -92,7 +93,7 @@ class _CreateCategoryDialogState extends ConsumerState<CreateCategoryDialog> {
                   controller: _emojiController,
                   onChanged: _onEmojiChanged,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 24),
+                  style: const TextStyle(fontSize: AppEmojiSize.large),
                   decoration: InputDecoration(
                     labelText: 'Emoji',
                     hintText: '😀',

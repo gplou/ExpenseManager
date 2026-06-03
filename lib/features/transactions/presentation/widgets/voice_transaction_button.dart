@@ -141,6 +141,8 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
           child: FloatingActionButton(
             heroTag: 'voiceFab',
             onPressed: _onTap,
+            // Rojo de grabación: convención universal de UI (recording),
+            // intencionadamente distinto del coral AppColors.negative ('gasto').
             backgroundColor: Colors.red,
             child: const Icon(Icons.stop_rounded),
           ),

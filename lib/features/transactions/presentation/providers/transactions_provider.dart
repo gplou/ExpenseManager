@@ -109,7 +109,14 @@ class AllTransactionsNotifier
 
       if (cached.isNotEmpty) {
         // Muestra la caché de forma instantánea y refresca Supabase en fondo.
-        _refreshInBackground(localRepo, range, generation);
+        // Pasamos los ids ya leídos para evitar una segunda lectura de SQLite
+        // dentro del refresh (el snapshot pre-fetch).
+        _refreshInBackground(
+          localRepo,
+          range,
+          generation,
+          preFetchLocalIds: cached.map((t) => t.id).toSet(),
+        );
         return cached;
       }
 
@@ -136,11 +143,19 @@ class AllTransactionsNotifier
   }
 
   // Refresca Supabase en segundo plano y actualiza la UI sin spinner.
+  //
+  // [preFetchLocalIds] es el snapshot de ids locales tomado ANTES del fetch al
+  // cloud. Lo recibe ya calculado desde [build] (a partir de la caché que
+  // acabamos de leer) para no repetir la lectura de SQLite. Cualquier tx local
+  // que aparezca después (creada por el usuario mientras el fetch estaba en
+  // vuelo) no estará en este set y por tanto se conservará en el merge —
+  // evitando que deleteByDateRange la borre.
   void _refreshInBackground(
     LocalTransactionsRepository localRepo,
     ({DateTime from, DateTime to}) range,
-    int generation,
-  ) {
+    int generation, {
+    required Set<String> preFetchLocalIds,
+  }) {
     // Mantiene el provider vivo mientras dura el refresh de fondo.
     final keepAlive = ref.keepAlive();
     // Siempre usar el repo cloud para obtener datos frescos de Supabase,
@@ -149,25 +164,6 @@ class AllTransactionsNotifier
 
     Future(() async {
       try {
-        // Snapshot de IDs locales ANTES del fetch al cloud. Cualquier tx local
-        // que aparezca después (creada por el usuario mientras el fetch estaba
-        // en vuelo) se conservará aunque no esté en cloudIds ni en pendingIds.
-        // Sin este snapshot la creación se borraba al hacer deleteByDateRange.
-        // Lectura best-effort: si SQLite falla seguimos con un snapshot vacío
-        // en lugar de abortar el refresh y perder los datos frescos del cloud.
-        Set<String> preFetchLocalIds = {};
-        try {
-          preFetchLocalIds = (await localRepo.getTransactions(
-            from: range.from,
-            to: range.to,
-          ))
-              .map((t) => t.id)
-              .toSet();
-        } catch (e) {
-          SentryService.addBreadcrumb(
-              'preFetch local read failed: $e', category: 'sync');
-        }
-
         final fresh = await cloudRepo.getTransactions(
           from: range.from,
           to: range.to,
@@ -305,7 +301,6 @@ class TransactionsNotifier extends Notifier<void> {
 
   Future<void> create(TransactionModel transaction) async {
     final repo = ref.read(transactionsRepositoryProvider);
-    debugPrint('TransactionsNotifier.create: repo=${repo.runtimeType}');
     await repo.createTransaction(transaction);
     // Only invalidate the single source of truth; derived providers
     // (summary, recent, distribution) rebuild automatically.
@@ -394,16 +389,12 @@ class TransactionsNotifier extends Notifier<void> {
           nextOccurrence: nextDate,
         );
       }
+      // id/userId vacíos: OfflineAwareTransactionsRepository los estampa.
+      // Usamos copyWith para no perder campos nuevos del modelo si se añaden.
       await create(
-        TransactionModel(
+        transaction.copyWith(
           id: '',
           userId: '',
-          amount: transaction.amount,
-          type: transaction.type,
-          category: transaction.category,
-          subcategory: transaction.subcategory,
-          description: transaction.description,
-          date: transaction.date,
           createdAt: clock.now(),
           recurringTransactionId: recurringId,
           currency: currency,

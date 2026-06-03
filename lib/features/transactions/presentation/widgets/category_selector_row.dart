@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -76,7 +77,7 @@ class CategorySelectorRow extends StatelessWidget {
                     ? customCat.emojiOverride != null
                         ? Text(
                             customCat.emojiOverride!,
-                            style: const TextStyle(fontSize: 18),
+                            style: const TextStyle(fontSize: AppEmojiSize.medium),
                           )
                         : Icon(customCat.icon,
                             size: 18,
@@ -85,7 +86,7 @@ class CategorySelectorRow extends StatelessWidget {
                                 : AppColors.textMuted)
                     : Text(
                         emoji ?? '📂',
-                        style: const TextStyle(fontSize: 18),
+                        style: const TextStyle(fontSize: AppEmojiSize.medium),
                       ),
               ),
             ),

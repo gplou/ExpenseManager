@@ -108,7 +108,7 @@ All AI calls go through Supabase Edge Functions, which proxy to **Gemini 2.5 Fla
 - **Voice parsing:** `VoiceTransactionParser` (speech_to_text → Edge Function `parse-voice-transaction`) in `lib/features/transactions/data/`
 - **Image parsing:** `ImageTransactionParser` (image_picker → Edge Function `parse-image-transaction`)
 - **Financial chat:** `ChatRepository` → Edge Function `chat-transactions`
-- Rate limiting: `AiRateLimiter` (`lib/core/utils/ai_rate_limiter.dart`) allows max 3 calls/minute
+- Rate limiting: `AiRateLimiter` (`lib/core/utils/ai_rate_limiter.dart`) allows max 7 calls/minute (shared across voice + image)
 
 ### Localization
 

@@ -54,8 +54,14 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// We suppress the listener for the duration of the explicit flow.
   bool _purchaseInFlight = false;
 
+  /// Incremented on every [build]. A background poll captures the value at
+  /// launch and bails out if it changes (e.g. user logged out/in mid-poll),
+  /// so a stale loop can never write state for a different user/session.
+  int _generation = 0;
+
   @override
   Future<SubscriptionState> build() async {
+    _generation++;
     final purchases = ref.read(purchasesGatewayProvider);
     // Rebuild when the logged-in user changes so stale cache is never reused.
     final user = ref.watch(currentUserProvider);
@@ -410,29 +416,41 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// Polls Supabase every 5 seconds (up to 10 attempts = 50s) waiting for the
   /// revenuecat-webhook to write the authoritative subscription row.
   /// Silently updates state + cache when confirmation arrives.
+  ///
+  /// Guarded by [_generation] + a [ref.keepAlive] token so a rebuild (e.g. the
+  /// user logging out and back in during the 50s window) cancels this loop
+  /// instead of writing state/cache for a stale session.
   void _pollForWebhookConfirmation({required DateTime purchasedAt}) {
+    final generation = _generation;
+    final keepAlive = ref.keepAlive();
     Future(() async {
-      final repo = ref.read(subscriptionRepositoryProvider);
-      for (var i = 0; i < 10; i++) {
-        await Future<void>.delayed(const Duration(seconds: 5));
-        try {
-          final remote = await repo.fetchRemoteSubscription();
-          if (remote.expiresAt != null &&
-              remote.expiresAt!.isAfter(purchasedAt)) {
-            await _persistCache(
-                expiresAt: remote.expiresAt, source: remote.source);
-            state = AsyncData(
-              SubscriptionState(
-                expiresAt: remote.expiresAt,
-                source: remote.source,
-                trialUsed: state.value?.trialUsed ?? false,
-              ),
-            );
-            return;
+      try {
+        final repo = ref.read(subscriptionRepositoryProvider);
+        for (var i = 0; i < 10; i++) {
+          await Future<void>.delayed(const Duration(seconds: 5));
+          if (_generation != generation) return;
+          try {
+            final remote = await repo.fetchRemoteSubscription();
+            if (_generation != generation) return;
+            if (remote.expiresAt != null &&
+                remote.expiresAt!.isAfter(purchasedAt)) {
+              await _persistCache(
+                  expiresAt: remote.expiresAt, source: remote.source);
+              state = AsyncData(
+                SubscriptionState(
+                  expiresAt: remote.expiresAt,
+                  source: remote.source,
+                  trialUsed: state.value?.trialUsed ?? false,
+                ),
+              );
+              return;
+            }
+          } catch (_) {
+            // Silently retry — RC optimistic state is already in state.
           }
-        } catch (_) {
-          // Silently retry — RC optimistic state is already in state.
         }
+      } finally {
+        keepAlive.close();
       }
     });
   }

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
@@ -602,10 +603,13 @@ class _TransactionTile extends ConsumerWidget {
                   : (customCat != null
                       ? customCat.emojiOverride != null
                           ? Text(customCat.emojiOverride!,
-                              style: const TextStyle(fontSize: 18))
+                              style:
+                                  const TextStyle(fontSize: AppEmojiSize.medium))
                           : Icon(customCat.icon,
                               size: 18, color: cs.onSurface)
-                      : Text(emoji, style: const TextStyle(fontSize: 18))),
+                      : Text(emoji,
+                          style:
+                              const TextStyle(fontSize: AppEmojiSize.medium))),
             ),
           ),
           const Gap(14),

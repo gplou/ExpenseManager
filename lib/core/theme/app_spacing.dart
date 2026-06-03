@@ -72,3 +72,20 @@ class AppTapTargets {
   /// 48x48 lógicos: cumple WCAG 2.5.5 AAA y Material Design.
   static const double minSize = 48.0;
 }
+
+/// Tamaños de fuente para los emojis de categoría según su contexto.
+///
+/// Centraliza los `TextStyle(fontSize: ...)` que estaban repetidos en tiles,
+/// listas, selectores y diálogos. No introducir valores nuevos sin justificar.
+class AppEmojiSize {
+  AppEmojiSize._();
+
+  /// Strip compacto de categorías recientes.
+  static const double small = 14.0;
+
+  /// Tiles de transacción, lista, selector de categoría.
+  static const double medium = 18.0;
+
+  /// Picker de categorías y diálogos de creación (presencia grande).
+  static const double large = 24.0;
+}

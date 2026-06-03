@@ -293,18 +293,30 @@ class _InitErrorApp extends StatelessWidget {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
-                if (step.isNotEmpty)
+                // En release ocultamos el paso interno y el detalle de la
+                // excepción para no filtrar rutas, nombres de librerías ni
+                // mensajes técnicos al usuario. En debug mostramos todo para
+                // diagnosticar.
+                if (kDebugMode) ...[
+                  if (step.isNotEmpty)
+                    Text(
+                      'Fallo en paso: $step',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 14, color: Colors.orange),
+                    ),
+                  const SizedBox(height: 8),
                   Text(
-                    'Fallo en paso: $step',
+                    error.toString(),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: Colors.orange),
+                    style: const TextStyle(fontSize: 12),
                   ),
-                const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12),
-                ),
+                ] else
+                  const Text(
+                    'No se pudo iniciar la aplicación. '
+                    'Cierra y vuelve a abrirla.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14),
+                  ),
               ],
             ),
           ),

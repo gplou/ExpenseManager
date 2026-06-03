@@ -67,10 +67,11 @@ class RecentTransactionTile extends ConsumerWidget {
                 child: customCat != null
                     ? customCat.emojiOverride != null
                         ? Text(customCat.emojiOverride!,
-                            style: const TextStyle(fontSize: 18))
+                            style: const TextStyle(fontSize: AppEmojiSize.medium))
                         : Icon(customCat.icon,
                             size: 18, color: cs.onSurface)
-                    : Text(emoji, style: const TextStyle(fontSize: 18)),
+                    : Text(emoji,
+                        style: const TextStyle(fontSize: AppEmojiSize.medium)),
               ),
             ),
             const Gap(14),

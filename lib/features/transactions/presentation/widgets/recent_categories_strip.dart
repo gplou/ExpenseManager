@@ -132,7 +132,7 @@ class _RecentChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 14)),
+              Text(emoji, style: const TextStyle(fontSize: AppEmojiSize.small)),
               const SizedBox(width: AppSpacing.xs + 2),
               Text(
                 label,

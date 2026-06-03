@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -163,7 +164,8 @@ class _CategoryPickerContent extends ConsumerWidget {
                             children: [
                               if (isCustom && cat.emojiOverride != null)
                                 Text(cat.emojiOverride!,
-                                    style: const TextStyle(fontSize: 24))
+                                    style: const TextStyle(
+                                        fontSize: AppEmojiSize.large))
                               else if (isCustom)
                                 Icon(cat.icon,
                                     size: 24,
@@ -172,7 +174,8 @@ class _CategoryPickerContent extends ConsumerWidget {
                                         : AppColors.textMuted)
                               else
                                 Text(emoji,
-                                    style: const TextStyle(fontSize: 24)),
+                                    style: const TextStyle(
+                                        fontSize: AppEmojiSize.large)),
                               const Gap(6),
                               Text(
                                 TransactionCategories.localizedName(

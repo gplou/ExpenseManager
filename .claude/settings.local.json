@@ -119,7 +119,9 @@
       "mcp__claude_ai_Sentry__whoami",
       "mcp__claude_ai_Sentry__search_issues",
       "Bash(grep \"async {$\\\\|async =>\")",
-      "Bash(dart run *)"
+      "Bash(dart run *)",
+      "Bash(grep -n 'app_spacing\\\\|import '\\\\''package:expense_manager/core/theme' /Users/guillermo/Workspace/ExpenseManager/__TRACKED_VAR__)",
+      "Bash(echo \"exit: $? \\(no output = todos migrados\\)\")"
     ]
   }
 }

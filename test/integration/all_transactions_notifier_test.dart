@@ -23,6 +23,8 @@ import 'package:expense_manager/features/auth/presentation/providers/auth_provid
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/data/initial_sync_service.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/pending_operation.dart';
+import 'package:expense_manager/features/transactions/data/sync_queue_repository.dart';
 import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
@@ -286,6 +288,65 @@ void main() {
         reason:
             'Stale background refresh (cancelled by generation guard) must not '
             'overwrite the state set by the newer period.',
+      );
+    });
+
+    test(
+        'preserves a locally-created pending tx not present in the cloud (localToKeep)',
+        () async {
+      final now = DateTime.now();
+      final monthStart = DateTime(now.year, now.month, 1);
+
+      // A tx that lives only locally (offline create, sitting in the queue) and
+      // is NOT returned by the cloud. The merge must keep it after the refresh.
+      final pendingTx = _tx('pending-local', monthStart, TransactionType.expense);
+      // A tx that exists both locally and in the cloud (normal synced tx).
+      final syncedTx = _tx('synced', monthStart, TransactionType.income);
+
+      final localRepo = LocalTransactionsRepository(userId: _userId);
+      await localRepo.insertAll([pendingTx, syncedTx]);
+
+      // Mark pendingTx as a pending create so localToKeep keeps it.
+      final queue = SyncQueueRepository(userId: _userId);
+      await queue.enqueue(PendingOperation(
+        id: 'pending-local_create',
+        userId: _userId,
+        opType: SyncOpType.create,
+        entityId: 'pending-local',
+        createdAt: now,
+      ));
+
+      // Cloud only knows about the synced tx.
+      final cloudRepo = _FakeCloudTxRepo(data: [syncedTx]);
+      final container = _makeContainer(cloudRepo: cloudRepo);
+      addTearDown(container.dispose);
+
+      final sub = container.listen(allTransactionsProvider, (_, __) {});
+      addTearDown(sub.close);
+
+      await container.read(allTransactionsProvider.future);
+      await _pump();
+
+      final finalIds =
+          container.read(allTransactionsProvider).value?.map((t) => t.id);
+      expect(
+        finalIds,
+        containsAll(['pending-local', 'synced']),
+        reason:
+            'A locally-created pending tx absent from the cloud must survive the '
+            'background refresh merge (localToKeep), not be wiped by '
+            'deleteByDateRange.',
+      );
+
+      // And it must remain in the SQLite cache after the write-back.
+      final cached = await localRepo.getTransactions(
+        from: monthStart,
+        to: now,
+      );
+      expect(
+        cached.map((t) => t.id),
+        contains('pending-local'),
+        reason: 'localToKeep entries must be re-inserted into the cache.',
       );
     });
   });

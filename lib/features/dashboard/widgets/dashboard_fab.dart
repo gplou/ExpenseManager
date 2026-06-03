@@ -417,6 +417,8 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
           width: fabSize,
           height: fabSize,
           decoration: const BoxDecoration(
+            // Rojo de grabación: convención universal de UI (recording),
+            // intencionadamente distinto del coral AppColors.negative ('gasto').
             color: Colors.red,
             shape: BoxShape.circle,
           ),
