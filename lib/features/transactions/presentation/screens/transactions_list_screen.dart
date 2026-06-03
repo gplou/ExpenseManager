@@ -146,90 +146,22 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ),
             ) ?? const SizedBox.shrink()
           else
-          transactionsAsync.whenOrNull(
-            data: (_) {
-              // Distinct, sorted categories come pre-computed from a memoized
-              // provider — no per-rebuild distinct+sort here.
-              final categories =
-                  ref.watch(transactionCategoryOptionsProvider).value ??
-                      const <String>[];
-              if (categories.isEmpty) return const SizedBox.shrink();
-              final isActive = _selectedCategory != null;
-              return PopupMenuButton<String?>(
-                icon: Icon(
-                  Icons.filter_list_rounded,
-                  color: isActive ? AppColors.dustyTeal : null,
-                ),
-                tooltip: l10n.category,
+            transactionsAsync.whenOrNull(
+              data: (_) => _CategoryFilterButton(
+                l10n: l10n,
+                selectedCategory: _selectedCategory,
                 onSelected: (value) {
                   HapticFeedback.selectionClick();
                   setState(() => _selectedCategory = value);
                   if (value != null) {
-                    AnalyticsService.track(AnalyticsService.categoryFilterApplied, {'category': value});
+                    AnalyticsService.track(
+                        AnalyticsService.categoryFilterApplied,
+                        {'category': value});
                   }
                 },
-                itemBuilder: (_) => [
-                  PopupMenuItem<String?>(
-                    value: null,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.clear_all_rounded,
-                          size: 18,
-                          color: _selectedCategory == null
-                              ? AppColors.dustyTeal
-                              : AppColors.textMuted,
-                        ),
-                        const Gap(10),
-                        Text(
-                          l10n.allCategories,
-                          style: TextStyle(
-                            fontFamily: 'GeneralSans',
-                            fontWeight: _selectedCategory == null
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            color: _selectedCategory == null
-                                ? AppColors.dustyTeal
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  ...categories.map((cat) => PopupMenuItem<String?>(
-                    value: cat,
-                    child: Row(
-                      children: [
-                        Icon(
-                          cat == _selectedCategory
-                              ? Icons.check_rounded
-                              : Icons.label_outline_rounded,
-                          size: 18,
-                          color: cat == _selectedCategory
-                              ? AppColors.dustyTeal
-                              : AppColors.textMuted,
-                        ),
-                        const Gap(10),
-                        Text(
-                          TransactionCategories.localizedName(cat, l10n),
-                          style: TextStyle(
-                            fontFamily: 'GeneralSans',
-                            fontWeight: cat == _selectedCategory
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            color: cat == _selectedCategory
-                                ? AppColors.dustyTeal
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
-                ],
-              );
-            },
-          ) ?? const SizedBox.shrink(),
+              ),
+            ) ??
+                const SizedBox.shrink(),
         ],
       ),
       body: transactionsAsync.when(
@@ -237,109 +169,16 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         loading: () => Center(
           child: CircularProgressIndicator(color: cs.primary),
         ),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.negativeSoft,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.error_outline_rounded,
-                    color: AppColors.negative,
-                    size: 24,
-                  ),
-                ),
-                const Gap(16),
-                Text(
-                  l10n.errorLoading,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.titleMedium?.copyWith(
-                    color: cs.onSurface,
-                  ),
-                ),
-                const Gap(14),
-                InkWell(
-                  onTap: () => ref.invalidate(allTransactionsProvider),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 6),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.retry,
-                          style: context.textTheme.labelLarge?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const Gap(4),
-                        Icon(
-                          Icons.refresh_rounded,
-                          size: 14,
-                          color: cs.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        error: (e, _) => _ErrorState(
+          l10n: l10n,
+          onRetry: () => ref.invalidate(allTransactionsProvider),
         ),
         data: (allTx) {
           final transactions = _selectedCategory == null
               ? allTx
               : allTx.where((t) => t.category == _selectedCategory).toList();
           if (transactions.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: context.appColors.raised,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.inbox_outlined,
-                        size: 26,
-                        color: cs.onSurface.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const Gap(16),
-                    Text(
-                      l10n.noTransactions,
-                      textAlign: TextAlign.center,
-                      style: context.textTheme.titleMedium?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const Gap(6),
-                    Text(
-                      l10n.noTransactionsPeriod,
-                      textAlign: TextAlign.center,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurface.withValues(alpha: 0.55),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return _EmptyState(l10n: l10n);
           }
 
           final grouped = _groupByDate(transactions);
@@ -402,6 +241,221 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       map.putIfAbsent(key, () => _DateGroup(t.date)).transactions.add(t);
     }
     return map.values.toList()..sort((a, b) => b.date.compareTo(a.date));
+  }
+}
+
+// ── Category filter button (AppBar action) ────────────────────────────────────
+
+class _CategoryFilterButton extends ConsumerWidget {
+  const _CategoryFilterButton({
+    required this.l10n,
+    required this.selectedCategory,
+    required this.onSelected,
+  });
+
+  final AppLocalizations l10n;
+  final String? selectedCategory;
+  final ValueChanged<String?> onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Distinct, sorted categories come pre-computed from a memoized provider —
+    // no per-rebuild distinct+sort here.
+    final categories =
+        ref.watch(transactionCategoryOptionsProvider).value ??
+            const <String>[];
+    if (categories.isEmpty) return const SizedBox.shrink();
+    final isActive = selectedCategory != null;
+    return PopupMenuButton<String?>(
+      icon: Icon(
+        Icons.filter_list_rounded,
+        color: isActive ? AppColors.dustyTeal : null,
+      ),
+      tooltip: l10n.category,
+      onSelected: onSelected,
+      itemBuilder: (_) => [
+        PopupMenuItem<String?>(
+          value: null,
+          child: Row(
+            children: [
+              Icon(
+                Icons.clear_all_rounded,
+                size: 18,
+                color: selectedCategory == null
+                    ? AppColors.dustyTeal
+                    : AppColors.textMuted,
+              ),
+              const Gap(10),
+              Text(
+                l10n.allCategories,
+                style: TextStyle(
+                  fontFamily: 'GeneralSans',
+                  fontWeight: selectedCategory == null
+                      ? FontWeight.w600
+                      : FontWeight.normal,
+                  color: selectedCategory == null ? AppColors.dustyTeal : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        ...categories.map((cat) => PopupMenuItem<String?>(
+              value: cat,
+              child: Row(
+                children: [
+                  Icon(
+                    cat == selectedCategory
+                        ? Icons.check_rounded
+                        : Icons.label_outline_rounded,
+                    size: 18,
+                    color: cat == selectedCategory
+                        ? AppColors.dustyTeal
+                        : AppColors.textMuted,
+                  ),
+                  const Gap(10),
+                  Text(
+                    TransactionCategories.localizedName(cat, l10n),
+                    style: TextStyle(
+                      fontFamily: 'GeneralSans',
+                      fontWeight: cat == selectedCategory
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: cat == selectedCategory
+                          ? AppColors.dustyTeal
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            )),
+      ],
+    );
+  }
+}
+
+// ── Error state ───────────────────────────────────────────────────────────────
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.l10n, required this.onRetry});
+
+  final AppLocalizations l10n;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: AppColors.negativeSoft,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.negative,
+                size: 24,
+              ),
+            ),
+            const Gap(16),
+            Text(
+              l10n.errorLoading,
+              textAlign: TextAlign.center,
+              style: context.textTheme.titleMedium?.copyWith(
+                color: cs.onSurface,
+              ),
+            ),
+            const Gap(14),
+            InkWell(
+              onTap: onRetry,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.retry,
+                      style: context.textTheme.labelLarge?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Gap(4),
+                    Icon(
+                      Icons.refresh_rounded,
+                      size: 14,
+                      color: cs.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: context.appColors.raised,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.inbox_outlined,
+                size: 26,
+                color: cs.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+            const Gap(16),
+            Text(
+              l10n.noTransactions,
+              textAlign: TextAlign.center,
+              style: context.textTheme.titleMedium?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Gap(6),
+            Text(
+              l10n.noTransactionsPeriod,
+              textAlign: TextAlign.center,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: cs.onSurface.withValues(alpha: 0.55),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
