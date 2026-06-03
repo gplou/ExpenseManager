@@ -159,7 +159,7 @@ class LocalDatabase {
       await plainDb.execute(
         "ATTACH DATABASE '$encPath' AS encrypted KEY '$key'",
       );
-      await plainDb.execute("SELECT sqlcipher_export('encrypted')");
+      await plainDb.rawQuery("SELECT sqlcipher_export('encrypted')");
       await plainDb.execute('DETACH DATABASE encrypted');
     } finally {
       await plainDb.close();
