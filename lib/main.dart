@@ -243,8 +243,23 @@ Future<void> _initSentry(PackageInfo packageInfo) async {
         '${packageInfo.packageName}@${packageInfo.version}+${packageInfo.buildNumber}';
     options.tracesSampleRate = AppConfig.isDevelopment ? 1.0 : 0.2;
     options.attachScreenshot = false;
+    // No PII y sin capturas: es una app financiera.
     options.sendDefaultPii = false;
+    // Adjunta stack trace también en eventos de mensaje (sin excepción).
+    options.attachStacktrace = true;
     options.debug = AppConfig.isDevelopment;
+    // Los reportes de "OnePlus8Pro" con pantalla 288x448 / archs x86 provienen
+    // de emuladores y granjas de testing (pre-launch report de Google Play,
+    // revisores de tiendas) que falsifican el modelo. Corre tras el enriquecido
+    // nativo, así que device.simulator ya está poblado aquí.
+    options.beforeSend = (event, hint) {
+      final isSimulator = event.contexts.device?.simulator ?? false;
+      if (isSimulator) {
+        if (AppConfig.isProduction) return null; // descartar ruido en prod
+        event.tags = {...?event.tags, 'simulator': 'true'}; // visible en dev
+      }
+      return event;
+    };
   });
 }
 

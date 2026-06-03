@@ -48,10 +48,20 @@ class AppConfig {
 
   // Sentry
   static const String sentryDsn = String.fromEnvironment('SENTRY_DSN');
-  static const String sentryEnvironment = String.fromEnvironment(
-    'SENTRY_ENVIRONMENT',
-    defaultValue: 'development',
-  );
+
+  /// Override opcional vía --dart-define=SENTRY_ENVIRONMENT=...
+  /// Si está vacío, el entorno se deriva automáticamente del build mode
+  /// (ver [sentryEnvironment]). Así un build de release nunca queda marcado
+  /// como `development` por olvidar el dart-define.
+  static const String _sentryEnvironmentOverride =
+      String.fromEnvironment('SENTRY_ENVIRONMENT');
+
+  /// Entorno reportado a Sentry. Prioriza el override; en su defecto deriva
+  /// `production` / `development` del build mode.
+  static String get sentryEnvironment {
+    if (_sentryEnvironmentOverride.isNotEmpty) return _sentryEnvironmentOverride;
+    return isProduction ? 'production' : 'development';
+  }
 
   // Entorno
   static const bool isProduction = bool.fromEnvironment('dart.vm.product');
