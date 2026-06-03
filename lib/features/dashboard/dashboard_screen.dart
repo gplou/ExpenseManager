@@ -7,31 +7,31 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../core/config/router.dart';
-import '../../core/constants/app_constants.dart';
-import '../../core/providers/currency_provider.dart';
-import '../../core/providers/number_format_provider.dart';
-import '../../core/providers/widget_action_provider.dart';
-import '../../core/services/home_widget_gateway.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/utils/extensions.dart';
-import '../../core/widgets/ad_banner_footer.dart';
-import '../../core/widgets/custom_date_range_picker.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:expense_manager/core/config/router.dart';
+import 'package:expense_manager/core/constants/app_constants.dart';
+import 'package:expense_manager/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/providers/number_format_provider.dart';
+import 'package:expense_manager/core/providers/widget_action_provider.dart';
+import 'package:expense_manager/core/services/home_widget_gateway.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
+import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/dashboard_fab.dart';
 import 'widgets/period_selector.dart';
 import 'widgets/recent_transaction_tile.dart';
 import 'widgets/summary_section.dart';
-import '../auth/presentation/providers/auth_provider.dart';
-import '../transactions/presentation/providers/recurring_transactions_provider.dart';
-import '../transactions/presentation/providers/sync_provider.dart';
-import '../transactions/presentation/providers/transactions_provider.dart';
-import '../subscription/subscription_provider.dart';
-import '../../core/services/analytics_service.dart';
-import '../tutorial/tutorial_keys.dart';
-import '../tutorial/tutorial_notifier.dart';
-import '../tutorial/tutorial_overlay.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/recurring_transactions_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
+import 'package:expense_manager/features/tutorial/tutorial_notifier.dart';
+import 'package:expense_manager/features/tutorial/tutorial_overlay.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -359,7 +359,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
                   ),
             const Gap(12),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+            SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
           ],
         ),
       ),

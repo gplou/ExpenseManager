@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/network/authenticated_repository.dart';
-import '../../../core/network/supabase_client.dart';
-import '../domain/custom_categories_repository_contract.dart';
-import '../domain/transaction_categories.dart';
-import '../domain/transaction_model.dart';
+import 'package:expense_manager/core/network/authenticated_repository.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/features/transactions/domain/custom_categories_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 class CustomCategoriesRepository
     with AuthenticatedRepository

@@ -1,6 +1,6 @@
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-import '../subscription_repository.dart';
+import 'package:expense_manager/features/subscription/subscription_repository.dart';
 
 /// Converts RevenueCat SDK types to the app's internal domain types.
 ///

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/subcategories_repository.dart';
-import '../../domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 /// Family provider keyed by (category, type).
 /// Returns the list of subcategory names for that category.

@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../core/network/supabase_client.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
 import 'data/purchases_gateway.dart';
 import 'data/revenue_cat_adapter.dart';
 import 'domain/subscription_repository_contract.dart';

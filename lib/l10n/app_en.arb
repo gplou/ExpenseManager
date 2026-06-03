@@ -303,6 +303,7 @@
     }
   },
   "voiceInterpretError": "Could not interpret. Try again.",
+  "voiceProcessing": "Processing audio…",
   "imageTransactionNotDetected": "Could not detect a transaction in the image.",
   "imageAiError": "Image AI error [{type}]: {info}",
   "@imageAiError": {

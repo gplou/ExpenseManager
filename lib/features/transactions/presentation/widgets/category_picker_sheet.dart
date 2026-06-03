@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../domain/transaction_categories.dart';
-import '../../domain/transaction_model.dart';
-import '../providers/custom_categories_provider.dart';
-import '../providers/hidden_builtin_categories_provider.dart';
-import '../widgets/create_category_dialog.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/hidden_builtin_categories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/create_category_dialog.dart';
 
 /// Opens a modal bottom sheet with a grid of categories.
 /// Returns the selected category DB key, or `null` if dismissed.

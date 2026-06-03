@@ -151,7 +151,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
     // the widget after the initial measurement.
     WidgetsBinding.instance.addPostFrameCallback((_) => _measureTarget());
 
-    final screen = MediaQuery.of(context).size;
+    final screen = MediaQuery.sizeOf(context);
     final rect = _targetRect;
 
     if (rect == null) {
@@ -202,7 +202,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
 
           // ── Step counter ─────────────────────────────────────────────────
           Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 20,
+            bottom: MediaQuery.paddingOf(context).bottom + 20,
             left: 20,
             child: Container(
               padding:
@@ -213,9 +213,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
               ),
               child: Text(
                 '${widget.stepIndex + 1} / ${widget.totalSteps}',
-                style: const TextStyle(
-                  fontFamily: 'GeneralSans',
-                  fontSize: 12,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                   decoration: TextDecoration.none,
@@ -226,7 +224,7 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
 
           // ── Skip button ──────────────────────────────────────────────────
           Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 20,
+            bottom: MediaQuery.paddingOf(context).bottom + 20,
             right: 20,
             child: TextButton(
               onPressed: widget.onSkip,
@@ -242,10 +240,8 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
               ),
               child: Text(
                 AppLocalizations.of(context).tutorialSkip,
-                style: const TextStyle(
-                  fontFamily: 'GeneralSans',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  fontSize: 13,
                 ),
               ),
             ),

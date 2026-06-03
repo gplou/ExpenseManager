@@ -1548,6 +1548,12 @@ abstract class AppLocalizations {
   /// **'No se pudo interpretar. Inténtalo de nuevo.'**
   String get voiceInterpretError;
 
+  /// No description provided for @voiceProcessing.
+  ///
+  /// In es, this message translates to:
+  /// **'Procesando audio'**
+  String get voiceProcessing;
+
   /// No description provided for @imageTransactionNotDetected.
   ///
   /// In es, this message translates to:
@@ -1709,12 +1715,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Escuchando, toca para detener'**
   String get voiceListening;
-
-  /// No description provided for @voiceProcessing.
-  ///
-  /// In es, this message translates to:
-  /// **'Procesando audio'**
-  String get voiceProcessing;
 
   /// No description provided for @imageProcessing.
   ///

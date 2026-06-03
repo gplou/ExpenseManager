@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 
-import '../../../../core/config/router.dart';
-import '../../../../core/errors/failure_localizations.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../providers/auth_provider.dart';
+import 'package:expense_manager/core/config/router.dart';
+import 'package:expense_manager/core/errors/failure_localizations.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});

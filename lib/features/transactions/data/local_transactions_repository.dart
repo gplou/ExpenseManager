@@ -2,12 +2,12 @@ import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../core/errors/failures.dart';
-import '../../../core/local_db/local_database.dart';
-import '../../../core/utils/date_helpers.dart';
-import '../../../core/utils/transaction_id_generator.dart';
-import '../domain/transaction_model.dart';
-import '../domain/transactions_repository_contract.dart';
+import 'package:expense_manager/core/errors/failures.dart';
+import 'package:expense_manager/core/local_db/local_database.dart';
+import 'package:expense_manager/core/utils/date_helpers.dart';
+import 'package:expense_manager/core/utils/transaction_id_generator.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 
 class LocalTransactionsRepository implements TransactionsRepositoryContract {
   LocalTransactionsRepository({required this.userId});

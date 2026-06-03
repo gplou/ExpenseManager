@@ -42,9 +42,11 @@ Future<void> main() async {
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     debugPrint('[FlutterError] ${details.exceptionAsString()}');
+    SentryService.captureException(details.exception, stackTrace: details.stack);
   };
   binding.platformDispatcher.onError = (error, stack) {
     debugPrint('[PlatformDispatcher] uncaught: $error\n$stack');
+    SentryService.captureException(error, stackTrace: stack);
     return true;
   };
   // Release-only: replace Flutter's default grey error box with a neutral

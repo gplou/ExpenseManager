@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/services/voice_input_gateway.dart';
-import '../../data/voice_transaction_parser.dart';
-import '../../domain/parsed_voice_transaction.dart';
-import '../providers/subcategories_provider.dart';
-import '../screens/add_transaction_screen.dart';
+import 'package:expense_manager/core/services/voice_input_gateway.dart';
+import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
+import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
 
 enum _VoiceState { idle, listening, processing }
 
@@ -121,15 +121,18 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
   @override
   Widget build(BuildContext context) {
     return switch (_state) {
-      _VoiceState.processing => const FloatingActionButton(
-          heroTag: 'voiceFab',
-          onPressed: null,
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              color: Colors.white,
+      _VoiceState.processing => Semantics(
+          label: AppLocalizations.of(context).voiceProcessing,
+          child: const FloatingActionButton(
+            heroTag: 'voiceFab',
+            onPressed: null,
+            child: SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Colors.white,
+              ),
             ),
           ),
         ),

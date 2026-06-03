@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_elevation.dart';
-import '../theme/app_spacing.dart';
-import '../utils/extensions.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_elevation.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
 
 /// Variantes de tarjeta unificadas.
 ///

@@ -784,6 +784,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo interpretar. Inténtalo de nuevo.';
 
   @override
+  String get voiceProcessing => 'Procesando audio';
+
+  @override
   String get imageTransactionNotDetected =>
       'No se pudo detectar una transacción en la imagen.';
 
@@ -870,9 +873,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceListening => 'Escuchando, toca para detener';
-
-  @override
-  String get voiceProcessing => 'Procesando audio';
 
   @override
   String get imageProcessing => 'Procesando imagen';

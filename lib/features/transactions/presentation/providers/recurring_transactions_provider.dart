@@ -2,11 +2,11 @@ import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../subscription/subscription_provider.dart';
-import '../../data/recurring_transactions_repository.dart';
-import '../../data/transactions_repository.dart';
-import '../../domain/recurring_transaction_model.dart';
-import '../../domain/transaction_model.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'transactions_provider.dart';
 
 // IDs of recurring transactions already processed this session.

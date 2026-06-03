@@ -1,11 +1,11 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../../core/utils/date_helpers.dart';
-import '../../../core/utils/transaction_id_generator.dart';
-import '../domain/cloud_transaction_sync_contract.dart';
-import '../domain/transaction_model.dart';
-import '../domain/transactions_repository_contract.dart';
+import 'package:expense_manager/core/utils/date_helpers.dart';
+import 'package:expense_manager/core/utils/transaction_id_generator.dart';
+import 'package:expense_manager/features/transactions/domain/cloud_transaction_sync_contract.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'local_transactions_repository.dart';
 import 'pending_operation.dart';
 import 'sync_queue_repository.dart';

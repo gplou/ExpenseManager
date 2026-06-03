@@ -4,21 +4,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
-import '../../../../core/providers/currency_provider.dart';
-import '../../../../core/providers/number_format_provider.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../core/widgets/ad_banner_footer.dart';
-import '../../../../core/widgets/custom_date_range_picker.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../transactions/domain/transaction_categories.dart';
-import '../../../transactions/domain/transaction_model.dart';
-import '../../../transactions/presentation/providers/custom_categories_provider.dart';
-import '../../../transactions/presentation/providers/transactions_provider.dart';
-import '../providers/chart_providers.dart';
-import '../widgets/chart_widgets.dart';
-import '../../../subscription/subscription_provider.dart';
+import 'package:expense_manager/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/providers/number_format_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
+import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/features/charts/presentation/providers/chart_providers.dart';
+import 'package:expense_manager/features/charts/presentation/widgets/chart_widgets.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
 
 enum _ChartMode { pie, bar }
 
@@ -215,7 +215,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                         cSymbol: cSymbol,
                         numFmtStyle: numFmt,
                       ),
-                      Gap(MediaQuery.of(context).padding.bottom + 24),
+                      Gap(MediaQuery.paddingOf(context).bottom + 24),
                     ],
                   ),
                 );
@@ -351,7 +351,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
       builder: (ctx) {
         return Container(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.6,
           ),
           decoration: BoxDecoration(
             color: context.appColors.surface,

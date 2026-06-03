@@ -2,16 +2,16 @@ import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/services/sentry_service.dart';
-import '../../../core/network/authenticated_repository.dart';
-import '../../../core/network/supabase_client.dart';
-import '../../../core/utils/date_helpers.dart';
-import '../domain/recurring_transaction_model.dart';
-import '../domain/recurring_transactions_repository_contract.dart';
-import '../domain/transaction_model.dart';
-import '../../auth/presentation/providers/auth_provider.dart';
-import '../../subscription/subscription_provider.dart';
-import '../presentation/providers/sync_provider.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/core/network/authenticated_repository.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/core/utils/date_helpers.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 import 'local_recurring_transactions_repository.dart';
 
 class RecurringTransactionsRepository

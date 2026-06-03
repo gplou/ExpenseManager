@@ -1,4 +1,4 @@
-import '../domain/user_model.dart';
+import 'package:expense_manager/features/auth/domain/user_model.dart';
 
 /// Core authentication operations.
 abstract interface class AuthRepositoryContract {

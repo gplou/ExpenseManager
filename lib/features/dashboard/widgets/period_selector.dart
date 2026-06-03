@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_elevation.dart';
-import '../../../core/utils/extensions.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_elevation.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
 
 /// Chip de período (Hoy / Semana / Mes / Año). Quieto, sin color de marca:
 /// selected = surface elevada con hairline, idle = transparente.

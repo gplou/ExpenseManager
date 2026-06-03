@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
-import '../../../core/local_db/local_database.dart';
+import 'package:expense_manager/core/local_db/local_database.dart';
 import 'pending_operation.dart';
 
 /// Gestiona la cola de operaciones pendientes de sincronizar con Supabase.

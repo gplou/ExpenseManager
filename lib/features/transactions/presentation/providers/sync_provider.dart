@@ -1,14 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/network/supabase_client.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../subscription/subscription_provider.dart';
-import '../../data/local_recurring_transactions_repository.dart';
-import '../../data/local_transactions_repository.dart';
-import '../../data/recurring_transactions_repository.dart';
-import '../../data/sync_queue_repository.dart';
-import '../../data/transaction_sync_service.dart';
-import '../../data/transactions_repository.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/sync_queue_repository.dart';
+import 'package:expense_manager/features/transactions/data/transaction_sync_service.dart';
+import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
 import 'transactions_provider.dart';
 
 enum SyncStatus { idle, syncing, done, error }
@@ -110,8 +113,9 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
         // Force UI to re-fetch from the now-correct store
         ref.invalidate(allTransactionsProvider);
         state = const AsyncData(SyncState(status: SyncStatus.done));
-      } catch (e) {
+      } catch (e, st) {
         if (_cancelled) return;
+        unawaited(SentryService.captureException(e, stackTrace: st));
         state = AsyncData(SyncState(status: SyncStatus.error, error: e.toString()));
       }
     });

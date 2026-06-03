@@ -4,19 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../core/services/analytics_service.dart';
-import '../../../../core/services/sentry_service.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../subscription/subscription_provider.dart';
-import '../../data/initial_sync_service.dart';
-import '../../data/local_transactions_repository.dart';
-import '../../data/recurring_transactions_repository.dart';
-import '../../data/sync_queue_repository.dart';
-import '../../data/transactions_repository.dart';
-import '../../domain/recurring_transaction_model.dart';
-import '../../domain/transaction_model.dart';
-import '../../domain/transactions_repository_contract.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/data/initial_sync_service.dart';
+import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/sync_queue_repository.dart';
+import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 
 // ── Period ────────────────────────────────────────────────────────────────────
 

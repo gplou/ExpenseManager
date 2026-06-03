@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import '../../features/subscription/subscription_provider.dart';
-import '../config/app_config.dart';
-import '../network/connectivity_service.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/core/config/app_config.dart';
+import 'package:expense_manager/core/network/connectivity_service.dart';
 
 /// Banner de publicidad fijo en la parte inferior de la pantalla.
 /// Se oculta automáticamente para usuarios PRO.

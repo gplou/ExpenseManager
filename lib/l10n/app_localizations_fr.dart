@@ -787,6 +787,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get voiceInterpretError => 'Impossible d\'interpréter. Réessayez.';
 
   @override
+  String get voiceProcessing => 'Traitement audio en cours';
+
+  @override
   String get imageTransactionNotDetected =>
       'Impossible de détecter une transaction dans l\'image.';
 
@@ -874,9 +877,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get voiceListening => 'Écoute en cours, touchez pour arrêter';
-
-  @override
-  String get voiceProcessing => 'Traitement audio en cours';
 
   @override
   String get imageProcessing => 'Traitement de l\'image en cours';

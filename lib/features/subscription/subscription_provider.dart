@@ -2,10 +2,10 @@ import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-import '../../core/security/secure_storage.dart';
-import '../../core/services/analytics_service.dart';
-import '../../core/services/sentry_service.dart';
-import '../auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/core/security/secure_storage.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'data/purchases_gateway.dart';
 import 'data/revenue_cat_adapter.dart';
 import 'domain/subscription_expiry_calculator.dart';

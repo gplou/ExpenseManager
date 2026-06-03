@@ -2,13 +2,13 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
-import '../../../../core/providers/number_format_provider.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../transactions/domain/transaction_categories.dart';
-import '../../../transactions/domain/transaction_model.dart';
+import 'package:expense_manager/core/providers/number_format_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 // ── Colors ───────────────────────────────────────────────────────────────────
 //

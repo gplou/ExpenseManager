@@ -117,7 +117,9 @@
       "Bash(grep -vE '\\\\.\\(g|freezed\\)\\\\.dart$|/l10n/')",
       "Bash(grep -iE \"\\\\.env$|secrets|google-services\\\\.json|GoogleService-Info\")",
       "mcp__claude_ai_Sentry__whoami",
-      "mcp__claude_ai_Sentry__search_issues"
+      "mcp__claude_ai_Sentry__search_issues",
+      "Bash(grep \"async {$\\\\|async =>\")",
+      "Bash(dart run *)"
     ]
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -9,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 
-import '../security/secure_storage.dart';
+import 'package:expense_manager/core/security/secure_storage.dart';
 
 /// Singleton lazy-open SQLite database, encrypted with SQLCipher.
 ///
@@ -79,11 +80,10 @@ class LocalDatabase {
     final path = p.join(dir.path, 'expense_manager.db');
 
     // flutter_secure_storage can hang indefinitely on some Android devices when
-    // the Keystore is initializing (common right after an app update). A 10-second
-    // timeout converts a silent hang into a recoverable exception.
-    var key = await SecureStorageService.instance
-        .read(_keyStorageKey)
-        .timeout(const Duration(seconds: 10));
+    // the Keystore is initializing (common right after an app update). Retry
+    // once with a longer timeout before giving up so that a transient Keystore
+    // delay does not crash the app with an unhandled TimeoutException → SIGABRT.
+    var key = await _readKeyWithRetry();
     if (key == null) {
       key = _generateKey();
       // Migrate existing plaintext DB before storing the key so that a crash
@@ -125,6 +125,22 @@ class LocalDatabase {
     if (oldVersion < 3) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(needsHydrationResetKey, true);
+    }
+  }
+
+  Future<String?> _readKeyWithRetry() async {
+    try {
+      return await SecureStorageService.instance
+          .read(_keyStorageKey)
+          .timeout(const Duration(seconds: 10));
+    } on TimeoutException {
+      // Keystore not ready yet — common on Android right after an app update.
+      // Wait briefly and retry with a longer timeout before giving up.
+      await Future<void>.delayed(const Duration(seconds: 3));
+      // Second timeout propagates up — caller handles the unrecoverable case.
+      return SecureStorageService.instance
+          .read(_keyStorageKey)
+          .timeout(const Duration(seconds: 20));
     }
   }
 

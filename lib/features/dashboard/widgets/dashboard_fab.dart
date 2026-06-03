@@ -6,26 +6,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/config/router.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/providers/widget_action_provider.dart';
-import '../../../core/services/image_input_gateway.dart';
-import '../../../core/services/voice_input_gateway.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_elevation.dart';
-import '../../../core/widgets/neo_card.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../subscription/subscription_provider.dart';
-import '../../subscription/subscription_state.dart';
-import '../../../core/providers/locale_provider.dart';
-import '../../../core/services/analytics_service.dart';
-import '../../transactions/data/image_transaction_parser.dart';
-import '../../transactions/data/voice_transaction_parser.dart';
-import '../../transactions/domain/parsed_voice_transaction.dart';
-import '../../transactions/presentation/providers/subcategories_provider.dart';
-import '../../transactions/presentation/screens/add_transaction_screen.dart';
-import '../../tutorial/tutorial_keys.dart';
-import '../../tutorial/tutorial_notifier.dart';
+import 'package:expense_manager/core/config/router.dart';
+import 'package:expense_manager/core/constants/app_constants.dart';
+import 'package:expense_manager/core/providers/widget_action_provider.dart';
+import 'package:expense_manager/core/services/image_input_gateway.dart';
+import 'package:expense_manager/core/services/voice_input_gateway.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_elevation.dart';
+import 'package:expense_manager/core/widgets/neo_card.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_state.dart';
+import 'package:expense_manager/core/providers/locale_provider.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
+import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
+import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
+import 'package:expense_manager/features/tutorial/tutorial_notifier.dart';
 
 enum VoiceInputState { idle, listening, processing, cameraProcessing }
 
@@ -294,7 +294,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     });
 
     final l10n = AppLocalizations.of(context);
-    final fabBottom = MediaQuery.of(context).padding.bottom + 16.0;
+    final fabBottom = MediaQuery.paddingOf(context).bottom + 16.0;
 
     // Report the FAB rect so the tutorial overlay can draw its spotlight
     // without relying on GlobalKey measurement through nested Stacks.

@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../errors/failures.dart';
+import 'package:expense_manager/core/errors/failures.dart';
 
 /// Mixin for repositories that require an authenticated user.
 ///

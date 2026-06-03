@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/providers/currency_provider.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/numeric_keypad.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../data/subcategories_repository.dart';
-import '../../domain/recurring_transaction_model.dart';
-import '../../domain/transaction_categories.dart';
-import '../../domain/transaction_model.dart';
-import '../providers/subcategories_provider.dart';
+import 'package:expense_manager/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/app_card.dart';
+import 'package:expense_manager/core/widgets/numeric_keypad.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'create_subcategory_dialog.dart';
 
 // ── Type toggle (Expense / Income) ────────────────────────────────────────────

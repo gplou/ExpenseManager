@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,16 +7,17 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/config/router.dart';
-import '../../../core/network/supabase_client.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/extensions.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../auth/presentation/providers/auth_provider.dart';
-import '../../subscription/subscription_provider.dart';
-import '../../subscription/subscription_repository.dart';
-import '../../subscription/widgets/pro_badge.dart';
-import '../../tutorial/tutorial_notifier.dart';
+import 'package:expense_manager/core/config/router.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_repository.dart';
+import 'package:expense_manager/features/subscription/widgets/pro_badge.dart';
+import 'package:expense_manager/features/tutorial/tutorial_notifier.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -438,7 +441,8 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
           );
       ref.invalidate(currentUserProvider);
       widget.onSaved();
-    } catch (e) {
+    } catch (e, st) {
+      unawaited(SentryService.captureException(e, stackTrace: st));
       if (mounted) setState(() => _error = l10n.errorSavingName);
     } finally {
       if (mounted) setState(() => _loading = false);

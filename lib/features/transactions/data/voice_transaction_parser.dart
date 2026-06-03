@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/errors/failures.dart';
-import '../../../core/network/supabase_client.dart';
-import '../../../core/utils/ai_rate_limiter.dart';
+import 'package:expense_manager/core/errors/failures.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/core/utils/ai_rate_limiter.dart';
 import 'ai_response_parser.dart';
-import '../domain/parsed_voice_transaction.dart';
+import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
 
 class VoiceTransactionParser {
   VoiceTransactionParser(this._client);

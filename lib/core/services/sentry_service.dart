@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-import '../errors/failures.dart';
+import 'package:expense_manager/core/errors/failures.dart';
 
 /// Thin wrapper around Sentry. All methods are fire-and-forget safe:
 /// any Sentry error is caught and logged, never surfaced to the user.

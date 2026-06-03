@@ -1,16 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/local_db/local_database.dart';
-import '../../../core/network/connectivity_service.dart';
-import '../../../core/network/supabase_client.dart';
-import '../../auth/presentation/providers/auth_provider.dart';
-import '../../subscription/subscription_provider.dart';
-import '../domain/recurring_transactions_repository_contract.dart';
-import '../domain/transactions_repository_contract.dart';
-import '../presentation/providers/sync_provider.dart';
-import '../presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/core/local_db/local_database.dart';
+import 'package:expense_manager/core/network/connectivity_service.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'local_recurring_transactions_repository.dart';
 import 'local_transactions_repository.dart';
 import 'recurring_transactions_repository.dart';
@@ -130,9 +133,10 @@ class InitialSyncService {
       await prefs.setBool(key, true);
       await prefs.remove(LocalDatabase.needsHydrationResetKey);
       _ref.invalidate(allTransactionsProvider);
-    } catch (e) {
+    } catch (e, st) {
       // Leave the flag unset — will retry on next connectivity restore or start.
       debugPrint('InitialSyncService: hydration failed, will retry: $e');
+      unawaited(SentryService.captureException(e, stackTrace: st));
     } finally {
       _running = false;
     }

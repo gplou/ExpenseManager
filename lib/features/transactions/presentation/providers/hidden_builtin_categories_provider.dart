@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../core/services/sentry_service.dart';
-import '../../domain/transaction_model.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 class HiddenBuiltInCategoriesNotifier
     extends Notifier<Map<TransactionType, Set<String>>> {

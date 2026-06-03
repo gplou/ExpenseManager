@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
-import '../../../../core/utils/extensions.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../domain/transaction_categories.dart';
-import '../../domain/transaction_model.dart';
-import '../providers/custom_categories_provider.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
 
 
 class CreateCategoryDialog extends ConsumerStatefulWidget {

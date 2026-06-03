@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../domain/transaction_categories.dart';
-import '../../domain/transaction_model.dart';
-import '../providers/custom_categories_provider.dart';
-import '../providers/transactions_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 
 /// Top 5 categorías más usadas para un tipo (income/expense), ordenadas por
 /// frecuencia descendente. Calculado a partir de `allTransactionsProvider`.

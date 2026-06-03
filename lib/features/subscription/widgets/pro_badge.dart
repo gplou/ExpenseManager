@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
 
 /// Small amber "PRO" chip shown next to locked features in the drawer.
 class ProBadge extends StatelessWidget {

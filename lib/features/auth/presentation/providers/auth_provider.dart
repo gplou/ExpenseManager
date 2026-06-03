@@ -1,13 +1,13 @@
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/errors/failures.dart';
-import '../../../../core/network/supabase_client.dart';
-import '../../../../core/services/analytics_service.dart';
-import '../../../../core/services/sentry_service.dart';
-import '../../data/auth_repository.dart';
-import '../../domain/user_model.dart';
-import '../../../subscription/subscription_provider.dart';
+import 'package:expense_manager/core/errors/failures.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/features/auth/data/auth_repository.dart';
+import 'package:expense_manager/features/auth/domain/user_model.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
 
 part 'auth_provider.g.dart';
 

@@ -5,19 +5,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/providers/currency_provider.dart';
-import '../../../../core/providers/number_format_provider.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../core/widgets/ad_banner_footer.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../data/export_excel_service.dart';
-import '../../domain/transaction_categories.dart';
-import '../../domain/transaction_model.dart';
-import '../providers/custom_categories_provider.dart';
-import '../providers/transactions_provider.dart';
-import '../../../../core/services/analytics_service.dart';
-import '../../../subscription/subscription_provider.dart';
+import 'package:expense_manager/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/providers/number_format_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/data/export_excel_service.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'add_transaction_screen.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {

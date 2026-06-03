@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_spacing.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
 
 class LegalScreen extends StatelessWidget {
   const LegalScreen({super.key, required this.title, required this.content});

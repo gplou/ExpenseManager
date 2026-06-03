@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../errors/failures.dart';
+import 'package:expense_manager/core/errors/failures.dart';
 import 'sentry_service.dart';
 
 /// Riverpod observer that automatically reports any AsyncError to Sentry.

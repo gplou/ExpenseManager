@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/providers/number_format_provider.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/utils/extensions.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../transactions/domain/transactions_repository_contract.dart';
-import '../../tutorial/tutorial_keys.dart';
+import 'package:expense_manager/core/providers/number_format_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
 
 /// Texto numérico que interpola entre el valor anterior y el nuevo cuando
 /// cambia. Útil para balance / income / expense después de guardar una

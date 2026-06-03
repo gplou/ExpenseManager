@@ -2,8 +2,8 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../l10n/app_localizations.dart';
-import '../theme/app_semantic_colors.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/core/theme/app_semantic_colors.dart';
 
 // ── String Extensions ──────────────────────────────────────────────────────────
 

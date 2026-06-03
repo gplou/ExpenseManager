@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../core/services/sentry_service.dart';
-import '../../data/custom_categories_repository.dart';
-import '../../domain/custom_categories_repository_contract.dart';
-import '../../domain/transaction_categories.dart';
-import '../../domain/transaction_model.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/features/transactions/data/custom_categories_repository.dart';
+import 'package:expense_manager/features/transactions/domain/custom_categories_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 class CustomCategoriesNotifier extends AsyncNotifier<
     Map<TransactionType, List<TransactionCategory>>> {

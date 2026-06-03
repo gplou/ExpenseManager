@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 import 'tutorial_step.dart';
 
 // ── Sliding dot progress indicator ───────────────────────────────────────────
@@ -123,9 +123,7 @@ class TutorialTooltipCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     step.title,
-                    style: TextStyle(
-                      fontFamily: 'GeneralSans',
-                      fontSize: 15,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: textColor,
                     ),
@@ -138,9 +136,7 @@ class TutorialTooltipCard extends StatelessWidget {
             // Body
             Text(
               step.body,
-              style: TextStyle(
-                fontFamily: 'GeneralSans',
-                fontSize: 13,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 height: 1.55,
                 color: subColor,
               ),
@@ -201,9 +197,7 @@ class TutorialTooltipCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(100),
                     ),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    textStyle: const TextStyle(
-                      fontFamily: 'GeneralSans',
-                      fontSize: 13,
+                    textStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),

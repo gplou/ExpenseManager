@@ -6,23 +6,23 @@ import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../features/auth/data/auth_repository.dart';
-import '../../features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/auth/data/auth_repository.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-import '../services/analytics_route_observer.dart';
-import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/dashboard/dashboard_screen.dart';
-import '../../features/transactions/domain/parsed_voice_transaction.dart';
-import '../../features/transactions/presentation/screens/add_transaction_screen.dart';
-import '../../features/transactions/presentation/screens/transactions_list_screen.dart';
-import '../../features/charts/presentation/screens/charts_screen.dart';
-import '../../features/chat/presentation/chat_screen.dart';
-import '../../features/subscription/pro_screen.dart';
-import '../../features/onboarding/presentation/onboarding_screen.dart';
-import '../../features/settings/app_settings_screen.dart';
-import '../../features/settings/legal_screen.dart';
+import 'package:expense_manager/core/services/analytics_route_observer.dart';
+import 'package:expense_manager/features/auth/presentation/screens/login_screen.dart';
+import 'package:expense_manager/features/auth/presentation/screens/register_screen.dart';
+import 'package:expense_manager/features/dashboard/dashboard_screen.dart';
+import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
+import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:expense_manager/features/transactions/presentation/screens/transactions_list_screen.dart';
+import 'package:expense_manager/features/charts/presentation/screens/charts_screen.dart';
+import 'package:expense_manager/features/chat/presentation/chat_screen.dart';
+import 'package:expense_manager/features/subscription/pro_screen.dart';
+import 'package:expense_manager/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:expense_manager/features/settings/app_settings_screen.dart';
+import 'package:expense_manager/features/settings/legal_screen.dart';
 import 'legal_content.dart';
 
 part 'router.g.dart';

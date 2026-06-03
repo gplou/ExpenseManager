@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/extensions.dart';
-import '../../../core/widgets/ad_banner_footer.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../subscription/subscription_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'providers/chat_provider.dart';
 import 'widgets/chat_bubble.dart';
 
@@ -139,9 +139,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             const SizedBox(height: 16),
             Text(
               l10n.chatWelcomeTitle,
-              style: TextStyle(
-                fontFamily: 'GeneralSans',
-                fontSize: 18,
+              style: context.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: context.appColors.text,
               ),
@@ -150,9 +148,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Text(
               l10n.chatWelcomeSubtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'GeneralSans',
-                fontSize: 13,
+              style: context.textTheme.labelMedium?.copyWith(
                 color: context.appColors.textMuted,
               ),
             ),
@@ -178,9 +174,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return ActionChip(
       label: Text(
         text,
-        style: const TextStyle(
-          fontFamily: 'GeneralSans',
-          fontSize: 12,
+        style: context.textTheme.bodySmall?.copyWith(
           color: AppColors.dustyTeal,
         ),
       ),
@@ -223,25 +217,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _dot(int index) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.3, end: 1.0),
-      duration: Duration(milliseconds: 600 + index * 200),
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              color: AppColors.dustyTeal.withValues(alpha: 0.6),
-              shape: BoxShape.circle,
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Widget _dot(int index) => _PulsingDot(index: index);
 
   Widget _buildInput(
     AppLocalizations l10n,
@@ -253,7 +229,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         16,
         8,
         8,
-        MediaQuery.of(context).padding.bottom + 8,
+        MediaQuery.paddingOf(context).bottom + 8,
       ),
       decoration: BoxDecoration(
         color: context.appColors.surface,
@@ -273,16 +249,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onSubmitted: (_) => _send(),
               maxLines: 3,
               minLines: 1,
-              style: TextStyle(
-                fontFamily: 'GeneralSans',
-                fontSize: 14,
+              style: context.textTheme.bodyMedium?.copyWith(
                 color: context.appColors.text,
               ),
               decoration: InputDecoration(
                 hintText: l10n.chatPlaceholder,
-                hintStyle: TextStyle(
-                  fontFamily: 'GeneralSans',
-                  fontSize: 14,
+                hintStyle: context.textTheme.bodyMedium?.copyWith(
                   color: context.appColors.textMuted,
                 ),
                 border: OutlineInputBorder(
@@ -329,6 +301,51 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PulsingDot extends StatefulWidget {
+  const _PulsingDot({required this.index});
+  final int index;
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 600 + widget.index * 200),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(begin: 0.3, end: 1.0).animate(_ctrl);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+          shape: BoxShape.circle,
+        ),
       ),
     );
   }

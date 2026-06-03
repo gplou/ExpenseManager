@@ -1,4 +1,4 @@
-import '../../l10n/app_localizations.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 import 'failures.dart';
 
 /// Presentation-layer mapping from a sealed [AppFailure] to a localized,

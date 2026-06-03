@@ -10,12 +10,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/config/app_config.dart';
-import '../../../core/errors/failures.dart';
-import '../../../core/local_db/local_database.dart';
-import '../../../core/network/supabase_client.dart';
-import '../domain/auth_repository_contract.dart';
-import '../domain/user_model.dart';
+import 'package:expense_manager/core/config/app_config.dart';
+import 'package:expense_manager/core/errors/failures.dart';
+import 'package:expense_manager/core/local_db/local_database.dart';
+import 'package:expense_manager/core/network/supabase_client.dart';
+import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
+import 'package:expense_manager/features/auth/domain/user_model.dart';
 
 class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
   final SupabaseClient _client;

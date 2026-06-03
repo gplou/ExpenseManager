@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../l10n/app_localizations.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 import 'transaction_base.dart';
 
 part 'transaction_model.freezed.dart';

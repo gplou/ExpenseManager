@@ -7,9 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../l10n/app_localizations.dart';
-import '../domain/transaction_categories.dart';
-import '../domain/transaction_model.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 class ExportExcelService {
   static Future<void> exportTransactions(

@@ -539,6 +539,8 @@
   },
   "voiceInterpretError": "No se pudo interpretar. Inténtalo de nuevo.",
   "@voiceInterpretError": {},
+  "voiceProcessing": "Procesando audio…",
+  "@voiceProcessing": {},
   "imageTransactionNotDetected": "No se pudo detectar una transacción en la imagen.",
   "@imageTransactionNotDetected": {},
   "imageAiError": "Error IA imagen [{type}]: {info}",

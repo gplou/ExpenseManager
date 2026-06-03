@@ -1,8 +1,8 @@
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import '../../data/chat_repository.dart';
-import '../../domain/chat_message.dart';
+import 'package:expense_manager/features/chat/data/chat_repository.dart';
+import 'package:expense_manager/features/chat/domain/chat_message.dart';
 
 final chatMessagesProvider =
     StateNotifierProvider.autoDispose<ChatNotifier, List<ChatMessage>>(

@@ -330,6 +330,8 @@
   },
   "voiceInterpretError": "Konnte nicht interpretiert werden. Versuchen Sie es erneut.",
   "@voiceInterpretError": {},
+  "voiceProcessing": "Audio wird verarbeitet…",
+  "@voiceProcessing": {},
   "imageTransactionNotDetected": "Es konnte keine Transaktion im Bild erkannt werden.",
   "@imageTransactionNotDetected": {},
   "imageAiError": "Bild-KI-Fehler [{type}]: {info}",

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../l10n/app_localizations.dart';
-import '../../data/subcategories_repository.dart';
-import '../../domain/transaction_model.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 class CreateSubcategoryDialog extends ConsumerStatefulWidget {
   const CreateSubcategoryDialog({

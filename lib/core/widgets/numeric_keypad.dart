@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_spacing.dart';
-import '../utils/extensions.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
 
 /// Operadores aritméticos soportados por el keypad.
 enum _Op { add, sub }

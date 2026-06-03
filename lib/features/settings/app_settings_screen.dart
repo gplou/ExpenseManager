@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/providers/currency_provider.dart';
-import '../../core/widgets/ad_banner_footer.dart';
-import '../subscription/subscription_provider.dart';
-import '../../core/providers/locale_provider.dart';
-import '../../core/providers/number_format_provider.dart';
-import '../../core/providers/theme_provider.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/utils/extensions.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:expense_manager/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/core/providers/locale_provider.dart';
+import 'package:expense_manager/core/providers/number_format_provider.dart';
+import 'package:expense_manager/core/providers/theme_provider.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 
 class AppSettingsScreen extends ConsumerWidget {
   const AppSettingsScreen({super.key});
@@ -180,7 +180,7 @@ class AppSettingsScreen extends ConsumerWidget {
                   return ListTile(
                     leading: Text(
                       locale.flag,
-                      style: const TextStyle(fontSize: 24),
+                      style: Theme.of(ctx).textTheme.bodyLarge,
                     ),
                     title: Text(locale.name),
                     trailing: isSelected
@@ -229,7 +229,7 @@ class AppSettingsScreen extends ConsumerWidget {
                       final isSelected = currentCode == c.code;
                       return ListTile(
                         leading: Text(c.flag,
-                            style: const TextStyle(fontSize: 24)),
+                            style: Theme.of(ctx).textTheme.bodyLarge),
                         title: Text('${c.code} — ${c.name}'),
                         subtitle: Text(c.symbol),
                         trailing: isSelected

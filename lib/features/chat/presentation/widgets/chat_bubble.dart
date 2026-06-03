@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../domain/chat_message.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/features/chat/domain/chat_message.dart';
 
 /// Burbuja editorial: usuario en ink azul, asistente en superficie con
 /// hairline. Esquinas asimétricas marcan el origen.
@@ -34,7 +34,7 @@ class ChatBubble extends StatelessWidget {
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78,
+          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
         ),
         margin: EdgeInsets.only(
           left: isUser ? 48 : 0,

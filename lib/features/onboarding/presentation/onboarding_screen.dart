@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/services/analytics_service.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/extensions.dart';
-import '../../../l10n/app_localizations.dart';
-import '../providers/onboarding_provider.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/onboarding/providers/onboarding_provider.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});

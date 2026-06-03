@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import '../../../transactions/domain/transaction_model.dart';
-import '../../../transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 
 // ── Filter state ─────────────────────────────────────────────────────────────
 

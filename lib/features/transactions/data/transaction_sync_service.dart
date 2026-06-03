@@ -1,5 +1,5 @@
-import '../domain/recurring_transactions_repository_contract.dart';
-import '../domain/transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'local_recurring_transactions_repository.dart';
 import 'local_transactions_repository.dart';
 

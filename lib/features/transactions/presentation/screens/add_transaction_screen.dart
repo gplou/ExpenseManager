@@ -5,26 +5,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/providers/currency_provider.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../core/widgets/ad_banner_footer.dart';
-import '../../../../core/widgets/numeric_keypad.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../subscription/subscription_provider.dart';
-import '../../data/recurring_transactions_repository.dart';
-import '../../data/subcategories_repository.dart';
-import '../../domain/parsed_voice_transaction.dart';
-import '../../domain/recurring_transaction_model.dart';
-import '../../domain/transaction_categories.dart';
-import '../../domain/transaction_model.dart';
-import '../providers/custom_categories_provider.dart';
-import '../providers/subcategories_provider.dart';
-import '../providers/transactions_provider.dart';
-import '../widgets/add_transaction_widgets.dart';
-import '../widgets/category_picker_sheet.dart';
-import '../widgets/recent_categories_strip.dart';
+import 'package:expense_manager/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/theme/app_spacing.dart';
+import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
+import 'package:expense_manager/core/widgets/numeric_keypad.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
+import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/add_transaction_widgets.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/category_picker_sheet.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/recent_categories_strip.dart';
 
 /// Presents [AddTransactionScreen] as a draggable bottom sheet covering ~94%
 /// of the screen height with rounded top corners. Used as the default entry
