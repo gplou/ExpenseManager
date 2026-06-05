@@ -107,9 +107,34 @@ class LocalDatabase {
       path,
       password: key,
       version: 3,
-      onCreate: (db, _) => createSchema(db),
+      onCreate: onCreate,
       onUpgrade: applyUpgrades,
     );
+  }
+
+  /// `onCreate` callback. Normally just builds the schema, but it also
+  /// self-heals databases left at `user_version = 0` by the pre-fix encryption
+  /// migration (see [_migrateToEncrypted]): those already contain every table
+  /// from sqlcipher_export, so a plain `createSchema` would crash with
+  /// "table transactions already exists". When we detect that situation we run
+  /// the incremental upgrade from v1 instead, recovering the DB in place
+  /// without losing data. Idempotent for genuinely fresh databases too.
+  @visibleForTesting
+  static Future<void> onCreate(Database db, int version) async {
+    if (await _hasTable(db, 'transactions')) {
+      // Pre-populated by a broken migration — repair forward, don't recreate.
+      await applyUpgrades(db, 1, version);
+      return;
+    }
+    await createSchema(db);
+  }
+
+  static Future<bool> _hasTable(Database db, String table) async {
+    final rows = await db.rawQuery(
+      "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
+      [table],
+    );
+    return rows.isNotEmpty;
   }
 
   /// Applies incremental schema upgrades from [oldVersion] to [newVersion].
@@ -176,6 +201,17 @@ class LocalDatabase {
         "ATTACH DATABASE '$encPath' AS encrypted KEY '$key'",
       );
       await plainDb.rawQuery("SELECT sqlcipher_export('encrypted')");
+      // sqlcipher_export() copies schema + data but NOT the user_version pragma,
+      // so the encrypted file would default to user_version 0. Carry the source
+      // DB's version across so the later openDatabase(version: 3) takes the
+      // onUpgrade path instead of onCreate — otherwise createSchema would run
+      // CREATE TABLE on tables the export just copied and crash with
+      // "table transactions already exists".
+      final srcVersion = Sqflite.firstIntValue(
+            await plainDb.rawQuery('PRAGMA user_version'),
+          ) ??
+          0;
+      await plainDb.execute('PRAGMA encrypted.user_version = $srcVersion');
       await plainDb.execute('DETACH DATABASE encrypted');
     } finally {
       await plainDb.close();

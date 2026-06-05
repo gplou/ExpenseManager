@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -174,6 +177,159 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getBool(LocalDatabase.needsHydrationResetKey), isNull);
 
+      await db.close();
+    });
+  });
+
+  // ── plaintext → encrypted migration: user_version carry-over ─────────────
+  //
+  // Regression for EXPENSE-MANAGER-7: sqlcipher_export() copies schema + data
+  // but NOT the user_version pragma. If the migrated DB is reopened with
+  // version 3 while its user_version is still 0, sqflite treats it as brand new
+  // and runs onCreate → createSchema → "table transactions already exists".
+  // These tests stand in for SQLCipher (unavailable in the FFI host VM) by
+  // copying a fully-formed schema into a fresh file and reopening it through
+  // the production onCreate/onUpgrade callbacks.
+
+  group('migrated DB reopen', () {
+    late Directory tmpDir;
+
+    setUp(() async {
+      tmpDir = await Directory.systemTemp.createTemp('em_migration_test');
+    });
+
+    tearDown(() async {
+      if (await tmpDir.exists()) await tmpDir.delete(recursive: true);
+    });
+
+    /// Reopens [path] through the production callbacks (`onCreate` /
+    /// `applyUpgrades`), returning which path ran:
+    ///   - `created` when onCreate built a fresh schema
+    ///   - `upgradedFrom` when onUpgrade ran (the value is oldVersion)
+    /// onCreate also self-heals a broken-migration DB without recreating tables.
+    Future<({bool created, int? upgradedFrom})> reopenLikeProduction(
+      String path,
+    ) async {
+      var created = false;
+      int? upgradedFrom;
+      final db = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 3,
+          onCreate: (db, version) async {
+            // Mirror production: onCreate self-heals already-populated DBs.
+            created = !await _hasTable(db, 'transactions');
+            await LocalDatabase.onCreate(db, version);
+          },
+          onUpgrade: (db, oldV, newV) async {
+            upgradedFrom = oldV;
+            await LocalDatabase.applyUpgrades(db, oldV, newV);
+          },
+        ),
+      );
+      await db.close();
+      return (created: created, upgradedFrom: upgradedFrom);
+    }
+
+    test('self-heals a migrated DB left at user_version 0 (no crash)', () async {
+      final path = p.join(tmpDir.path, 'migrated_v0.db');
+      // Reproduce sqlcipher_export's defect: full schema + data, but the
+      // user_version pragma was never carried across, so it defaults to 0.
+      // This is the exact on-disk state already shipped to crashing users.
+      final src = await databaseFactoryFfi.openDatabase(path);
+      await LocalDatabase.createSchema(src);
+      await src.insert('transactions', {
+        'id': 'stranded',
+        'user_id': 'u',
+        'amount': 4.0,
+        'type': 'expense',
+        'category': 'C',
+        'date': '2026-01-01',
+        'created_at': '2026-01-01T00:00:00Z',
+        'currency': 'EUR',
+      });
+      await src.execute('PRAGMA user_version = 0');
+      await src.close();
+
+      // openDatabase(version: 3) sees version 0 → onCreate. Before the heal this
+      // crashed with "table transactions already exists"; now it recovers.
+      final result = await reopenLikeProduction(path);
+      expect(result.created, isFalse,
+          reason: 'must not recreate tables on a populated DB');
+
+      // No data lost, and the missing table was filled in by the heal.
+      final db = await databaseFactoryFfi.openDatabase(path);
+      expect(await _hasTable(db, 'pending_operations'), isTrue);
+      final rows = await db.query('transactions');
+      expect(rows.single['id'], 'stranded');
+      await db.close();
+    });
+
+    test('carrying user_version across the export takes the upgrade path',
+        () async {
+      final path = p.join(tmpDir.path, 'migrated_v3.db');
+      final src = await databaseFactoryFfi.openDatabase(path);
+      await LocalDatabase.createSchema(src);
+      await src.insert('transactions', {
+        'id': 'pre-migration',
+        'user_id': 'u',
+        'amount': 9.0,
+        'type': 'expense',
+        'category': 'C',
+        'date': '2026-01-01',
+        'created_at': '2026-01-01T00:00:00Z',
+        'currency': 'EUR',
+      });
+      // The fix: the migration now copies the source user_version onto the
+      // encrypted file. The source schema is current (v3), so set 3.
+      await src.execute('PRAGMA user_version = 3');
+      await src.close();
+
+      // Reopening must NOT crash and must NOT run onCreate; v3→v3 is a no-op.
+      final result = await reopenLikeProduction(path);
+      expect(result.created, isFalse);
+      expect(result.upgradedFrom, isNull,
+          reason: 'v3 → v3 should not call onUpgrade');
+
+      // Existing data survived the reopen.
+      final db = await databaseFactoryFfi.openDatabase(path);
+      final rows = await db.query('transactions');
+      expect(rows, hasLength(1));
+      expect(rows.single['id'], 'pre-migration');
+      await db.close();
+    });
+
+    test('carrying a pre-v3 user_version runs the incremental upgrade',
+        () async {
+      final path = p.join(tmpDir.path, 'migrated_v1.db');
+      // A v1 plaintext DB (no pending_operations) carried across as version 1.
+      final src = await databaseFactoryFfi.openDatabase(path);
+      await _createV1Schema(src);
+      await src.execute('PRAGMA user_version = 1');
+      await src.close();
+
+      final result = await reopenLikeProduction(path);
+      expect(result.upgradedFrom, 1,
+          reason: 'v1 → v3 should run onUpgrade from 1');
+
+      // onUpgrade added the missing table and set the hydration-reset flag.
+      final db = await databaseFactoryFfi.openDatabase(path);
+      expect(await _hasTable(db, 'pending_operations'), isTrue);
+      await db.close();
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(LocalDatabase.needsHydrationResetKey), isTrue);
+    });
+
+    test('onCreate builds a full fresh schema for a brand-new DB', () async {
+      final path = p.join(tmpDir.path, 'fresh.db');
+      final result = await reopenLikeProduction(path);
+      expect(result.created, isTrue);
+      expect(result.upgradedFrom, isNull);
+
+      final db = await databaseFactoryFfi.openDatabase(path);
+      expect(await _hasTable(db, 'transactions'), isTrue);
+      expect(await _hasTable(db, 'recurring_transactions'), isTrue);
+      expect(await _hasTable(db, 'pending_operations'), isTrue);
       await db.close();
     });
   });
