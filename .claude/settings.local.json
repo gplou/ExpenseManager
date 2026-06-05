@@ -123,7 +123,8 @@
       "Bash(grep -n 'app_spacing\\\\|import '\\\\''package:expense_manager/core/theme' /Users/guillermo/Workspace/ExpenseManager/__TRACKED_VAR__)",
       "Bash(echo \"exit: $? \\(no output = todos migrados\\)\")",
       "Bash(python3 -c \"import json; json.load\\(open\\('dart_defines.json'\\)\\); print\\('dart_defines.json: JSON válido ✓'\\)\")",
-      "Bash(python3 -c \"import json; json.load\\(open\\('dart_defines.json.example'\\)\\); print\\('dart_defines.json.example: JSON válido ✓'\\)\")"
+      "Bash(python3 -c \"import json; json.load\\(open\\('dart_defines.json.example'\\)\\); print\\('dart_defines.json.example: JSON válido ✓'\\)\")",
+      "Bash(bash -n build_release.sh)"
     ]
   }
 }

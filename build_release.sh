@@ -31,21 +31,38 @@ if [ -f .env.sentry ]; then
   set -a; source .env.sentry; set +a
 fi
 
-echo "Building Android AAB..."
-fvm flutter build appbundle $SENTRY_ENV_DEFINE --dart-define-from-file=dart_defines.json
+# Derive the app version (e.g. "1.0.4+37") so Dart obfuscation symbols can be
+# archived per-version. Without the matching symbols you cannot de-obfuscate a
+# crash from that exact build.
+APP_VERSION="$(grep '^version:' pubspec.yaml | awk '{print $2}')"
+SYMBOLS_DIR="build/symbols/$APP_VERSION"
+echo "App version: $APP_VERSION"
+echo "Dart symbols dir: $SYMBOLS_DIR"
 
-# Upload debug symbols to Sentry for readable stack traces
+echo "Building Android AAB (obfuscated)..."
+fvm flutter build appbundle $SENTRY_ENV_DEFINE \
+  --dart-define-from-file=dart_defines.json \
+  --obfuscate \
+  --split-debug-info="$SYMBOLS_DIR"
+
+# Upload debug symbols to Sentry for readable stack traces.
+# Three kinds of symbols matter:
+#   1. Native NDK libs (.so)        → merged_native_libs/
+#   2. R8/ProGuard mapping (Kotlin) → mapping/release/
+#   3. Dart obfuscation symbols     → $SYMBOLS_DIR  (only exist when --obfuscate is used)
 if command -v sentry-cli >/dev/null 2>&1 && [ -n "$SENTRY_AUTH_TOKEN" ]; then
   echo "Uploading debug symbols to Sentry..."
   sentry-cli debug-files upload \
     --org "$SENTRY_ORG" \
     --project "$SENTRY_PROJECT" \
     build/app/intermediates/merged_native_libs/release/ \
-    build/app/outputs/mapping/release/
+    build/app/outputs/mapping/release/ \
+    "$SYMBOLS_DIR"
   echo "Symbols uploaded."
 else
   echo "sentry-cli not found or SENTRY_AUTH_TOKEN not set — skipping symbol upload."
   echo "To enable: brew install getsentry/tools/sentry-cli and create .env.sentry"
+  echo "IMPORTANT: keep $SYMBOLS_DIR archived — required to de-obfuscate crashes from this build."
 fi
 
 echo ""
