@@ -114,10 +114,16 @@ Future<void> main() async {
     LocalDatabase.instance.db.ignore();
 
     step = '5 - Supabase';
+    // Supabase es crítico: auth y el redirect del router dependen de él, así que
+    // —a diferencia de AdMob/RevenueCat/PostHog— no podemos continuar sin él.
+    // El timeout evita que una red lenta cuelgue runApp() indefinidamente
+    // (causa típica de ANR en arranque); el TimeoutException se propaga al
+    // catch de abajo, que reporta a Sentry, quita el splash y muestra
+    // _InitErrorApp ("no se pudo iniciar, reábrela").
     await Supabase.initialize(
       url: AppConfig.supabaseUrl,
       anonKey: AppConfig.supabaseAnonKey,
-    );
+    ).timeout(const Duration(seconds: 15));
     debugPrint('[main] 5 - supabase ok');
 
     step = '6 - Tracking';
