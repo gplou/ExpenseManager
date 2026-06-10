@@ -129,6 +129,39 @@ void main() {
 
       expect(state.isSyncing, isFalse);
     });
+
+    test(
+        'triggers migration when PRO user has orphaned local data on first build',
+        () async {
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      // Seed local SQLite with a transaction for user A (simulating leftover
+      // data from a FREE period before this app version added migration
+      // support).
+      final db = await LocalDatabase.instance.db;
+      await db.insert('transactions', {
+        'id': 'tx-orphan-1',
+        'user_id': _userA.id,
+        'amount': 10.0,
+        'type': 'expense',
+        'category': 'food',
+        'date': '2026-01-01',
+        'created_at': '2026-01-01T00:00:00.000',
+        'currency': 'EUR',
+      });
+      addTearDown(() async {
+        await db.delete(
+          'transactions',
+          where: 'id = ?',
+          whereArgs: ['tx-orphan-1'],
+        );
+      });
+
+      final state = await _setAndRead(container, user: _userA, isPro: true);
+
+      expect(state.isSyncing, isTrue);
+    });
   });
 
   // ── Same user changes subscription ────────────────────────────────────────

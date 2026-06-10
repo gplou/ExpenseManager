@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
@@ -93,6 +94,16 @@ class AppSettingsScreen extends ConsumerWidget {
             title: Text(l10n.termsOfService),
             trailing: const Icon(Icons.chevron_right, size: 18),
             onTap: () => context.push('/terms-of-service'),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.cloud_upload_outlined),
+            title: const Text('Recuperar datos locales'),
+            subtitle: const Text(
+              'Sube transacciones guardadas en este dispositivo a tu cuenta',
+            ),
+            trailing: const Icon(Icons.chevron_right, size: 18),
+            onTap: () => context.push(AppRoutes.dataRecovery),
           ),
         ],
       ),

@@ -22,6 +22,7 @@ import 'package:expense_manager/features/chat/presentation/chat_screen.dart';
 import 'package:expense_manager/features/subscription/pro_screen.dart';
 import 'package:expense_manager/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:expense_manager/features/settings/app_settings_screen.dart';
+import 'package:expense_manager/features/settings/data_recovery_screen.dart';
 import 'package:expense_manager/features/settings/legal_screen.dart';
 import 'legal_content.dart';
 
@@ -41,6 +42,7 @@ abstract class AppRoutes {
   static const appSettings = '/settings';
   static const privacyPolicy = '/privacy-policy';
   static const termsOfService = '/terms-of-service';
+  static const dataRecovery = '/data-recovery';
 }
 
 /// Notifier que escucha el stream de auth y notifica a GoRouter para
@@ -157,6 +159,11 @@ GoRouter router(Ref ref) {
         path: AppRoutes.appSettings,
         name: 'appSettings',
         builder: (context, state) => const AppSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dataRecovery,
+        name: 'dataRecovery',
+        builder: (context, state) => const DataRecoveryScreen(),
       ),
       GoRoute(
         path: AppRoutes.privacyPolicy,

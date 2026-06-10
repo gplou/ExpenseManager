@@ -78,7 +78,32 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
       return const SyncState(status: SyncStatus.syncing);
     }
 
+    // First build for this user on this device. If they're already PRO but
+    // still have local transactions from a prior FREE period (e.g. the
+    // subscription was already active when this app version first added
+    // migration support, so no false→true transition was ever observed),
+    // migrate those orphaned rows to Supabase now.
+    if (previous == null && isPro) {
+      final hasOrphanedLocalData = await _hasLocalData(user.id);
+      if (hasOrphanedLocalData) {
+        _runMigration(wasPro: false, userId: user.id);
+        return const SyncState(status: SyncStatus.syncing);
+      }
+    }
+
     return const SyncState();
+  }
+
+  Future<bool> _hasLocalData(String userId) async {
+    try {
+      final tx = await LocalTransactionsRepository(userId: userId).getAllForUser();
+      if (tx.isNotEmpty) return true;
+      final recurring = await LocalRecurringTransactionsRepository(userId: userId)
+          .getAllForUser();
+      return recurring.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   void _runMigration({required bool wasPro, required String userId}) {
