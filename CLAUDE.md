@@ -81,7 +81,7 @@ Never put business logic in widgets. Widgets call notifier methods and watch pro
 
 **Remote:** Supabase (PostgreSQL + Auth + Edge Functions). Each feature has a repository implementing a contract interface (`*_repository_contract.dart`).
 
-**Local cache:** SQLite via `sqflite`. `LocalDatabase` (`lib/core/local_db/local_database.dart`) is a lazy-open singleton. Tables: `transactions`, `recurring_transactions`, `pending_operations`.
+**Local cache:** SQLite encrypted with SQLCipher (`sqflite_sqlcipher`). `LocalDatabase` (`lib/core/local_db/local_database.dart`) is a lazy-open singleton; the encryption key lives in `SecureStorageService`. Tables: `transactions`, `recurring_transactions`, `pending_operations`.
 
 **Offline sync:** `OfflineSyncService` runs in the background and drains `pending_operations`. `InitialSyncService` hydrates PRO users on first load. Conflict resolution is last-write-wins.
 
@@ -110,9 +110,17 @@ All AI calls go through Supabase Edge Functions, which proxy to **Gemini 2.5 Fla
 - **Financial chat:** `ChatRepository` → Edge Function `chat-transactions`
 - Rate limiting: `AiRateLimiter` (`lib/core/utils/ai_rate_limiter.dart`) allows max 7 calls/minute (shared across voice + image)
 
+### Currency
+
+The global currency setting (`currencyProvider`) is **display-only**: switching it changes the displayed symbol but never converts historical amounts. Every creation path (form, voice/image parsing, recurring materialization) stamps the current global currency into `transaction.currency`.
+
 ### Localization
 
 4 locales: Spanish (`es`), English (`en`), French (`fr`), German (`de`). Source files are `.arb` in `lib/l10n/`. Run `flutter gen-l10n` to regenerate `AppLocalizations`. Category keys are stored in Spanish in the DB; translation happens at the presentation layer via `TransactionCategories`.
+
+### Logging
+
+Use `AppLogger.log(...)` (`lib/core/utils/app_logger.dart`) — never `debugPrint` directly (`debugPrint` prints in release builds too). `AppLogger` is silent in release and can optionally attach a Sentry breadcrumb (`sentryBreadcrumb: true`). The only exceptions are `app_logger.dart` itself and `sentry_service.dart` internals (guarded with `kDebugMode`), to avoid the logger depending on itself.
 
 ### Analytics
 
@@ -141,4 +149,4 @@ Full conventions live in `test/README.md`. Key points for new tests:
 - **Time**: production code should depend on `package:clock` and call `clock.now()` (not `DateTime.now()`). Tests pin time with `withFixedClock()` / `withFakeAsyncAndClock()` from `helpers/clock_helper.dart`.
 - **Widget tests**: use `pumpWithProviders` / `pumpScreen` from `helpers/pump_app.dart` for `ProviderScope` + `MaterialApp` + l10n preloaded.
 
-Don't hit the real network, RevenueCat, or platform channels from `test/` — those belong in `integration_test/` (planned, not yet present).
+Don't hit the real network, RevenueCat, or platform channels from `test/` — those belong in `integration_test/` (currently a device smoke test, `integration_test/smoke_test.dart`).

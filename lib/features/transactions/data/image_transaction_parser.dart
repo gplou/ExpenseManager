@@ -12,6 +12,7 @@ import 'package:expense_manager/core/utils/image_compressor.dart';
 import 'package:expense_manager/core/utils/image_mime_detector.dart';
 import 'ai_response_parser.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 class ImageTransactionParser {
   ImageTransactionParser(this._client);
@@ -63,7 +64,7 @@ class ImageTransactionParser {
 
       return ParsedVoiceTransaction.fromAiJson(json);
     } catch (e, st) {
-      debugPrint('ImageTransactionParser error: $e\n$st');
+      AppLogger.log('ImageTransactionParser error: $e\n$st');
       rethrow;
     }
   }

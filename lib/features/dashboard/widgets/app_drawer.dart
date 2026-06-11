@@ -15,8 +15,8 @@ import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
-import 'package:expense_manager/features/subscription/subscription_repository.dart';
 import 'package:expense_manager/features/subscription/widgets/pro_badge.dart';
+import 'package:expense_manager/features/subscription/widgets/promo_code_dialog.dart';
 import 'package:expense_manager/features/tutorial/tutorial_notifier.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -151,10 +151,7 @@ class AppDrawer extends ConsumerWidget {
                 l10n.logout,
                 style: TextStyle(color: context.colors.error),
               ),
-              onTap: () {
-                Navigator.of(context).pop();
-                ref.read(authProvider.notifier).signOut();
-              },
+              onTap: () => _confirmLogout(context, ref),
             ),
             // ── Delete account ────────────────────────────────────────────
             ListTile(
@@ -173,6 +170,37 @@ class AppDrawer extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.logoutConfirmTitle),
+        content: Text(l10n.logoutConfirmContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: ctx.colors.error,
+              foregroundColor: ctx.colors.onError,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.logout),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    Navigator.of(context).pop(); // close the drawer
+    await ref.read(authProvider.notifier).signOut();
   }
 
   Future<void> _confirmDeleteAccount(
@@ -219,7 +247,7 @@ class AppDrawer extends ConsumerWidget {
   void _showPromoCodeDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => const _PromoCodeDialog(),
+      builder: (ctx) => const PromoCodeDialog(),
     );
   }
 
@@ -489,122 +517,6 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
                   ),
                 )
               : Text(l10n.save),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Promo code dialog ─────────────────────────────────────────────────────────
-
-class _PromoCodeDialog extends ConsumerStatefulWidget {
-  const _PromoCodeDialog();
-
-  @override
-  ConsumerState<_PromoCodeDialog> createState() => _PromoCodeDialogState();
-}
-
-class _PromoCodeDialogState extends ConsumerState<_PromoCodeDialog> {
-  final _controller = TextEditingController();
-  bool _loading = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _applyCode() async {
-    final code = _controller.text.trim();
-    if (code.isEmpty) return;
-
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    try {
-      await ref.read(subscriptionProvider.notifier).redeemPromoCode(code);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.proPromoSuccess),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on PromoCooldownException catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        setState(() {
-          _error = l10n.errorPromoTooManyAttempts(e.remainingSeconds);
-          _loading = false;
-        });
-      }
-    } on PromoCodeException catch (e) {
-      // Server-driven message (invalid/expired code) — surfaced as-is.
-      if (mounted) setState(() { _error = e.message; _loading = false; });
-    } catch (_) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        setState(() { _error = l10n.proPromoUnexpectedError; _loading = false; });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(l10n.promoCodeTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            maxLength: 20,
-            textCapitalization: TextCapitalization.characters,
-            enabled: !_loading,
-            decoration: InputDecoration(
-              hintText: l10n.promoCodeHint,
-              prefixIcon: const Icon(Icons.local_offer_outlined),
-            ),
-            onSubmitted: (_) => _applyCode(),
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                _error!,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                  fontSize: 12,
-                  fontFamily: 'GeneralSans',
-                ),
-              ),
-            ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: _loading ? null : _applyCode,
-          child: _loading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Text(l10n.apply),
         ),
       ],
     );

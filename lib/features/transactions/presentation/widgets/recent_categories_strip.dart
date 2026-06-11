@@ -8,6 +8,7 @@ import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/hidden_builtin_categories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 
 /// Top 5 categorías más usadas para un tipo (income/expense), ordenadas por
@@ -24,16 +25,41 @@ final recentCategoriesProvider = FutureProvider.autoDispose
   return sorted.take(5).map((e) => e.key).toList();
 });
 
-/// Tira horizontal de categorías frecuentes para selección rápida (1 tap).
-///
-/// Si hay <2 categorías recientes, no se renderiza (evita ruido visual en
-/// usuarios nuevos sin historial).
-class RecentCategoriesStrip extends ConsumerWidget {
-  const RecentCategoriesStrip({
+/// Categorías de acceso rápido: las recientes primero y, si no llegan a
+/// [_maxQuickCategories], se rellena con custom + built-in visibles para que
+/// un usuario sin historial también pueda elegir con 1 tap.
+const int _maxQuickCategories = 8;
+
+final quickCategoriesProvider = FutureProvider.autoDispose
+    .family<List<String>, TransactionType>((ref, type) async {
+  final recent = await ref.watch(recentCategoriesProvider(type).future);
+  final custom = ref.watch(customCategoriesSyncProvider)[type] ?? const [];
+  final hidden = ref.watch(hiddenBuiltInCategoriesProvider)[type];
+
+  final result = <String>[...recent];
+  final fallback = <String>[
+    ...custom.map((c) => c.name),
+    ...TransactionCategories.forType(type)
+        .where((c) => !(hidden?.contains(c.name) ?? false))
+        .map((c) => c.name),
+  ];
+  for (final name in fallback) {
+    if (result.length >= _maxQuickCategories) break;
+    if (!result.contains(name)) result.add(name);
+  }
+  return result;
+});
+
+/// Tira horizontal de categorías para selección con 1 tap, con un chip final
+/// "Más" que abre el picker completo. La categoría seleccionada siempre es
+/// visible (se antepone si no estaba en la lista).
+class QuickCategoryStrip extends ConsumerWidget {
+  const QuickCategoryStrip({
     super.key,
     required this.type,
     required this.selected,
     required this.onSelect,
+    required this.onMore,
     required this.accentColor,
     required this.accentLight,
   });
@@ -41,66 +67,81 @@ class RecentCategoriesStrip extends ConsumerWidget {
   final TransactionType type;
   final String? selected;
   final ValueChanged<String> onSelect;
+  final VoidCallback onMore;
   final Color accentColor;
   final Color accentLight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final asyncRecent = ref.watch(recentCategoriesProvider(type));
+    final asyncQuick = ref.watch(quickCategoriesProvider(type));
     final customCats = ref.watch(customCategoriesSyncProvider)[type] ?? [];
 
-    final recent = asyncRecent.value ?? const [];
-    if (recent.length < 2) return const SizedBox.shrink();
+    final names = [...asyncQuick.value ?? const <String>[]];
+    if (selected != null && !names.contains(selected)) {
+      names.insert(0, selected!);
+    }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: SizedBox(
-        height: 36,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.zero,
-          itemCount: recent.length,
-          separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-          itemBuilder: (context, i) {
-            final name = recent[i];
-            final isSelected = selected == name;
-            final emoji = TransactionCategories.resolveEmoji(
-                name, type.isIncome, customCats);
-            final label = TransactionCategories.localizedName(name, l10n);
-
-            return _RecentChip(
-              key: ValueKey(name),
-              emoji: emoji,
-              label: label,
-              isSelected: isSelected,
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        itemCount: names.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+        itemBuilder: (context, i) {
+          if (i == names.length) {
+            return _QuickChip(
+              key: const ValueKey('quick-chip-more'),
+              icon: Icons.grid_view_rounded,
+              label: l10n.more,
+              semanticLabel: l10n.allCategories,
+              isSelected: false,
               accentColor: accentColor,
               accentLight: accentLight,
               onTap: () {
                 HapticFeedback.selectionClick();
-                onSelect(name);
+                onMore();
               },
             );
-          },
-        ),
+          }
+          final name = names[i];
+          return _QuickChip(
+            key: ValueKey(name),
+            emoji: TransactionCategories.resolveEmoji(
+                name, type.isIncome, customCats),
+            label: TransactionCategories.localizedName(name, l10n),
+            isSelected: selected == name,
+            accentColor: accentColor,
+            accentLight: accentLight,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onSelect(name);
+            },
+          );
+        },
       ),
     );
   }
 }
 
-class _RecentChip extends StatelessWidget {
-  const _RecentChip({
+class _QuickChip extends StatelessWidget {
+  const _QuickChip({
     super.key,
-    required this.emoji,
+    this.emoji,
+    this.icon,
     required this.label,
+    this.semanticLabel,
     required this.isSelected,
     required this.accentColor,
     required this.accentLight,
     required this.onTap,
   });
 
-  final String emoji;
+  final String? emoji;
+  final IconData? icon;
   final String label;
+  final String? semanticLabel;
   final bool isSelected;
   final Color accentColor;
   final Color accentLight;
@@ -112,15 +153,13 @@ class _RecentChip extends StatelessWidget {
     return Semantics(
       button: true,
       selected: isSelected,
-      label: label,
+      label: semanticLabel ?? label,
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected ? accentLight : cs.surface,
             borderRadius: AppRadius.radiusPill,
@@ -132,13 +171,18 @@ class _RecentChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: AppEmojiSize.small)),
+              if (emoji != null)
+                Text(emoji!,
+                    style: const TextStyle(fontSize: AppEmojiSize.small))
+              else if (icon != null)
+                Icon(icon, size: 15,
+                    color: isSelected ? accentColor : AppColors.textMuted),
               const SizedBox(width: AppSpacing.xs + 2),
               Text(
                 label,
                 style: TextStyle(
                   fontFamily: 'GeneralSans',
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: isSelected ? accentColor : AppColors.textMuted,
                 ),

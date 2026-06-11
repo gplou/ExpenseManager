@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:expense_manager/features/auth/data/auth_repository.dart';
+import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
 import 'package:expense_manager/features/auth/domain/user_model.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+
+import '../../../helpers/mocks.dart';
 import 'package:expense_manager/features/dashboard/widgets/app_drawer.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
@@ -25,10 +30,16 @@ class _FakeSubscriptionNotifier extends SubscriptionNotifier {
   Future<SubscriptionState> build() async => _state;
 }
 
-Widget _wrap({UserModel? user, bool isEmailPassword = true}) {
+Widget _wrap({
+  UserModel? user,
+  bool isEmailPassword = true,
+  AuthRepositoryContract? authRepo,
+}) {
   SharedPreferences.setMockInitialValues({});
   return ProviderScope(
     overrides: [
+      if (authRepo != null)
+        authRepositoryProvider.overrideWith((ref) => authRepo),
       currentUserProvider.overrideWith((ref) => user),
       isEmailPasswordUserProvider.overrideWith((ref) => isEmailPassword),
       subscriptionProvider.overrideWith(
@@ -126,5 +137,48 @@ void main() {
 
     // The ProBadge widget renders the literal "PRO" text.
     expect(find.text('PRO'), findsOneWidget);
+  });
+
+  group('logout confirmation', () {
+    testWidgets('tap shows dialog; cancel does NOT sign out', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(500, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final authRepo = MockAuthRepository();
+      when(() => authRepo.signOut()).thenAnswer((_) async {});
+
+      await tester.pumpWidget(_wrap(user: _alice(), authRepo: authRepo));
+      await _openDrawer(tester);
+
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Cerrar sesión?'), findsOneWidget);
+
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => authRepo.signOut());
+      expect(find.text('¿Cerrar sesión?'), findsNothing);
+    });
+
+    testWidgets('confirm calls signOut', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(500, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final authRepo = MockAuthRepository();
+      when(() => authRepo.signOut()).thenAnswer((_) async {});
+
+      await tester.pumpWidget(_wrap(user: _alice(), authRepo: authRepo));
+      await _openDrawer(tester);
+
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      verify(() => authRepo.signOut()).called(1);
+    });
   });
 }

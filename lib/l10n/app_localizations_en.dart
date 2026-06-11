@@ -80,6 +80,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringTransaction => 'Recurring transaction';
 
   @override
+  String get noRepeat => 'Don\'t repeat';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get more => 'More';
+
+  @override
   String get weekly => 'Weekly';
 
   @override
@@ -211,6 +220,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logout => 'Log out';
 
   @override
+  String get logoutConfirmTitle => 'Log out?';
+
+  @override
+  String get logoutConfirmContent =>
+      'Your data stored on this device is kept and will be available again when you sign back in with the same account.';
+
+  @override
   String changePasswordContent(String email) {
     return 'We\'ll send a password reset link to:\n\n$email';
   }
@@ -316,6 +332,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get relToday => 'Today';
+
+  @override
+  String get relYesterday => 'Yesterday';
 
   @override
   String get relTomorrow => 'Tomorrow';
@@ -772,11 +791,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get micUnavailable => 'Microphone not available';
 
   @override
-  String voiceAiError(String type, String info) {
-    return 'Voice AI error [$type]: $info';
-  }
-
-  @override
   String get voiceInterpretError => 'Could not interpret. Try again.';
 
   @override
@@ -787,9 +801,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not detect a transaction in the image.';
 
   @override
-  String imageAiError(String type, String info) {
-    return 'Image AI error [$type]: $info';
-  }
+  String get aiProcessingError =>
+      'Your request could not be processed. Please try again.';
 
   @override
   String get promoCodeTitle => 'Promo code';

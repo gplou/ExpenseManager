@@ -23,6 +23,9 @@
   "descriptionHint": "Notiz hinzufügen...",
   "date": "Datum",
   "recurringTransaction": "Wiederkehrende Transaktion",
+  "noRepeat": "Nicht wiederholen",
+  "note": "Notiz",
+  "more": "Mehr",
   "weekly": "Wöchentlich",
   "monthly": "Monatlich",
   "yearly": "Jährlich",
@@ -68,6 +71,8 @@
   "darkMode": "Dunkelmodus",
   "language": "Sprache",
   "logout": "Abmelden",
+  "logoutConfirmTitle": "Abmelden?",
+  "logoutConfirmContent": "Deine auf diesem Gerät gespeicherten Daten bleiben erhalten und sind wieder verfügbar, sobald du dich mit demselben Konto anmeldest.",
   "changePasswordContent": "Wir senden Ihnen einen Link zur Passwortänderung an:\n\n{email}",
   "send": "Senden",
   "checkEmailPassword": "Überprüfen Sie Ihre E-Mail zum Ändern des Passworts",
@@ -102,6 +107,7 @@
   "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen, einen Buchstaben und eine Zahl enthalten",
   "accountCreated": "Konto erstellt! Überprüfen Sie Ihre E-Mail zur Verifizierung.",
   "relToday": "Heute",
+  "relYesterday": "Gestern",
   "relTomorrow": "Morgen",
   "relOverdue": "Überfällig",
   "categorySalary": "Gehalt",
@@ -321,26 +327,13 @@
   "@galleryOption": {},
   "micUnavailable": "Mikrofon nicht verfügbar",
   "@micUnavailable": {},
-  "voiceAiError": "Sprach-KI-Fehler [{type}]: {info}",
-  "@voiceAiError": {
-    "placeholders": {
-      "type": { "type": "String" },
-      "info": { "type": "String" }
-    }
-  },
   "voiceInterpretError": "Konnte nicht interpretiert werden. Versuchen Sie es erneut.",
   "@voiceInterpretError": {},
   "voiceProcessing": "Audio wird verarbeitet…",
   "@voiceProcessing": {},
   "imageTransactionNotDetected": "Es konnte keine Transaktion im Bild erkannt werden.",
   "@imageTransactionNotDetected": {},
-  "imageAiError": "Bild-KI-Fehler [{type}]: {info}",
-  "@imageAiError": {
-    "placeholders": {
-      "type": { "type": "String" },
-      "info": { "type": "String" }
-    }
-  },
+  "aiProcessingError": "Deine Anfrage konnte nicht verarbeitet werden. Bitte versuche es erneut.",
   "promoCodeTitle": "Aktionscode",
   "@promoCodeTitle": {},
   "promoCodeHint": "Code eingeben",

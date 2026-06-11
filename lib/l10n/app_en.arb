@@ -23,6 +23,9 @@
   "descriptionHint": "Add a note...",
   "date": "Date",
   "recurringTransaction": "Recurring transaction",
+  "noRepeat": "Don't repeat",
+  "note": "Note",
+  "more": "More",
   "weekly": "Weekly",
   "monthly": "Monthly",
   "yearly": "Yearly",
@@ -68,6 +71,8 @@
   "darkMode": "Dark mode",
   "language": "Language",
   "logout": "Log out",
+  "logoutConfirmTitle": "Log out?",
+  "logoutConfirmContent": "Your data stored on this device is kept and will be available again when you sign back in with the same account.",
   "changePasswordContent": "We'll send a password reset link to:\n\n{email}",
   "send": "Send",
   "checkEmailPassword": "Check your email to change your password",
@@ -102,6 +107,7 @@
   "passwordTooShort": "Password must have at least 8 characters, one letter and one number",
   "accountCreated": "Account created! Check your email to verify it.",
   "relToday": "Today",
+  "relYesterday": "Yesterday",
   "relTomorrow": "Tomorrow",
   "relOverdue": "Overdue",
   "categorySalary": "Salary",
@@ -295,23 +301,10 @@
   "cameraOption": "Camera",
   "galleryOption": "Gallery",
   "micUnavailable": "Microphone not available",
-  "voiceAiError": "Voice AI error [{type}]: {info}",
-  "@voiceAiError": {
-    "placeholders": {
-      "type": { "type": "String" },
-      "info": { "type": "String" }
-    }
-  },
   "voiceInterpretError": "Could not interpret. Try again.",
   "voiceProcessing": "Processing audio…",
   "imageTransactionNotDetected": "Could not detect a transaction in the image.",
-  "imageAiError": "Image AI error [{type}]: {info}",
-  "@imageAiError": {
-    "placeholders": {
-      "type": { "type": "String" },
-      "info": { "type": "String" }
-    }
-  },
+  "aiProcessingError": "Your request could not be processed. Please try again.",
   "promoCodeTitle": "Promo code",
   "promoCodeHint": "Enter your code",
   "apply": "Apply",

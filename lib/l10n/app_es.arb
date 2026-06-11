@@ -52,6 +52,12 @@
   "@date": {},
   "recurringTransaction": "Transacción recurrente",
   "@recurringTransaction": {},
+  "noRepeat": "No repetir",
+  "@noRepeat": {},
+  "note": "Nota",
+  "@note": {},
+  "more": "Más",
+  "@more": {},
   "weekly": "Semanal",
   "@weekly": {},
   "monthly": "Mensual",
@@ -146,6 +152,10 @@
   "@language": {},
   "logout": "Cerrar sesión",
   "@logout": {},
+  "logoutConfirmTitle": "¿Cerrar sesión?",
+  "@logoutConfirmTitle": {},
+  "logoutConfirmContent": "Tus datos guardados en este dispositivo se conservan y volverás a verlos al iniciar sesión con la misma cuenta.",
+  "@logoutConfirmContent": {},
   "changePasswordContent": "Te enviaremos un enlace de cambio de contraseña a:\n\n{email}",
   "@changePasswordContent": {
     "placeholders": { "email": { "type": "String" } }
@@ -216,6 +226,8 @@
 
   "relToday": "Hoy",
   "@relToday": {},
+  "relYesterday": "Ayer",
+  "@relYesterday": {},
   "relTomorrow": "Mañana",
   "@relTomorrow": {},
   "relOverdue": "Vencida",
@@ -530,26 +542,14 @@
   "@galleryOption": {},
   "micUnavailable": "Micrófono no disponible",
   "@micUnavailable": {},
-  "voiceAiError": "Error IA voz [{type}]: {info}",
-  "@voiceAiError": {
-    "placeholders": {
-      "type": { "type": "String" },
-      "info": { "type": "String" }
-    }
-  },
   "voiceInterpretError": "No se pudo interpretar. Inténtalo de nuevo.",
   "@voiceInterpretError": {},
   "voiceProcessing": "Procesando audio…",
   "@voiceProcessing": {},
   "imageTransactionNotDetected": "No se pudo detectar una transacción en la imagen.",
   "@imageTransactionNotDetected": {},
-  "imageAiError": "Error IA imagen [{type}]: {info}",
-  "@imageAiError": {
-    "placeholders": {
-      "type": { "type": "String" },
-      "info": { "type": "String" }
-    }
-  },
+  "aiProcessingError": "No se pudo procesar tu solicitud. Inténtalo de nuevo.",
+  "@aiProcessingError": {},
   "promoCodeTitle": "Código promocional",
   "@promoCodeTitle": {},
   "promoCodeHint": "Introduce tu código",

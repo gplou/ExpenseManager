@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -87,24 +88,29 @@ class AppSettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.privacy_tip_outlined),
             title: Text(l10n.privacyPolicy),
             trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () => context.push('/privacy-policy'),
+            onTap: () => context.push(AppRoutes.privacyPolicy),
           ),
           ListTile(
             leading: const Icon(Icons.description_outlined),
             title: Text(l10n.termsOfService),
             trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () => context.push('/terms-of-service'),
+            onTap: () => context.push(AppRoutes.termsOfService),
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.cloud_upload_outlined),
-            title: const Text('Recuperar datos locales'),
-            subtitle: const Text(
-              'Sube transacciones guardadas en este dispositivo a tu cuenta',
+          // Herramienta temporal de soporte (migración FREE→PRO huérfana).
+          // Oculta en release desde 2026-06; eliminar pantalla + ruta cuando
+          // pase una release sin que haga falta.
+          if (kDebugMode) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.cloud_upload_outlined),
+              title: const Text('Recuperar datos locales'),
+              subtitle: const Text(
+                'Sube transacciones guardadas en este dispositivo a tu cuenta',
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 18),
+              onTap: () => context.push(AppRoutes.dataRecovery),
             ),
-            trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () => context.push(AppRoutes.dataRecovery),
-          ),
+          ],
         ],
       ),
     );

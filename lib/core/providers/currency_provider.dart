@@ -39,6 +39,12 @@ String currencySymbol(String code) => supportedCurrencies
     .firstWhere((c) => c.code == code, orElse: () => supportedCurrencies.first)
     .symbol;
 
+/// Divisa global de la app — **display-only**.
+///
+/// Cambiarla solo afecta al símbolo mostrado: los importes históricos NO se
+/// convierten (no hay tasas de cambio). Todos los paths de creación
+/// (formulario, voz/imagen, recurrentes) estampan la divisa global vigente en
+/// `transaction.currency` para mantener el dato coherente.
 class CurrencyNotifier extends AsyncNotifier<String> {
   @override
   Future<String> build() async {

@@ -80,6 +80,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recurringTransaction => 'Transaction récurrente';
 
   @override
+  String get noRepeat => 'Ne pas répéter';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get more => 'Plus';
+
+  @override
   String get weekly => 'Hebdomadaire';
 
   @override
@@ -211,6 +220,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logout => 'Se déconnecter';
 
   @override
+  String get logoutConfirmTitle => 'Se déconnecter ?';
+
+  @override
+  String get logoutConfirmContent =>
+      'Vos données enregistrées sur cet appareil sont conservées et seront de nouveau disponibles lorsque vous vous reconnecterez avec le même compte.';
+
+  @override
   String changePasswordContent(String email) {
     return 'Nous vous enverrons un lien pour changer votre mot de passe à :\n\n$email';
   }
@@ -318,6 +334,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get relToday => 'Aujourd\'hui';
+
+  @override
+  String get relYesterday => 'Hier';
 
   @override
   String get relTomorrow => 'Demain';
@@ -779,11 +798,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get micUnavailable => 'Microphone non disponible';
 
   @override
-  String voiceAiError(String type, String info) {
-    return 'Erreur IA voix [$type] : $info';
-  }
-
-  @override
   String get voiceInterpretError => 'Impossible d\'interpréter. Réessayez.';
 
   @override
@@ -794,9 +808,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de détecter une transaction dans l\'image.';
 
   @override
-  String imageAiError(String type, String info) {
-    return 'Erreur IA image [$type] : $info';
-  }
+  String get aiProcessingError =>
+      'Votre demande n\'a pas pu être traitée. Veuillez réessayer.';
 
   @override
   String get promoCodeTitle => 'Code promo';

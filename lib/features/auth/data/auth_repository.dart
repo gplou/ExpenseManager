@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -16,6 +15,7 @@ import 'package:expense_manager/core/local_db/local_database.dart';
 import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
 import 'package:expense_manager/features/auth/domain/user_model.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
   final SupabaseClient _client;
@@ -91,19 +91,17 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
 
   @override
   Future<void> signOut() async {
-    final userId = _client.auth.currentUser?.id;
     try {
       await _client.auth.signOut();
     } on AuthException catch (_) {
       // signOut failures are non-critical — the session is cleared locally
       // regardless, so swallow the error silently.
-    } finally {
-      // Clear local SQLite data so no sensitive records persist on shared devices.
-      // Mirrors the cleanup that deleteAccount() already performs.
-      if (userId != null) {
-        await LocalDatabase.instance.clearUserData(userId);
-      }
     }
+    // IMPORTANTE: NO borrar los datos locales aquí. Para usuarios FREE el
+    // SQLite local es su ÚNICA copia (no sincronizan con Supabase): borrarla
+    // en el logout era pérdida de datos irreversible. La BD está cifrada con
+    // SQLCipher y las lecturas filtran por user_id, así que conservarla no
+    // expone datos a otras cuentas. El borrado solo ocurre en deleteAccount().
   }
 
   @override
@@ -155,7 +153,7 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
     } on AuthFailure {
       rethrow;
     } on AuthException catch (e) {
-      debugPrint('[GoogleSignIn] AuthException: ${e.message} | statusCode: ${e.statusCode}');
+      AppLogger.log('[GoogleSignIn] AuthException: ${e.message} | statusCode: ${e.statusCode}');
       throw AuthFailure(e.message, code: _mapAuthError(e.message));
     } on PlatformException catch (e) {
       if (e.code == 'sign_in_canceled') {
@@ -175,7 +173,7 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         code: AuthErrorCode.googleFailed,
       );
     } catch (e) {
-      debugPrint('[GoogleSignIn] unexpected error: $e');
+      AppLogger.log('[GoogleSignIn] unexpected error: $e');
       throw AuthFailure(
         'Unexpected Google sign-in error: $e',
         code: AuthErrorCode.googleFailed,

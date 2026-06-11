@@ -7,6 +7,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/core/config/app_config.dart';
 import 'package:expense_manager/core/network/connectivity_service.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 /// Banner de publicidad fijo en la parte inferior de la pantalla.
 /// Se oculta automáticamente para usuarios PRO.
@@ -42,7 +43,7 @@ class _AdBannerFooterState extends ConsumerState<AdBannerFooter> {
           if (mounted) setState(() => _isLoaded = true);
         },
         onAdFailedToLoad: (ad, error) {
-          debugPrint('[AdMob] Banner failed to load: $error');
+          AppLogger.log('[AdMob] Banner failed to load: $error');
           ad.dispose();
         },
       ),

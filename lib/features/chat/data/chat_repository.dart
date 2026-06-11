@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,6 +5,7 @@ import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/core/utils/ai_rate_limiter.dart';
 import 'package:expense_manager/features/chat/domain/chat_message.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 class ChatRepository {
   ChatRepository(this._client);
@@ -57,7 +57,7 @@ class ChatRepository {
     } on AppFailure {
       rethrow;
     } catch (e, st) {
-      debugPrint('ChatRepository error: $e\n$st');
+      AppLogger.log('ChatRepository error: $e\n$st');
       throw const NetworkFailure('Failed to communicate with AI');
     }
   }

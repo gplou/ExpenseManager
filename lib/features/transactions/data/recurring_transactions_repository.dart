@@ -170,5 +170,5 @@ final recurringTransactionsRepositoryProvider =
   if (isPro || user == null || isSyncing) {
     return RecurringTransactionsRepository(ref.watch(supabaseClientProvider));
   }
-  return LocalRecurringTransactionsRepository(userId: user.id);
+  return ref.watch(localRecurringTransactionsRepositoryProvider);
 });

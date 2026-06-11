@@ -93,7 +93,7 @@ class AllTransactionsNotifier
 
     // ── Usuarios PRO: caché SQLite primero ───────────────────────────────────
     if (isPro && user != null) {
-      final localRepo = LocalTransactionsRepository(userId: user.id);
+      final localRepo = ref.read(localTransactionsRepositoryProvider);
 
       // Wrap in try/catch: on some Android devices the SQLite open can hang
       // (Keystore timeout) or fail after an update. Fall through to Supabase
@@ -180,7 +180,7 @@ class AllTransactionsNotifier
         // descartar datos frescos.
         List<TransactionModel> localToKeep = [];
         try {
-          final queue = SyncQueueRepository(userId: localRepo.userId);
+          final queue = ref.read(syncQueueRepositoryProvider);
           final pending = await queue.getPending();
           final pendingIds = pending.map((op) => op.entityId).toSet();
           final cloudIds = fresh.map((t) => t.id).toSet();
@@ -236,7 +236,16 @@ class AllTransactionsNotifier
     LocalTransactionsRepository localRepo,
     List<TransactionModel> transactions,
   ) {
-    Future(() => localRepo.insertAll(transactions));
+    // Best-effort: un fallo de escritura local no debe romper nada ni acabar
+    // como unhandled-zone-error; la UI ya tiene los datos del cloud.
+    Future(() async {
+      try {
+        await localRepo.insertAll(transactions);
+      } catch (e) {
+        SentryService.addBreadcrumb(
+            'initial cache save failed: $e', category: 'sync');
+      }
+    });
   }
 }
 

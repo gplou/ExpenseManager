@@ -129,12 +129,11 @@ void main() {
     await LocalDatabase.instance.close();
   });
 
-  OfflineAwareTransactionsRepository makeRepo({required bool isOnline}) =>
+  OfflineAwareTransactionsRepository makeRepo() =>
       OfflineAwareTransactionsRepository(
         cloud: cloud,
         local: local,
         queue: queue,
-        isOnline: isOnline,
       );
 
   // ── Reads always come from local ───────────────────────────────────────────
@@ -143,7 +142,7 @@ void main() {
     test('returns transactions previously stored in local SQLite', () async {
       await local.createTransaction(makeTx(id: 'tx-1'));
 
-      final results = await makeRepo(isOnline: true).getTransactions(
+      final results = await makeRepo().getTransactions(
         from: DateTime(2024, 1, 1),
         to: DateTime(2024, 12, 31),
       );
@@ -154,7 +153,7 @@ void main() {
     test('returns local data even when offline', () async {
       await local.createTransaction(makeTx(id: 'tx-offline'));
 
-      final results = await makeRepo(isOnline: false).getTransactions(
+      final results = await makeRepo().getTransactions(
         from: DateTime(2024, 1, 1),
         to: DateTime(2024, 12, 31),
       );
@@ -167,7 +166,7 @@ void main() {
 
   group('createTransaction — online', () {
     test('saves to local AND calls upsert on cloud', () async {
-      final repo = makeRepo(isOnline: true);
+      final repo = makeRepo();
       await repo.createTransaction(makeTx(id: 'tx-new'));
 
       final localAll = await local.getAllForUser();
@@ -176,7 +175,7 @@ void main() {
     });
 
     test('does NOT enqueue when cloud upsert succeeds', () async {
-      await makeRepo(isOnline: true).createTransaction(makeTx(id: 'tx-ok'));
+      await makeRepo().createTransaction(makeTx(id: 'tx-ok'));
 
       final pending = await queue.getPending();
       expect(pending, isEmpty);
@@ -188,7 +187,7 @@ void main() {
       final tx = makeTx(id: 'tx-upd');
       await local.createTransaction(tx);
 
-      final repo = makeRepo(isOnline: true);
+      final repo = makeRepo();
       await repo.updateTransaction(tx.copyWith(amount: 200));
 
       final all = await local.getAllForUser();
@@ -201,7 +200,7 @@ void main() {
     test('removes from local and calls cloud delete', () async {
       await local.createTransaction(makeTx(id: 'tx-del'));
 
-      await makeRepo(isOnline: true).deleteTransaction('tx-del');
+      await makeRepo().deleteTransaction('tx-del');
 
       final all = await local.getAllForUser();
       expect(all.map((t) => t.id), isNot(contains('tx-del')));
@@ -211,14 +210,13 @@ void main() {
 
   // ── Cloud-fail → enqueue ───────────────────────────────────────────────────
   //
-  // The repository now always attempts the cloud call regardless of isOnline.
-  // Enqueueing happens when the cloud call throws (network error, timeout…),
-  // not based on the isOnline flag.
+  // The repository always attempts the cloud call. Enqueueing happens when the
+  // cloud call throws (network error, timeout…), not based on connectivity.
 
   group('createTransaction — cloud fails', () {
     test('saves to local and enqueues a create op when cloud throws', () async {
       cloud.failNext = true;
-      await makeRepo(isOnline: false).createTransaction(makeTx(id: 'tx-q'));
+      await makeRepo().createTransaction(makeTx(id: 'tx-q'));
 
       final localAll = await local.getAllForUser();
       expect(localAll.map((t) => t.id), contains('tx-q'));
@@ -229,9 +227,8 @@ void main() {
       expect(pending.first.entityId, 'tx-q');
     });
 
-    test('always attempts cloud call even when isOnline is false', () async {
-      // isOnline parameter is kept for API compat but ignored internally.
-      await makeRepo(isOnline: false).createTransaction(makeTx(id: 'tx-nc'));
+    test('always attempts cloud call regardless of connectivity', () async {
+      await makeRepo().createTransaction(makeTx(id: 'tx-nc'));
       expect(cloud.upsertedIds, contains('tx-nc'));
     });
   });
@@ -242,7 +239,7 @@ void main() {
       await local.createTransaction(tx);
 
       cloud.failNext = true;
-      await makeRepo(isOnline: false).updateTransaction(tx.copyWith(amount: 77));
+      await makeRepo().updateTransaction(tx.copyWith(amount: 77));
 
       final pending = await queue.getPending();
       expect(pending.any((op) => op.opType == SyncOpType.update), isTrue);
@@ -254,7 +251,7 @@ void main() {
       await local.createTransaction(makeTx(id: 'tx-dq'));
 
       cloud.failNext = true;
-      await makeRepo(isOnline: false).deleteTransaction('tx-dq');
+      await makeRepo().deleteTransaction('tx-dq');
 
       final all = await local.getAllForUser();
       expect(all.map((t) => t.id), isNot(contains('tx-dq')));
@@ -270,7 +267,7 @@ void main() {
     test('enqueues create op when cloud upsert throws', () async {
       cloud.failNext = true;
 
-      await makeRepo(isOnline: true).createTransaction(makeTx(id: 'tx-fail'));
+      await makeRepo().createTransaction(makeTx(id: 'tx-fail'));
 
       final pending = await queue.getPending();
       expect(pending.length, 1);
@@ -281,7 +278,7 @@ void main() {
       await local.createTransaction(makeTx(id: 'tx-fdel'));
       cloud.failNext = true;
 
-      await makeRepo(isOnline: true).deleteTransaction('tx-fdel');
+      await makeRepo().deleteTransaction('tx-fdel');
 
       final pending = await queue.getPending();
       expect(pending.any((op) => op.opType == SyncOpType.delete), isTrue);
@@ -292,7 +289,7 @@ void main() {
 
   group('upsertTransaction — online', () {
     test('saves to local and calls cloud upsert', () async {
-      await makeRepo(isOnline: true).upsertTransaction(makeTx(id: 'ups-ok'));
+      await makeRepo().upsertTransaction(makeTx(id: 'ups-ok'));
 
       final localAll = await local.getAllForUser();
       expect(localAll.map((t) => t.id), contains('ups-ok'));
@@ -300,7 +297,7 @@ void main() {
     });
 
     test('does not enqueue when cloud upsert succeeds', () async {
-      await makeRepo(isOnline: true).upsertTransaction(makeTx(id: 'ups-clean'));
+      await makeRepo().upsertTransaction(makeTx(id: 'ups-clean'));
 
       expect(await queue.getPending(), isEmpty);
     });
@@ -309,7 +306,7 @@ void main() {
   group('upsertTransaction — cloud fails', () {
     test('saves to local and enqueues an update op when cloud throws', () async {
       cloud.failNext = true;
-      await makeRepo(isOnline: false).upsertTransaction(makeTx(id: 'ups-fail'));
+      await makeRepo().upsertTransaction(makeTx(id: 'ups-fail'));
 
       final localAll = await local.getAllForUser();
       expect(localAll.map((t) => t.id), contains('ups-fail'));
@@ -437,7 +434,7 @@ void main() {
       await local.createTransaction(
           makeTx(id: 's2', amount: 40, type: TransactionType.expense));
 
-      final summary = await makeRepo(isOnline: true).getSummary(
+      final summary = await makeRepo().getSummary(
         from: DateTime(2024, 1, 1),
         to: DateTime(2024, 12, 31),
       );

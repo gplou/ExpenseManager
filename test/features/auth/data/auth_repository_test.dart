@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/features/auth/data/auth_repository.dart';
+import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 
 import '../../../helpers/local_db_helper.dart';
 import '../../../helpers/mocks.dart';
@@ -259,18 +261,38 @@ void main() {
   // ── signOut ──────────────────────────────────────────────────────────────
 
   group('signOut', () {
-    test('calls Supabase signOut and clears local data for the current user',
-        () async {
+    test('calls Supabase signOut and PRESERVES local data', () async {
       when(() => auth.currentUser).thenReturn(_userFixture(id: 'u-1'));
       when(() => auth.signOut()).thenAnswer((_) async {});
+
+      // Para usuarios FREE el SQLite local es su ÚNICA copia: el logout
+      // no debe borrarla (solo deleteAccount lo hace).
+      final local = LocalTransactionsRepository(userId: 'u-1');
+      await local.createTransaction(
+        TransactionModel(
+          id: 'tx-keep',
+          userId: 'u-1',
+          amount: 12.5,
+          type: TransactionType.expense,
+          category: 'Comida',
+          date: DateTime(2026, 1, 10),
+          createdAt: DateTime(2026, 1, 10),
+        ),
+      );
 
       await repo.signOut();
 
       verify(() => auth.signOut()).called(1);
+      final remaining = await local.getAllForUser();
+      expect(
+        remaining.map((t) => t.id),
+        contains('tx-keep'),
+        reason: 'Logout must NOT wipe local data — for FREE users it is '
+            'their only copy.',
+      );
     });
 
-    test('swallows AuthException from Supabase and still clears local data',
-        () async {
+    test('swallows AuthException from Supabase', () async {
       when(() => auth.currentUser).thenReturn(_userFixture(id: 'u-1'));
       when(() => auth.signOut()).thenThrow(AuthException('network down'));
 

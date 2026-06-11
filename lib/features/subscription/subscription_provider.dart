@@ -237,10 +237,22 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   }
 
   /// Forces a re-check against Supabase + RevenueCat, ignoring the cache TTL.
+  ///
+  /// Never throws: callers include the dashboard's RefreshIndicator (which
+  /// awaits this) and fire-and-forget lifecycle hooks. On failure (e.g.
+  /// offline) the previous state is restored so the UI never gets stuck in
+  /// `isLoading` showing a spinner forever.
   Future<void> forceRefresh() async {
+    final previous = state.value ?? const SubscriptionState();
     _setLoading(true);
-    final fresh = await _fetchRemote();
-    state = AsyncData(fresh);
+    try {
+      final fresh = await _fetchRemote();
+      state = AsyncData(fresh);
+    } catch (e) {
+      SentryService.addBreadcrumb(
+          'subscription forceRefresh failed: $e', category: 'subscription');
+      state = AsyncData(previous.copyWith(isLoading: false, clearError: true));
+    }
   }
 
   // ── Internal ───────────────────────────────────────────────────────────────

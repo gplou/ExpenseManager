@@ -80,6 +80,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recurringTransaction => 'Transacción recurrente';
 
   @override
+  String get noRepeat => 'No repetir';
+
+  @override
+  String get note => 'Nota';
+
+  @override
+  String get more => 'Más';
+
+  @override
   String get weekly => 'Semanal';
 
   @override
@@ -211,6 +220,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logout => 'Cerrar sesión';
 
   @override
+  String get logoutConfirmTitle => '¿Cerrar sesión?';
+
+  @override
+  String get logoutConfirmContent =>
+      'Tus datos guardados en este dispositivo se conservan y volverás a verlos al iniciar sesión con la misma cuenta.';
+
+  @override
   String changePasswordContent(String email) {
     return 'Te enviaremos un enlace de cambio de contraseña a:\n\n$email';
   }
@@ -316,6 +332,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get relToday => 'Hoy';
+
+  @override
+  String get relYesterday => 'Ayer';
 
   @override
   String get relTomorrow => 'Mañana';
@@ -775,11 +794,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get micUnavailable => 'Micrófono no disponible';
 
   @override
-  String voiceAiError(String type, String info) {
-    return 'Error IA voz [$type]: $info';
-  }
-
-  @override
   String get voiceInterpretError =>
       'No se pudo interpretar. Inténtalo de nuevo.';
 
@@ -791,9 +805,8 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo detectar una transacción en la imagen.';
 
   @override
-  String imageAiError(String type, String info) {
-    return 'Error IA imagen [$type]: $info';
-  }
+  String get aiProcessingError =>
+      'No se pudo procesar tu solicitud. Inténtalo de nuevo.';
 
   @override
   String get promoCodeTitle => 'Código promocional';

@@ -24,7 +24,7 @@ import 'package:expense_manager/features/onboarding/presentation/onboarding_scre
 import 'package:expense_manager/features/settings/app_settings_screen.dart';
 import 'package:expense_manager/features/settings/data_recovery_screen.dart';
 import 'package:expense_manager/features/settings/legal_screen.dart';
-import 'legal_content.dart';
+import 'legal/legal_content.dart';
 
 part 'router.g.dart';
 
@@ -170,7 +170,7 @@ GoRouter router(Ref ref) {
         name: 'privacyPolicy',
         builder: (context, state) => LegalScreen(
           title: AppLocalizations.of(context).privacyPolicy,
-          content: privacyPolicyContent,
+          content: legalContentFor(Localizations.localeOf(context)).privacyPolicy,
         ),
       ),
       GoRoute(
@@ -178,7 +178,7 @@ GoRouter router(Ref ref) {
         name: 'termsOfService',
         builder: (context, state) => LegalScreen(
           title: AppLocalizations.of(context).termsOfService,
-          content: termsOfServiceContent,
+          content: legalContentFor(Localizations.localeOf(context)).termsOfService,
         ),
       ),
     ],

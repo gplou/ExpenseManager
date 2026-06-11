@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 /// Thin wrapper around PostHog. All methods are fire-and-forget safe:
 /// any PostHog error is caught and logged, never surfaced to the user.
@@ -43,7 +43,7 @@ class AnalyticsService {
           userProperties: {'is_pro': isPro},
         );
       } catch (e) {
-        debugPrint('[Analytics] identify error: $e');
+        AppLogger.log('[Analytics] identify error: $e');
       }
     }());
   }
@@ -54,7 +54,7 @@ class AnalyticsService {
       try {
         await Posthog().reset();
       } catch (e) {
-        debugPrint('[Analytics] reset error: $e');
+        AppLogger.log('[Analytics] reset error: $e');
       }
     }());
   }
@@ -73,7 +73,7 @@ class AnalyticsService {
           properties: properties,
         );
       } catch (e) {
-        debugPrint('[Analytics] track($event) error: $e');
+        AppLogger.log('[Analytics] track($event) error: $e');
       }
     }());
   }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -10,6 +9,7 @@ import 'package:expense_manager/features/subscription/subscription_provider.dart
 import 'package:expense_manager/features/transactions/domain/cloud_transaction_sync_contract.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 import 'pending_operation.dart';
 import 'sync_queue_repository.dart';
 import 'transactions_repository.dart';
@@ -72,7 +72,7 @@ class OfflineSyncService {
     final isPro = _ref.read(isProProvider);
     if (user == null || !isPro) return;
 
-    final queue = SyncQueueRepository(userId: user.id);
+    final queue = _ref.read(syncQueueRepositoryProvider);
     final pending = await queue.getPending();
     if (pending.isEmpty) return;
 
@@ -82,7 +82,7 @@ class OfflineSyncService {
     for (final op in pending) {
       // Descartar ops que han fallado demasiadas veces para evitar queue poisoning.
       if (op.attempts >= _maxAttempts) {
-        debugPrint(
+        AppLogger.log(
           'OfflineSyncService: dropping op ${op.id} after $_maxAttempts failed attempts',
         );
         await queue.remove(op.id);
@@ -96,14 +96,14 @@ class OfflineSyncService {
       } on AuthException {
         // Token expirado o sesión revocada — no tiene sentido continuar con
         // el resto de ops porque todas fallarán con el mismo error.
-        debugPrint('OfflineSyncService: auth error, aborting flush');
+        AppLogger.log('OfflineSyncService: auth error, aborting flush');
         break;
       } on AuthFailure {
-        debugPrint('OfflineSyncService: auth failure, aborting flush');
+        AppLogger.log('OfflineSyncService: auth failure, aborting flush');
         break;
       } catch (e) {
         await queue.incrementAttempts(op.id);
-        debugPrint(
+        AppLogger.log(
           'OfflineSyncService: failed op ${op.id} '
           '(${op.attempts + 1}/$_maxAttempts attempts): $e',
         );

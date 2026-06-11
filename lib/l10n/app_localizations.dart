@@ -240,6 +240,24 @@ abstract class AppLocalizations {
   /// **'Transacción recurrente'**
   String get recurringTransaction;
 
+  /// No description provided for @noRepeat.
+  ///
+  /// In es, this message translates to:
+  /// **'No repetir'**
+  String get noRepeat;
+
+  /// No description provided for @note.
+  ///
+  /// In es, this message translates to:
+  /// **'Nota'**
+  String get note;
+
+  /// No description provided for @more.
+  ///
+  /// In es, this message translates to:
+  /// **'Más'**
+  String get more;
+
   /// No description provided for @weekly.
   ///
   /// In es, this message translates to:
@@ -492,6 +510,18 @@ abstract class AppLocalizations {
   /// **'Cerrar sesión'**
   String get logout;
 
+  /// No description provided for @logoutConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cerrar sesión?'**
+  String get logoutConfirmTitle;
+
+  /// No description provided for @logoutConfirmContent.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus datos guardados en este dispositivo se conservan y volverás a verlos al iniciar sesión con la misma cuenta.'**
+  String get logoutConfirmContent;
+
   /// No description provided for @changePasswordContent.
   ///
   /// In es, this message translates to:
@@ -695,6 +725,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Hoy'**
   String get relToday;
+
+  /// No description provided for @relYesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayer'**
+  String get relYesterday;
 
   /// No description provided for @relTomorrow.
   ///
@@ -1536,12 +1572,6 @@ abstract class AppLocalizations {
   /// **'Micrófono no disponible'**
   String get micUnavailable;
 
-  /// No description provided for @voiceAiError.
-  ///
-  /// In es, this message translates to:
-  /// **'Error IA voz [{type}]: {info}'**
-  String voiceAiError(String type, String info);
-
   /// No description provided for @voiceInterpretError.
   ///
   /// In es, this message translates to:
@@ -1560,11 +1590,11 @@ abstract class AppLocalizations {
   /// **'No se pudo detectar una transacción en la imagen.'**
   String get imageTransactionNotDetected;
 
-  /// No description provided for @imageAiError.
+  /// No description provided for @aiProcessingError.
   ///
   /// In es, this message translates to:
-  /// **'Error IA imagen [{type}]: {info}'**
-  String imageAiError(String type, String info);
+  /// **'No se pudo procesar tu solicitud. Inténtalo de nuevo.'**
+  String get aiProcessingError;
 
   /// No description provided for @promoCodeTitle.
   ///

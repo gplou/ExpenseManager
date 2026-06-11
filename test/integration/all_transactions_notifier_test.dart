@@ -435,4 +435,37 @@ void main() {
       );
     });
   });
+
+  // ── F12: _saveToCache es best-effort ───────────────────────────────────────
+
+  group('_saveToCache — best-effort (F12)', () {
+    test('a failing local cache write neither crashes nor hides cloud data',
+        () async {
+      // Hidratación ya completada → el notifier intentará _saveToCache.
+      SharedPreferences.setMockInitialValues({_hydrationKey: true});
+
+      final now = DateTime.now();
+      final cloudTx =
+          _tx('cloud-1', DateTime(now.year, now.month, 1), TransactionType.expense);
+      final container =
+          _makeContainer(cloudRepo: _FakeCloudTxRepo(data: [cloudTx]));
+      addTearDown(container.dispose);
+
+      // Simula SQLite no disponible (Keystore hang / DB corrupta): sin BD de
+      // test, cualquier acceso intenta abrir la real y falla en el entorno
+      // de test (MissingPluginException de path_provider).
+      await LocalDatabase.instance.close();
+
+      final result = await container.read(allTransactionsProvider.future);
+      expect(
+        result.map((t) => t.id),
+        contains('cloud-1'),
+        reason: 'El fallo del caché local no debe ocultar los datos del cloud.',
+      );
+
+      // El write en background falla en silencio: si lanzara un unhandled
+      // async error, el propio runner del test fallaría aquí.
+      await _pump();
+    });
+  });
 }

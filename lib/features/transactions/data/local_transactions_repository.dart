@@ -1,13 +1,15 @@
 import 'package:clock/clock.dart';
-import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/local_db/local_database.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/core/utils/date_helpers.dart';
 import 'package:expense_manager/core/utils/transaction_id_generator.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 class LocalTransactionsRepository implements TransactionsRepositoryContract {
   LocalTransactionsRepository({required this.userId});
@@ -30,7 +32,7 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
       );
       return rows.map(_fromRow).toList();
     } catch (e, st) {
-      debugPrint('LocalTransactionsRepository.getTransactions error: $e\n$st');
+      AppLogger.log('LocalTransactionsRepository.getTransactions error: $e\n$st');
       throw const CacheFailure('Failed to load transactions from local DB');
     }
   }
@@ -72,7 +74,7 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
       );
       return model;
     } catch (e, st) {
-      debugPrint('LocalTransactionsRepository.createTransaction error: $e\n$st');
+      AppLogger.log('LocalTransactionsRepository.createTransaction error: $e\n$st');
       throw const CacheFailure('Failed to save transaction');
     }
   }
@@ -89,7 +91,7 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
       );
       return transaction;
     } catch (e, st) {
-      debugPrint('LocalTransactionsRepository.updateTransaction error: $e\n$st');
+      AppLogger.log('LocalTransactionsRepository.updateTransaction error: $e\n$st');
       throw const CacheFailure('Failed to update transaction');
     }
   }
@@ -104,7 +106,7 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
         whereArgs: [id, userId],
       );
     } catch (e, st) {
-      debugPrint('LocalTransactionsRepository.deleteTransaction error: $e\n$st');
+      AppLogger.log('LocalTransactionsRepository.deleteTransaction error: $e\n$st');
       throw const CacheFailure('Failed to delete transaction');
     }
   }
@@ -119,7 +121,7 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e, st) {
-      debugPrint('LocalTransactionsRepository.upsertTransaction error: $e\n$st');
+      AppLogger.log('LocalTransactionsRepository.upsertTransaction error: $e\n$st');
       throw const CacheFailure('Failed to upsert transaction');
     }
   }
@@ -200,3 +202,21 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
         currency: row['currency'] as String? ?? 'EUR',
       );
 }
+
+// ── Provider ─────────────────────────────────────────────────────────────────
+
+/// Instancia ligada al usuario autenticado actual.
+///
+/// Lanza [StateError] si se lee sin sesión: todos los call-sites comprueban
+/// `currentUserProvider != null` antes de leerlo. Permite a los tests hacer
+/// override sin montar SQLite real.
+final localTransactionsRepositoryProvider =
+    Provider<LocalTransactionsRepository>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) {
+    throw StateError(
+      'localTransactionsRepositoryProvider leído sin usuario autenticado',
+    );
+  }
+  return LocalTransactionsRepository(userId: user.id);
+});

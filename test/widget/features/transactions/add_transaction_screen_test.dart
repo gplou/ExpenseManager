@@ -22,6 +22,7 @@ import 'package:expense_manager/features/transactions/domain/transactions_reposi
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/recent_categories_strip.dart';
 import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
@@ -132,6 +133,7 @@ Widget _wrap({
   _MockRecurringRepo? recurringRepo,
   _MockSubRepo? subRepo,
   String currency = 'EUR',
+  List<String>? quickCategories,
 }) {
   SharedPreferences.setMockInitialValues({});
   final repo = subRepo ?? _MockSubRepo();
@@ -157,6 +159,9 @@ Widget _wrap({
           TransactionType.expense: [],
         },
       ),
+      for (final type in TransactionType.values)
+        quickCategoriesProvider(type).overrideWith(
+            (_) async => quickCategories ?? const <String>[]),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -170,12 +175,9 @@ Widget _wrap({
   );
 }
 
-// Navigate from step 1 (amount) to step 2 (details) by entering an amount
-// and tapping the submit button on the keypad (identified by its check icon).
-Future<void> _goToDetails(WidgetTester tester, String digit) async {
-  await tester.tap(find.text(digit).first);
-  await tester.pump();
-  // The submit key always carries Icons.check_rounded next to the label.
+/// Taps the keypad submit key (✓), which saves directly in the single-screen
+/// quick-entry flow.
+Future<void> _tapSave(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.check_rounded).first);
   await tester.pumpAndSettle();
 }
@@ -199,12 +201,13 @@ void main() {
 
   // ── Basic render ─────────────────────────────────────────────────────────────
 
-  testWidgets('renders the type toggle, keypad and save area for a new entry',
+  testWidgets(
+      'renders the type toggle, keypad, category strip and detail pills',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(_wrap());
+    await tester.pumpWidget(_wrap(quickCategories: ['Comida', 'Transporte']));
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.trending_up_rounded), findsOneWidget);
@@ -212,6 +215,13 @@ void main() {
     expect(find.text('1'), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
     expect(find.text('9'), findsOneWidget);
+    // Quick category chips on the main screen
+    expect(find.text('Comida'), findsOneWidget);
+    expect(find.text('Transporte'), findsOneWidget);
+    // Detail pills: date (Hoy), note, recurrence
+    expect(find.text('Hoy'), findsOneWidget);
+    expect(find.text('Nota'), findsOneWidget);
+    expect(find.text('No repetir'), findsOneWidget);
   });
 
   testWidgets('renders the transaction amount when editing an existing one',
@@ -237,7 +247,7 @@ void main() {
 
   // ── Amount validation ────────────────────────────────────────────────────────
 
-  testWidgets('shows invalid-amount error when tapping continue with amount=0',
+  testWidgets('shows invalid-amount error when saving with amount=0',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -245,11 +255,8 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
-    // Tap the submit key (check icon) without entering any amount
-    await tester.tap(find.byIcon(Icons.check_rounded).first);
-    await tester.pumpAndSettle();
+    await _tapSave(tester);
 
-    // Should still be on step 1 (error message visible)
     expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
   });
 
@@ -263,22 +270,46 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
-    // Default is expense — tap income toggle
     await tester.tap(find.byIcon(Icons.trending_up_rounded));
     await tester.pumpAndSettle();
 
-    // Switch back to expense
     await tester.tap(find.byIcon(Icons.trending_down_rounded));
     await tester.pumpAndSettle();
 
-    // Still on step 1 with both icons visible
     expect(find.byIcon(Icons.trending_up_rounded), findsOneWidget);
     expect(find.byIcon(Icons.trending_down_rounded), findsOneWidget);
   });
 
-  // ── Edit mode pre-populates fields ───────────────────────────────────────────
+  testWidgets('switching type clears the selected category', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-  testWidgets('edit mode shows "Editar transacción" in app bar', (tester) async {
+    final txRepo = _makeTxRepo();
+    await tester.pumpWidget(_wrap(
+      txRepo: txRepo,
+      quickCategories: ['Comida', 'Transporte'],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Comida'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.trending_up_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.trending_down_rounded));
+    await tester.pumpAndSettle();
+
+    // Saving now must complain about the missing category.
+    await tester.tap(find.text('5'));
+    await tester.pump();
+    await _tapSave(tester);
+    expect(find.byType(SnackBar), findsOneWidget);
+    verifyNever(() => txRepo.createTransaction(any()));
+  });
+
+  // ── Edit mode ────────────────────────────────────────────────────────────────
+
+  testWidgets('edit mode shows "Editar transacción" in app bar',
+      (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -298,7 +329,7 @@ void main() {
     expect(find.text('Editar transacción'), findsOneWidget);
   });
 
-  testWidgets('edit mode goes to detail step directly when amount is set',
+  testWidgets('edit mode shows the delete button in the app bar',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -314,36 +345,6 @@ void main() {
         createdAt: DateTime(2026, 1, 1),
       ),
     ));
-    await tester.pumpAndSettle();
-
-    // In details step: save button visible
-    expect(find.text('Guardar cambios'), findsOneWidget);
-  });
-
-  testWidgets('edit mode shows delete button on amount step', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(500, 1400));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    final txRepo = _makeTxRepo();
-    final recRepo = _makeRecurringRepo();
-
-    await tester.pumpWidget(_wrap(
-      transaction: TransactionModel(
-        id: 'tx-1',
-        userId: 'u',
-        amount: 25,
-        type: TransactionType.expense,
-        category: 'Comida',
-        date: DateTime(2026, 1, 1),
-        createdAt: DateTime(2026, 1, 1),
-      ),
-      txRepo: txRepo,
-      recurringRepo: recRepo,
-    ));
-    await tester.pumpAndSettle();
-
-    // Navigate back to amount step to see the delete button
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
@@ -351,8 +352,7 @@ void main() {
 
   // ── Voice mode pre-populates ─────────────────────────────────────────────────
 
-  testWidgets('voice mode pre-populates amount and goes to details step',
-      (tester) async {
+  testWidgets('voice mode pre-populates amount and category', (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -367,8 +367,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // With amount pre-filled, jumps directly to details step
     expect(find.textContaining('15'), findsAtLeastNWidgets(1));
+    // The parsed category is visible (prepended to the quick strip).
+    expect(find.text('Comida'), findsOneWidget);
+    // The parsed note shows up in its pill.
+    expect(find.text('Café'), findsOneWidget);
   });
 
   // ── Category required validation ─────────────────────────────────────────────
@@ -380,19 +383,57 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
-    // Enter amount and go to details
-    await _goToDetails(tester, '5');
-
-    // Try to save without selecting category
-    await tester.tap(find.text('Guardar gasto'));
-    await tester.pumpAndSettle();
+    await tester.tap(find.text('5'));
+    await tester.pump();
+    await _tapSave(tester);
 
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
-  // ── Subcategory picker ───────────────────────────────────────────────────────
+  // ── Quick category strip ─────────────────────────────────────────────────────
 
-  testWidgets('subcategory row visible after category is pre-selected',
+  testWidgets('tapping a quick category chip selects it and allows saving',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final txRepo = _makeTxRepo();
+    await tester.pumpWidget(_wrap(
+      txRepo: txRepo,
+      quickCategories: ['Comida', 'Transporte'],
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('5'));
+    await tester.pump();
+    await tester.tap(find.text('Comida'));
+    await tester.pumpAndSettle();
+    await _tapSave(tester);
+
+    final captured = verify(() => txRepo.createTransaction(captureAny()))
+        .captured
+        .first as TransactionModel;
+    expect(captured.category, 'Comida');
+    expect(captured.amount, 5);
+  });
+
+  testWidgets('the "Más" chip opens the full category picker', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(quickCategories: ['Comida']));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Más'));
+    await tester.pumpAndSettle();
+
+    // Category picker sheet shows its eyebrow title.
+    expect(find.text('CATEGORÍA'), findsOneWidget);
+  });
+
+  // ── Detail pills: subcategory ────────────────────────────────────────────────
+
+  testWidgets('subcategory pill visible after category is pre-selected',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -415,29 +456,112 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // The subcategory row uses the label "Subcategoría"
     expect(find.textContaining('Subcategor'), findsOneWidget);
   });
 
-  // ── Recurring toggle ─────────────────────────────────────────────────────────
+  // ── Detail pills: date ───────────────────────────────────────────────────────
 
-  testWidgets('recurring toggle reveals frequency picker', (tester) async {
+  testWidgets('date pill opens the quick date sheet and "Ayer" updates it',
+      (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
-    await _goToDetails(tester, '5');
-
-    // Recurring repeat icon button
-    final repeatIcon = find.byIcon(Icons.repeat_rounded);
-    // May be multiple (category block + recurring toggle) — tap the one in _RecurringToggleCompact
-    await tester.tap(repeatIcon.last);
+    await tester.tap(find.text('Hoy'));
     await tester.pumpAndSettle();
 
-    // Frequency picker should now be visible (weekly/monthly/yearly labels)
-    expect(find.text('Mensual'), findsAtLeastNWidgets(1));
+    expect(find.byType(CalendarDatePicker), findsOneWidget);
+
+    await tester.tap(find.text('Ayer'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ayer'), findsOneWidget);
+    expect(find.byType(CalendarDatePicker), findsNothing);
+  });
+
+  // ── Detail pills: note ───────────────────────────────────────────────────────
+
+  testWidgets('note pill opens the note sheet and shows the saved text',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Nota'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Cena con amigos');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cena con amigos'), findsOneWidget);
+  });
+
+  // ── Detail pills: recurrence ─────────────────────────────────────────────────
+
+  testWidgets('recurrence pill opens the sheet and selecting Mensual '
+      'activates it', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('No repetir'));
+    await tester.pumpAndSettle();
+
+    // Sheet offers the frequency options.
+    expect(find.text('Mensual'), findsOneWidget);
+    expect(find.text('Semanal'), findsOneWidget);
+    expect(find.text('Anual'), findsOneWidget);
+
+    await tester.tap(find.text('Mensual'));
+    await tester.pumpAndSettle();
+
+    // Pill now reflects the active recurrence.
+    expect(find.text('Mensual'), findsOneWidget);
+    expect(find.text('No repetir'), findsNothing);
+  });
+
+  testWidgets('saving with recurrence creates a recurring transaction',
+      (tester) async {
+    // Wider surface: with a category selected the pill row holds four pills
+    // (date, subcategory, note, recurrence) and is horizontally scrollable.
+    await tester.binding.setSurfaceSize(const Size(900, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final recRepo = _makeRecurringRepo();
+    await tester.pumpWidget(_wrap(
+      recurringRepo: recRepo,
+      voiceData: ParsedVoiceTransaction(
+        amount: 12.0,
+        type: TransactionType.expense,
+        category: 'Comida',
+        date: DateTime(2026, 3, 1),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('No repetir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mensual'));
+    await tester.pumpAndSettle();
+
+    await _tapSave(tester);
+
+    verify(() => recRepo.createRecurring(
+          amount: any(named: 'amount'),
+          type: any(named: 'type'),
+          category: any(named: 'category'),
+          subcategory: any(named: 'subcategory'),
+          description: any(named: 'description'),
+          recurrenceType: RecurrenceType.monthly,
+          nextOccurrence: any(named: 'nextOccurrence'),
+        )).called(1);
   });
 
   // ── New transaction save flow ────────────────────────────────────────────────
@@ -459,14 +583,13 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // Already on details step; tap save
-    await tester.tap(find.text('Guardar gasto'));
-    await tester.pumpAndSettle();
+    await _tapSave(tester);
 
     verify(() => txRepo.createTransaction(any())).called(1);
   });
 
-  testWidgets('save income creates transaction with income type', (tester) async {
+  testWidgets('save income creates transaction with income type',
+      (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -483,8 +606,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Guardar ingreso'));
-    await tester.pumpAndSettle();
+    await _tapSave(tester);
 
     final captured = verify(() => txRepo.createTransaction(captureAny()))
         .captured
@@ -514,8 +636,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Guardar cambios'));
-    await tester.pumpAndSettle();
+    await _tapSave(tester);
 
     verify(() => txRepo.updateTransaction(any())).called(1);
   });
@@ -545,17 +666,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // Go back to amount step to see delete button
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
-    await tester.pumpAndSettle();
-
     await tester.tap(find.byIcon(Icons.delete_outline_rounded));
     await tester.pumpAndSettle();
 
-    // Confirm dialog appears
     expect(find.byType(AlertDialog), findsOneWidget);
 
-    // Tap the Delete button in the dialog
     final dialogDeleteBtns = find.descendant(
       of: find.byType(AlertDialog),
       matching: find.text('Eliminar'),
@@ -564,22 +679,5 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => txRepo.deleteTransaction('tx-1')).called(1);
-  });
-
-  // ── Step indicator ───────────────────────────────────────────────────────────
-
-  testWidgets('step indicator shows two bars; second activates on details step',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(500, 1400));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(_wrap());
-    await tester.pumpAndSettle();
-
-    // Two _Bar widgets exist in the step indicator
-    await _goToDetails(tester, '3');
-
-    // On details step the back arrow is visible
-    expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
   });
 }

@@ -2,7 +2,7 @@
 // These constants are used by the LegalScreen widget via the app router.
 // Last updated: 2026-03-26.
 
-const String privacyPolicyContent = '''
+const String privacyPolicyContentEn = '''
 Privacy Policy
 
 Last updated: March 26, 2026
@@ -118,7 +118,7 @@ GPM
 Email: support@gpm-apps.com
 ''';
 
-const String termsOfServiceContent = '''
+const String termsOfServiceContentEn = '''
 Terms of Service
 
 Last updated: March 26, 2026

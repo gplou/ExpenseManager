@@ -23,6 +23,9 @@
   "descriptionHint": "Ajouter une note...",
   "date": "Date",
   "recurringTransaction": "Transaction récurrente",
+  "noRepeat": "Ne pas répéter",
+  "note": "Note",
+  "more": "Plus",
   "weekly": "Hebdomadaire",
   "monthly": "Mensuel",
   "yearly": "Annuel",
@@ -68,6 +71,8 @@
   "darkMode": "Mode sombre",
   "language": "Langue",
   "logout": "Se déconnecter",
+  "logoutConfirmTitle": "Se déconnecter ?",
+  "logoutConfirmContent": "Vos données enregistrées sur cet appareil sont conservées et seront de nouveau disponibles lorsque vous vous reconnecterez avec le même compte.",
   "changePasswordContent": "Nous vous enverrons un lien pour changer votre mot de passe à :\n\n{email}",
   "send": "Envoyer",
   "checkEmailPassword": "Vérifiez votre e-mail pour changer le mot de passe",
@@ -102,6 +107,7 @@
   "passwordTooShort": "Le mot de passe doit avoir au moins 8 caractères, une lettre et un chiffre",
   "accountCreated": "Compte créé ! Vérifiez votre e-mail pour le valider.",
   "relToday": "Aujourd'hui",
+  "relYesterday": "Hier",
   "relTomorrow": "Demain",
   "relOverdue": "En retard",
   "categorySalary": "Salaire",
@@ -321,26 +327,13 @@
   "@galleryOption": {},
   "micUnavailable": "Microphone non disponible",
   "@micUnavailable": {},
-  "voiceAiError": "Erreur IA voix [{type}] : {info}",
-  "@voiceAiError": {
-    "placeholders": {
-      "type": { "type": "String" },
-      "info": { "type": "String" }
-    }
-  },
   "voiceInterpretError": "Impossible d'interpréter. Réessayez.",
   "@voiceInterpretError": {},
   "voiceProcessing": "Traitement de l'audio…",
   "@voiceProcessing": {},
   "imageTransactionNotDetected": "Impossible de détecter une transaction dans l'image.",
   "@imageTransactionNotDetected": {},
-  "imageAiError": "Erreur IA image [{type}] : {info}",
-  "@imageAiError": {
-    "placeholders": {
-      "type": { "type": "String" },
-      "info": { "type": "String" }
-    }
-  },
+  "aiProcessingError": "Votre demande n'a pas pu être traitée. Veuillez réessayer.",
   "promoCodeTitle": "Code promo",
   "@promoCodeTitle": {},
   "promoCodeHint": "Entrez votre code",

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 /// Configuración global de la aplicación.
 ///
@@ -28,14 +29,20 @@ class AppConfig {
   static const String revenueCatIosKey =
       String.fromEnvironment('REVENUECAT_IOS_KEY');
 
-  // AdMob — ad unit IDs (test IDs used by default; replace via dart-define before publishing)
+  // AdMob — ad unit IDs de TEST de Google. Sirven como default en desarrollo;
+  // validate() impide publicar un build de producción con ellos.
+  static const String admobTestAndroidBannerUnitId =
+      'ca-app-pub-3940256099942544/6300978111';
+  static const String admobTestIosBannerUnitId =
+      'ca-app-pub-3940256099942544/2934735716';
+
   static const String admobAndroidBannerUnitId = String.fromEnvironment(
     'ADMOB_ANDROID_BANNER_UNIT_ID',
-    defaultValue: 'ca-app-pub-3940256099942544/6300978111',
+    defaultValue: admobTestAndroidBannerUnitId,
   );
   static const String admobIosBannerUnitId = String.fromEnvironment(
     'ADMOB_IOS_BANNER_UNIT_ID',
-    defaultValue: 'ca-app-pub-3940256099942544/2934735716',
+    defaultValue: admobTestIosBannerUnitId,
   );
 
   // PostHog
@@ -69,7 +76,34 @@ class AppConfig {
 
   /// Valida que las variables de entorno obligatorias estén presentes.
   /// Lanza [StateError] si falta alguna.
-  static void validate() {
+  ///
+  /// En producción es estricto: también falla con los AdMob ad-units de TEST
+  /// o con las claves de RevenueCat/Google vacías — mejor un crash visible en
+  /// la verificación pre-release que publicar con configuración de desarrollo.
+  static void validate() => validateValues(
+        isProd: isProduction,
+        supabaseUrl: supabaseUrl,
+        supabaseAnonKey: supabaseAnonKey,
+        revenueCatAndroidKey: revenueCatAndroidKey,
+        revenueCatIosKey: revenueCatIosKey,
+        googleWebClientId: googleWebClientId,
+        admobAndroidBannerUnitId: admobAndroidBannerUnitId,
+        admobIosBannerUnitId: admobIosBannerUnitId,
+      );
+
+  /// Lógica de [validate] extraída con los valores como parámetros para poder
+  /// testearla (los `String.fromEnvironment` no se pueden variar en tests).
+  @visibleForTesting
+  static void validateValues({
+    required bool isProd,
+    required String supabaseUrl,
+    required String supabaseAnonKey,
+    required String revenueCatAndroidKey,
+    required String revenueCatIosKey,
+    required String googleWebClientId,
+    required String admobAndroidBannerUnitId,
+    required String admobIosBannerUnitId,
+  }) {
     if (supabaseUrl.isEmpty) {
       throw StateError(
         'SUPABASE_URL no está configurado.\n'
@@ -83,21 +117,46 @@ class AppConfig {
       );
     }
 
-    // RevenueCat keys — warn only (may be empty during early development).
+    if (isProd) {
+      // Production: configuración incompleta = build no publicable.
+      if (admobAndroidBannerUnitId == admobTestAndroidBannerUnitId ||
+          admobIosBannerUnitId == admobTestIosBannerUnitId) {
+        throw StateError(
+          'Build de producción con AdMob ad-units de TEST. '
+          'Define ADMOB_ANDROID_BANNER_UNIT_ID / ADMOB_IOS_BANNER_UNIT_ID '
+          'en dart_defines.json.',
+        );
+      }
+      if (revenueCatAndroidKey.isEmpty || revenueCatIosKey.isEmpty) {
+        throw StateError(
+          'Build de producción sin claves de RevenueCat. '
+          'Define REVENUECAT_ANDROID_KEY / REVENUECAT_IOS_KEY.',
+        );
+      }
+      if (googleWebClientId.isEmpty) {
+        throw StateError(
+          'Build de producción sin GOOGLE_WEB_CLIENT_ID: '
+          'el inicio de sesión con Google no funcionaría.',
+        );
+      }
+      return;
+    }
+
+    // Desarrollo: solo warnings (las claves pueden faltar al empezar).
     if (revenueCatAndroidKey.isEmpty) {
-      debugPrint(
+      AppLogger.log(
         '[AppConfig] REVENUECAT_ANDROID_KEY está vacío. '
         'Las compras in-app no funcionarán en Android.',
       );
     }
     if (revenueCatIosKey.isEmpty) {
-      debugPrint(
+      AppLogger.log(
         '[AppConfig] REVENUECAT_IOS_KEY está vacío. '
         'Las compras in-app no funcionarán en iOS.',
       );
     }
     if (googleWebClientId.isEmpty) {
-      debugPrint(
+      AppLogger.log(
         '[AppConfig] GOOGLE_WEB_CLIENT_ID está vacío. '
         'El inicio de sesión con Google no funcionará.',
       );

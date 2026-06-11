@@ -80,6 +80,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get recurringTransaction => 'Wiederkehrende Transaktion';
 
   @override
+  String get noRepeat => 'Nicht wiederholen';
+
+  @override
+  String get note => 'Notiz';
+
+  @override
+  String get more => 'Mehr';
+
+  @override
   String get weekly => 'Wöchentlich';
 
   @override
@@ -211,6 +220,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get logout => 'Abmelden';
 
   @override
+  String get logoutConfirmTitle => 'Abmelden?';
+
+  @override
+  String get logoutConfirmContent =>
+      'Deine auf diesem Gerät gespeicherten Daten bleiben erhalten und sind wieder verfügbar, sobald du dich mit demselben Konto anmeldest.';
+
+  @override
   String changePasswordContent(String email) {
     return 'Wir senden Ihnen einen Link zur Passwortänderung an:\n\n$email';
   }
@@ -320,6 +336,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get relToday => 'Heute';
+
+  @override
+  String get relYesterday => 'Gestern';
 
   @override
   String get relTomorrow => 'Morgen';
@@ -783,11 +802,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get micUnavailable => 'Mikrofon nicht verfügbar';
 
   @override
-  String voiceAiError(String type, String info) {
-    return 'Sprach-KI-Fehler [$type]: $info';
-  }
-
-  @override
   String get voiceInterpretError =>
       'Konnte nicht interpretiert werden. Versuchen Sie es erneut.';
 
@@ -799,9 +813,8 @@ class AppLocalizationsDe extends AppLocalizations {
       'Es konnte keine Transaktion im Bild erkannt werden.';
 
   @override
-  String imageAiError(String type, String info) {
-    return 'Bild-KI-Fehler [$type]: $info';
-  }
+  String get aiProcessingError =>
+      'Deine Anfrage konnte nicht verarbeitet werden. Bitte versuche es erneut.';
 
   @override
   String get promoCodeTitle => 'Aktionscode';
