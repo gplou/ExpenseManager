@@ -17,6 +17,7 @@ import 'package:expense_manager/features/dashboard/dashboard_screen.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
 import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:expense_manager/features/transactions/presentation/screens/transactions_list_screen.dart';
+import 'package:expense_manager/features/budgets/presentation/screens/budgets_screen.dart';
 import 'package:expense_manager/features/charts/presentation/screens/charts_screen.dart';
 import 'package:expense_manager/features/chat/presentation/chat_screen.dart';
 import 'package:expense_manager/features/subscription/pro_screen.dart';
@@ -36,6 +37,7 @@ abstract class AppRoutes {
   static const transactions = '/transactions';
   static const addTransaction = '/transactions/add';
   static const charts = '/charts';
+  static const budgets = '/budgets';
   static const pro = '/pro';
   static const chat = '/chat';
   static const onboarding = '/onboarding';
@@ -137,6 +139,11 @@ GoRouter router(Ref ref) {
         path: AppRoutes.charts,
         name: 'charts',
         builder: (context, state) => const ChartsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.budgets,
+        name: 'budgets',
+        builder: (context, state) => const BudgetsScreen(),
       ),
       GoRoute(
         path: AppRoutes.pro,

@@ -24,6 +24,7 @@ import 'core/services/sentry_provider_observer.dart';
 import 'core/services/sentry_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/config/router.dart';
+import 'core/widgets/lock_gate.dart';
 import 'core/local_db/local_database.dart';
 import 'core/providers/locale_provider.dart' show localeProvider, kLocaleKey, supportedLocales;
 import 'core/providers/theme_provider.dart' show themeModeProvider, kThemeModeKey;
@@ -31,6 +32,8 @@ import 'core/providers/widget_action_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/transactions/data/initial_sync_service.dart';
 import 'features/transactions/data/offline_sync_service.dart';
+import 'features/transactions/presentation/providers/home_widget_sync_provider.dart';
+import 'features/transactions/presentation/providers/recurring_reminders_provider.dart';
 import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
@@ -389,6 +392,10 @@ class _MyAppState extends ConsumerState<MyApp> {
     ref.watch(offlineSyncServiceProvider);
     // Hidrata la BD local desde Supabase en el primer arranque para usuarios PRO.
     ref.watch(initialSyncServiceProvider);
+    // Reprograma los recordatorios de recurrentes (no-op con el toggle off).
+    ref.watch(recurringRemindersBootstrapProvider);
+    // Publica gasto/balance del mes en el home widget tras cada CRUD/sync.
+    ref.watch(homeWidgetDataSyncProvider);
 
     final router = ref.watch(routerProvider);
     final themeMode =
@@ -416,7 +423,9 @@ class _MyAppState extends ConsumerState<MyApp> {
         );
         return MediaQuery(
           data: mq.copyWith(textScaler: clamped),
-          child: child!,
+          // App lock: overlay opaco por encima del Navigator (cubre cualquier
+          // ruta/diálogo) cuando el bloqueo biométrico está activado.
+          child: LockGate(child: child!),
         );
       },
     );

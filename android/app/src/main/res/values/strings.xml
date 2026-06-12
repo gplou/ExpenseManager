@@ -10,4 +10,6 @@
     <string name="widget_camera_label">Foto</string>
     <string name="widget_camera_desc">Widget para añadir transacción por foto</string>
     <string name="widget_quad_desc">Widget de acciones rápidas de transacciones</string>
+    <string name="widget_spent_label">Gastado</string>
+    <string name="widget_balance_label">Balance</string>
 </resources>

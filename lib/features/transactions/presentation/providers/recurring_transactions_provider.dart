@@ -8,6 +8,7 @@ import 'package:expense_manager/features/transactions/data/recurring_transaction
 import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'recurring_reminders_provider.dart';
 import 'transactions_provider.dart';
 
 // IDs of recurring transactions already processed this session.
@@ -102,4 +103,8 @@ final processRecurringTransactionsProvider = FutureProvider<void>((ref) async {
 
   // Refrescar la única fuente de verdad; summary/recent derivan de ella.
   ref.invalidate(allTransactionsProvider);
+
+  // Las next_occurrence avanzaron: reprograma los recordatorios (no-op si el
+  // toggle está desactivado; nunca lanza).
+  resyncRecurringReminders(ref);
 });

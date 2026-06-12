@@ -72,6 +72,11 @@ class LocalDatabase {
         where: 'user_id = ?',
         whereArgs: [userId],
       );
+      await txn.delete(
+        'budgets',
+        where: 'user_id = ?',
+        whereArgs: [userId],
+      );
     });
   }
 
@@ -106,7 +111,7 @@ class LocalDatabase {
     return openDatabase(
       path,
       password: key,
-      version: 3,
+      version: 4,
       onCreate: onCreate,
       onUpgrade: applyUpgrades,
     );
@@ -151,6 +156,7 @@ class LocalDatabase {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(needsHydrationResetKey, true);
     }
+    if (oldVersion < 4) await _addBudgetsTable(db);
   }
 
   Future<String?> _readKeyWithRetry() async {
@@ -261,6 +267,28 @@ class LocalDatabase {
       'CREATE INDEX idx_recurring_user ON recurring_transactions(user_id)',
     );
     await _addPendingOperationsTable(db);
+    await _addBudgetsTable(db);
+  }
+
+  /// v4: presupuestos por categoría. Espejo de la tabla Supabase `budgets`
+  /// (FREE: única fuente de datos; PRO: caché cloud-first). Un presupuesto por
+  /// (user_id, category); period fijo 'monthly' en v1.
+  static Future<void> _addBudgetsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS budgets (
+        id         TEXT PRIMARY KEY,
+        user_id    TEXT NOT NULL,
+        category   TEXT NOT NULL,
+        amount     REAL NOT NULL,
+        period     TEXT NOT NULL DEFAULT 'monthly',
+        currency   TEXT NOT NULL DEFAULT 'EUR',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_budgets_user_category '
+      'ON budgets(user_id, category)',
+    );
   }
 
   static Future<void> _addPendingOperationsTable(Database db) async {

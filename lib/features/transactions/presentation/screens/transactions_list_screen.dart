@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/data/export_excel_service.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/transaction_search_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/core/services/analytics_service.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
@@ -28,6 +31,50 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   String? _selectedCategory; // null = todas
   bool _isSelecting = false;
   final Set<String> _selectedIds = {};
+
+  bool _isSearching = false;
+  final _searchController = TextEditingController();
+  Timer? _searchDebounce;
+  // Analytics: un solo evento por sesión de búsqueda, no por tecla.
+  bool _searchTracked = false;
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _enterSearchMode() {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _isSearching = true;
+      // Evita un filtro de categoría invisible mientras el botón está oculto.
+      _selectedCategory = null;
+    });
+  }
+
+  void _exitSearchMode() {
+    _searchDebounce?.cancel();
+    _searchController.clear();
+    ref.read(transactionSearchQueryProvider.notifier).clear();
+    setState(() {
+      _isSearching = false;
+      _searchTracked = false;
+    });
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      ref.read(transactionSearchQueryProvider.notifier).set(value);
+      if (value.trim().isNotEmpty && !_searchTracked) {
+        _searchTracked = true;
+        AnalyticsService.track(AnalyticsService.transactionsSearched);
+      }
+    });
+  }
 
   void _enterSelectionMode(String id) {
     HapticFeedback.mediumImpact();
@@ -56,7 +103,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     });
   }
 
-  Future<void> _deleteSelected(List<TransactionModel> allTransactions) async {
+  Future<void> _deleteSelected() async {
+    // Siempre sobre la lista completa: la selección puede haberse hecho antes
+    // de aplicar la búsqueda o el filtro de categoría.
+    final allTransactions =
+        ref.read(allTransactionsProvider).value ?? const <TransactionModel>[];
     final l10n = AppLocalizations.of(context);
     final count = _selectedIds.length;
     final confirmed = await showDialog<bool>(
@@ -113,6 +164,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final transactionsAsync = ref.watch(allTransactionsProvider);
+    final displayAsync = ref.watch(filteredTransactionsProvider);
     final cs = context.colors;
 
     return Scaffold(
@@ -124,23 +176,63 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 icon: const Icon(Icons.close_rounded),
                 onPressed: _exitSelectionMode,
               )
-            : null,
+            : _isSearching
+                ? IconButton(
+                    tooltip: l10n.cancel,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    onPressed: _exitSearchMode,
+                  )
+                : null,
         title: _isSelecting
             ? Text(
                 l10n.selectedCount(_selectedIds.length),
                 style: const TextStyle(fontFamily: 'GeneralSans', fontWeight: FontWeight.w600),
               )
-            : Text(l10n.history),
+            : _isSearching
+                ? TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: l10n.searchHint,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
+                    onChanged: _onSearchChanged,
+                  )
+                : Text(l10n.history),
         actions: [
           if (_isSelecting)
             transactionsAsync.whenOrNull(
-              data: (allTx) => IconButton(
+              data: (_) => IconButton(
                 tooltip: l10n.delete,
                 icon: const Icon(Icons.delete_outline_rounded, color: AppColors.mutedTerra),
-                onPressed: _selectedIds.isEmpty ? null : () => _deleteSelected(allTx),
+                onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
               ),
             ) ?? const SizedBox.shrink()
-          else
+          else if (_isSearching)
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _searchController,
+              builder: (_, value, __) => value.text.isEmpty
+                  ? const SizedBox.shrink()
+                  : IconButton(
+                      tooltip: l10n.cancel,
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                    ),
+            )
+          else ...[
+            transactionsAsync.whenOrNull(
+              data: (_) => IconButton(
+                tooltip: l10n.search,
+                icon: const Icon(Icons.search_rounded),
+                onPressed: _enterSearchMode,
+              ),
+            ) ?? const SizedBox.shrink(),
             transactionsAsync.whenOrNull(
               data: (_) => CategoryFilterButton(
                 l10n: l10n,
@@ -157,9 +249,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ),
             ) ??
                 const SizedBox.shrink(),
+          ],
         ],
       ),
-      body: transactionsAsync.when(
+      body: displayAsync.when(
         skipLoadingOnReload: true,
         loading: () => Center(
           child: CircularProgressIndicator(color: cs.primary),
@@ -168,12 +261,16 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           l10n: l10n,
           onRetry: () => ref.invalidate(allTransactionsProvider),
         ),
-        data: (allTx) {
+        data: (displayTx) {
           final transactions = _selectedCategory == null
-              ? allTx
-              : allTx.where((t) => t.category == _selectedCategory).toList();
+              ? displayTx
+              : displayTx.where((t) => t.category == _selectedCategory).toList();
           if (transactions.isEmpty) {
-            return EmptyState(l10n: l10n);
+            final isFiltering =
+                _isSearching && _searchController.text.trim().isNotEmpty;
+            return isFiltering
+                ? SearchEmptyState(l10n: l10n)
+                : EmptyState(l10n: l10n);
           }
 
           final grouped = _groupByDate(transactions);
@@ -214,7 +311,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               if (_isSelecting)
                 DeleteSelectedButton(
                   count: _selectedIds.length,
-                  onTap: _selectedIds.isEmpty ? null : () => _deleteSelected(allTx),
+                  onTap: _selectedIds.isEmpty ? null : _deleteSelected,
                 )
               else
                 ExportButton(

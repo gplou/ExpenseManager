@@ -60,6 +60,12 @@ final class RateLimitFailure extends AppFailure {
   const RateLimitFailure(super.message);
 }
 
+/// Límite del plan FREE alcanzado (p. ej. 1 presupuesto). La UI debe ofrecer
+/// el upgrade a PRO (CTA a /pro) además del mensaje localizado.
+final class FreeLimitFailure extends AppFailure {
+  const FreeLimitFailure([super.message = 'Free plan limit reached']);
+}
+
 /// Error inesperado
 final class UnexpectedFailure extends AppFailure {
   const UnexpectedFailure([super.message = 'An unexpected error occurred']);
@@ -77,6 +83,7 @@ extension AppFailureExtension on AppFailure {
         CacheFailure() => message,
         ValidationFailure(message: final msg) => msg,
         RateLimitFailure(message: final msg) => msg,
+        FreeLimitFailure(message: final msg) => msg,
         UnexpectedFailure() => message,
       };
 }

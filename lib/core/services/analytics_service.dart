@@ -26,6 +26,17 @@ class AnalyticsService {
   static const String photoUsed = 'photo_used';
   static const String exportExcel = 'export_excel';
   static const String onboardingCompleted = 'onboarding_completed';
+  static const String transactionsSearched = 'transactions_searched';
+  static const String appLockToggled = 'app_lock_toggled';
+
+  static const String budgetCreated = 'budget_created';
+  static const String budgetEdited = 'budget_edited';
+  static const String budgetDeleted = 'budget_deleted';
+  static const String budgetLimitHit = 'budget_limit_hit';
+
+  static const String backupExported = 'backup_exported';
+  static const String backupImported = 'backup_imported';
+  static const String recurringRemindersToggled = 'recurring_reminders_toggled';
 
   // ── Identity ───────────────────────────────────────────────────────────────
 

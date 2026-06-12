@@ -81,7 +81,7 @@ Never put business logic in widgets. Widgets call notifier methods and watch pro
 
 **Remote:** Supabase (PostgreSQL + Auth + Edge Functions). Each feature has a repository implementing a contract interface (`*_repository_contract.dart`).
 
-**Local cache:** SQLite encrypted with SQLCipher (`sqflite_sqlcipher`). `LocalDatabase` (`lib/core/local_db/local_database.dart`) is a lazy-open singleton; the encryption key lives in `SecureStorageService`. Tables: `transactions`, `recurring_transactions`, `pending_operations`.
+**Local cache:** SQLite encrypted with SQLCipher (`sqflite_sqlcipher`). `LocalDatabase` (`lib/core/local_db/local_database.dart`) is a lazy-open singleton; the encryption key lives in `SecureStorageService`. Tables: `transactions`, `recurring_transactions`, `pending_operations`, `budgets` (schema v4).
 
 **Offline sync:** `OfflineSyncService` runs in the background and drains `pending_operations`. `InitialSyncService` hydrates PRO users on first load. Conflict resolution is last-write-wins.
 
@@ -129,6 +129,26 @@ Use `AppLogger.log(...)` (`lib/core/utils/app_logger.dart`) — never `debugPrin
 ### Ads
 
 Google Mobile Ads (`google_mobile_ads: ^8.0.0`) with `app_tracking_transparency` for iOS ATT prompt. Ads are gated behind the PRO entitlement — PRO users see no ads.
+
+### Budgets
+
+Monthly per-category budgets (`lib/features/budgets/`). One budget per (user, category), period fixed to 'monthly' in v1, currency display-only like transactions. Repository selection mirrors transactions: FREE → `LocalBudgetsRepository` (SQLite only), PRO → `MirroredBudgetsRepository` (Supabase cloud-first, best-effort SQLite mirror, **no offline sync queue** — low-frequency CRUD fails fast). FREE gate: `kFreeBudgetLimit` (1) enforced in `BudgetsNotifier` via `FreeLimitFailure` → UI shows upgrade dialog with CTA to `/pro`. `budgetProgressProvider` computes current-month spend per category (own repo query; watches `allTransactionsProvider` only as a refresh signal). 80%/100% alerts fire once per budget+month (`BudgetAlerts`, SharedPreferences flags) from `BudgetsSection` in the dashboard.
+
+### Home Widget
+
+The Android 2×2 widget (`QuadWidgetProvider.kt` + `home_widget_quad.xml`) shows a month spent/balance strip plus 4 action buttons (deep links `expensemanager://widget/<action>`). `homeWidgetDataSyncProvider` (watched in MyApp) publishes **pre-formatted strings** for the current month via `HomeWidgetGateway.saveWidgetData` (keys `month_spent`/`balance`) after every CRUD/sync and clears them on logout — the native side never formats currency/numbers. Always go through `HomeWidgetGateway`, not `HomeWidget.*` directly. iOS widget: Swift source + Xcode setup guide live in `ios/ExpenseManagerWidget/` (target not created yet).
+
+### Backup / Import
+
+`BackupService` (`lib/features/transactions/data/backup_service.dart`): JSON full backup (transactions + recurring) and simple CSV, shared via share_plus. Import (settings) only accepts the app's own formats (v1), dedups by (day, amount, category, description) and strips ids before insert (repos assign fresh ids — avoids silent PK REPLACE on re-import). UI flow lives in `backup_flow.dart` (file_picker → parse → preview dialog → insert via `transactionsRepositoryProvider`).
+
+### Recurring Reminders (local notifications)
+
+`NotificationService` (`lib/core/services/notification_service.dart`) wraps flutter_local_notifications (lazy init, timezone via flutter_timezone, `inexactAllowWhileIdle` — no exact-alarm permission). `RecurringRemindersNotifier` (`recurring_reminders_provider.dart`) owns the settings toggle (default off; enabling requests the runtime permission) and `resync()` reprograms everything from the repo — called on startup (`recurringRemindersBootstrapProvider` in MyApp), after `saveWithRecurrence`/`delete` and after the recurring catch-up. Reminders fire the day before `next_occurrence` at 9:00; no BOOT_COMPLETED dependency. `resync()` never throws. Android requires core library desugaring (already enabled in `build.gradle.kts` — don't remove it).
+
+### App Lock (biometric)
+
+`LockGate` (`lib/core/widgets/lock_gate.dart`) is mounted in `MaterialApp.router`'s `builder` (above the Navigator) and shows an opaque overlay on launch and on resume when the lock is enabled (`appLockProvider`, SharedPreferences). Biometric/device-credential prompts go through `BiometricAuthService` (`lib/core/services/biometric_auth_service.dart`) — never call `local_auth` directly (the service is what tests override). Android requires `FlutterFragmentActivity` (already set in `MainActivity.kt`) — don't revert it to `FlutterActivity`.
 
 ### Tutorial
 

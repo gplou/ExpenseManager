@@ -19,6 +19,7 @@ import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
+import 'widgets/budgets_section.dart';
 import 'widgets/dashboard_fab.dart';
 import 'widgets/period_selector.dart';
 import 'widgets/recent_transaction_tile.dart';
@@ -278,6 +279,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         onViewCharts: () => context.push(AppRoutes.charts),
                       ),
                     ),
+                    const Gap(12),
+
+                    // ── Budgets ──────────────────────────────────────────────
+                    BudgetsSection(cSymbol: cSymbol, numFmtStyle: numFmt),
                     const Gap(12),
 
                     // ── Recent transactions ──────────────────────────────────

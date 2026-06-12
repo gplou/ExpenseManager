@@ -3,7 +3,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:expense_manager/core/services/biometric_auth_service.dart';
 import 'package:expense_manager/core/services/home_widget_gateway.dart';
+import 'package:expense_manager/core/services/notification_service.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
 import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
@@ -44,6 +46,10 @@ class MockHomeWidgetGateway extends Mock implements HomeWidgetGateway {}
 class MockVoiceInputGateway extends Mock implements VoiceInputGateway {}
 
 class MockImageInputGateway extends Mock implements ImageInputGateway {}
+
+class MockBiometricAuthService extends Mock implements BiometricAuthService {}
+
+class MockNotificationService extends Mock implements NotificationService {}
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 

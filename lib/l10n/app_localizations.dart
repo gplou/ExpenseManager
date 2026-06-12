@@ -408,6 +408,210 @@ abstract class AppLocalizations {
   /// **'Historial'**
   String get history;
 
+  /// No description provided for @search.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar'**
+  String get search;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar transacciones…'**
+  String get searchHint;
+
+  /// No description provided for @searchNoResults.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin resultados para tu búsqueda'**
+  String get searchNoResults;
+
+  /// No description provided for @appLock.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloqueo de la app'**
+  String get appLock;
+
+  /// No description provided for @appLockSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pedir biometría o código del dispositivo al abrir'**
+  String get appLockSubtitle;
+
+  /// No description provided for @appLockUnlockReason.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquea para acceder a tus finanzas'**
+  String get appLockUnlockReason;
+
+  /// No description provided for @appLockUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Configura primero un bloqueo de pantalla en tu dispositivo'**
+  String get appLockUnavailable;
+
+  /// No description provided for @unlock.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquear'**
+  String get unlock;
+
+  /// No description provided for @budgets.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuestos'**
+  String get budgets;
+
+  /// No description provided for @budgetsManage.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestionar'**
+  String get budgetsManage;
+
+  /// No description provided for @budgetsEmptyCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea tu primer presupuesto por categoría'**
+  String get budgetsEmptyCta;
+
+  /// No description provided for @budgetNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo presupuesto'**
+  String get budgetNew;
+
+  /// No description provided for @budgetEdit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar presupuesto'**
+  String get budgetEdit;
+
+  /// No description provided for @budgetMonthlyLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Límite mensual'**
+  String get budgetMonthlyLimit;
+
+  /// No description provided for @budgetDeleteConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar este presupuesto? Tus transacciones no se tocan.'**
+  String get budgetDeleteConfirm;
+
+  /// No description provided for @budgetNoBudgets.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin presupuestos'**
+  String get budgetNoBudgets;
+
+  /// No description provided for @budgetNoBudgetsSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea un presupuesto mensual por categoría para controlar tu gasto'**
+  String get budgetNoBudgetsSubtitle;
+
+  /// No description provided for @budgetNearLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Has superado el 80% del presupuesto de {category}'**
+  String budgetNearLimit(String category);
+
+  /// No description provided for @budgetLimitReached.
+  ///
+  /// In es, this message translates to:
+  /// **'Has alcanzado el presupuesto de {category}'**
+  String budgetLimitReached(String category);
+
+  /// No description provided for @budgetUpgradeCta.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver PRO'**
+  String get budgetUpgradeCta;
+
+  /// No description provided for @errorFreePlanLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'El plan gratuito permite 1 presupuesto. Pásate a PRO para crear más.'**
+  String get errorFreePlanLimit;
+
+  /// No description provided for @backupExport.
+  ///
+  /// In es, this message translates to:
+  /// **'Exportar copia de seguridad'**
+  String get backupExport;
+
+  /// No description provided for @backupExportJson.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia completa (JSON)'**
+  String get backupExportJson;
+
+  /// No description provided for @backupExportCsv.
+  ///
+  /// In es, this message translates to:
+  /// **'Tabla simple (CSV)'**
+  String get backupExportCsv;
+
+  /// No description provided for @backupImport.
+  ///
+  /// In es, this message translates to:
+  /// **'Importar copia'**
+  String get backupImport;
+
+  /// No description provided for @backupImportPreview.
+  ///
+  /// In es, this message translates to:
+  /// **'{valid} nuevas, {duplicates} duplicadas, {invalid} con errores'**
+  String backupImportPreview(int valid, int duplicates, int invalid);
+
+  /// No description provided for @backupImportDone.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} transacciones importadas'**
+  String backupImportDone(int count);
+
+  /// No description provided for @backupImportNothing.
+  ///
+  /// In es, this message translates to:
+  /// **'Nada nuevo que importar'**
+  String get backupImportNothing;
+
+  /// No description provided for @backupImportError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo leer el archivo. Usa una copia exportada por la app.'**
+  String get backupImportError;
+
+  /// No description provided for @recurringReminders.
+  ///
+  /// In es, this message translates to:
+  /// **'Recordatorios de recurrentes'**
+  String get recurringReminders;
+
+  /// No description provided for @recurringRemindersSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aviso el día antes de cada cargo'**
+  String get recurringRemindersSubtitle;
+
+  /// No description provided for @recurringReminderTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Pago recurrente mañana'**
+  String get recurringReminderTitle;
+
+  /// No description provided for @recurringReminderBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} — {amount}'**
+  String recurringReminderBody(String name, String amount);
+
+  /// No description provided for @notificationsDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa las notificaciones de la app en los ajustes del sistema'**
+  String get notificationsDenied;
+
   /// No description provided for @errorLoading.
   ///
   /// In es, this message translates to:

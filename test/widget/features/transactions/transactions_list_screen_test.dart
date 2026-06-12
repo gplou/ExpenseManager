@@ -100,4 +100,68 @@ void main() {
     // Selection-mode AppBar shows a count of 1.
     expect(find.textContaining('1'), findsAtLeastNWidgets(1));
   });
+
+  group('search mode', () {
+    Future<void> enterSearch(WidgetTester tester, String query) async {
+      await tester.tap(find.byIcon(Icons.search_rounded));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), query);
+      // Debounce de 300ms antes de aplicar la query.
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('filters rows by category as the user types', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(500, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(_wrap([
+        _tx(id: 't1', category: 'Comida'),
+        _tx(id: 't2', category: 'Transporte'),
+        _tx(id: 't3', category: 'Ocio'),
+      ]));
+      await tester.pumpAndSettle();
+
+      await enterSearch(tester, 'transporte');
+
+      expect(find.text('Transporte'), findsOneWidget);
+      expect(find.text('Comida'), findsNothing);
+      expect(find.text('Ocio'), findsNothing);
+    });
+
+    testWidgets('shows the search empty state when nothing matches',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(500, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(_wrap([
+        _tx(id: 't1', category: 'Comida'),
+      ]));
+      await tester.pumpAndSettle();
+
+      await enterSearch(tester, 'zzz');
+
+      expect(find.text('Sin resultados para tu búsqueda'), findsOneWidget);
+    });
+
+    testWidgets('closing search restores the full list', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(500, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(_wrap([
+        _tx(id: 't1', category: 'Comida'),
+        _tx(id: 't2', category: 'Transporte'),
+      ]));
+      await tester.pumpAndSettle();
+
+      await enterSearch(tester, 'zzz');
+      expect(find.text('Comida'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comida'), findsOneWidget);
+      expect(find.text('Transporte'), findsOneWidget);
+    });
+  });
 }

@@ -17,6 +17,7 @@ import 'package:expense_manager/features/transactions/data/transactions_reposito
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/recurring_reminders_provider.dart';
 
 // ── Period ────────────────────────────────────────────────────────────────────
 
@@ -332,6 +333,7 @@ class TransactionsNotifier extends Notifier<void> {
       await ref
           .read(recurringTransactionsRepositoryProvider)
           .deleteRecurring(recurringTransactionId);
+      resyncRecurringReminders(ref);
     }
     ref.invalidate(allTransactionsProvider);
     AnalyticsService.track(AnalyticsService.transactionDeleted);
@@ -409,6 +411,12 @@ class TransactionsNotifier extends Notifier<void> {
           currency: currency,
         ),
       );
+    }
+
+    // Cualquier rama puede haber creado/editado/borrado una recurrente:
+    // reprograma los recordatorios (no-op con el toggle off; nunca lanza).
+    if (isRecurring || transaction.recurringTransactionId != null) {
+      resyncRecurringReminders(ref);
     }
   }
 }

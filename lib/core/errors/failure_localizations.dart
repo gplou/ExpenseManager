@@ -15,6 +15,7 @@ extension AppFailureL10n on AppFailure {
         CacheFailure() => l10n.errorCache,
         ValidationFailure() => l10n.errorValidation,
         RateLimitFailure() => l10n.errorRateLimit,
+        FreeLimitFailure() => l10n.errorFreePlanLimit,
         UnexpectedFailure() => l10n.errorGeneric,
       };
 

@@ -169,6 +169,126 @@ class AppLocalizationsDe extends AppLocalizations {
   String get history => 'Verlauf';
 
   @override
+  String get search => 'Suchen';
+
+  @override
+  String get searchHint => 'Transaktionen suchen…';
+
+  @override
+  String get searchNoResults => 'Keine Ergebnisse für Ihre Suche';
+
+  @override
+  String get appLock => 'App-Sperre';
+
+  @override
+  String get appLockSubtitle =>
+      'Beim Öffnen Biometrie oder Gerätecode verlangen';
+
+  @override
+  String get appLockUnlockReason =>
+      'Entsperren Sie die App, um auf Ihre Finanzen zuzugreifen';
+
+  @override
+  String get appLockUnavailable =>
+      'Richten Sie zuerst eine Displaysperre auf Ihrem Gerät ein';
+
+  @override
+  String get unlock => 'Entsperren';
+
+  @override
+  String get budgets => 'Budgets';
+
+  @override
+  String get budgetsManage => 'Verwalten';
+
+  @override
+  String get budgetsEmptyCta => 'Erstellen Sie Ihr erstes Kategorie-Budget';
+
+  @override
+  String get budgetNew => 'Neues Budget';
+
+  @override
+  String get budgetEdit => 'Budget bearbeiten';
+
+  @override
+  String get budgetMonthlyLimit => 'Monatslimit';
+
+  @override
+  String get budgetDeleteConfirm =>
+      'Dieses Budget löschen? Ihre Transaktionen bleiben unberührt.';
+
+  @override
+  String get budgetNoBudgets => 'Keine Budgets';
+
+  @override
+  String get budgetNoBudgetsSubtitle =>
+      'Erstellen Sie ein monatliches Budget pro Kategorie, um Ihre Ausgaben im Blick zu behalten';
+
+  @override
+  String budgetNearLimit(String category) {
+    return 'Sie haben 80 % Ihres Budgets für $category überschritten';
+  }
+
+  @override
+  String budgetLimitReached(String category) {
+    return 'Sie haben Ihr Budget für $category erreicht';
+  }
+
+  @override
+  String get budgetUpgradeCta => 'PRO ansehen';
+
+  @override
+  String get errorFreePlanLimit =>
+      'Der kostenlose Plan erlaubt 1 Budget. Upgraden Sie auf PRO, um mehr zu erstellen.';
+
+  @override
+  String get backupExport => 'Sicherungskopie exportieren';
+
+  @override
+  String get backupExportJson => 'Vollständige Sicherung (JSON)';
+
+  @override
+  String get backupExportCsv => 'Einfache Tabelle (CSV)';
+
+  @override
+  String get backupImport => 'Sicherung importieren';
+
+  @override
+  String backupImportPreview(int valid, int duplicates, int invalid) {
+    return '$valid neu, $duplicates Duplikate, $invalid mit Fehlern';
+  }
+
+  @override
+  String backupImportDone(int count) {
+    return '$count Transaktionen importiert';
+  }
+
+  @override
+  String get backupImportNothing => 'Nichts Neues zu importieren';
+
+  @override
+  String get backupImportError =>
+      'Datei konnte nicht gelesen werden. Verwenden Sie eine von der App exportierte Sicherung.';
+
+  @override
+  String get recurringReminders => 'Erinnerungen an wiederkehrende Zahlungen';
+
+  @override
+  String get recurringRemindersSubtitle => 'Hinweis am Tag vor jeder Abbuchung';
+
+  @override
+  String get recurringReminderTitle => 'Wiederkehrende Zahlung morgen';
+
+  @override
+  String recurringReminderBody(String name, String amount) {
+    return '$name — $amount';
+  }
+
+  @override
+  String get notificationsDenied =>
+      'Aktivieren Sie die App-Benachrichtigungen in den Systemeinstellungen';
+
+  @override
   String get errorLoading => 'Ladefehler';
 
   @override

@@ -128,4 +128,49 @@ class EmptyState extends StatelessWidget {
   }
 }
 
+// ── Search empty state ────────────────────────────────────────────────────────
+
+class SearchEmptyState extends StatelessWidget {
+  const SearchEmptyState({super.key, required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: context.appColors.raised,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_off_rounded,
+                size: 26,
+                color: cs.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+            const Gap(16),
+            Text(
+              l10n.searchNoResults,
+              textAlign: TextAlign.center,
+              style: context.textTheme.titleMedium?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Export button ─────────────────────────────────────────────────────────────

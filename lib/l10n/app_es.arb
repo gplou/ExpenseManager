@@ -116,6 +116,97 @@
 
   "history": "Historial",
   "@history": {},
+  "search": "Buscar",
+  "@search": {},
+  "searchHint": "Buscar transacciones…",
+  "@searchHint": {},
+  "searchNoResults": "Sin resultados para tu búsqueda",
+  "@searchNoResults": {},
+  "appLock": "Bloqueo de la app",
+  "@appLock": {},
+  "appLockSubtitle": "Pedir biometría o código del dispositivo al abrir",
+  "@appLockSubtitle": {},
+  "appLockUnlockReason": "Desbloquea para acceder a tus finanzas",
+  "@appLockUnlockReason": {},
+  "appLockUnavailable": "Configura primero un bloqueo de pantalla en tu dispositivo",
+  "@appLockUnavailable": {},
+  "unlock": "Desbloquear",
+  "@unlock": {},
+  "budgets": "Presupuestos",
+  "@budgets": {},
+  "budgetsManage": "Gestionar",
+  "@budgetsManage": {},
+  "budgetsEmptyCta": "Crea tu primer presupuesto por categoría",
+  "@budgetsEmptyCta": {},
+  "budgetNew": "Nuevo presupuesto",
+  "@budgetNew": {},
+  "budgetEdit": "Editar presupuesto",
+  "@budgetEdit": {},
+  "budgetMonthlyLimit": "Límite mensual",
+  "@budgetMonthlyLimit": {},
+  "budgetDeleteConfirm": "¿Eliminar este presupuesto? Tus transacciones no se tocan.",
+  "@budgetDeleteConfirm": {},
+  "budgetNoBudgets": "Sin presupuestos",
+  "@budgetNoBudgets": {},
+  "budgetNoBudgetsSubtitle": "Crea un presupuesto mensual por categoría para controlar tu gasto",
+  "@budgetNoBudgetsSubtitle": {},
+  "budgetNearLimit": "Has superado el 80% del presupuesto de {category}",
+  "@budgetNearLimit": {
+    "placeholders": {
+      "category": {"type": "String"}
+    }
+  },
+  "budgetLimitReached": "Has alcanzado el presupuesto de {category}",
+  "@budgetLimitReached": {
+    "placeholders": {
+      "category": {"type": "String"}
+    }
+  },
+  "budgetUpgradeCta": "Ver PRO",
+  "@budgetUpgradeCta": {},
+  "errorFreePlanLimit": "El plan gratuito permite 1 presupuesto. Pásate a PRO para crear más.",
+  "@errorFreePlanLimit": {},
+  "backupExport": "Exportar copia de seguridad",
+  "@backupExport": {},
+  "backupExportJson": "Copia completa (JSON)",
+  "@backupExportJson": {},
+  "backupExportCsv": "Tabla simple (CSV)",
+  "@backupExportCsv": {},
+  "backupImport": "Importar copia",
+  "@backupImport": {},
+  "backupImportPreview": "{valid} nuevas, {duplicates} duplicadas, {invalid} con errores",
+  "@backupImportPreview": {
+    "placeholders": {
+      "valid": {"type": "int"},
+      "duplicates": {"type": "int"},
+      "invalid": {"type": "int"}
+    }
+  },
+  "backupImportDone": "{count} transacciones importadas",
+  "@backupImportDone": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "backupImportNothing": "Nada nuevo que importar",
+  "@backupImportNothing": {},
+  "backupImportError": "No se pudo leer el archivo. Usa una copia exportada por la app.",
+  "@backupImportError": {},
+  "recurringReminders": "Recordatorios de recurrentes",
+  "@recurringReminders": {},
+  "recurringRemindersSubtitle": "Aviso el día antes de cada cargo",
+  "@recurringRemindersSubtitle": {},
+  "recurringReminderTitle": "Pago recurrente mañana",
+  "@recurringReminderTitle": {},
+  "recurringReminderBody": "{name} — {amount}",
+  "@recurringReminderBody": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "notificationsDenied": "Activa las notificaciones de la app en los ajustes del sistema",
+  "@notificationsDenied": {},
   "errorLoading": "Error al cargar",
   "@errorLoading": {},
   "retry": "Reintentar",

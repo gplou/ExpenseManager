@@ -169,6 +169,125 @@ class AppLocalizationsEs extends AppLocalizations {
   String get history => 'Historial';
 
   @override
+  String get search => 'Buscar';
+
+  @override
+  String get searchHint => 'Buscar transacciones…';
+
+  @override
+  String get searchNoResults => 'Sin resultados para tu búsqueda';
+
+  @override
+  String get appLock => 'Bloqueo de la app';
+
+  @override
+  String get appLockSubtitle =>
+      'Pedir biometría o código del dispositivo al abrir';
+
+  @override
+  String get appLockUnlockReason => 'Desbloquea para acceder a tus finanzas';
+
+  @override
+  String get appLockUnavailable =>
+      'Configura primero un bloqueo de pantalla en tu dispositivo';
+
+  @override
+  String get unlock => 'Desbloquear';
+
+  @override
+  String get budgets => 'Presupuestos';
+
+  @override
+  String get budgetsManage => 'Gestionar';
+
+  @override
+  String get budgetsEmptyCta => 'Crea tu primer presupuesto por categoría';
+
+  @override
+  String get budgetNew => 'Nuevo presupuesto';
+
+  @override
+  String get budgetEdit => 'Editar presupuesto';
+
+  @override
+  String get budgetMonthlyLimit => 'Límite mensual';
+
+  @override
+  String get budgetDeleteConfirm =>
+      '¿Eliminar este presupuesto? Tus transacciones no se tocan.';
+
+  @override
+  String get budgetNoBudgets => 'Sin presupuestos';
+
+  @override
+  String get budgetNoBudgetsSubtitle =>
+      'Crea un presupuesto mensual por categoría para controlar tu gasto';
+
+  @override
+  String budgetNearLimit(String category) {
+    return 'Has superado el 80% del presupuesto de $category';
+  }
+
+  @override
+  String budgetLimitReached(String category) {
+    return 'Has alcanzado el presupuesto de $category';
+  }
+
+  @override
+  String get budgetUpgradeCta => 'Ver PRO';
+
+  @override
+  String get errorFreePlanLimit =>
+      'El plan gratuito permite 1 presupuesto. Pásate a PRO para crear más.';
+
+  @override
+  String get backupExport => 'Exportar copia de seguridad';
+
+  @override
+  String get backupExportJson => 'Copia completa (JSON)';
+
+  @override
+  String get backupExportCsv => 'Tabla simple (CSV)';
+
+  @override
+  String get backupImport => 'Importar copia';
+
+  @override
+  String backupImportPreview(int valid, int duplicates, int invalid) {
+    return '$valid nuevas, $duplicates duplicadas, $invalid con errores';
+  }
+
+  @override
+  String backupImportDone(int count) {
+    return '$count transacciones importadas';
+  }
+
+  @override
+  String get backupImportNothing => 'Nada nuevo que importar';
+
+  @override
+  String get backupImportError =>
+      'No se pudo leer el archivo. Usa una copia exportada por la app.';
+
+  @override
+  String get recurringReminders => 'Recordatorios de recurrentes';
+
+  @override
+  String get recurringRemindersSubtitle => 'Aviso el día antes de cada cargo';
+
+  @override
+  String get recurringReminderTitle => 'Pago recurrente mañana';
+
+  @override
+  String recurringReminderBody(String name, String amount) {
+    return '$name — $amount';
+  }
+
+  @override
+  String get notificationsDenied =>
+      'Activa las notificaciones de la app en los ajustes del sistema';
+
+  @override
   String get errorLoading => 'Error al cargar';
 
   @override
