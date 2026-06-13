@@ -148,7 +148,8 @@
       "Bash(sed -i '' \"s|import 'add_transaction_screen.dart';|import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';|\" lib/features/transactions/presentation/widgets/transactions_filter_button.dart lib/features/transactions/presentation/widgets/transactions_list_footer.dart lib/features/transactions/presentation/widgets/transactions_list_states.dart lib/features/transactions/presentation/widgets/transaction_list_tile.dart)",
       "Bash(sed -i '' \"s|^import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';|import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';\\\\nimport 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';|\" lib/features/transactions/presentation/widgets/transaction_list_tile.dart)",
       "mcp__claude_ai_Supabase__list_migrations",
-      "mcp__claude_ai_Supabase__apply_migration"
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Bash(python3 -c ' *)"
     ]
   }
 }
