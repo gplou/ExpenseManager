@@ -481,9 +481,8 @@ class _MiniFabState extends State<_MiniFab>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? AppColors.dustyTeal.withValues(alpha: 0.22)
-        : AppColors.dustyTealLight;
+    final bg = isDark ? AppColors.raisedDark : AppColors.dustyTealLight;
+    final iconColor = isDark ? AppColors.inkBlueLight : AppColors.dustyTeal;
     return Semantics(
       button: true,
       label: widget.label,
@@ -510,7 +509,7 @@ class _MiniFabState extends State<_MiniFab>
                 ),
                 child: Icon(
                   widget.icon,
-                  color: AppColors.dustyTeal,
+                  color: iconColor,
                   size: 22,
                 ),
               ),
