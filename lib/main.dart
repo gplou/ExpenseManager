@@ -268,6 +268,17 @@ Future<void> _initSentry(PackageInfo packageInfo) async {
         if (AppConfig.isProduction) return null; // descartar ruido en prod
         event.tags = {...?event.tags, 'simulator': 'true'}; // visible en dev
       }
+      // Supabase auto-refreshes the session token in the background. When the
+      // device is offline this always fails with a SocketException / host
+      // lookup error — expected behaviour, not a real bug worth alerting on.
+      final exceptions = event.exceptions ?? [];
+      final isOfflineAuthRefresh = exceptions.any((ex) {
+        final msg = ex.value ?? '';
+        return (msg.contains('Failed host lookup') ||
+                msg.contains('SocketException')) &&
+            msg.contains('auth/v1/token');
+      });
+      if (isOfflineAuthRefresh) return null;
       return event;
     };
   });
