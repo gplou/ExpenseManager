@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -129,6 +130,16 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
         throw const RCPurchaseCancelledException();
       }
       throw RCPurchaseException(e.message);
+    } on PlatformException catch (e) {
+      // On some Android versions RC bypasses its own error wrapper and throws
+      // PlatformException directly. Detect cancellation by the readable code.
+      final details = e.details;
+      final isCancelled = e.code == '1' ||
+          (details is Map &&
+              (details['readableErrorCode'] == 'PurchaseCancelledError' ||
+                  details['userCancelled'] == true));
+      if (isCancelled) throw const RCPurchaseCancelledException();
+      throw RCPurchaseException(e.message ?? 'Purchase failed');
     }
   }
 

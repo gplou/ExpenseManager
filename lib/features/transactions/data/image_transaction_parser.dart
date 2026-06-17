@@ -53,8 +53,6 @@ class ImageTransactionParser {
             ),
           );
 
-      if (response.status != 200) return null;
-
       final data = response.data as Map<String, dynamic>;
       final json = AiResponseParser.parseJsonResponse(data['result'] as String?);
       if (json == null) return null;
@@ -63,6 +61,15 @@ class ImageTransactionParser {
       if (amount <= 0) return null;
 
       return ParsedVoiceTransaction.fromAiJson(json);
+    } on AppFailure {
+      rethrow;
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final serverError = details is Map ? details['error'] as String? : null;
+      if (e.status == 429) {
+        throw RateLimitFailure(serverError ?? 'Rate limit exceeded');
+      }
+      throw ServerFailure(serverError ?? 'AI service error (${e.status})');
     } catch (e, st) {
       AppLogger.log('ImageTransactionParser error: $e\n$st');
       rethrow;
