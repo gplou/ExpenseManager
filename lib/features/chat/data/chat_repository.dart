@@ -54,6 +54,16 @@ class ChatRepository {
       }
 
       return reply;
+    } on FunctionException catch (e, st) {
+      debugPrint('ChatRepository FunctionException: status=${e.status} details=${e.details}\n$st');
+      final details = e.details;
+      String? serverMsg;
+      if (details is Map) {
+        serverMsg = details['error'] as String?;
+      }
+      final msg = serverMsg ?? 'Server error (${e.status ?? 'unknown'})';
+      if (e.status == 429) throw RateLimitFailure(msg);
+      throw ServerFailure(msg);
     } on AppFailure {
       rethrow;
     } catch (e, st) {

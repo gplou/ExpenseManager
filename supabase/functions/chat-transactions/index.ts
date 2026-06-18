@@ -149,7 +149,9 @@ async function getOrCreateUserCache(
     .maybeSingle()
 
   const now = new Date()
-  if (existing && existing.signature === signature && new Date(existing.expires_at) > now) {
+  // Use a 60-second safety buffer so we don't hand a nearly-expired cache to Gemini.
+  const safeExpiry = new Date(now.getTime() + 60_000)
+  if (existing && existing.signature === signature && new Date(existing.expires_at) > safeExpiry) {
     return existing.cache_name as string
   }
 
@@ -317,14 +319,36 @@ serve(async (req: Request) => {
     requestBody.systemInstruction = { parts: [{ text: inlineSystem }] }
   }
 
-  const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': GOOGLE_AI_KEY },
-      body: JSON.stringify(requestBody),
-    },
-  )
+  async function callGemini(body: Record<string, unknown>): Promise<Response> {
+    return fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': GOOGLE_AI_KEY },
+        body: JSON.stringify(body),
+      },
+    )
+  }
+
+  let geminiRes = await callGemini(requestBody)
+
+  // If the call failed while using a cached context, the cache may have expired in Gemini
+  // even though our DB record still looks valid. Evict the stale record and retry inline.
+  if (!geminiRes.ok && cacheName) {
+    await supabase.from('chat_user_context_cache').delete().eq('user_id', user.id)
+    fetch(`https://generativelanguage.googleapis.com/v1beta/${cacheName}`, {
+      method: 'DELETE',
+      headers: { 'x-goog-api-key': GOOGLE_AI_KEY },
+    }).catch(() => {})
+
+    const inlineSystem = `${systemPrompt}\n\nUser financial data:\n${summaryBlock}\n\nRecent transactions (last 20):\n${recentTxBlock}`
+    const fallbackBody: Record<string, unknown> = {
+      contents: turns,
+      generationConfig: requestBody.generationConfig,
+      systemInstruction: { parts: [{ text: inlineSystem }] },
+    }
+    geminiRes = await callGemini(fallbackBody)
+  }
 
   if (!geminiRes.ok) {
     const geminiErr = await geminiRes.text()
