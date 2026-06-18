@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,6 +5,7 @@ import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/core/utils/ai_rate_limiter.dart';
 import 'package:expense_manager/features/chat/domain/chat_message.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 class ChatRepository {
   ChatRepository(this._client);
@@ -41,12 +41,6 @@ class ChatRepository {
         },
       );
 
-      if (response.status != 200) {
-        final data = response.data as Map<String, dynamic>?;
-        final error = data?['error'] as String? ?? 'Unknown error';
-        throw ServerFailure(error);
-      }
-
       final data = response.data as Map<String, dynamic>;
       final reply = data['reply'] as String?;
       if (reply == null || reply.isEmpty) {
@@ -56,8 +50,15 @@ class ChatRepository {
       return reply;
     } on AppFailure {
       rethrow;
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final serverError = details is Map ? details['error'] as String? : null;
+      if (e.status == 429) {
+        throw RateLimitFailure(serverError ?? 'Rate limit exceeded');
+      }
+      throw ServerFailure(serverError ?? 'AI service error (${e.status})');
     } catch (e, st) {
-      debugPrint('ChatRepository error: $e\n$st');
+      AppLogger.log('ChatRepository error: $e\n$st');
       throw const NetworkFailure('Failed to communicate with AI');
     }
   }

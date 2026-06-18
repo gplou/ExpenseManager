@@ -82,3 +82,6 @@
 
 # Suppress R8 warnings for missing Play Store classes
 -dontwarn com.google.android.play.**
+
+# Apache Tika (transitive dep) references desktop-only JAXP APIs not present on Android
+-dontwarn javax.xml.stream.**

@@ -15,6 +15,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 import 'core/config/app_config.dart';
 import 'core/constants/app_constants.dart';
@@ -23,6 +24,7 @@ import 'core/services/sentry_provider_observer.dart';
 import 'core/services/sentry_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/config/router.dart';
+import 'core/widgets/lock_gate.dart';
 import 'core/local_db/local_database.dart';
 import 'core/providers/locale_provider.dart' show localeProvider, kLocaleKey, supportedLocales;
 import 'core/providers/theme_provider.dart' show themeModeProvider, kThemeModeKey;
@@ -30,6 +32,8 @@ import 'core/providers/widget_action_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/transactions/data/initial_sync_service.dart';
 import 'features/transactions/data/offline_sync_service.dart';
+import 'features/transactions/presentation/providers/home_widget_sync_provider.dart';
+import 'features/transactions/presentation/providers/recurring_reminders_provider.dart';
 import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
@@ -41,11 +45,11 @@ Future<void> main() async {
   // so framework/async errors are still logged when SENTRY_DSN is empty.
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    debugPrint('[FlutterError] ${details.exceptionAsString()}');
+    AppLogger.log('[FlutterError] ${details.exceptionAsString()}');
     SentryService.captureException(details.exception, stackTrace: details.stack);
   };
   binding.platformDispatcher.onError = (error, stack) {
-    debugPrint('[PlatformDispatcher] uncaught: $error\n$stack');
+    AppLogger.log('[PlatformDispatcher] uncaught: $error\n$stack');
     SentryService.captureException(error, stackTrace: stack);
     return true;
   };
@@ -65,7 +69,7 @@ Future<void> main() async {
 
   var step = '0 - binding';
   try {
-    debugPrint('[main] 1 - binding ok');
+    AppLogger.log('[main] 1 - binding ok');
 
     // Detectar si la app fue lanzada desde un widget de pantalla de inicio
     step = '1 - HomeWidget';
@@ -76,7 +80,7 @@ Future<void> main() async {
     // Pre-cargar tema y locale para evitar flash al inicio
     step = '2 - SharedPreferences';
     final prefs = await SharedPreferences.getInstance();
-    debugPrint('[main] 2 - prefs ok');
+    AppLogger.log('[main] 2 - prefs ok');
     final savedTheme = prefs.getString(kThemeModeKey);
     final systemBrightness =
         WidgetsBinding.instance.platformDispatcher.platformBrightness;
@@ -102,11 +106,11 @@ Future<void> main() async {
       initializeDateFormatting('fr'),
       initializeDateFormatting('de'),
     ]);
-    debugPrint('[main] 3 - date formatting ok');
+    AppLogger.log('[main] 3 - date formatting ok');
 
     step = '4 - AppConfig.validate';
     AppConfig.validate();
-    debugPrint('[main] 4 - config ok');
+    AppLogger.log('[main] 4 - config ok');
 
     // Pre-warm the local SQLite database in the background so the first
     // non-PRO data fetch has no cold-start penalty.
@@ -124,43 +128,43 @@ Future<void> main() async {
       url: AppConfig.supabaseUrl,
       anonKey: AppConfig.supabaseAnonKey,
     ).timeout(const Duration(seconds: 15));
-    debugPrint('[main] 5 - supabase ok');
+    AppLogger.log('[main] 5 - supabase ok');
 
     step = '6 - Tracking';
     await _requestTrackingAuthorization();
-    debugPrint('[main] 6 - tracking ok');
+    AppLogger.log('[main] 6 - tracking ok');
 
     step = '7 - AdMob';
     try {
       await MobileAds.instance.initialize().timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          debugPrint('[main] AdMob initialization timed out — continuing without ads');
+          AppLogger.log('[main] AdMob initialization timed out — continuing without ads');
           return InitializationStatus({});
         },
       );
-      debugPrint('[main] 7 - admob ok');
+      AppLogger.log('[main] 7 - admob ok');
     } catch (e) {
-      debugPrint('[main] AdMob initialization failed — continuing without ads: $e');
+      AppLogger.log('[main] AdMob initialization failed — continuing without ads: $e');
     }
 
     step = '8 - RevenueCat';
     try {
       await _initRevenueCat().timeout(
         const Duration(seconds: 10),
-        onTimeout: () => debugPrint('[main] RevenueCat initialization timed out — continuing without purchases'),
+        onTimeout: () => AppLogger.log('[main] RevenueCat initialization timed out — continuing without purchases'),
       );
-      debugPrint('[main] 8 - revenuecat ok');
+      AppLogger.log('[main] 8 - revenuecat ok');
     } catch (e) {
-      debugPrint('[main] RevenueCat initialization failed — continuing without purchases: $e');
+      AppLogger.log('[main] RevenueCat initialization failed — continuing without purchases: $e');
     }
 
     step = '9 - PostHog';
     try {
       await _initPostHog();
-      debugPrint('[main] 9 - posthog ok');
+      AppLogger.log('[main] 9 - posthog ok');
     } catch (e) {
-      debugPrint('[main] PostHog initialization failed — continuing without analytics: $e');
+      AppLogger.log('[main] PostHog initialization failed — continuing without analytics: $e');
     }
 
     step = '10 - PackageInfo';
@@ -169,9 +173,9 @@ Future<void> main() async {
     step = '10.5 - Sentry';
     try {
       await _initSentry(packageInfo);
-      debugPrint('[main] 10.5 - sentry ok');
+      AppLogger.log('[main] 10.5 - sentry ok');
     } catch (e) {
-      debugPrint('[main] Sentry initialization failed — continuing without error tracking: $e');
+      AppLogger.log('[main] Sentry initialization failed — continuing without error tracking: $e');
     }
     AnalyticsService.track(AnalyticsService.appOpened, {'version': packageInfo.version});
 
@@ -193,9 +197,9 @@ Future<void> main() async {
         ),
       ),
     );
-    debugPrint('[main] 10 - runApp ok');
+    AppLogger.log('[main] 10 - runApp ok');
   } catch (e, stack) {
-    debugPrint('[main] Fatal initialization error at step "$step": $e\n$stack');
+    AppLogger.log('[main] Fatal initialization error at step "$step": $e\n$stack');
     // Report the init-phase fatal (no-op if Sentry never initialized).
     await SentryService.captureException(e, stackTrace: stack);
     FlutterNativeSplash.remove();
@@ -264,6 +268,17 @@ Future<void> _initSentry(PackageInfo packageInfo) async {
         if (AppConfig.isProduction) return null; // descartar ruido en prod
         event.tags = {...?event.tags, 'simulator': 'true'}; // visible en dev
       }
+      // Supabase auto-refreshes the session token in the background. When the
+      // device is offline this always fails with a SocketException / host
+      // lookup error — expected behaviour, not a real bug worth alerting on.
+      final exceptions = event.exceptions ?? [];
+      final isOfflineAuthRefresh = exceptions.any((ex) {
+        final msg = ex.value ?? '';
+        return (msg.contains('Failed host lookup') ||
+                msg.contains('SocketException')) &&
+            msg.contains('auth/v1/token');
+      });
+      if (isOfflineAuthRefresh) return null;
       return event;
     };
   });
@@ -388,6 +403,10 @@ class _MyAppState extends ConsumerState<MyApp> {
     ref.watch(offlineSyncServiceProvider);
     // Hidrata la BD local desde Supabase en el primer arranque para usuarios PRO.
     ref.watch(initialSyncServiceProvider);
+    // Reprograma los recordatorios de recurrentes (no-op con el toggle off).
+    ref.watch(recurringRemindersBootstrapProvider);
+    // Publica gasto/balance del mes en el home widget tras cada CRUD/sync.
+    ref.watch(homeWidgetDataSyncProvider);
 
     final router = ref.watch(routerProvider);
     final themeMode =
@@ -415,7 +434,9 @@ class _MyAppState extends ConsumerState<MyApp> {
         );
         return MediaQuery(
           data: mq.copyWith(textScaler: clamped),
-          child: child!,
+          // App lock: overlay opaco por encima del Navigator (cubre cualquier
+          // ruta/diálogo) cuando el bloqueo biométrico está activado.
+          child: LockGate(child: child!),
         );
       },
     );

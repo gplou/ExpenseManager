@@ -17,6 +17,7 @@ import 'package:expense_manager/features/transactions/data/transactions_reposito
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/recurring_reminders_provider.dart';
 
 // ── Period ────────────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ class AllTransactionsNotifier
 
     // ── Usuarios PRO: caché SQLite primero ───────────────────────────────────
     if (isPro && user != null) {
-      final localRepo = LocalTransactionsRepository(userId: user.id);
+      final localRepo = ref.read(localTransactionsRepositoryProvider);
 
       // Wrap in try/catch: on some Android devices the SQLite open can hang
       // (Keystore timeout) or fail after an update. Fall through to Supabase
@@ -180,7 +181,7 @@ class AllTransactionsNotifier
         // descartar datos frescos.
         List<TransactionModel> localToKeep = [];
         try {
-          final queue = SyncQueueRepository(userId: localRepo.userId);
+          final queue = ref.read(syncQueueRepositoryProvider);
           final pending = await queue.getPending();
           final pendingIds = pending.map((op) => op.entityId).toSet();
           final cloudIds = fresh.map((t) => t.id).toSet();
@@ -236,7 +237,16 @@ class AllTransactionsNotifier
     LocalTransactionsRepository localRepo,
     List<TransactionModel> transactions,
   ) {
-    Future(() => localRepo.insertAll(transactions));
+    // Best-effort: un fallo de escritura local no debe romper nada ni acabar
+    // como unhandled-zone-error; la UI ya tiene los datos del cloud.
+    Future(() async {
+      try {
+        await localRepo.insertAll(transactions);
+      } catch (e) {
+        SentryService.addBreadcrumb(
+            'initial cache save failed: $e', category: 'sync');
+      }
+    });
   }
 }
 
@@ -323,6 +333,7 @@ class TransactionsNotifier extends Notifier<void> {
       await ref
           .read(recurringTransactionsRepositoryProvider)
           .deleteRecurring(recurringTransactionId);
+      resyncRecurringReminders(ref);
     }
     ref.invalidate(allTransactionsProvider);
     AnalyticsService.track(AnalyticsService.transactionDeleted);
@@ -400,6 +411,12 @@ class TransactionsNotifier extends Notifier<void> {
           currency: currency,
         ),
       );
+    }
+
+    // Cualquier rama puede haber creado/editado/borrado una recurrente:
+    // reprograma los recordatorios (no-op con el toggle off; nunca lanza).
+    if (isRecurring || transaction.recurringTransactionId != null) {
+      resyncRecurringReminders(ref);
     }
   }
 }

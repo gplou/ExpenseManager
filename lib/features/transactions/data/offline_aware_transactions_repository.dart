@@ -1,11 +1,11 @@
 import 'package:clock/clock.dart';
-import 'package:flutter/foundation.dart';
 
 import 'package:expense_manager/core/utils/date_helpers.dart';
 import 'package:expense_manager/core/utils/transaction_id_generator.dart';
 import 'package:expense_manager/features/transactions/domain/cloud_transaction_sync_contract.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 import 'local_transactions_repository.dart';
 import 'pending_operation.dart';
 import 'sync_queue_repository.dart';
@@ -31,8 +31,6 @@ class OfflineAwareTransactionsRepository
     required CloudTransactionSyncContract cloud,
     required LocalTransactionsRepository local,
     required SyncQueueRepository queue,
-    // isOnline conservado en constructor para no romper el provider existente.
-    bool isOnline = true,
   })  : _cloud = cloud,
         _local = local,
         _queue = queue;
@@ -77,7 +75,7 @@ class OfflineAwareTransactionsRepository
       saved = await _local.createTransaction(stamped);
       localOk = true;
     } catch (e, st) {
-      debugPrint(
+      AppLogger.log(
         'OfflineAware.createTransaction: local failed, trying cloud only — $e\n$st',
       );
     }
@@ -86,7 +84,7 @@ class OfflineAwareTransactionsRepository
       await _cloud.upsertTransaction(saved);
       return saved;
     } catch (e) {
-      debugPrint('OfflineAware.createTransaction: cloud upsert failed — $e');
+      AppLogger.log('OfflineAware.createTransaction: cloud upsert failed — $e');
       if (localOk) {
         await _enqueue(SyncOpType.create, saved);
         return saved;
@@ -103,7 +101,7 @@ class OfflineAwareTransactionsRepository
       saved = await _local.updateTransaction(transaction);
       localOk = true;
     } catch (e, st) {
-      debugPrint(
+      AppLogger.log(
         'OfflineAware.updateTransaction: local failed, trying cloud only — $e\n$st',
       );
     }
@@ -112,7 +110,7 @@ class OfflineAwareTransactionsRepository
       await _cloud.upsertTransaction(saved);
       return saved;
     } catch (e) {
-      debugPrint('OfflineAware.updateTransaction: cloud upsert failed — $e');
+      AppLogger.log('OfflineAware.updateTransaction: cloud upsert failed — $e');
       if (localOk) {
         await _enqueue(SyncOpType.update, saved);
         return saved;
@@ -128,7 +126,7 @@ class OfflineAwareTransactionsRepository
       await _local.deleteTransaction(id);
       localOk = true;
     } catch (e, st) {
-      debugPrint(
+      AppLogger.log(
         'OfflineAware.deleteTransaction: local failed, trying cloud only — $e\n$st',
       );
     }
@@ -136,7 +134,7 @@ class OfflineAwareTransactionsRepository
     try {
       await _cloud.deleteTransaction(id);
     } catch (e) {
-      debugPrint('OfflineAware.deleteTransaction: cloud delete failed — $e');
+      AppLogger.log('OfflineAware.deleteTransaction: cloud delete failed — $e');
       if (localOk) {
         await _enqueueDelete(id);
         return;
@@ -152,7 +150,7 @@ class OfflineAwareTransactionsRepository
       await _local.upsertTransaction(transaction);
       localOk = true;
     } catch (e, st) {
-      debugPrint(
+      AppLogger.log(
         'OfflineAware.upsertTransaction: local failed, trying cloud only — $e\n$st',
       );
     }
@@ -160,7 +158,7 @@ class OfflineAwareTransactionsRepository
     try {
       await _cloud.upsertTransaction(transaction);
     } catch (e) {
-      debugPrint('OfflineAware.upsertTransaction: cloud upsert failed — $e');
+      AppLogger.log('OfflineAware.upsertTransaction: cloud upsert failed — $e');
       if (localOk) {
         await _enqueue(SyncOpType.update, transaction);
         return;

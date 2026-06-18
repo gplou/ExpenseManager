@@ -206,6 +206,8 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveColor = isDark ? AppColors.inkBlueLight : widget.accentColor;
+    final iconColor = isDark ? AppColors.paperDark : AppColors.paper;
     return GestureDetector(
       onTap: _handleTap,
       child: ScaleTransition(
@@ -214,7 +216,7 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
           width: widget.size,
           height: widget.size,
           decoration: BoxDecoration(
-            color: widget.accentColor,
+            color: effectiveColor,
             shape: BoxShape.circle,
             boxShadow: isDark
                 ? null
@@ -222,7 +224,7 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
           ),
           child: Icon(
             widget.icon,
-            color: AppColors.paper,
+            color: iconColor,
             size: 26,
           ),
         ),

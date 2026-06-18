@@ -1,6 +1,8 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -11,7 +13,6 @@ import 'package:expense_manager/core/widgets/numeric_keypad.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
-import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'create_subcategory_dialog.dart';
@@ -117,7 +118,7 @@ class AmountDisplay extends StatelessWidget {
           variant: AppCardVariant.outlined,
           accent: accent,
           padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg, vertical: AppSpacing.xxl),
+              horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
           semanticLabel:
               '${l10n.amountHint}: ${hasValue ? controller.current : "0"} $currencyCode',
           child: Column(
@@ -144,7 +145,7 @@ class AmountDisplay extends StatelessWidget {
                     '${currencySymbol(currencyCode)} ',
                     style: TextStyle(
                       fontFamily: 'GeneralSans',
-                      fontSize: 28,
+                      fontSize: 26,
                       fontWeight: FontWeight.w600,
                       color: accent.withValues(alpha: 0.55),
                     ),
@@ -157,7 +158,7 @@ class AmountDisplay extends StatelessWidget {
                         hasValue ? controller.current : '0',
                         style: TextStyle(
                           fontFamily: 'GeneralSans',
-                          fontSize: 48,
+                          fontSize: 44,
                           fontWeight: FontWeight.w700,
                           color: hasValue
                               ? accent
@@ -218,349 +219,428 @@ class AmountDisplay extends StatelessWidget {
   }
 }
 
-// ── Inline calendar date picker ───────────────────────────────────────────────
+// ── Detail pill (fecha / nota / repetir / subcategoría) ───────────────────────
+//
+// Disclosure progresivo: cada píldora muestra el valor actual y abre un sheet
+// compacto al tocarla. Mantiene la pantalla principal mínima sin esconder
+// funcionalidad.
 
-class InlineDatePicker extends StatelessWidget {
-  const InlineDatePicker({
+class DetailPill extends StatelessWidget {
+  const DetailPill({
     super.key,
-    required this.selected,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.active = false,
     required this.accent,
-    required this.onDateChanged,
+    required this.accentLight,
+    this.semanticLabel,
   });
 
-  final DateTime selected;
-  final Color accent;
-  final ValueChanged<DateTime> onDateChanged;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
-  static const double _scale = 0.78;
+  /// Cuando la píldora tiene un valor no-default (nota escrita, recurrencia
+  /// activa, fecha ≠ hoy…) se tinta con el accent para señalarlo.
+  final bool active;
+  final Color accent;
+  final Color accentLight;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: AppRadius.radiusLg,
-        border: Border.all(color: AppColors.borderLight, width: 1.5),
-      ),
-      child: ClipRRect(
-        borderRadius: AppRadius.radiusLg,
-        child: ClipRect(
-          child: Align(
-            alignment: Alignment.topCenter,
-            heightFactor: _scale,
-            child: Transform.scale(
-              scale: _scale,
-              alignment: Alignment.topCenter,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  colorScheme: cs.copyWith(
-                    primary: accent,
-                    onPrimary: AppColors.pureWhite,
-                  ),
-                ),
-                child: CalendarDatePicker(
-                  initialDate: selected,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                  onDateChanged: onDateChanged,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Recurring toggle compacto (chip icon) ─────────────────────────────────────
-
-class RecurringToggleCompact extends StatelessWidget {
-  const RecurringToggleCompact({
-    super.key,
-    required this.isRecurring,
-    required this.recurrenceType,
-    required this.date,
-    required this.accent,
-    required this.onToggle,
-    required this.onChangeFrequency,
-  });
-
-  final bool isRecurring;
-  final RecurrenceType? recurrenceType;
-  final DateTime date;
-  final Color accent;
-  final ValueChanged<bool> onToggle;
-  final ValueChanged<RecurrenceType> onChangeFrequency;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
     return Semantics(
-      toggled: isRecurring,
-      label: l10n.recurringTransaction,
+      button: true,
+      label: semanticLabel ?? label,
       child: GestureDetector(
-        onTap: () => onToggle(!isRecurring),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.all(AppSpacing.sm + 2),
+          duration: const Duration(milliseconds: 180),
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isRecurring
-                ? AppColors.dustyTealLight
-                : cs.surfaceContainerHigh,
-            borderRadius: AppRadius.radiusMd,
+            color: active ? accentLight : cs.surfaceContainerHigh,
+            borderRadius: AppRadius.radiusPill,
             border: Border.all(
-              color: isRecurring ? AppColors.dustyTeal : AppColors.borderLight,
+              color: active ? accent : Colors.transparent,
               width: 1.5,
             ),
           ),
-          child: Icon(
-            Icons.repeat_rounded,
-            size: 20,
-            color: isRecurring ? AppColors.dustyTeal : AppColors.textMuted,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Recurring frequency picker (segmented + info) ─────────────────────────────
-
-class RecurringFrequencyPicker extends StatelessWidget {
-  const RecurringFrequencyPicker({
-    super.key,
-    required this.recurrenceType,
-    required this.date,
-    required this.accent,
-    required this.onChangeFrequency,
-  });
-
-  final RecurrenceType? recurrenceType;
-  final DateTime date;
-  final Color accent;
-  final ValueChanged<RecurrenceType> onChangeFrequency;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final type = recurrenceType ?? RecurrenceType.monthly;
-    final next = nextRecurrenceDate(date, type);
-    final dayStr =
-        '${next.day.toString().padLeft(2, '0')}/${next.month.toString().padLeft(2, '0')}/${next.year}';
-    final freq = switch (type) {
-      RecurrenceType.weekly => l10n.frequencyWeek,
-      RecurrenceType.monthly => l10n.frequencyMonth,
-      RecurrenceType.annual => l10n.frequencyYear,
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SegmentedButton<RecurrenceType>(
-          showSelectedIcon: false,
-          segments: [
-            ButtonSegment(
-              value: RecurrenceType.weekly,
-              label: Text(l10n.weekly),
-              icon: const Icon(Icons.calendar_view_week_outlined, size: 16),
-            ),
-            ButtonSegment(
-              value: RecurrenceType.monthly,
-              label: Text(l10n.monthly),
-              icon: const Icon(Icons.calendar_month_outlined, size: 16),
-            ),
-            ButtonSegment(
-              value: RecurrenceType.annual,
-              label: Text(l10n.yearly),
-              icon: const Icon(Icons.event_repeat_outlined, size: 16),
-            ),
-          ],
-          selected: {type},
-          onSelectionChanged: (s) => onChangeFrequency(s.first),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: const BoxDecoration(
-            color: AppColors.dustyTealLight,
-            borderRadius: AppRadius.radiusMd,
-          ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.repeat_rounded,
-                  size: 14, color: AppColors.dustyTeal),
-              const SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: Text(
-                  l10n.nextRepetition(dayStr, freq),
-                  style: const TextStyle(
-                    fontFamily: 'GeneralSans',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.dustyTeal,
-                  ),
+              Icon(icon, size: 16,
+                  color: active ? accent : AppColors.textMuted),
+              const SizedBox(width: AppSpacing.xs + 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'GeneralSans',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: active ? accent : AppColors.textMuted,
                 ),
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
-// ── Category block ────────────────────────────────────────────────────────────
-
-class CategoryBlock extends StatelessWidget {
-  const CategoryBlock({
-    super.key,
-    required this.type,
-    required this.selectedCategory,
-    required this.selectedSubcategory,
-    required this.accentColor,
-    required this.accentLight,
-    required this.customCats,
-    required this.onCategoryTap,
-    required this.onSubcategorySelected,
-  });
-
-  final TransactionType type;
-  final String? selectedCategory;
-  final String? selectedSubcategory;
-  final Color accentColor;
-  final Color accentLight;
-  final List<TransactionCategory> customCats;
-  final VoidCallback onCategoryTap;
-  final ValueChanged<String> onSubcategorySelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppCompactRow(
-          emoji: selectedCategory != null
-              ? TransactionCategories.resolveEmoji(
-                  selectedCategory!, type.isIncome, customCats)
-              : null,
-          icon: selectedCategory == null ? Icons.category_outlined : null,
-          label: selectedCategory != null
-              ? TransactionCategories.localizedName(selectedCategory!, l10n)
-              : l10n.category,
-          hasValue: selectedCategory != null,
-          accent: accentColor,
-          accentLight: accentLight,
-          onTap: onCategoryTap,
-          semanticLabel:
-              '${l10n.category}: ${selectedCategory != null ? TransactionCategories.localizedName(selectedCategory!, l10n) : l10n.tutorialSkip}',
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
-          child: selectedCategory != null
-              ? Padding(
-                  padding: const EdgeInsets.only(
-                      top: AppSpacing.sm, left: AppSpacing.xl),
-                  child: AppCompactRow(
-                    icon: selectedSubcategory == null
-                        ? Icons.label_outline_rounded
-                        : null,
-                    emoji: selectedSubcategory != null ? '🏷' : null,
-                    label: selectedSubcategory ?? l10n.subcategory,
-                    hasValue: selectedSubcategory != null,
-                    accent: accentColor,
-                    accentLight: accentLight,
-                    onTap: () async {
-                      final sub = await showModalBottomSheet<String>(
-                        context: context,
-                        isScrollControlled: true,
-                        useSafeArea: true,
-                        builder: (_) => SubcategoryPickerSheet(
-                          selected: selectedSubcategory,
-                          category: selectedCategory!,
-                          type: type,
-                          accentColor: accentColor,
-                          accentLight: accentLight,
-                        ),
-                      );
-                      if (sub != null) onSubcategorySelected(sub);
-                    },
-                    semanticLabel:
-                        '${l10n.subcategory}: ${selectedSubcategory ?? ""}',
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
+/// Etiqueta corta y legible para la píldora de fecha: Hoy / Ayer / "12 mar".
+String relativeDateLabel(BuildContext context, DateTime date) {
+  final l10n = AppLocalizations.of(context);
+  final now = clock.now();
+  final d = DateTime(date.year, date.month, date.day);
+  final today = DateTime(now.year, now.month, now.day);
+  if (d == today) return l10n.relToday;
+  if (d == today.subtract(const Duration(days: 1))) return l10n.relYesterday;
+  final locale = Localizations.localeOf(context).toString();
+  return DateFormat.MMMd(locale).format(date);
 }
 
-// ── Details block: description field ─────────────────────────────────────────
+// ── Quick date sheet ──────────────────────────────────────────────────────────
 
-class DetailsBlock extends StatelessWidget {
-  const DetailsBlock({
-    super.key,
-    required this.descriptionController,
-    required this.descriptionFocus,
-  });
-
-  final TextEditingController descriptionController;
-  final FocusNode descriptionFocus;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final cs = context.colors;
-    return AppCard(
-      variant: AppCardVariant.outlined,
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+Future<DateTime?> showQuickDateSheet(
+  BuildContext context, {
+  required DateTime selected,
+  required Color accent,
+}) {
+  return showModalBottomSheet<DateTime>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (ctx) {
+      final l10n = AppLocalizations.of(ctx);
+      final cs = Theme.of(ctx).colorScheme;
+      final now = clock.now();
+      return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.edit_note_rounded,
-              size: 18, color: AppColors.textMuted),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: TextFormField(
-              controller: descriptionController,
-              focusNode: descriptionFocus,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Row(
+              children: [
+                Text(
+                  l10n.date.toUpperCase(),
+                  style: const TextStyle(
+                    fontFamily: 'GeneralSans',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const Spacer(),
+                _QuickDateChip(
+                  label: l10n.relToday,
+                  accent: accent,
+                  onTap: () => Navigator.pop(ctx, now),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                _QuickDateChip(
+                  label: l10n.relYesterday,
+                  accent: accent,
+                  onTap: () => Navigator.pop(
+                      ctx, now.subtract(const Duration(days: 1))),
+                ),
+              ],
+            ),
+          ),
+          Theme(
+            data: Theme.of(ctx).copyWith(
+              colorScheme: cs.copyWith(
+                primary: accent,
+                onPrimary: AppColors.pureWhite,
+              ),
+            ),
+            child: CalendarDatePicker(
+              initialDate: selected,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              onDateChanged: (d) => Navigator.pop(ctx, d),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+      );
+    },
+  );
+}
+
+class _QuickDateChip extends StatelessWidget {
+  const _QuickDateChip({
+    required this.label,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final String label;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.1),
+            borderRadius: AppRadius.radiusPill,
+            border: Border.all(color: accent.withValues(alpha: 0.35)),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'GeneralSans',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: accent,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Note sheet ────────────────────────────────────────────────────────────────
+
+/// Devuelve el texto (puede ser vacío para borrar la nota) o null si se
+/// descartó sin guardar.
+Future<String?> showNoteSheet(
+  BuildContext context, {
+  required String initial,
+  required Color accent,
+}) {
+  final controller = TextEditingController(text: initial);
+  return showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (ctx) {
+      final l10n = AppLocalizations.of(ctx);
+      return Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.xl,
+          right: AppSpacing.xl,
+          bottom: MediaQuery.viewInsetsOf(ctx).bottom + AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Text(
+                  l10n.note.toUpperCase(),
+                  style: const TextStyle(
+                    fontFamily: 'GeneralSans',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pop(ctx, controller.text.trim()),
+                  child: Text(l10n.save, style: TextStyle(color: accent)),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: controller,
+              autofocus: true,
               maxLines: 1,
               maxLength: 100,
               textInputAction: TextInputAction.done,
-              onTapOutside: (_) => descriptionFocus.unfocus(),
-              onEditingComplete: descriptionFocus.unfocus,
-              style: TextStyle(
-                fontFamily: 'GeneralSans',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: cs.onSurface,
-              ),
+              onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
               decoration: InputDecoration(
-                isDense: true,
-                hintText: l10n.descriptionOptional,
-                hintStyle: const TextStyle(
-                  fontFamily: 'GeneralSans',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textTertiary,
-                ),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
+                hintText: l10n.descriptionHint,
                 counterText: '',
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.sm),
               ),
             ),
+          ],
+        ),
+      );
+    },
+  ).whenComplete(() {
+    // El sheet puede cerrarse por gesto; liberar tras el frame del pop.
+    WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
+  });
+}
+
+// ── Recurrence sheet ──────────────────────────────────────────────────────────
+
+/// Resultado del sheet de recurrencia. `type == null` significa "no repetir".
+/// Se envuelve en una clase para distinguirlo de un cierre sin selección.
+class RecurrenceChoice {
+  const RecurrenceChoice(this.type);
+  final RecurrenceType? type;
+}
+
+Future<RecurrenceChoice?> showRecurrenceSheet(
+  BuildContext context, {
+  required RecurrenceType? current,
+  required DateTime date,
+  required Color accent,
+}) {
+  return showModalBottomSheet<RecurrenceChoice>(
+    context: context,
+    useSafeArea: true,
+    builder: (ctx) {
+      final l10n = AppLocalizations.of(ctx);
+      final options = <(RecurrenceType?, IconData, String)>[
+        (null, Icons.block_rounded, l10n.noRepeat),
+        (RecurrenceType.weekly, Icons.calendar_view_week_outlined, l10n.weekly),
+        (RecurrenceType.monthly, Icons.calendar_month_outlined, l10n.monthly),
+        (RecurrenceType.annual, Icons.event_repeat_outlined, l10n.yearly),
+      ];
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Row(
+              children: [
+                Text(
+                  l10n.recurringTransaction.toUpperCase(),
+                  style: const TextStyle(
+                    fontFamily: 'GeneralSans',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: AppSpacing.sm),
+          for (final (type, icon, label) in options)
+            _RecurrenceOption(
+              icon: icon,
+              label: label,
+              subtitle: type == null
+                  ? null
+                  : _nextRepetitionLabel(l10n, date, type),
+              selected: current == type,
+              accent: accent,
+              onTap: () => Navigator.pop(ctx, RecurrenceChoice(type)),
+            ),
+          const SizedBox(height: AppSpacing.xl),
         ],
+      );
+    },
+  );
+}
+
+String _nextRepetitionLabel(
+  AppLocalizations l10n,
+  DateTime date,
+  RecurrenceType type,
+) {
+  final next = nextRecurrenceDate(date, type);
+  final dayStr =
+      '${next.day.toString().padLeft(2, '0')}/${next.month.toString().padLeft(2, '0')}/${next.year}';
+  final freq = switch (type) {
+    RecurrenceType.weekly => l10n.frequencyWeek,
+    RecurrenceType.monthly => l10n.frequencyMonth,
+    RecurrenceType.annual => l10n.frequencyYear,
+  };
+  return l10n.nextRepetition(dayStr, freq);
+}
+
+class _RecurrenceOption extends StatelessWidget {
+  const _RecurrenceOption({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          child: Row(
+            children: [
+              Icon(icon, size: 20,
+                  color: selected ? accent : AppColors.textMuted),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontFamily: 'GeneralSans',
+                        fontSize: 15,
+                        fontWeight:
+                            selected ? FontWeight.w600 : FontWeight.w500,
+                        color: selected ? accent : cs.onSurface,
+                      ),
+                    ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          fontFamily: 'GeneralSans',
+                          fontSize: 12,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (selected)
+                Icon(Icons.check_rounded, size: 20, color: accent),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -788,135 +868,6 @@ class SubcategoryPickerSheet extends ConsumerWidget {
         .remove(category, type, name);
     ref.invalidate(
       subcategoriesProvider((category: category, type: type)),
-    );
-  }
-}
-
-// ── Step indicator (two segmented capsule bars) ───────────────────────────────
-
-class TransactionStepIndicator extends StatelessWidget {
-  const TransactionStepIndicator({
-    super.key,
-    required this.currentStep,
-    required this.accent,
-  });
-
-  final int currentStep;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: _StepBar(active: true, accent: accent)),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(child: _StepBar(active: currentStep >= 1, accent: accent)),
-      ],
-    );
-  }
-}
-
-class _StepBar extends StatelessWidget {
-  const _StepBar({required this.active, required this.accent});
-
-  final bool active;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
-      height: 4,
-      decoration: BoxDecoration(
-        color: active ? accent : AppColors.borderLight,
-        borderRadius: AppRadius.radiusPill,
-      ),
-    );
-  }
-}
-
-// ── Amount pill (AppBar action in step 2) ─────────────────────────────────────
-
-class AmountPill extends StatelessWidget {
-  const AmountPill({
-    super.key,
-    required this.controller,
-    required this.type,
-    required this.accent,
-    required this.accentLight,
-    required this.currencyCode,
-    required this.onTap,
-  });
-
-  final AmountKeypadController controller;
-  final TransactionType type;
-  final Color accent;
-  final Color accentLight;
-  final String currencyCode;
-  final VoidCallback onTap;
-
-  String _format(double v) {
-    if (v == v.truncateToDouble()) return v.toStringAsFixed(0);
-    return v.toStringAsFixed(2).replaceAll('.', ',');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) {
-        final value = controller.resolve() ?? 0;
-        final amountStr = _format(value);
-        final icon = type.isIncome
-            ? Icons.trending_up_rounded
-            : Icons.trending_down_rounded;
-        return Semantics(
-          button: true,
-          label: '${type.isIncome ? "+" : "-"}$amountStr $currencyCode',
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: AppRadius.radiusPill,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: accentLight,
-                  borderRadius: AppRadius.radiusPill,
-                  border: Border.all(
-                    color: accent.withValues(alpha: 0.4),
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 14, color: accent),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${currencySymbol(currencyCode)} $amountStr',
-                      style: TextStyle(
-                        fontFamily: 'GeneralSans',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: accent,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.edit_rounded,
-                      size: 11,
-                      color: accent.withValues(alpha: 0.65),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

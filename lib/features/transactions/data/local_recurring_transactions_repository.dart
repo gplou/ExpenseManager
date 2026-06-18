@@ -1,14 +1,16 @@
 import 'package:clock/clock.dart';
-import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/local_db/local_database.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/core/utils/date_helpers.dart';
 import 'package:expense_manager/core/utils/transaction_id_generator.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transactions_repository_contract.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 class LocalRecurringTransactionsRepository
     implements RecurringTransactionsRepositoryContract {
@@ -29,7 +31,7 @@ class LocalRecurringTransactionsRepository
       );
       return rows.map(_fromRow).toList();
     } catch (e, st) {
-      debugPrint('LocalRecurringTransactionsRepository.getDueRecurring error: $e\n$st');
+      AppLogger.log('LocalRecurringTransactionsRepository.getDueRecurring error: $e\n$st');
       throw const CacheFailure('Failed to load recurring transactions');
     }
   }
@@ -65,7 +67,7 @@ class LocalRecurringTransactionsRepository
       );
       return id;
     } catch (e, st) {
-      debugPrint('LocalRecurringTransactionsRepository.createRecurring error: $e\n$st');
+      AppLogger.log('LocalRecurringTransactionsRepository.createRecurring error: $e\n$st');
       throw const CacheFailure('Failed to save recurring transaction');
     }
   }
@@ -83,7 +85,7 @@ class LocalRecurringTransactionsRepository
       if (rows.isEmpty) return null;
       return _fromRow(rows.first);
     } catch (e, st) {
-      debugPrint('LocalRecurringTransactionsRepository.getById error: $e\n$st');
+      AppLogger.log('LocalRecurringTransactionsRepository.getById error: $e\n$st');
       throw const CacheFailure('Failed to get recurring transaction');
     }
   }
@@ -116,7 +118,7 @@ class LocalRecurringTransactionsRepository
         whereArgs: [id, userId],
       );
     } catch (e, st) {
-      debugPrint('LocalRecurringTransactionsRepository.updateRecurring error: $e\n$st');
+      AppLogger.log('LocalRecurringTransactionsRepository.updateRecurring error: $e\n$st');
       throw const CacheFailure('Failed to update recurring transaction');
     }
   }
@@ -132,7 +134,7 @@ class LocalRecurringTransactionsRepository
         whereArgs: [id, userId],
       );
     } catch (e, st) {
-      debugPrint('LocalRecurringTransactionsRepository.updateNextOccurrence error: $e\n$st');
+      AppLogger.log('LocalRecurringTransactionsRepository.updateNextOccurrence error: $e\n$st');
       throw const CacheFailure('Failed to update next occurrence');
     }
   }
@@ -154,7 +156,7 @@ class LocalRecurringTransactionsRepository
         whereArgs: [id, userId],
       );
     } catch (e, st) {
-      debugPrint('LocalRecurringTransactionsRepository.deleteRecurring error: $e\n$st');
+      AppLogger.log('LocalRecurringTransactionsRepository.deleteRecurring error: $e\n$st');
       throw const CacheFailure('Failed to delete recurring transaction');
     }
   }
@@ -169,7 +171,7 @@ class LocalRecurringTransactionsRepository
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e, st) {
-      debugPrint(
+      AppLogger.log(
           'LocalRecurringTransactionsRepository.upsertRecurring error: $e\n$st');
       throw const CacheFailure('Failed to upsert recurring transaction');
     }
@@ -240,3 +242,19 @@ class LocalRecurringTransactionsRepository
         createdAt: DateTime.parse(row['created_at'] as String),
       );
 }
+
+// ── Provider ─────────────────────────────────────────────────────────────────
+
+/// Repo local de recurrentes ligado al usuario autenticado actual.
+/// Lanza [StateError] si se lee sin sesión (ver nota en
+/// [localTransactionsRepositoryProvider]).
+final localRecurringTransactionsRepositoryProvider =
+    Provider<LocalRecurringTransactionsRepository>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) {
+    throw StateError(
+      'localRecurringTransactionsRepositoryProvider leído sin usuario autenticado',
+    );
+  }
+  return LocalRecurringTransactionsRepository(userId: user.id);
+});

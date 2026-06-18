@@ -1,15 +1,21 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:expense_manager/core/config/router.dart';
+import 'package:expense_manager/core/providers/app_lock_provider.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/core/services/biometric_auth_service.dart';
 import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/core/providers/locale_provider.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/providers/theme_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/recurring_reminders_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/backup_flow.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
@@ -82,32 +88,114 @@ class AppSettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right, size: 18),
             onTap: () => _showNumberFormatSheet(context, ref),
           ),
+          SwitchListTile(
+            secondary: const Icon(Icons.fingerprint),
+            title: Text(l10n.appLock),
+            subtitle: Text(l10n.appLockSubtitle),
+            value: ref.watch(appLockProvider).value ?? false,
+            onChanged: (enable) => _toggleAppLock(context, ref, enable),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.notifications_outlined),
+            title: Text(l10n.recurringReminders),
+            subtitle: Text(l10n.recurringRemindersSubtitle),
+            value: ref.watch(recurringRemindersProvider).value ?? false,
+            onChanged: (enable) => _toggleReminders(context, ref, enable),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.file_upload_outlined),
+            title: Text(l10n.backupExport),
+            trailing: const Icon(Icons.chevron_right, size: 18),
+            onTap: () => runBackupExportFlow(context, ref),
+          ),
+          ListTile(
+            leading: const Icon(Icons.file_download_outlined),
+            title: Text(l10n.backupImport),
+            trailing: const Icon(Icons.chevron_right, size: 18),
+            onTap: () => runBackupImportFlow(context, ref),
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: Text(l10n.privacyPolicy),
             trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () => context.push('/privacy-policy'),
+            onTap: () => context.push(AppRoutes.privacyPolicy),
           ),
           ListTile(
             leading: const Icon(Icons.description_outlined),
             title: Text(l10n.termsOfService),
             trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () => context.push('/terms-of-service'),
+            onTap: () => context.push(AppRoutes.termsOfService),
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.cloud_upload_outlined),
-            title: const Text('Recuperar datos locales'),
-            subtitle: const Text(
-              'Sube transacciones guardadas en este dispositivo a tu cuenta',
+          // Herramienta temporal de soporte (migración FREE→PRO huérfana).
+          // Oculta en release desde 2026-06; eliminar pantalla + ruta cuando
+          // pase una release sin que haga falta.
+          if (kDebugMode) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.cloud_upload_outlined),
+              title: const Text('Recuperar datos locales'),
+              subtitle: const Text(
+                'Sube transacciones guardadas en este dispositivo a tu cuenta',
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 18),
+              onTap: () => context.push(AppRoutes.dataRecovery),
             ),
-            trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () => context.push(AppRoutes.dataRecovery),
-          ),
+          ],
         ],
       ),
     );
+  }
+
+  Future<void> _toggleAppLock(
+    BuildContext context,
+    WidgetRef ref,
+    bool enable,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    if (!enable) {
+      await ref.read(appLockProvider.notifier).setEnabled(false);
+      AnalyticsService.track(AnalyticsService.appLockToggled, {'enabled': false});
+      return;
+    }
+    final biometrics = ref.read(biometricAuthServiceProvider);
+    if (!await biometrics.isSupported()) {
+      if (context.mounted) {
+        context.showSnackbar(l10n.appLockUnavailable, isError: true);
+      }
+      return;
+    }
+    // Exigir una autenticación correcta antes de activar: evita que el usuario
+    // se bloquee a sí mismo si su biometría/código no funciona.
+    final ok = await biometrics.authenticate(l10n.appLockUnlockReason);
+    if (!ok) return;
+    await ref.read(appLockProvider.notifier).setEnabled(true);
+    AnalyticsService.track(AnalyticsService.appLockToggled, {'enabled': true});
+  }
+
+  Future<void> _toggleReminders(
+    BuildContext context,
+    WidgetRef ref,
+    bool enable,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final notifier = ref.read(recurringRemindersProvider.notifier);
+    if (!enable) {
+      await notifier.disable();
+      AnalyticsService.track(
+          AnalyticsService.recurringRemindersToggled, {'enabled': false});
+      return;
+    }
+    final granted = await notifier.enable();
+    if (!granted) {
+      if (context.mounted) {
+        context.showSnackbar(l10n.notificationsDenied, isError: true);
+      }
+      return;
+    }
+    AnalyticsService.track(
+        AnalyticsService.recurringRemindersToggled, {'enabled': true});
   }
 
   void _showNumberFormatSheet(BuildContext context, WidgetRef ref) {

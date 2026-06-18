@@ -12,7 +12,6 @@ import 'package:expense_manager/features/transactions/data/recurring_transaction
 import 'package:expense_manager/features/transactions/data/sync_queue_repository.dart';
 import 'package:expense_manager/features/transactions/data/transaction_sync_service.dart';
 import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
-import 'transactions_provider.dart';
 
 enum SyncStatus { idle, syncing, done, error }
 
@@ -135,8 +134,10 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
 
         if (_cancelled) return;
 
-        // Force UI to re-fetch from the now-correct store
-        ref.invalidate(allTransactionsProvider);
+        // State change triggers transactionsRepositoryProvider rebuild (it
+        // watches syncProvider), which in turn rebuilds allTransactionsProvider.
+        // No need to call ref.invalidate(allTransactionsProvider) directly —
+        // doing so creates a circular dependency in Riverpod 3.x.
         state = const AsyncData(SyncState(status: SyncStatus.done));
       } catch (e, st) {
         if (_cancelled) return;

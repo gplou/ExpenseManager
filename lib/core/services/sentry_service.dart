@@ -22,7 +22,8 @@ class SentryService {
           ));
         });
       } catch (e) {
-        debugPrint('[Sentry] setUser error: $e');
+        // Diagnóstico interno del propio logger/telemetría: solo en debug.
+        if (kDebugMode) debugPrint('[Sentry] setUser error: $e');
       }
     }());
   }
@@ -33,7 +34,7 @@ class SentryService {
       try {
         await Sentry.configureScope((scope) => scope.setUser(null));
       } catch (e) {
-        debugPrint('[Sentry] clearUser error: $e');
+        if (kDebugMode) debugPrint('[Sentry] clearUser error: $e');
       }
     }());
   }
@@ -61,7 +62,7 @@ class SentryService {
         },
       );
     } catch (e) {
-      debugPrint('[Sentry] captureFailure error: $e');
+      if (kDebugMode) debugPrint('[Sentry] captureFailure error: $e');
     }
   }
 
@@ -72,7 +73,7 @@ class SentryService {
     try {
       await Sentry.captureException(error, stackTrace: stackTrace);
     } catch (e) {
-      debugPrint('[Sentry] captureException error: $e');
+      if (kDebugMode) debugPrint('[Sentry] captureException error: $e');
     }
   }
 

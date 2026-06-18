@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 /// Thin wrapper around PostHog. All methods are fire-and-forget safe:
 /// any PostHog error is caught and logged, never surfaced to the user.
@@ -26,6 +26,17 @@ class AnalyticsService {
   static const String photoUsed = 'photo_used';
   static const String exportExcel = 'export_excel';
   static const String onboardingCompleted = 'onboarding_completed';
+  static const String transactionsSearched = 'transactions_searched';
+  static const String appLockToggled = 'app_lock_toggled';
+
+  static const String budgetCreated = 'budget_created';
+  static const String budgetEdited = 'budget_edited';
+  static const String budgetDeleted = 'budget_deleted';
+  static const String budgetLimitHit = 'budget_limit_hit';
+
+  static const String backupExported = 'backup_exported';
+  static const String backupImported = 'backup_imported';
+  static const String recurringRemindersToggled = 'recurring_reminders_toggled';
 
   // ── Identity ───────────────────────────────────────────────────────────────
 
@@ -43,7 +54,7 @@ class AnalyticsService {
           userProperties: {'is_pro': isPro},
         );
       } catch (e) {
-        debugPrint('[Analytics] identify error: $e');
+        AppLogger.log('[Analytics] identify error: $e');
       }
     }());
   }
@@ -54,7 +65,7 @@ class AnalyticsService {
       try {
         await Posthog().reset();
       } catch (e) {
-        debugPrint('[Analytics] reset error: $e');
+        AppLogger.log('[Analytics] reset error: $e');
       }
     }());
   }
@@ -73,7 +84,7 @@ class AnalyticsService {
           properties: properties,
         );
       } catch (e) {
-        debugPrint('[Analytics] track($event) error: $e');
+        AppLogger.log('[Analytics] track($event) error: $e');
       }
     }());
   }

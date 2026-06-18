@@ -1,11 +1,17 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:image_picker/image_picker.dart';
+
 import 'package:expense_manager/core/providers/locale_provider.dart';
+import 'package:expense_manager/core/services/image_input_gateway.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'package:expense_manager/core/widgets/neo_card.dart';
 import 'package:expense_manager/features/dashboard/widgets/dashboard_fab.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
@@ -53,9 +59,37 @@ class _FakeImageParser extends Fake implements ImageTransactionParser {
       null;
 }
 
+class _ThrowingImageParser extends Fake implements ImageTransactionParser {
+  @override
+  Future<ParsedVoiceTransaction?> parse(
+    Uint8List imageBytes, {
+    List<Map<String, String>> subcategories = const [],
+  }) async =>
+      throw Exception('AI backend down');
+}
+
+class _FakeImageGateway implements ImageInputGateway {
+  _FakeImageGateway(this.path);
+  final String path;
+
+  @override
+  Future<XFile?> pickImage({
+    required ImageSource source,
+    double? maxWidth,
+    double? maxHeight,
+    int? imageQuality,
+  }) async =>
+      XFile(path);
+}
+
 // ── Widget builder ────────────────────────────────────────────────────────────
 
-Widget _buildFab({bool isPro = true}) => ProviderScope(
+Widget _buildFab({
+  bool isPro = true,
+  ImageTransactionParser? imageParser,
+  List<Override> extraOverrides = const [],
+}) =>
+    ProviderScope(
       overrides: [
         subscriptionProvider.overrideWith(
           isPro
@@ -64,7 +98,9 @@ Widget _buildFab({bool isPro = true}) => ProviderScope(
         ),
         localeProvider.overrideWith(() => _FakeLocaleNotifier()),
         voiceTransactionParserProvider.overrideWithValue(_FakeVoiceParser()),
-        imageTransactionParserProvider.overrideWithValue(_FakeImageParser()),
+        imageTransactionParserProvider
+            .overrideWithValue(imageParser ?? _FakeImageParser()),
+        ...extraOverrides,
       ],
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -127,6 +163,56 @@ void main() {
       } finally {
         handle.dispose();
       }
+    });
+  });
+
+  group('SpeedDialFab — AI error handling (F11)', () {
+    testWidgets('image parse failure shows a generic localized snackbar',
+        (tester) async {
+      final tmp = File(
+          '${Directory.systemTemp.path}/fab_test_${DateTime.now().microsecondsSinceEpoch}.jpg');
+      await tester.runAsync(() => tmp.writeAsBytes(const [1, 2, 3]));
+
+      await tester.pumpWidget(_buildFab(
+        imageParser: _ThrowingImageParser(),
+        extraOverrides: [
+          imageInputGatewayProvider
+              .overrideWithValue(_FakeImageGateway(tmp.path)),
+          allSubcategoriesProvider.overrideWith((ref) async => const []),
+        ],
+      ));
+      await tester.pumpAndSettle();
+
+      // Asegura que la suscripción PRO está resuelta antes de tocar (si no,
+      // _requirePro() redirigiría a /pro).
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(SpeedDialFab)),
+      );
+      await container.read(subscriptionProvider.future);
+      await tester.pump();
+      expect(container.read(isProProvider), isTrue);
+
+      // Toda la interacción dentro de runAsync: _startCamera hace IO real
+      // (readAsBytes / delete del temporal) que no completa en la zona
+      // fake-async del tester.
+      await tester.runAsync(() async {
+        // Mini-FAB de cámara → bottom sheet de origen → Galería.
+        await tester.tap(find.byIcon(Icons.camera_alt_rounded));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Galería'));
+        await tester.pump();
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        await tester.pump();
+      });
+      await tester.pump();
+
+      // Mensaje genérico localizado — nunca el runtimeType de la excepción.
+      expect(
+        find.text('No se pudo procesar tu solicitud. Inténtalo de nuevo.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Exception'), findsNothing);
     });
   });
 }

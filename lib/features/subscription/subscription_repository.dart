@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -103,6 +104,15 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
             : null,
       );
     } on PostgrestException catch (e) {
+      // Rate limit server-side: hint = 'promo_rate_limited:<segundos>'.
+      // Se mapea a la misma excepción que el límite client-side para que la
+      // UI muestre el cooldown sin código nuevo.
+      final hint = e.hint;
+      if (hint != null && hint.startsWith('promo_rate_limited')) {
+        final seconds =
+            int.tryParse(hint.split(':').elementAtOrNull(1) ?? '') ?? 3600;
+        throw PromoCooldownException(seconds);
+      }
       // The RPC raises P0001 with user-facing messages in Spanish.
       throw PromoCodeException(e.message);
     }
@@ -120,6 +130,16 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
         throw const RCPurchaseCancelledException();
       }
       throw RCPurchaseException(e.message);
+    } on PlatformException catch (e) {
+      // On some Android versions RC bypasses its own error wrapper and throws
+      // PlatformException directly. Detect cancellation by the readable code.
+      final details = e.details;
+      final isCancelled = e.code == '1' ||
+          (details is Map &&
+              (details['readableErrorCode'] == 'PurchaseCancelledError' ||
+                  details['userCancelled'] == true));
+      if (isCancelled) throw const RCPurchaseCancelledException();
+      throw RCPurchaseException(e.message ?? 'Purchase failed');
     }
   }
 

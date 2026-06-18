@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/network/authenticated_repository.dart';
-import 'package:expense_manager/core/network/connectivity_service.dart';
 import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/core/utils/date_helpers.dart';
 import 'package:expense_manager/features/transactions/domain/cloud_transaction_sync_contract.dart';
@@ -13,6 +11,7 @@ import 'package:expense_manager/features/transactions/domain/transactions_reposi
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 import 'local_transactions_repository.dart';
 import 'offline_aware_transactions_repository.dart';
 import 'sync_queue_repository.dart';
@@ -180,12 +179,14 @@ class TransactionsRepository
 Never _mapToFailure(Object e) {
   if (e is AppFailure) throw e;
   if (e is AuthException) {
-    throw const AuthFailure('Sesión expirada. Inicia sesión de nuevo.');
+    // Mensajes técnicos (logs/Sentry); la UI localiza por tipo de failure
+    // vía failure_localizations.dart.
+    throw const AuthFailure('Auth session expired');
   }
   if (e is PostgrestException) {
     throw NetworkFailure(e.message);
   }
-  throw const NetworkFailure('Error de red. Inténtalo de nuevo.');
+  throw const NetworkFailure('Network request failed');
 }
 
 // ── Provider ─────────────────────────────────────────────────────────────────
@@ -204,25 +205,27 @@ final transactionsRepositoryProvider =
 
   // No autenticado o migración en curso → Supabase directo.
   if (user == null || isSyncing) {
-    debugPrint('transactionsRepo → DirectSupabase (user=${user?.id.substring(0, 8)}, syncing=$isSyncing)');
+    AppLogger.log('transactionsRepo → DirectSupabase (user=${user?.id.substring(0, 8)}, syncing=$isSyncing)');
     return TransactionsRepository(ref.watch(supabaseClientProvider));
   }
 
   // PRO confirmado, o suscripción todavía cargando.
   // Usamos OfflineAware mientras carga para evitar que transacciones creadas
   // en esa ventana se guarden solo en SQLite sin intentar Supabase.
+  // No watchear conectividad aquí: reconstruiría el repo (y recargaría
+  // allTransactionsProvider) en cada cambio de red. El fallback offline ya lo
+  // resuelve OfflineAwareTransactionsRepository por operación (try cloud →
+  // encolar) sin necesitar el estado de conexión.
   if (isPro || !subscriptionLoaded) {
-    debugPrint('transactionsRepo → OfflineAware (isPro=$isPro, loaded=$subscriptionLoaded)');
-    final isOnline = ref.watch(isOnlineProvider);
+    AppLogger.log('transactionsRepo → OfflineAware (isPro=$isPro, loaded=$subscriptionLoaded)');
     return OfflineAwareTransactionsRepository(
       cloud: TransactionsRepository(ref.watch(supabaseClientProvider)),
-      local: LocalTransactionsRepository(userId: user.id),
-      queue: SyncQueueRepository(userId: user.id),
-      isOnline: isOnline,
+      local: ref.watch(localTransactionsRepositoryProvider),
+      queue: ref.watch(syncQueueRepositoryProvider),
     );
   }
 
   // FREE confirmado → SQLite local únicamente.
-  debugPrint('transactionsRepo → LocalOnly (FREE user, subscription loaded)');
-  return LocalTransactionsRepository(userId: user.id);
+  AppLogger.log('transactionsRepo → LocalOnly (FREE user, subscription loaded)');
+  return ref.watch(localTransactionsRepositoryProvider);
 });

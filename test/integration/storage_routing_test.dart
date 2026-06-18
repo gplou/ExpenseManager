@@ -4,6 +4,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -166,6 +167,41 @@ void main() {
       expect(
         container.read(transactionsRepositoryProvider),
         isA<OfflineAwareTransactionsRepository>(),
+      );
+    });
+
+    test('repo instance is STABLE across connectivity changes', () async {
+      // Regresión: el provider watcheaba isOnlineProvider, así que cada cambio
+      // de red reconstruía el repo y recargaba allTransactionsProvider.
+      final onlineFlag = StateProvider<bool>((ref) => true);
+      final mockSupabase = MockSupabaseClient();
+      when(() => mockSupabase.auth).thenReturn(MockGoTrueClient());
+
+      final container = ProviderContainer(
+        overrides: [
+          isProProvider.overrideWith((ref) => true),
+          currentUserProvider.overrideWith((ref) => _fakeUser),
+          subscriptionProvider.overrideWith(_FakeSubscriptionNotifier.new),
+          syncProvider.overrideWith(
+            () => _FakeSyncNotifier(const SyncState(status: SyncStatus.idle)),
+          ),
+          supabaseClientProvider.overrideWith((ref) => mockSupabase),
+          isOnlineProvider.overrideWith((ref) => ref.watch(onlineFlag)),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(subscriptionProvider.future);
+
+      final repoBefore = container.read(transactionsRepositoryProvider);
+      container.read(onlineFlag.notifier).state = false;
+      await Future<void>.delayed(Duration.zero);
+      final repoAfter = container.read(transactionsRepositoryProvider);
+
+      expect(
+        identical(repoBefore, repoAfter),
+        isTrue,
+        reason: 'Un cambio de conectividad no debe reconstruir el repo '
+            '(provocaba recargas completas del listado).',
       );
     });
   });

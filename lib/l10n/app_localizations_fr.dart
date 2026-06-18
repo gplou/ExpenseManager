@@ -80,6 +80,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recurringTransaction => 'Transaction récurrente';
 
   @override
+  String get noRepeat => 'Ne pas répéter';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get more => 'Plus';
+
+  @override
   String get weekly => 'Hebdomadaire';
 
   @override
@@ -160,6 +169,126 @@ class AppLocalizationsFr extends AppLocalizations {
   String get history => 'Historique';
 
   @override
+  String get search => 'Rechercher';
+
+  @override
+  String get searchHint => 'Rechercher des transactions…';
+
+  @override
+  String get searchNoResults => 'Aucun résultat pour votre recherche';
+
+  @override
+  String get appLock => 'Verrouillage de l\'application';
+
+  @override
+  String get appLockSubtitle =>
+      'Demander la biométrie ou le code de l\'appareil à l\'ouverture';
+
+  @override
+  String get appLockUnlockReason => 'Déverrouillez pour accéder à vos finances';
+
+  @override
+  String get appLockUnavailable =>
+      'Configurez d\'abord un verrouillage d\'écran sur votre appareil';
+
+  @override
+  String get unlock => 'Déverrouiller';
+
+  @override
+  String get budgets => 'Budgets';
+
+  @override
+  String get budgetsManage => 'Gérer';
+
+  @override
+  String get budgetsEmptyCta => 'Créez votre premier budget par catégorie';
+
+  @override
+  String get budgetNew => 'Nouveau budget';
+
+  @override
+  String get budgetEdit => 'Modifier le budget';
+
+  @override
+  String get budgetMonthlyLimit => 'Plafond mensuel';
+
+  @override
+  String get budgetDeleteConfirm =>
+      'Supprimer ce budget ? Vos transactions ne sont pas affectées.';
+
+  @override
+  String get budgetNoBudgets => 'Aucun budget';
+
+  @override
+  String get budgetNoBudgetsSubtitle =>
+      'Créez un budget mensuel par catégorie pour maîtriser vos dépenses';
+
+  @override
+  String budgetNearLimit(String category) {
+    return 'Vous avez dépassé 80 % de votre budget $category';
+  }
+
+  @override
+  String budgetLimitReached(String category) {
+    return 'Vous avez atteint votre budget $category';
+  }
+
+  @override
+  String get budgetUpgradeCta => 'Voir PRO';
+
+  @override
+  String get errorFreePlanLimit =>
+      'Le plan gratuit permet 1 budget. Passez à PRO pour en créer plus.';
+
+  @override
+  String get backupExport => 'Exporter une sauvegarde';
+
+  @override
+  String get backupExportJson => 'Sauvegarde complète (JSON)';
+
+  @override
+  String get backupExportCsv => 'Tableau simple (CSV)';
+
+  @override
+  String get backupImport => 'Importer une sauvegarde';
+
+  @override
+  String backupImportPreview(int valid, int duplicates, int invalid) {
+    return '$valid nouvelles, $duplicates doublons, $invalid avec erreurs';
+  }
+
+  @override
+  String backupImportDone(int count) {
+    return '$count transactions importées';
+  }
+
+  @override
+  String get backupImportNothing => 'Rien de nouveau à importer';
+
+  @override
+  String get backupImportError =>
+      'Impossible de lire le fichier. Utilisez une sauvegarde exportée par l\'application.';
+
+  @override
+  String get recurringReminders => 'Rappels des paiements récurrents';
+
+  @override
+  String get recurringRemindersSubtitle =>
+      'Alerte la veille de chaque échéance';
+
+  @override
+  String get recurringReminderTitle => 'Paiement récurrent demain';
+
+  @override
+  String recurringReminderBody(String name, String amount) {
+    return '$name — $amount';
+  }
+
+  @override
+  String get notificationsDenied =>
+      'Activez les notifications de l\'application dans les réglages du système';
+
+  @override
   String get errorLoading => 'Erreur de chargement';
 
   @override
@@ -209,6 +338,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get logout => 'Se déconnecter';
+
+  @override
+  String get logoutConfirmTitle => 'Se déconnecter ?';
+
+  @override
+  String get logoutConfirmContent =>
+      'Vos données enregistrées sur cet appareil sont conservées et seront de nouveau disponibles lorsque vous vous reconnecterez avec le même compte.';
 
   @override
   String changePasswordContent(String email) {
@@ -318,6 +454,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get relToday => 'Aujourd\'hui';
+
+  @override
+  String get relYesterday => 'Hier';
 
   @override
   String get relTomorrow => 'Demain';
@@ -779,11 +918,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get micUnavailable => 'Microphone non disponible';
 
   @override
-  String voiceAiError(String type, String info) {
-    return 'Erreur IA voix [$type] : $info';
-  }
-
-  @override
   String get voiceInterpretError => 'Impossible d\'interpréter. Réessayez.';
 
   @override
@@ -794,9 +928,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de détecter une transaction dans l\'image.';
 
   @override
-  String imageAiError(String type, String info) {
-    return 'Erreur IA image [$type] : $info';
-  }
+  String get aiProcessingError =>
+      'Votre demande n\'a pas pu être traitée. Veuillez réessayer.';
 
   @override
   String get promoCodeTitle => 'Code promo';

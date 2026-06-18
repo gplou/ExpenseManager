@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ import 'package:expense_manager/features/subscription/subscription_provider.dart
 import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/core/providers/locale_provider.dart';
 import 'package:expense_manager/core/services/analytics_service.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
 import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
@@ -169,13 +171,13 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     try {
       final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
       parsed = await _parser.parse(text, subcategories: subcats);
-    } catch (e) {
+    } catch (e, st) {
+      // El detalle técnico va a Sentry; al usuario solo un mensaje accionable.
+      unawaited(SentryService.captureException(e, stackTrace: st));
       if (!mounted) return;
       setState(() => _voiceState = VoiceInputState.idle);
-      final info = e.toString().split('\n').first;
-      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.voiceAiError(e.runtimeType.toString(), info))),
+        SnackBar(content: Text(AppLocalizations.of(context).aiProcessingError)),
       );
       return;
     }
@@ -264,13 +266,13 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
         return;
       }
       showAddTransactionSheet(context, voiceData: parsed).ignore();
-    } catch (e) {
+    } catch (e, st) {
+      // El detalle técnico va a Sentry; al usuario solo un mensaje accionable.
+      unawaited(SentryService.captureException(e, stackTrace: st));
       if (mounted) {
         setState(() => _voiceState = VoiceInputState.idle);
-        final info = e.toString().split('\n').first;
-        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.imageAiError(e.runtimeType.toString(), info))),
+          SnackBar(content: Text(AppLocalizations.of(context).aiProcessingError)),
         );
       }
     } finally {
@@ -479,9 +481,8 @@ class _MiniFabState extends State<_MiniFab>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark
-        ? AppColors.dustyTeal.withValues(alpha: 0.22)
-        : AppColors.dustyTealLight;
+    final bg = isDark ? AppColors.raisedDark : AppColors.dustyTealLight;
+    final iconColor = isDark ? AppColors.inkBlueLight : AppColors.dustyTeal;
     return Semantics(
       button: true,
       label: widget.label,
@@ -508,7 +509,7 @@ class _MiniFabState extends State<_MiniFab>
                 ),
                 child: Icon(
                   widget.icon,
-                  color: AppColors.dustyTeal,
+                  color: iconColor,
                   size: 22,
                 ),
               ),

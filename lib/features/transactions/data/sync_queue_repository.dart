@@ -1,6 +1,8 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/local_db/local_database.dart';
+import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'pending_operation.dart';
 
 /// Gestiona la cola de operaciones pendientes de sincronizar con Supabase.
@@ -71,3 +73,16 @@ class SyncQueueRepository {
     );
   }
 }
+
+// ── Provider ─────────────────────────────────────────────────────────────────
+
+/// Cola de sync ligada al usuario autenticado actual.
+/// Lanza [StateError] si se lee sin sesión (ver nota en
+/// [localTransactionsRepositoryProvider]).
+final syncQueueRepositoryProvider = Provider<SyncQueueRepository>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) {
+    throw StateError('syncQueueRepositoryProvider leído sin usuario autenticado');
+  }
+  return SyncQueueRepository(userId: user.id);
+});

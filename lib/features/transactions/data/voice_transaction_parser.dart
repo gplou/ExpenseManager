@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,6 +8,7 @@ import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/core/utils/ai_rate_limiter.dart';
 import 'ai_response_parser.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 
 class VoiceTransactionParser {
   VoiceTransactionParser(this._client);
@@ -41,15 +41,22 @@ class VoiceTransactionParser {
             ),
           );
 
-      if (response.status != 200) return null;
-
       final data = response.data as Map<String, dynamic>;
       final json = AiResponseParser.parseJsonResponse(data['result'] as String?);
       if (json == null) return null;
 
       return ParsedVoiceTransaction.fromAiJson(json);
+    } on AppFailure {
+      rethrow;
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final serverError = details is Map ? details['error'] as String? : null;
+      if (e.status == 429) {
+        throw RateLimitFailure(serverError ?? 'Rate limit exceeded');
+      }
+      throw ServerFailure(serverError ?? 'AI service error (${e.status})');
     } catch (e, st) {
-      debugPrint('VoiceTransactionParser error: $e\n$st');
+      AppLogger.log('VoiceTransactionParser error: $e\n$st');
       rethrow;
     }
   }

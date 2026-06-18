@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,6 +13,7 @@ import 'package:expense_manager/features/transactions/domain/recurring_transacti
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/core/utils/app_logger.dart';
 import 'local_recurring_transactions_repository.dart';
 import 'local_transactions_repository.dart';
 import 'recurring_transactions_repository.dart';
@@ -124,9 +124,9 @@ class InitialSyncService {
     _running = true;
     try {
       final service = TransactionSyncService(
-        localTx: LocalTransactionsRepository(userId: user.id),
+        localTx: _ref.read(localTransactionsRepositoryProvider),
         cloudTx: _ref.read(cloudTxRepoForHydrationProvider),
-        localRecurring: LocalRecurringTransactionsRepository(userId: user.id),
+        localRecurring: _ref.read(localRecurringTransactionsRepositoryProvider),
         cloudRecurring: _ref.read(cloudRecurringRepoForHydrationProvider),
       );
       await service.hydrateLocalFromCloud();
@@ -135,7 +135,7 @@ class InitialSyncService {
       _ref.invalidate(allTransactionsProvider);
     } catch (e, st) {
       // Leave the flag unset — will retry on next connectivity restore or start.
-      debugPrint('InitialSyncService: hydration failed, will retry: $e');
+      AppLogger.log('InitialSyncService: hydration failed, will retry: $e');
       unawaited(SentryService.captureException(e, stackTrace: st));
     } finally {
       _running = false;

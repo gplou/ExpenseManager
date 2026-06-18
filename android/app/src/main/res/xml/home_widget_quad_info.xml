@@ -8,6 +8,6 @@
     android:targetCellWidth="2"
     android:targetCellHeight="2"
     android:previewImage="@mipmap/ic_launcher"
-    android:resizeMode="none"
+    android:resizeMode="vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />

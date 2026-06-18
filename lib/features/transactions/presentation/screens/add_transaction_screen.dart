@@ -17,9 +17,7 @@ import 'package:expense_manager/features/transactions/data/recurring_transaction
 import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
-import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
-import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/add_transaction_widgets.dart';
@@ -53,6 +51,12 @@ Future<void> showAddTransactionSheet(
   );
 }
 
+/// Pantalla única de entrada rápida.
+///
+/// Todo lo necesario para el caso común vive en una sola vista sin pasos:
+/// teclear importe → tocar un chip de categoría → pulsar ✓ en el keypad.
+/// Fecha, nota, subcategoría y recurrencia son píldoras con disclosure
+/// progresivo (abren sheets compactos) para no penalizar la velocidad.
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key, this.transaction, this.voiceData});
 
@@ -67,19 +71,15 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   late TransactionType _type;
   late final AmountKeypadController _keypadController;
-  late final TextEditingController _descriptionController;
-  final FocusNode _descriptionFocus = FocusNode();
+  String _note = '';
   String? _selectedCategory;
   String? _selectedSubcategory;
   late DateTime _selectedDate;
   bool _isSaving = false;
-  bool _isRecurring = false;
+
+  /// null = no repetir. Un valor activo marca la transacción como recurrente.
   RecurrenceType? _recurrenceType;
   String? _amountError;
-
-  late final PageController _pageController;
-  int _currentPage = 0;
-  static const Duration _pageAnim = Duration(milliseconds: 250);
 
   bool get _isEditing => widget.transaction != null;
 
@@ -91,23 +91,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     _type = t?.type ?? v?.type ?? TransactionType.expense;
     _keypadController = AmountKeypadController();
     final initialAmount = t?.amount ?? v?.amount;
-    final hasInitialAmount = initialAmount != null && initialAmount > 0;
-    if (hasInitialAmount) {
+    if (initialAmount != null && initialAmount > 0) {
       _keypadController.setValue(initialAmount);
     }
-    _descriptionController =
-        TextEditingController(text: t?.description ?? v?.description ?? '');
+    _note = t?.description ?? v?.description ?? '';
     _selectedCategory = t?.category ?? v?.category;
     _selectedSubcategory = t?.subcategory ?? v?.subcategory;
     _selectedDate = t?.date ?? v?.date ?? clock.now();
 
-    // Skip directly to the details step when we already have an amount
-    // (editing existing tx or voice-parsed data).
-    _currentPage = (_isEditing || hasInitialAmount) ? 1 : 0;
-    _pageController = PageController(initialPage: _currentPage);
-
     if (v?.isRecurring == true) {
-      _isRecurring = true;
       _recurrenceType = switch (v?.recurrenceType) {
         'weekly' => RecurrenceType.weekly,
         'annual' => RecurrenceType.annual,
@@ -137,7 +129,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       });
     }
     if (t?.recurringTransactionId != null) {
-      _isRecurring = true;
+      _recurrenceType = RecurrenceType.monthly;
       _loadRecurrenceType(t!.recurringTransactionId!);
     }
   }
@@ -154,58 +146,80 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   @override
   void dispose() {
     _keypadController.dispose();
-    _descriptionController.dispose();
-    _descriptionFocus.dispose();
-    _pageController.dispose();
     super.dispose();
   }
 
-  Future<void> _goToDetails() async {
-    final l10n = AppLocalizations.of(context);
-    final amount = _keypadController.resolve();
-    if (amount == null || amount <= 0) {
-      setState(() => _amountError = l10n.invalidAmount);
-      HapticFeedback.heavyImpact().ignore();
-      return;
-    }
-    setState(() => _amountError = null);
-    FocusScope.of(context).unfocus();
-    HapticFeedback.selectionClick().ignore();
-    await _pageController.animateToPage(
-      1,
-      duration: _pageAnim,
-      curve: Curves.easeOut,
-    );
-  }
-
-  void _goToAmount() {
-    FocusScope.of(context).unfocus();
-    HapticFeedback.selectionClick().ignore();
-    _pageController.animateToPage(
-      0,
-      duration: _pageAnim,
-      curve: Curves.easeOut,
-    );
-  }
+  Color get _accentColor =>
+      _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
+  Color get _accentLight =>
+      _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
 
   Future<void> _openCategoryPicker() async {
-    final accentColor =
-        _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
-    final accentLight =
-        _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
     final selected = await showCategoryPickerSheet(
       context,
       ref,
       type: _type,
       selectedCategory: _selectedCategory,
-      accentColor: accentColor,
-      accentLight: accentLight,
+      accentColor: _accentColor,
+      accentLight: _accentLight,
     );
     if (selected != null && mounted) {
       setState(() {
         _selectedCategory = selected;
         _selectedSubcategory = null;
       });
+    }
+  }
+
+  Future<void> _openSubcategoryPicker() async {
+    final sub = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => SubcategoryPickerSheet(
+        selected: _selectedSubcategory,
+        category: _selectedCategory!,
+        type: _type,
+        accentColor: _accentColor,
+        accentLight: _accentLight,
+      ),
+    );
+    if (sub != null && mounted) {
+      setState(() => _selectedSubcategory = sub);
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final date = await showQuickDateSheet(
+      context,
+      selected: _selectedDate,
+      accent: _accentColor,
+    );
+    if (date != null && mounted) {
+      setState(() => _selectedDate = date);
+    }
+  }
+
+  Future<void> _editNote() async {
+    final note = await showNoteSheet(
+      context,
+      initial: _note,
+      accent: _accentColor,
+    );
+    if (note != null && mounted) {
+      setState(() => _note = note);
+    }
+  }
+
+  Future<void> _pickRecurrence() async {
+    final choice = await showRecurrenceSheet(
+      context,
+      current: _recurrenceType,
+      date: _selectedDate,
+      accent: _accentColor,
+    );
+    if (choice != null && mounted) {
+      setState(() => _recurrenceType = choice.type);
     }
   }
 
@@ -222,17 +236,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     setState(() => _amountError = null);
 
     if (_selectedCategory == null) {
+      HapticFeedback.heavyImpact().ignore();
       context.showSnackbar(l10n.selectCategory, isError: true);
       return;
     }
-    if (_isRecurring && _recurrenceType == null) {
-      context.showSnackbar(l10n.selectFrequency, isError: true);
-      return;
-    }
 
-    final desc = _descriptionController.text.trim().isEmpty
-        ? null
-        : _descriptionController.text.trim();
+    final desc = _note.trim().isEmpty ? null : _note.trim();
 
     final tx = _isEditing
         ? widget.transaction!.copyWith(
@@ -262,7 +271,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       await ref.read(transactionsNotifierProvider.notifier).saveWithRecurrence(
             transaction: tx,
             isEditing: _isEditing,
-            isRecurring: _isRecurring,
+            isRecurring: _recurrenceType != null,
             recurrenceType: _recurrenceType,
             currency: currentCurrency,
           );
@@ -327,261 +336,151 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final customCats = ref.watch(
-      customCategoriesSyncProvider.select((m) => m[_type] ?? []),
-    );
-
-    final accentColor =
-        _type.isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
-    final accentLight =
-        _type.isIncome ? AppColors.sageGreenLight : AppColors.mutedTerraLight;
-
     final isPro = ref.watch(isProProvider);
     final currencyCode = ref.watch(currencyProvider).value ?? 'EUR';
-    final isDetailsStep = _currentPage == 1;
 
-    return PopScope(
-      canPop: _currentPage == 0,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && _currentPage == 1) {
-          _goToAmount();
-        }
-      },
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        appBar: AppBar(
-          leading: isDetailsStep
-              ? IconButton(
-                  tooltip: l10n.stepAmount,
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  onPressed: _goToAmount,
-                )
-              : null,
-          title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
-          actions: [
-            if (isDetailsStep)
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: Center(
-                  child: AmountPill(
-                    controller: _keypadController,
-                    type: _type,
-                    accent: accentColor,
-                    accentLight: accentLight,
-                    currencyCode: currencyCode,
-                    onTap: _goToAmount,
-                  ),
-                ),
-              ),
-            if (_isEditing && !isDetailsStep)
-              IconButton(
-                tooltip: l10n.delete,
-                onPressed: _delete,
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: AppColors.mutedTerra,
-                ),
-              ),
-          ],
-        ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildBottomAction(l10n, accentColor),
-                if (!isPro) const AdBannerFooter(),
-              ],
-            ),
-          ),
-        ),
-        body: GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          behavior: HitTestBehavior.opaque,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
-                    AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
-                child: TransactionStepIndicator(
-                  currentStep: _currentPage,
-                  accent: accentColor,
-                ),
-              ),
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const ClampingScrollPhysics(),
-                  onPageChanged: (i) {
-                    if (!mounted) return;
-                    setState(() => _currentPage = i);
-                  },
-                  children: [
-                    _buildAmountStep(accentColor, currencyCode),
-                    _buildDetailsStep(
-                      l10n: l10n,
-                      accentColor: accentColor,
-                      accentLight: accentLight,
-                      customCats: customCats,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAmountStep(Color accentColor, String currencyCode) {
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, 0),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TransactionTypeToggle(
-            value: _type,
-            onChanged: (next) {
-              HapticFeedback.selectionClick();
-              setState(() {
-                _type = next;
-                _selectedCategory = null;
-                _selectedSubcategory = null;
-              });
-            },
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AmountDisplay(
-            controller: _keypadController,
-            accent: accentColor,
-            currencyCode: currencyCode,
-            error: _amountError,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Expanded(
-            child: NumericKeypad(
-              controller: _keypadController,
-              accent: accentColor,
-              submitLabel: l10n.continueAction,
-              canSubmit: !_isSaving,
-              onSubmit: _goToDetails,
-              fillVertical: true,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailsStep({
-    required AppLocalizations l10n,
-    required Color accentColor,
-    required Color accentLight,
-    required List<TransactionCategory> customCats,
-  }) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          RecentCategoriesStrip(
-            type: _type,
-            selected: _selectedCategory,
-            accentColor: accentColor,
-            accentLight: accentLight,
-            onSelect: (cat) {
-              setState(() {
-                _selectedCategory = cat;
-                _selectedSubcategory = null;
-              });
-            },
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          CategoryBlock(
-            type: _type,
-            selectedCategory: _selectedCategory,
-            selectedSubcategory: _selectedSubcategory,
-            accentColor: accentColor,
-            accentLight: accentLight,
-            customCats: customCats,
-            onCategoryTap: _openCategoryPicker,
-            onSubcategorySelected: (sub) =>
-                setState(() => _selectedSubcategory = sub),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          InlineDatePicker(
-            selected: _selectedDate,
-            accent: accentColor,
-            onDateChanged: (d) => setState(() => _selectedDate = d),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: DetailsBlock(
-                  descriptionController: _descriptionController,
-                  descriptionFocus: _descriptionFocus,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              RecurringToggleCompact(
-                isRecurring: _isRecurring,
-                recurrenceType: _recurrenceType,
-                date: _selectedDate,
-                accent: accentColor,
-                onToggle: (v) => setState(() {
-                  _isRecurring = v;
-                  _recurrenceType = v ? RecurrenceType.monthly : null;
-                }),
-                onChangeFrequency: (t) =>
-                    setState(() => _recurrenceType = t),
-              ),
-            ],
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOut,
-            child: _isRecurring
-                ? Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.sm),
-                    child: RecurringFrequencyPicker(
-                      recurrenceType: _recurrenceType,
-                      date: _selectedDate,
-                      accent: accentColor,
-                      onChangeFrequency: (t) =>
-                          setState(() => _recurrenceType = t),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomAction(AppLocalizations l10n, Color accentColor) {
-    if (_currentPage == 0) return const SizedBox.shrink();
-
-    final label = _isEditing
+    final saveLabel = _isEditing
         ? l10n.saveChanges
         : (_type.isIncome ? l10n.saveIncome : l10n.saveExpense);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
-      child: ElevatedButton.icon(
-        onPressed: _isSaving ? null : _save,
-        icon: const Icon(Icons.check_rounded),
-        label: Text(label),
-        style: ElevatedButton.styleFrom(backgroundColor: accentColor),
+
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
+        actions: [
+          if (_isEditing)
+            IconButton(
+              tooltip: l10n.delete,
+              onPressed: _delete,
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.mutedTerra,
+              ),
+            ),
+        ],
+      ),
+      bottomNavigationBar:
+          isPro ? null : const SafeArea(top: false, child: AdBannerFooter()),
+      body: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TransactionTypeToggle(
+                value: _type,
+                onChanged: (next) {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    _type = next;
+                    _selectedCategory = null;
+                    _selectedSubcategory = null;
+                  });
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AmountDisplay(
+                controller: _keypadController,
+                accent: _accentColor,
+                currencyCode: currencyCode,
+                error: _amountError,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              QuickCategoryStrip(
+                type: _type,
+                selected: _selectedCategory,
+                accentColor: _accentColor,
+                accentLight: _accentLight,
+                onMore: _openCategoryPicker,
+                onSelect: (cat) {
+                  setState(() {
+                    if (_selectedCategory != cat) {
+                      _selectedCategory = cat;
+                      _selectedSubcategory = null;
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _buildDetailPills(l10n),
+              Expanded(
+                child: NumericKeypad(
+                  controller: _keypadController,
+                  accent: _accentColor,
+                  submitLabel: saveLabel,
+                  canSubmit: !_isSaving,
+                  onSubmit: _save,
+                  fillVertical: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailPills(AppLocalizations l10n) {
+    final dateLabel = relativeDateLabel(context, _selectedDate);
+    final isToday = dateLabel == l10n.relToday;
+    final recurrenceLabel = switch (_recurrenceType) {
+      RecurrenceType.weekly => l10n.weekly,
+      RecurrenceType.monthly => l10n.monthly,
+      RecurrenceType.annual => l10n.yearly,
+      null => l10n.noRepeat,
+    };
+
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        children: [
+          DetailPill(
+            icon: Icons.calendar_today_outlined,
+            label: dateLabel,
+            active: !isToday,
+            accent: _accentColor,
+            accentLight: _accentLight,
+            semanticLabel: '${l10n.date}: $dateLabel',
+            onTap: _pickDate,
+          ),
+          if (_selectedCategory != null) ...[
+            const SizedBox(width: AppSpacing.sm),
+            DetailPill(
+              icon: Icons.label_outline_rounded,
+              label: _selectedSubcategory ?? l10n.subcategory,
+              active: _selectedSubcategory != null,
+              accent: _accentColor,
+              accentLight: _accentLight,
+              semanticLabel:
+                  '${l10n.subcategory}: ${_selectedSubcategory ?? ""}',
+              onTap: _openSubcategoryPicker,
+            ),
+          ],
+          const SizedBox(width: AppSpacing.sm),
+          DetailPill(
+            icon: Icons.edit_note_rounded,
+            label: _note.trim().isEmpty ? l10n.note : _note.trim(),
+            active: _note.trim().isNotEmpty,
+            accent: _accentColor,
+            accentLight: _accentLight,
+            semanticLabel: '${l10n.note}: ${_note.trim()}',
+            onTap: _editNote,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          DetailPill(
+            icon: Icons.repeat_rounded,
+            label: recurrenceLabel,
+            active: _recurrenceType != null,
+            accent: _accentColor,
+            accentLight: _accentLight,
+            semanticLabel: '${l10n.recurringTransaction}: $recurrenceLabel',
+            onTap: _pickRecurrence,
+          ),
+        ],
       ),
     );
   }

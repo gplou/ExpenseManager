@@ -183,4 +183,54 @@ void main() {
       expect(state.source, 'app_store');
     });
   });
+
+  // ── forceRefresh ─────────────────────────────────────────────────────────
+
+  group('forceRefresh()', () {
+    test('success replaces state with fresh remote data', () async {
+      when(() => repo.fetchRemoteSubscription())
+          .thenAnswer((_) async => (expiresAt: null, source: null));
+
+      final container = buildContainer(user: _user('alice'));
+      await container.read(subscriptionProvider.future);
+      expect(container.read(subscriptionProvider).value!.isPro, isFalse);
+
+      // The next remote check finds an active subscription.
+      final expires = DateTime.now().add(const Duration(days: 30));
+      when(() => repo.fetchRemoteSubscription())
+          .thenAnswer((_) async => (expiresAt: expires, source: 'app_store'));
+
+      await container.read(subscriptionProvider.notifier).forceRefresh();
+
+      final state = container.read(subscriptionProvider).value!;
+      expect(state.isPro, isTrue);
+      expect(state.isLoading, isFalse);
+      expect(state.source, 'app_store');
+    });
+
+    test('failure restores previous state without throwing (no stuck spinner)',
+        () async {
+      final expires = DateTime.now().add(const Duration(days: 30));
+      when(() => repo.fetchRemoteSubscription())
+          .thenAnswer((_) async => (expiresAt: expires, source: 'promo_code'));
+
+      final container = buildContainer(user: _user('alice'));
+      await container.read(subscriptionProvider.future);
+      final before = container.read(subscriptionProvider).value!;
+      expect(before.isPro, isTrue);
+
+      // Next remote fetch fails (e.g. pull-to-refresh while offline).
+      when(() => repo.fetchRemoteSubscription())
+          .thenAnswer((_) async => throw Exception('offline'));
+
+      // Must complete without throwing: the dashboard RefreshIndicator awaits it.
+      await container.read(subscriptionProvider.notifier).forceRefresh();
+
+      final after = container.read(subscriptionProvider).value!;
+      expect(after.isLoading, isFalse,
+          reason: 'A failed refresh must never leave the spinner stuck.');
+      expect(after.expiresAt, before.expiresAt);
+      expect(after.isPro, isTrue);
+    });
+  });
 }
