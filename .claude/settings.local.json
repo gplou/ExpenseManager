@@ -126,7 +126,8 @@
       "Bash(python3 -c \"import json; json.load\\(open\\('dart_defines.json.example'\\)\\); print\\('dart_defines.json.example: JSON válido ✓'\\)\")",
       "Bash(bash -n build_release.sh)",
       "Bash(adb devices *)",
-      "Bash(bash build_release.sh beta)"
+      "Bash(bash build_release.sh beta)",
+      "mcp__e940ecc9-6f9f-4de5-9a20-b9f16a33e0af__deploy_edge_function"
     ]
   }
 }
