@@ -150,7 +150,8 @@
       "mcp__claude_ai_Supabase__list_migrations",
       "mcp__claude_ai_Supabase__apply_migration",
       "Bash(python3 -c ' *)",
-      "Bash(xargs -I{} ls {}/lib/)"
+      "Bash(xargs -I{} ls {}/lib/)",
+      "mcp__f3ab3bdd-218f-43ce-aadb-0b53b3da13d0__get_sentry_resource"
     ]
   }
 }
