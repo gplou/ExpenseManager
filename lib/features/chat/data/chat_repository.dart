@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -32,17 +34,27 @@ class ChatRepository {
         };
       }).toList();
 
-      final response = await _client.functions.invoke(
-        _function,
-        body: {
-          'message': message,
-          'history': historyPayload,
-          'locale': locale,
-        },
-      );
+      final response = await _client.functions
+          .invoke(
+            _function,
+            body: {
+              'message': message,
+              'history': historyPayload,
+              'locale': locale,
+            },
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw const NetworkFailure(
+              'Connection timed out. Please try again.',
+            ),
+          );
 
-      final data = response.data as Map<String, dynamic>;
-      final reply = data['reply'] as String?;
+      final rawData = response.data;
+      if (rawData is! Map<String, dynamic>) {
+        throw const ServerFailure('Unexpected response from AI service');
+      }
+      final reply = rawData['reply'] as String?;
       if (reply == null || reply.isEmpty) {
         throw const ServerFailure('No response received from AI');
       }

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/utils/ai_rate_limiter.dart';
@@ -74,20 +75,56 @@ void main() {
   // ── Server-side failures ─────────────────────────────────────────────────
 
   group('sendMessage — failures', () {
-    test('throws ServerFailure with server message on non-200', () async {
-      stubFunctionInvoke(
+    test('throws ServerFailure with server message when FunctionException has error detail',
+        () async {
+      stubFunctionInvokeError(
         functions,
-        response: functionResponseWith(
-          status: 500,
-          data: {'error': 'AI overloaded'},
+        error: FunctionException(
+          status: 502,
+          details: {'error': 'AI service temporarily unavailable. Please try again.'},
         ),
       );
 
       await expectLater(
         () => repo.sendMessage(message: 'm', history: const [], locale: 'es'),
         throwsA(
-          isA<ServerFailure>().having((f) => f.message, 'message', 'AI overloaded'),
+          isA<ServerFailure>().having(
+            (f) => f.message,
+            'message',
+            'AI service temporarily unavailable. Please try again.',
+          ),
         ),
+      );
+    });
+
+    test('throws ServerFailure with status code when FunctionException has no error detail',
+        () async {
+      stubFunctionInvokeError(
+        functions,
+        error: FunctionException(status: 500, details: 'Internal server error'),
+      );
+
+      await expectLater(
+        () => repo.sendMessage(message: 'm', history: const [], locale: 'es'),
+        throwsA(
+          isA<ServerFailure>()
+              .having((f) => f.message, 'message', contains('500')),
+        ),
+      );
+    });
+
+    test('throws RateLimitFailure on 429 FunctionException', () async {
+      stubFunctionInvokeError(
+        functions,
+        error: FunctionException(
+          status: 429,
+          details: {'error': 'Rate limit exceeded. Maximum 20 messages per hour.'},
+        ),
+      );
+
+      await expectLater(
+        () => repo.sendMessage(message: 'm', history: const [], locale: 'es'),
+        throwsA(isA<RateLimitFailure>()),
       );
     });
 
@@ -107,6 +144,18 @@ void main() {
       stubFunctionInvoke(
         functions,
         response: okFunctionResponse({'reply': ''}),
+      );
+
+      expect(
+        () => repo.sendMessage(message: 'm', history: const [], locale: 'es'),
+        throwsA(isA<ServerFailure>()),
+      );
+    });
+
+    test('throws ServerFailure when response data is not a Map', () async {
+      stubFunctionInvoke(
+        functions,
+        response: functionResponseWith(status: 200, data: 'unexpected string'),
       );
 
       expect(

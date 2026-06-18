@@ -320,14 +320,21 @@ serve(async (req: Request) => {
   }
 
   async function callGemini(body: Record<string, unknown>): Promise<Response> {
-    return fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': GOOGLE_AI_KEY },
-        body: JSON.stringify(body),
-      },
-    )
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 25_000)
+    try {
+      return await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': GOOGLE_AI_KEY },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        },
+      )
+    } finally {
+      clearTimeout(timeoutId)
+    }
   }
 
   let geminiRes = await callGemini(requestBody)
@@ -352,7 +359,9 @@ serve(async (req: Request) => {
 
   if (!geminiRes.ok) {
     const geminiErr = await geminiRes.text()
-    return jsonResponse({ error: `Gemini ${geminiRes.status}: ${geminiErr}` }, 502, corsHeaders)
+    Sentry.captureMessage(`Gemini error ${geminiRes.status}: ${geminiErr}`, 'error')
+    console.error(`Gemini error ${geminiRes.status}:`, geminiErr)
+    return jsonResponse({ error: 'AI service temporarily unavailable. Please try again.' }, 502, corsHeaders)
   }
 
   const geminiData = await geminiRes.json()
@@ -361,9 +370,7 @@ serve(async (req: Request) => {
   return jsonResponse({ reply: text.trim() }, 200, corsHeaders)
   } catch (error) {
     Sentry.captureException(error)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'content-type': 'application/json' },
-    })
+    console.error('chat-transactions unhandled error:', error)
+    return jsonResponse({ error: 'Internal server error' }, 500, getCorsHeaders(req))
   }
 })
