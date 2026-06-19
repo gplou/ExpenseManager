@@ -175,11 +175,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       label: Text(
         text,
         style: context.textTheme.bodySmall?.copyWith(
-          color: AppColors.dustyTeal,
+          color: context.isDark ? AppColors.inkBlueSoft : AppColors.dustyTeal,
         ),
       ),
       backgroundColor: context.appColors.raised,
-      side: BorderSide.none,
+      side: BorderSide(color: context.appColors.divider, width: 1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       onPressed: () {
         _controller.text = text;
