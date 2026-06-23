@@ -332,6 +332,64 @@ void main() {
     });
   });
 
+  group('replaceRange', () {
+    test('replaces in-range rows and leaves out-of-range rows untouched',
+        () async {
+      await repo.createTransaction(_tx(
+          id: 'old-in', amount: 10, type: TransactionType.expense,
+          date: DateTime(2024, 3, 10)));
+      await repo.createTransaction(_tx(
+          id: 'out-before', amount: 20, type: TransactionType.income,
+          date: DateTime(2024, 2, 1)));
+      await repo.createTransaction(_tx(
+          id: 'out-after', amount: 30, type: TransactionType.income,
+          date: DateTime(2024, 4, 1)));
+
+      await repo.replaceRange(
+        DateTime(2024, 3, 1),
+        DateTime(2024, 3, 31),
+        [
+          _tx(id: 'new-in', amount: 99, type: TransactionType.expense,
+              date: DateTime(2024, 3, 15)),
+        ],
+      );
+
+      final all = await repo.getAllForUser();
+      final ids = all.map((t) => t.id).toSet();
+      expect(ids, contains('new-in'));
+      expect(ids, isNot(contains('old-in'))); // borrada (estaba en rango)
+      expect(ids, contains('out-before')); // conservada (fuera de rango)
+      expect(ids, contains('out-after')); // conservada (fuera de rango)
+    });
+
+    test('a concurrent read never observes the emptied range mid-rewrite',
+        () async {
+      // Estado previo: una transacción dentro del rango del mes.
+      await repo.createTransaction(_tx(
+          id: 'existing', amount: 50, type: TransactionType.expense,
+          date: DateTime(2024, 3, 10)));
+
+      final from = DateTime(2024, 3, 1);
+      final to = DateTime(2024, 3, 31);
+
+      // Lanzamos la reescritura SIN await y, en el mismo turno del event loop,
+      // una lectura concurrente del mismo rango (simula budgetProgressProvider
+      // recalculando durante el refresh en segundo plano).
+      final rewrite = repo.replaceRange(from, to, [
+        _tx(id: 'fresh', amount: 80, type: TransactionType.expense,
+            date: DateTime(2024, 3, 12)),
+      ]);
+      final concurrentRead = repo.getTransactions(from: from, to: to);
+
+      final results = await Future.wait([rewrite, concurrentRead]);
+      final read = results[1] as List<TransactionModel>;
+
+      // La transacción atómica garantiza que el lector vea el estado previo o
+      // el nuevo, nunca el intermedio vacío.
+      expect(read, isNotEmpty);
+    });
+  });
+
   group('clearAllForUser', () {
     test('removes all transactions for the user', () async {
       await repo.createTransaction(

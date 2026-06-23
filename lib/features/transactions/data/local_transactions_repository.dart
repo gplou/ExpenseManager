@@ -172,6 +172,40 @@ class LocalTransactionsRepository implements TransactionsRepositoryContract {
     );
   }
 
+  /// Reemplaza ATÓMICAMENTE las transacciones del rango [from, to] por
+  /// [transactions] (delete + insert dentro de una única transacción SQLite).
+  ///
+  /// Imprescindible para el refresh en segundo plano del cache-then-network:
+  /// un `deleteByDateRange` seguido de `insertAll` por separado deja una
+  /// ventana en la que el rango está vacío, y cualquier lector concurrente
+  /// (ej. la consulta del mes de `budgetProgressProvider` o del home widget)
+  /// puede leer 0 transacciones a mitad de la reescritura. La transacción
+  /// garantiza que esos lectores vean el estado previo o el nuevo, nunca el
+  /// intermedio vacío.
+  Future<void> replaceRange(
+    DateTime from,
+    DateTime to,
+    List<TransactionModel> transactions,
+  ) async {
+    final db = await _db;
+    await db.transaction((txn) async {
+      await txn.delete(
+        'transactions',
+        where: 'user_id = ? AND date >= ? AND date <= ?',
+        whereArgs: [userId, dateToString(from), dateToString(to)],
+      );
+      final batch = txn.batch();
+      for (final t in transactions) {
+        batch.insert(
+          'transactions',
+          _toRow(t),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────
 
   Map<String, dynamic> _toRow(TransactionModel t) => {

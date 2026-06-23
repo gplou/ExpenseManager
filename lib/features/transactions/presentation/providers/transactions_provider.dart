@@ -212,12 +212,14 @@ class AllTransactionsNotifier
         // en Supabase.
         state = AsyncData(merged);
 
-        // Sincroniza la caché como paso best-effort: elimina el rango y
-        // reinserta datos frescos + locales conservados. Si falla, la UI ya
+        // Sincroniza la caché como paso best-effort: reemplaza el rango
+        // (datos frescos + locales conservados) de forma ATÓMICA. Hacerlo en
+        // una sola transacción evita que un lector concurrente —p.ej. la
+        // consulta del mes de budgetProgressProvider o del home widget— lea el
+        // rango medio vacío entre el delete y el insert. Si falla, la UI ya
         // refleja el cloud y reintentaremos en el próximo refresh.
         try {
-          await localRepo.deleteByDateRange(range.from, range.to);
-          await localRepo.insertAll(merged);
+          await localRepo.replaceRange(range.from, range.to, merged);
         } catch (e) {
           SentryService.addBreadcrumb(
               'local cache sync write failed: $e', category: 'sync');
