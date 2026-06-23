@@ -294,6 +294,50 @@ void main() {
       expect(cloudRecurring.all.map((r) => r.id), contains('uuid-rec-1'));
     });
 
+    test('removes stale cloud transactions that no longer exist locally', () async {
+      // Cloud holds rows from a prior PRO period; local (FREE source of truth)
+      // only has a subset because the user deleted some while FREE.
+      cloudTx._data.addAll([
+        _tx(id: 'kept', amount: 100),
+        _tx(id: 'deleted-while-free', amount: 200),
+      ]);
+      await localTx.insertAll([_tx(id: 'kept', amount: 100)]);
+
+      await service.migrateToCloud();
+
+      final cloudIds = cloudTx.all.map((t) => t.id);
+      expect(cloudIds, contains('kept'));
+      expect(cloudIds, isNot(contains('deleted-while-free')),
+          reason: 'rows deleted during FREE must not survive in the cloud');
+    });
+
+    test('removes stale cloud recurring that no longer exists locally', () async {
+      cloudRecurring._data.add(RecurringTransactionModel(
+        id: 'rec-deleted-while-free',
+        userId: 'user-1',
+        amount: 30,
+        type: TransactionType.expense,
+        category: 'Suscripción',
+        recurrenceType: RecurrenceType.monthly,
+        nextOccurrence: DateTime(2024, 5, 1),
+        createdAt: DateTime(2024, 1, 1),
+      ));
+      // Local has no recurring rows (the only one was deleted while FREE).
+
+      await service.migrateToCloud();
+
+      expect(cloudRecurring.all, isEmpty);
+    });
+
+    test('keeps cloud rows that still exist locally', () async {
+      cloudTx._data.add(_tx(id: 'still-here', amount: 50));
+      await localTx.insertAll([_tx(id: 'still-here', amount: 50)]);
+
+      await service.migrateToCloud();
+
+      expect(cloudTx.all.map((t) => t.id), contains('still-here'));
+    });
+
     test('does not clear local if cloud write fails', () async {
       // Replace cloudTx with one that throws on write
       final failingCloud = _ThrowingCloudTxRepo();

@@ -22,7 +22,16 @@ class TransactionSyncService {
   final LocalRecurringTransactionsRepository localRecurring;
   final RecurringTransactionsRepositoryContract cloudRecurring;
 
-  /// FREE → PRO: copy all local data to Supabase, then clear local.
+  /// FREE → PRO: make Supabase mirror the local store exactly, then clear local.
+  ///
+  /// While FREE the device-local store is the single source of truth — every
+  /// write (including deletions) only ever touched SQLite, never Supabase. So
+  /// the migration both uploads local rows AND removes any stale cloud rows that
+  /// no longer exist locally. Without that reconcile step, transactions deleted
+  /// during the FREE period — but still sitting in Supabase from a prior PRO
+  /// period (or a downgrade that never ran [migrateToLocal]) — would reappear
+  /// after re-subscribing.
+  ///
   /// Recurring transactions are migrated first to preserve FK references.
   Future<void> migrateToCloud() async {
     // 1. Recurring transactions first (FK dependency).
@@ -41,7 +50,31 @@ class TransactionSyncService {
       await cloudTx.upsertTransaction(t);
     }
 
-    // 3. Clear local only after all writes have succeeded
+    // 3. Reconcile deletions: drop any cloud row absent from local so the
+    // cloud mirrors local exactly. Delete transactions before recurring so no
+    // cloud transaction still references a recurring row when it is removed.
+    final localTxIds = transactions.map((t) => t.id).toSet();
+    final cloudTransactions = await cloudTx.getTransactions(
+      from: DateTime(2000, 1, 1),
+      to: DateTime(2099, 12, 31),
+    );
+    for (final t in cloudTransactions) {
+      if (!localTxIds.contains(t.id)) {
+        await cloudTx.deleteTransaction(t.id);
+      }
+    }
+
+    final localRecurringIds = recurring.map((r) => r.id).toSet();
+    final cloudRecurring2 = await cloudRecurring.getAllForUser();
+    for (final r in cloudRecurring2) {
+      if (!localRecurringIds.contains(r.id)) {
+        await cloudRecurring.deleteRecurring(r.id);
+      }
+    }
+
+    // 4. Clear local only after all cloud writes (upserts + deletes) succeeded.
+    // If any step above throws, local stays intact and the migration re-runs;
+    // every operation is idempotent so re-running produces no duplicates.
     await localTx.clearAllForUser();
     await localRecurring.clearAllForUser();
   }
