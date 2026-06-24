@@ -58,6 +58,14 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
   /// instead of writing to a stale notifier after logout or account switch.
   bool _cancelled = false;
 
+  /// Cadena serial de migraciones. Toggles rápidos PRO↔FREE re-ejecutan
+  /// [build] varias veces; sin serializar, dos `_runMigration` corrían en
+  /// paralelo (uno subiendo a la nube, otro borrándola) y se corrompían los
+  /// datos. Encadenamos sobre este Future para que cada migración espere a la
+  /// anterior. La reevaluación del plan real dentro de [_runMigration] descarta
+  /// las que hayan quedado obsoletas.
+  Future<void> _migrationChain = Future.value();
+
   @override
   Future<SyncState> build() async {
     _cancelled = false;
@@ -136,9 +144,24 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
   }
 
   void _runMigration({required bool wasPro, required String userId}) {
-    Future(() async {
+    // Encadena sobre la migración anterior para que nunca corran dos a la vez.
+    _migrationChain = _migrationChain.then((_) async {
       try {
         if (_cancelled) return;
+
+        // Reevalúa el plan real justo antes de ejecutar: si entre que se encoló
+        // esta migración y ahora el usuario volvió a cambiar de plan, la
+        // dirección (wasPro) ya no refleja la realidad. Saltamos esta y dejamos
+        // que la siguiente en cola (encolada por el último cambio) reconcilie.
+        final isProNow = ref.read(isProProvider);
+        if (wasPro == isProNow) {
+          // wasPro==true & sigue PRO  → no hubo bajada real (o ya se revirtió).
+          // wasPro==false & sigue FREE → no hubo subida real (o ya se revirtió).
+          // En ambos casos esta migración es obsoleta. Salimos de `syncing`
+          // para que los repos vuelvan a apuntar al store correcto.
+          if (!_cancelled) state = const AsyncData(SyncState());
+          return;
+        }
 
         final queue = SyncQueueRepository(userId: userId);
 

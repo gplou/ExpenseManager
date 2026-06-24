@@ -354,4 +354,39 @@ void main() {
     expect(prefs.getBool('pro_hydrated_$_userId'), isNot(true),
         reason: 'migration must clear the flag so the mirror re-hydrates');
   });
+
+  test(
+      'rapid PRO→FREE→PRO toggles do not corrupt the cloud (migrations are '
+      'serialized, not run concurrently)', () async {
+    // Reproduce el incidente real: alternar de plan deprisa lanzaba un
+    // migrateToCloud (sube) y un migrateToLocal (antes borraba la nube) en
+    // paralelo, pisándose y dejando solo unas pocas filas. Con la cadena serial
+    // + reevaluación del plan, el estado final debe ser consistente.
+    final container = makeContainer();
+    addTearDown(container.dispose);
+
+    // Empieza PRO con histórico en la nube y espejado en local.
+    container.read(_isProLever.notifier).state = true;
+    await container.read(subscriptionProvider.future);
+    await container.read(syncProvider.future);
+    container.listen(syncProvider, (_, __) {});
+
+    cloudTx.data.addAll([_tx('A'), _tx('B'), _tx('C')]);
+    await LocalTransactionsRepository(userId: _userId)
+        .insertAll([_tx('A'), _tx('B'), _tx('C')]);
+
+    // Toggle rápido: PRO → FREE → PRO sin esperar entre medias.
+    container.read(_isProLever.notifier).state = false;
+    container.read(_isProLever.notifier).state = true;
+
+    // Deja drenar la cadena serial de migraciones por completo (no exigimos un
+    // status final concreto: lo que importa es que la nube quede consistente).
+    for (var i = 0; i < 100; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+
+    // El histórico sigue íntegro en la nube — nada se perdió por la carrera.
+    expect(cloudTx.data.map((t) => t.id), containsAll(['A', 'B', 'C']),
+        reason: 'concurrent migrations must not drop cloud rows');
+  });
 }

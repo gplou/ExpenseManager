@@ -32,14 +32,11 @@ class BudgetsSyncService {
     await local.clearAllForUser();
   }
 
-  /// PRO → FREE: baja los presupuestos de la nube al local, luego los borra del
-  /// cloud. Se escribe local primero (nunca se toca el cloud hasta que el local
-  /// está a salvo).
+  /// PRO → FREE: baja los presupuestos de la nube al local. NO borra la nube
+  /// (mismo criterio que `TransactionSyncService.migrateToLocal`: la nube queda
+  /// como respaldo; al volver a PRO el upsert aditivo reconcilia).
   Future<void> migrateToLocal() async {
     final budgets = await cloud.getAllForUser();
     await local.insertAll(budgets);
-    for (final b in budgets) {
-      await cloud.deleteBudget(b.id);
-    }
   }
 }

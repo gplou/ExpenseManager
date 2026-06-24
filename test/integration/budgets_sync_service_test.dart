@@ -98,7 +98,7 @@ void main() {
   });
 
   group('migrateToLocal (PRO → FREE)', () {
-    test('downloads cloud budgets to local and deletes them from cloud',
+    test('downloads cloud budgets to local and keeps them in the cloud',
         () async {
       cloud.data.addAll([
         _budget(id: 'c1', category: 'Comida'),
@@ -109,7 +109,9 @@ void main() {
 
       final stored = await local.getBudgets();
       expect(stored.map((b) => b.category), ['Comida', 'Transporte']);
-      expect(cloud.data, isEmpty);
+      // La nube se conserva como respaldo (no se borra al bajar a FREE).
+      expect(cloud.data.map((b) => b.category),
+          containsAll(['Comida', 'Transporte']));
     });
   });
 }

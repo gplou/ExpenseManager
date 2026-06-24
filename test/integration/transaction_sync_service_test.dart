@@ -481,12 +481,17 @@ void main() {
       expect(localAll.map((t) => t.id), containsAll(['c1', 'c2']));
     });
 
-    test('deletes cloud transactions after copying to local', () async {
-      cloudTx._data.add(_tx(id: 'cloud-gone', amount: 150));
+    test('preserves cloud transactions after copying to local (cloud is a '
+        'read-only backup while FREE)', () async {
+      cloudTx._data.add(_tx(id: 'cloud-keep', amount: 150));
 
       await service.migrateToLocal();
 
-      expect(cloudTx.all, isEmpty);
+      // La nube ya NO se borra: queda intacta como respaldo. Al volver a PRO,
+      // migrateToCloud reconcilia con upsert aditivo por id.
+      expect(cloudTx.all.map((t) => t.id), contains('cloud-keep'));
+      expect((await localTx.getAllForUser()).map((t) => t.id),
+          contains('cloud-keep'));
     });
 
     test('copies cloud recurring to local', () async {
@@ -515,8 +520,9 @@ void main() {
       expect(await localRecurring.getAllForUser(), isEmpty);
     });
 
-    test('does not clear cloud if local write fails', () async {
-      // Seed cloud
+    test('cloud stays intact even if local write fails', () async {
+      // migrateToLocal nunca borra la nube; aunque la escritura local falle,
+      // la nube permanece como respaldo.
       cloudTx._data.add(_tx(id: 'keep-cloud', amount: 99));
 
       // Use a local tx repo that always throws on insertAll to simulate

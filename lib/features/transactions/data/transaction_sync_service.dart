@@ -97,31 +97,26 @@ class TransactionSyncService {
     await localTx.insertAll(allTransactions);
   }
 
-  /// PRO → FREE: fetch all Supabase data and save locally, then delete from cloud.
-  /// Recurring transactions are migrated first to preserve FK references.
+  /// PRO → FREE: copy all Supabase data down into the local cache.
+  ///
+  /// IMPORTANT: this NO LONGER deletes anything from the cloud. Borrar la nube
+  /// aquí era destructivo y sin red de seguridad: si el usuario alternaba de
+  /// plan (o dos migraciones se solapaban) se perdía todo el histórico. Dejar
+  /// la nube intacta la convierte en un respaldo de solo-lectura mientras el
+  /// usuario es FREE; al volver a PRO, [migrateToCloud] es aditivo (upsert por
+  /// id) y reconcilia sin duplicar. Los borrados que el usuario haga siendo
+  /// FREE se propagan luego vía las lápidas de la cola, no por ausencia.
+  ///
+  /// Idempotente: [insertAll] usa [ConflictAlgorithm.replace].
   Future<void> migrateToLocal() async {
-    // 1. Fetch all recurring from cloud
     final allRecurring = await cloudRecurring.getAllForUser();
-
-    // 2. Fetch all transactions from cloud (wide window covers full history)
     final allTransactions = await cloudTx.getTransactions(
       from: DateTime(2000, 1, 1),
       to: DateTime(2099, 12, 31),
     );
 
-    // 3. Write to local first — never touch cloud until local is safe
+    // Recurring first (FK dependency).
     await localRecurring.insertAll(allRecurring);
     await localTx.insertAll(allTransactions);
-
-    // 4. Delete from cloud only after local writes have succeeded.
-    // Transactions are deleted first; by the time we delete recurring rows,
-    // there are no longer any cloud transactions referencing them, so the
-    // FK-nullification step in deleteRecurring is harmless (affects 0 rows).
-    for (final t in allTransactions) {
-      await cloudTx.deleteTransaction(t.id);
-    }
-    for (final r in allRecurring) {
-      await cloudRecurring.deleteRecurring(r.id);
-    }
   }
 }
