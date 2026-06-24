@@ -1,6 +1,17 @@
 import 'dart:convert';
 
-enum SyncOpType { create, update, delete }
+enum SyncOpType {
+  create,
+  update,
+  delete,
+
+  /// Tombstone for a recurring transaction deleted while FREE. Stored in the
+  /// same `pending_operations` table but consumed ONLY by the FREE→PRO migration
+  /// ([TransactionSyncService.migrateToCloud]) — [OfflineSyncService] skips it,
+  /// since recurring transactions have no offline-sync queue (PRO writes them
+  /// straight to Supabase). The `entity_id` is the recurring transaction id.
+  deleteRecurring,
+}
 
 /// Representa una operación de escritura pendiente de sincronizar con Supabase.
 ///

@@ -111,11 +111,7 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
         if (_cancelled) return;
 
         final supabase = ref.read(supabaseClientProvider);
-
-        // Descarta ops pendientes antes de migrar: los datos del store de
-        // origen son la fuente de verdad y la migración los trasladará
-        // íntegramente, por lo que la cola quedaría obsoleta.
-        await SyncQueueRepository(userId: userId).clearAll();
+        final queue = SyncQueueRepository(userId: userId);
 
         final service = TransactionSyncService(
           localTx: LocalTransactionsRepository(userId: userId),
@@ -125,11 +121,26 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
         );
 
         if (wasPro) {
-          // PRO expired: download cloud data to local
+          // PRO expired: download cloud data to local. Las ops pendientes son
+          // irrelevantes — la nube es la fuente de verdad que se copia abajo.
+          await queue.clearAll();
           await service.migrateToLocal();
         } else {
-          // Upgraded to PRO: upload local data to cloud
-          await service.migrateToCloud();
+          // Upgraded to PRO: sube los datos locales a la nube y reproduce las
+          // lápidas de borrado del periodo FREE, de modo que las transacciones
+          // borradas siendo FREE se eliminen también de Supabase (podrían
+          // seguir ahí de un periodo PRO anterior). Se leen ANTES de migrar y la
+          // cola se limpia solo DESPUÉS del éxito, para que un fallo a medias se
+          // reintente con las lápidas intactas. Las ops create/update pendientes
+          // se descartan: el store local ya las refleja y se sube entero.
+          final deletedIds = await queue.pendingDeleteEntityIds();
+          final deletedRecurringIds =
+              await queue.pendingRecurringDeleteEntityIds();
+          await service.migrateToCloud(
+            deletedTransactionIds: deletedIds,
+            deletedRecurringIds: deletedRecurringIds,
+          );
+          await queue.clearAll();
         }
 
         if (_cancelled) return;

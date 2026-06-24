@@ -15,6 +15,8 @@ import 'package:expense_manager/features/auth/presentation/providers/auth_provid
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/local_tombstoning_recurring_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/local_tombstoning_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/offline_aware_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
@@ -94,14 +96,16 @@ void main() {
       expect(repo, isA<OfflineAwareTransactionsRepository>());
     });
 
-    test('returns LocalTransactionsRepository when user is free and authenticated',
+    test('returns LocalTombstoningTransactionsRepository when user is free and authenticated',
         () async {
       final container = _makeContainer(isPro: false, user: _fakeUser);
       addTearDown(container.dispose);
       await container.read(subscriptionProvider.future);
 
+      // FREE writes stay local but deletions are recorded as tombstones for the
+      // next FREE→PRO migration — hence the decorator, not the raw local repo.
       final repo = container.read(transactionsRepositoryProvider);
-      expect(repo, isA<LocalTransactionsRepository>());
+      expect(repo, isA<LocalTombstoningTransactionsRepository>());
     });
 
     test('local repo has the correct userId', () async {
@@ -109,9 +113,9 @@ void main() {
       addTearDown(container.dispose);
       await container.read(subscriptionProvider.future);
 
-      final repo = container.read(transactionsRepositoryProvider)
-          as LocalTransactionsRepository;
-      expect(repo.userId, _fakeUser.id);
+      // The decorator wraps the user-scoped local repo; assert that wrapped repo.
+      final local = container.read(localTransactionsRepositoryProvider);
+      expect(local.userId, _fakeUser.id);
     });
 
     test('returns cloud repo when user is null (unauthenticated)', () {
@@ -145,7 +149,7 @@ void main() {
       addTearDown(containerDone.dispose);
       await containerDone.read(subscriptionProvider.future);
       expect(containerDone.read(transactionsRepositoryProvider),
-          isA<LocalTransactionsRepository>());
+          isA<LocalTombstoningTransactionsRepository>());
     });
 
     test('PRO online returns OfflineAwareTransactionsRepository', () {
@@ -219,22 +223,25 @@ void main() {
     });
 
     test(
-        'returns LocalRecurringTransactionsRepository when user is free and authenticated',
+        'returns LocalTombstoningRecurringTransactionsRepository when user is free and authenticated',
         () {
       final container = _makeContainer(isPro: false, user: _fakeUser);
       addTearDown(container.dispose);
 
+      // FREE writes stay local but recurring deletions are tombstoned for the
+      // next FREE→PRO migration — hence the decorator, not the raw local repo.
       final repo = container.read(recurringTransactionsRepositoryProvider);
-      expect(repo, isA<LocalRecurringTransactionsRepository>());
+      expect(repo, isA<LocalTombstoningRecurringTransactionsRepository>());
     });
 
     test('local recurring repo has the correct userId', () {
       final container = _makeContainer(isPro: false, user: _fakeUser);
       addTearDown(container.dispose);
 
-      final repo = container.read(recurringTransactionsRepositoryProvider)
-          as LocalRecurringTransactionsRepository;
-      expect(repo.userId, _fakeUser.id);
+      // The decorator wraps the user-scoped local repo; assert that wrapped repo.
+      final local =
+          container.read(localRecurringTransactionsRepositoryProvider);
+      expect(local.userId, _fakeUser.id);
     });
 
     test('returns cloud repo when unauthenticated', () {
@@ -326,8 +333,8 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      // Ensure subscription is loaded so free users get LocalTransactionsRepository
-      // once sync is no longer in progress.
+      // Ensure subscription is loaded so free users get the local (tombstoning)
+      // repo once sync is no longer in progress.
       await container.read(subscriptionProvider.future);
 
       // During sync: cloud repo.
@@ -336,11 +343,11 @@ void main() {
       final repoSyncing = container.read(transactionsRepositoryProvider);
       expect(repoSyncing, isA<TransactionsRepository>());
 
-      // Sync done: local repo.
+      // Sync done: local (tombstoning) repo.
       container.read(syncProvider.notifier).state =
           const AsyncData(SyncState(status: SyncStatus.done));
       final repoDone = container.read(transactionsRepositoryProvider);
-      expect(repoDone, isA<LocalTransactionsRepository>());
+      expect(repoDone, isA<LocalTombstoningTransactionsRepository>());
     });
   });
 }

@@ -80,6 +80,11 @@ class OfflineSyncService {
     bool anySuccess = false;
 
     for (final op in pending) {
+      // Las lápidas de recurrentes no se procesan aquí: las recurrentes no
+      // tienen cola de sync (PRO escribe directo a Supabase). Se quedan en la
+      // cola para que las consuma la migración FREE→PRO.
+      if (op.opType == SyncOpType.deleteRecurring) continue;
+
       // Descartar ops que han fallado demasiadas veces para evitar queue poisoning.
       if (op.attempts >= _maxAttempts) {
         AppLogger.log(
@@ -123,6 +128,10 @@ class OfflineSyncService {
         await cloud.upsertTransaction(_transactionFromPayload(op.payload!));
       case SyncOpType.delete:
         await cloud.deleteTransaction(op.entityId);
+      case SyncOpType.deleteRecurring:
+        // Unreachable: filtered out in _doFlush. Recurring tombstones are
+        // applied by the FREE→PRO migration, not here.
+        break;
     }
   }
 

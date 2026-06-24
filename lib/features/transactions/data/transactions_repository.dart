@@ -12,6 +12,7 @@ import 'package:expense_manager/features/auth/presentation/providers/auth_provid
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 import 'package:expense_manager/core/utils/app_logger.dart';
+import 'local_tombstoning_transactions_repository.dart';
 import 'local_transactions_repository.dart';
 import 'offline_aware_transactions_repository.dart';
 import 'sync_queue_repository.dart';
@@ -225,7 +226,13 @@ final transactionsRepositoryProvider =
     );
   }
 
-  // FREE confirmado → SQLite local únicamente.
-  AppLogger.log('transactionsRepo → LocalOnly (FREE user, subscription loaded)');
-  return ref.watch(localTransactionsRepositoryProvider);
+  // FREE confirmado → SQLite local. Las escrituras no tocan Supabase, pero los
+  // borrados se registran como lápidas (tombstones) para que la futura
+  // migración FREE→PRO los elimine también de la nube. Ver
+  // [LocalTombstoningTransactionsRepository].
+  AppLogger.log('transactionsRepo → LocalOnly+Tombstones (FREE user, subscription loaded)');
+  return LocalTombstoningTransactionsRepository(
+    local: ref.watch(localTransactionsRepositoryProvider),
+    queue: ref.watch(syncQueueRepositoryProvider),
+  );
 });

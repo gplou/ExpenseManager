@@ -13,6 +13,8 @@ import 'package:expense_manager/features/auth/presentation/providers/auth_provid
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 import 'local_recurring_transactions_repository.dart';
+import 'local_tombstoning_recurring_transactions_repository.dart';
+import 'sync_queue_repository.dart';
 
 class RecurringTransactionsRepository
     with AuthenticatedRepository
@@ -170,5 +172,10 @@ final recurringTransactionsRepositoryProvider =
   if (isPro || user == null || isSyncing) {
     return RecurringTransactionsRepository(ref.watch(supabaseClientProvider));
   }
-  return ref.watch(localRecurringTransactionsRepositoryProvider);
+  // FREE: SQLite local, pero los borrados se registran como lápidas para que la
+  // futura migración FREE→PRO los elimine también de la nube.
+  return LocalTombstoningRecurringTransactionsRepository(
+    local: ref.watch(localRecurringTransactionsRepositoryProvider),
+    queue: ref.watch(syncQueueRepositoryProvider),
+  );
 });

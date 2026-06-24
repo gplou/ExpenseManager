@@ -25,18 +25,27 @@ class TransactionSyncService {
   /// FREE → PRO: copy all local data to Supabase, then clear local.
   /// Recurring transactions are migrated first to preserve FK references.
   ///
-  /// IMPORTANT: this is an *additive* merge — it upserts local rows into the
-  /// cloud but must NEVER delete cloud rows that are absent locally. `migrateToCloud`
-  /// also runs on a PRO user's cold start when local has data (see sync_provider),
-  /// where local is frequently a partial/empty view of the cloud. Inferring
-  /// deletions from local absence there wipes cloud data. Deletions made during a
-  /// FREE period are handled separately via explicit delete tombstones, never by
-  /// reconciling against the local snapshot.
-  Future<void> migrateToCloud() async {
+  /// IMPORTANT: the upsert step is an *additive* merge — it must NEVER delete
+  /// cloud rows just because they are absent locally. `migrateToCloud` also runs
+  /// on a PRO user's cold start when local has data (see sync_provider), where
+  /// local is frequently a partial/empty view of the cloud; inferring deletions
+  /// from local absence there wipes cloud data.
+  ///
+  /// Deletions made during the FREE period are propagated *explicitly* via
+  /// [deletedTransactionIds] / [deletedRecurringIds] (delete tombstones recorded
+  /// by the FREE-tier tombstoning repositories). Only those ids — and only when
+  /// they are not present in the current local set — are removed from the cloud,
+  /// so a partial/empty local snapshot can at most drop the handful of rows the
+  /// user actually deleted, never the whole history.
+  Future<void> migrateToCloud({
+    List<String> deletedTransactionIds = const [],
+    List<String> deletedRecurringIds = const [],
+  }) async {
     // 1. Recurring transactions first (FK dependency).
     // upsertRecurring preserves the local UUID so FK references in regular
     // transactions remain valid after migration.
     final recurring = await localRecurring.getAllForUser();
+    final localRecurringIds = recurring.map((r) => r.id).toSet();
     for (final r in recurring) {
       await cloudRecurring.upsertRecurring(r);
     }
@@ -45,11 +54,29 @@ class TransactionSyncService {
     // upsertTransaction preserves the local UUID (avoids new Supabase-generated
     // IDs that would break any existing recurring_transaction_id FK links).
     final transactions = await localTx.getAllForUser();
+    final localTxIds = transactions.map((t) => t.id).toSet();
     for (final t in transactions) {
       await cloudTx.upsertTransaction(t);
     }
 
-    // 3. Clear local only after all writes have succeeded
+    // 3. Replay FREE-period delete tombstones against the cloud. Skip any id
+    // that is present locally (defensive against a deleted-then-recreated id):
+    // the upsert above is authoritative for rows that still exist. Transactions
+    // are deleted before recurring so the FK-nullification inside
+    // deleteRecurring runs once the referencing transactions are already gone.
+    for (final id in deletedTransactionIds) {
+      if (!localTxIds.contains(id)) {
+        await cloudTx.deleteTransaction(id);
+      }
+    }
+    for (final id in deletedRecurringIds) {
+      if (!localRecurringIds.contains(id)) {
+        await cloudRecurring.deleteRecurring(id);
+      }
+    }
+
+    // 4. Clear local only after all cloud writes (upserts + tombstone deletes)
+    // have succeeded.
     await localTx.clearAllForUser();
     await localRecurring.clearAllForUser();
   }

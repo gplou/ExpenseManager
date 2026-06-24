@@ -330,6 +330,123 @@ void main() {
       expect(cloudRecurring.all.map((r) => r.id), contains('cloud-only-rec'));
     });
 
+    test('replays delete tombstones: removes those ids from the cloud only',
+        () async {
+      // Simulates PRO→FREE→PRO: cloud still holds rows from the prior PRO
+      // period; while FREE the user deleted 'deleted-while-free' and kept 'kept'.
+      cloudTx._data.addAll([
+        _tx(id: 'kept', amount: 100),
+        _tx(id: 'deleted-while-free', amount: 200),
+      ]);
+      await localTx.insertAll([_tx(id: 'kept', amount: 100)]);
+
+      await service.migrateToCloud(
+        deletedTransactionIds: ['deleted-while-free'],
+      );
+
+      final cloudIds = cloudTx.all.map((t) => t.id);
+      expect(cloudIds, contains('kept'));
+      expect(cloudIds, isNot(contains('deleted-while-free')),
+          reason: 'explicitly tombstoned id must be removed from the cloud');
+    });
+
+    test('a tombstone never deletes a row that still exists locally', () async {
+      // Defensive: an id that was deleted then re-created locally must survive.
+      cloudTx._data.add(_tx(id: 're-created', amount: 50));
+      await localTx.insertAll([_tx(id: 're-created', amount: 50)]);
+
+      await service.migrateToCloud(deletedTransactionIds: ['re-created']);
+
+      expect(cloudTx.all.map((t) => t.id), contains('re-created'),
+          reason: 'local presence wins over a stale tombstone');
+    });
+
+    test('tombstone for an id absent from the cloud is a harmless no-op',
+        () async {
+      cloudTx._data.add(_tx(id: 'survivor', amount: 10));
+
+      await service.migrateToCloud(deletedTransactionIds: ['never-existed']);
+
+      expect(cloudTx.all.map((t) => t.id), contains('survivor'));
+    });
+
+    test('replays recurring delete tombstones: removes those ids from the cloud',
+        () async {
+      cloudRecurring._data.addAll([
+        RecurringTransactionModel(
+          id: 'rec-kept',
+          userId: 'user-1',
+          amount: 10,
+          type: TransactionType.expense,
+          category: 'Suscripción',
+          recurrenceType: RecurrenceType.monthly,
+          nextOccurrence: DateTime(2024, 5, 1),
+          createdAt: DateTime(2024, 1, 1),
+        ),
+        RecurringTransactionModel(
+          id: 'rec-deleted-while-free',
+          userId: 'user-1',
+          amount: 20,
+          type: TransactionType.expense,
+          category: 'Suscripción',
+          recurrenceType: RecurrenceType.monthly,
+          nextOccurrence: DateTime(2024, 5, 1),
+          createdAt: DateTime(2024, 1, 1),
+        ),
+      ]);
+      await localRecurring.insertAll([
+        RecurringTransactionModel(
+          id: 'rec-kept',
+          userId: 'user-1',
+          amount: 10,
+          type: TransactionType.expense,
+          category: 'Suscripción',
+          recurrenceType: RecurrenceType.monthly,
+          nextOccurrence: DateTime(2024, 5, 1),
+          createdAt: DateTime(2024, 1, 1),
+        ),
+      ]);
+
+      await service.migrateToCloud(
+        deletedRecurringIds: ['rec-deleted-while-free'],
+      );
+
+      final ids = cloudRecurring.all.map((r) => r.id);
+      expect(ids, contains('rec-kept'));
+      expect(ids, isNot(contains('rec-deleted-while-free')));
+    });
+
+    test('a recurring tombstone never deletes a recurring still present locally',
+        () async {
+      cloudRecurring._data.add(RecurringTransactionModel(
+        id: 'rec-recreated',
+        userId: 'user-1',
+        amount: 20,
+        type: TransactionType.expense,
+        category: 'Suscripción',
+        recurrenceType: RecurrenceType.monthly,
+        nextOccurrence: DateTime(2024, 5, 1),
+        createdAt: DateTime(2024, 1, 1),
+      ));
+      await localRecurring.insertAll([
+        RecurringTransactionModel(
+          id: 'rec-recreated',
+          userId: 'user-1',
+          amount: 20,
+          type: TransactionType.expense,
+          category: 'Suscripción',
+          recurrenceType: RecurrenceType.monthly,
+          nextOccurrence: DateTime(2024, 5, 1),
+          createdAt: DateTime(2024, 1, 1),
+        ),
+      ]);
+
+      await service.migrateToCloud(deletedRecurringIds: ['rec-recreated']);
+
+      expect(cloudRecurring.all.map((r) => r.id), contains('rec-recreated'),
+          reason: 'local presence wins over a stale recurring tombstone');
+    });
+
     test('does not clear local if cloud write fails', () async {
       // Replace cloudTx with one that throws on write
       final failingCloud = _ThrowingCloudTxRepo();

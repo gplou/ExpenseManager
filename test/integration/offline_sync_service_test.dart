@@ -134,6 +134,14 @@ PendingOperation makeDeleteOp(String txId) => PendingOperation(
       createdAt: DateTime(2024, 6, 2),
     );
 
+PendingOperation makeRecurringDeleteOp(String recId) => PendingOperation(
+      id: '${recId}_deleteRecurring',
+      userId: _userId,
+      opType: SyncOpType.deleteRecurring,
+      entityId: recId,
+      createdAt: DateTime(2024, 6, 3),
+    );
+
 ProviderContainer makeContainer({
   required CloudTransactionSyncContract fakeCloud,
   required Stream<bool> connectivityStream,
@@ -242,6 +250,26 @@ void main() {
     await triggerReconnect(container);
 
     expect(fakeCloud.deletedIds, contains('tx-del'));
+  });
+
+  test('skips recurring delete tombstones, leaving them in the queue', () async {
+    // Recurring tombstones are consumed by the FREE→PRO migration, never by
+    // OfflineSyncService (recurring has no offline sync queue). They must be
+    // left untouched here — not applied as a transaction delete, not removed.
+    await queue.enqueue(makeRecurringDeleteOp('rec-1'));
+
+    final container = makeContainer(
+      fakeCloud: fakeCloud,
+      connectivityStream: connectivityCtrl.stream,
+    );
+    addTearDown(container.dispose);
+
+    await triggerReconnect(container);
+
+    expect(fakeCloud.deletedIds, isEmpty);
+    final pending = await queue.getPending();
+    expect(pending, hasLength(1));
+    expect(pending.first.opType, SyncOpType.deleteRecurring);
   });
 
   test('increments attempt count and keeps op when cloud call fails', () async {

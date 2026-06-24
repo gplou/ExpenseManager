@@ -44,6 +44,34 @@ class SyncQueueRepository {
     return rows.map(PendingOperation.fromRow).toList();
   }
 
+  /// Devuelve los `entity_id` de las operaciones de borrado pendientes
+  /// (lápidas/tombstones). Lo usa la migración FREE→PRO para eliminar de la
+  /// nube las transacciones que el usuario borró mientras era FREE.
+  Future<List<String>> pendingDeleteEntityIds() async {
+    final db = await _db;
+    final rows = await db.query(
+      'pending_operations',
+      columns: ['entity_id'],
+      where: 'user_id = ? AND op_type = ?',
+      whereArgs: [userId, SyncOpType.delete.name],
+    );
+    return rows.map((r) => r['entity_id'] as String).toList();
+  }
+
+  /// Devuelve los `entity_id` de las lápidas de borrado de **recurrentes**
+  /// pendientes (`SyncOpType.deleteRecurring`). Lo usa la migración FREE→PRO
+  /// para eliminar de Supabase las recurrentes borradas mientras era FREE.
+  Future<List<String>> pendingRecurringDeleteEntityIds() async {
+    final db = await _db;
+    final rows = await db.query(
+      'pending_operations',
+      columns: ['entity_id'],
+      where: 'user_id = ? AND op_type = ?',
+      whereArgs: [userId, SyncOpType.deleteRecurring.name],
+    );
+    return rows.map((r) => r['entity_id'] as String).toList();
+  }
+
   /// Elimina una operación completada con éxito.
   Future<void> remove(String id) async {
     final db = await _db;

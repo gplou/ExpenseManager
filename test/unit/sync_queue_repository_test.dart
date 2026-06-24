@@ -152,6 +152,80 @@ void main() {
     });
   });
 
+  // ── pendingDeleteEntityIds ───────────────────────────────────────────────────
+
+  group('pendingDeleteEntityIds', () {
+    test('returns only the entity ids of delete ops', () async {
+      await queue.enqueue(makeOp(id: 'tx-1_create', opType: SyncOpType.create));
+      await queue.enqueue(makeOp(
+          id: 'tx-2_delete', opType: SyncOpType.delete, entityId: 'tx-2'));
+      await queue.enqueue(makeOp(
+          id: 'tx-3_delete', opType: SyncOpType.delete, entityId: 'tx-3'));
+
+      final ids = await queue.pendingDeleteEntityIds();
+
+      expect(ids, containsAll(['tx-2', 'tx-3']));
+      expect(ids, hasLength(2));
+    });
+
+    test('returns empty when there are no delete ops', () async {
+      await queue.enqueue(makeOp(id: 'tx-1_update', opType: SyncOpType.update));
+
+      expect(await queue.pendingDeleteEntityIds(), isEmpty);
+    });
+
+    test('does not return delete ops of a different user', () async {
+      final otherQueue = SyncQueueRepository(userId: 'user-2');
+      await otherQueue.enqueue(makeOp(
+          id: 'tx-x_delete',
+          userId: 'user-2',
+          opType: SyncOpType.delete,
+          entityId: 'tx-x'));
+
+      expect(await queue.pendingDeleteEntityIds(), isEmpty);
+    });
+
+    test('does not include recurring delete tombstones', () async {
+      await queue.enqueue(makeOp(
+          id: 'tx-1_delete', opType: SyncOpType.delete, entityId: 'tx-1'));
+      await queue.enqueue(makeOp(
+          id: 'rec-1_deleteRecurring',
+          opType: SyncOpType.deleteRecurring,
+          entityId: 'rec-1'));
+
+      expect(await queue.pendingDeleteEntityIds(), equals(['tx-1']));
+    });
+  });
+
+  // ── pendingRecurringDeleteEntityIds ──────────────────────────────────────────
+
+  group('pendingRecurringDeleteEntityIds', () {
+    test('returns only the entity ids of recurring delete ops', () async {
+      await queue.enqueue(makeOp(
+          id: 'tx-1_delete', opType: SyncOpType.delete, entityId: 'tx-1'));
+      await queue.enqueue(makeOp(
+          id: 'rec-1_deleteRecurring',
+          opType: SyncOpType.deleteRecurring,
+          entityId: 'rec-1'));
+      await queue.enqueue(makeOp(
+          id: 'rec-2_deleteRecurring',
+          opType: SyncOpType.deleteRecurring,
+          entityId: 'rec-2'));
+
+      final ids = await queue.pendingRecurringDeleteEntityIds();
+
+      expect(ids, containsAll(['rec-1', 'rec-2']));
+      expect(ids, hasLength(2));
+    });
+
+    test('returns empty when there are no recurring delete ops', () async {
+      await queue.enqueue(makeOp(
+          id: 'tx-1_delete', opType: SyncOpType.delete, entityId: 'tx-1'));
+
+      expect(await queue.pendingRecurringDeleteEntityIds(), isEmpty);
+    });
+  });
+
   // ── clearAll ───────────────────────────────────────────────────────────────
 
   group('clearAll', () {
