@@ -11,12 +11,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:expense_manager/core/local_db/local_database.dart';
 import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/features/auth/domain/user_model.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/budgets/data/local_budgets_repository.dart';
+import 'package:expense_manager/features/budgets/domain/budget_model.dart';
+import 'package:expense_manager/features/budgets/domain/budgets_repository_contract.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
@@ -117,6 +121,26 @@ class _FakeCloudRecurringRepo implements RecurringTransactionsRepositoryContract
   }
 }
 
+class _FakeCloudBudgetsRepo implements CloudBudgetsRepo {
+  final List<BudgetModel> data = [];
+
+  @override
+  Future<BudgetModel> upsertBudget(BudgetModel budget) async {
+    data.removeWhere(
+      (b) => b.userId == budget.userId && b.category == budget.category,
+    );
+    data.add(budget);
+    return budget;
+  }
+
+  @override
+  Future<List<BudgetModel>> getAllForUser() async => List.of(data);
+
+  @override
+  Future<void> deleteBudget(String id) async =>
+      data.removeWhere((b) => b.id == id);
+}
+
 class _FakeSubscriptionNotifier extends SubscriptionNotifier {
   @override
   Future<SubscriptionState> build() async => const SubscriptionState();
@@ -155,17 +179,21 @@ RecurringTransactionModel _rec(String id) => RecurringTransactionModel(
     );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
 
   late _FakeCloudTxRepo cloudTx;
   late _FakeCloudRecurringRepo cloudRecurring;
+  late _FakeCloudBudgetsRepo cloudBudgets;
 
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     final db = await databaseFactoryFfi.openDatabase(':memory:');
     await LocalDatabase.createSchema(db);
     LocalDatabase.instance.setTestDb(db);
     cloudTx = _FakeCloudTxRepo();
     cloudRecurring = _FakeCloudRecurringRepo();
+    cloudBudgets = _FakeCloudBudgetsRepo();
   });
 
   tearDown(() async {
@@ -186,6 +214,7 @@ void main() {
         supabaseClientProvider.overrideWith((ref) => mockSupabase),
         cloudTxRepoForMigrationProvider.overrideWithValue(cloudTx),
         cloudRecurringRepoForMigrationProvider.overrideWithValue(cloudRecurring),
+        cloudBudgetsRepoForMigrationProvider.overrideWithValue(cloudBudgets),
       ],
     );
   }
@@ -269,5 +298,60 @@ void main() {
 
     expect(cloudTx.data.map((t) => t.id), contains('A'));
     expect(cloudRecurring.data.map((r) => r.id), contains('R1'));
+  });
+
+  test(
+      'FREE→PRO migration uploads budgets created while FREE to the cloud and '
+      'clears them locally', () async {
+    final container = makeContainer();
+    addTearDown(container.dispose);
+
+    await container.read(subscriptionProvider.future);
+    await container.read(syncProvider.future);
+    container.listen(syncProvider, (_, __) {});
+
+    // Budget created while FREE — local-only.
+    final localBudgets = LocalBudgetsRepository(userId: _userId);
+    final created = await localBudgets.createBudget(BudgetModel(
+      id: '',
+      userId: '',
+      category: 'Comida',
+      amount: 200,
+      createdAt: DateTime(2026, 6, 1),
+    ));
+
+    container.read(_isProLever.notifier).state = true;
+    await waitForMigration(container);
+
+    // Budget is now in the cloud (preserving its id) and the local copy is
+    // cleared (the PRO mirror re-hydrates from the cloud on next read).
+    expect(cloudBudgets.data.single.category, 'Comida');
+    expect(cloudBudgets.data.single.id, created.id);
+    expect(await localBudgets.getBudgets(), isEmpty);
+  });
+
+  test(
+      'FREE→PRO migration clears the hydration flag so the (just-emptied) local '
+      'mirror is re-populated and budget spend is not stuck at 0', () async {
+    // Simulate a user who was PRO on this device before: the flag is set, so
+    // without clearing it InitialSyncService would skip re-hydration and the
+    // local mirror (emptied by migrateToCloud) would stay empty.
+    SharedPreferences.setMockInitialValues({'pro_hydrated_$_userId': true});
+
+    final container = makeContainer();
+    addTearDown(container.dispose);
+
+    await container.read(subscriptionProvider.future);
+    await container.read(syncProvider.future);
+    container.listen(syncProvider, (_, __) {});
+
+    await LocalTransactionsRepository(userId: _userId).insertAll([_tx('A')]);
+
+    container.read(_isProLever.notifier).state = true;
+    await waitForMigration(container);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('pro_hydrated_$_userId'), isNot(true),
+        reason: 'migration must clear the flag so the mirror re-hydrates');
   });
 }

@@ -5,6 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/core/services/sentry_service.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
+import 'package:expense_manager/features/budgets/data/budgets_repository.dart';
+import 'package:expense_manager/features/budgets/data/budgets_sync_service.dart';
+import 'package:expense_manager/features/budgets/data/local_budgets_repository.dart';
+import 'package:expense_manager/features/budgets/domain/budgets_repository_contract.dart';
+import 'package:expense_manager/features/transactions/data/initial_sync_service.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
@@ -27,6 +32,12 @@ final cloudTxRepoForMigrationProvider =
 final cloudRecurringRepoForMigrationProvider =
     Provider<RecurringTransactionsRepositoryContract>(
   (ref) => RecurringTransactionsRepository(ref.read(supabaseClientProvider)),
+);
+
+/// Cloud budgets repo usado exclusivamente por la migración FREE↔PRO.
+/// Expuesto como provider para que los tests lo sustituyan por un fake.
+final cloudBudgetsRepoForMigrationProvider = Provider<CloudBudgetsRepo>(
+  (ref) => SupabaseBudgetsRepository(ref.read(supabaseClientProvider)),
 );
 
 enum SyncStatus { idle, syncing, done, error }
@@ -115,7 +126,10 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
       if (tx.isNotEmpty) return true;
       final recurring = await LocalRecurringTransactionsRepository(userId: userId)
           .getAllForUser();
-      return recurring.isNotEmpty;
+      if (recurring.isNotEmpty) return true;
+      final budgets =
+          await LocalBudgetsRepository(userId: userId).getAllForUser();
+      return budgets.isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -135,11 +149,17 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
           cloudRecurring: ref.read(cloudRecurringRepoForMigrationProvider),
         );
 
+        final budgetsService = BudgetsSyncService(
+          local: LocalBudgetsRepository(userId: userId),
+          cloud: ref.read(cloudBudgetsRepoForMigrationProvider),
+        );
+
         if (wasPro) {
           // PRO expired: download cloud data to local. Las ops pendientes son
           // irrelevantes — la nube es la fuente de verdad que se copia abajo.
           await queue.clearAll();
           await service.migrateToLocal();
+          await budgetsService.migrateToLocal();
         } else {
           // Upgraded to PRO: sube los datos locales a la nube y reproduce las
           // lápidas de borrado del periodo FREE, de modo que las transacciones
@@ -155,7 +175,16 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
             deletedTransactionIds: deletedIds,
             deletedRecurringIds: deletedRecurringIds,
           );
+          await budgetsService.migrateToCloud();
           await queue.clearAll();
+
+          // migrateToCloud vació el espejo local tras subir a la nube. Forzamos
+          // la rehidratación limpiando el flag: si el usuario ya fue PRO antes
+          // en este dispositivo el flag estaría puesto y InitialSyncService no
+          // repoblaría el espejo, dejando getTransactions (y por tanto el gasto
+          // de cada presupuesto) en 0 hasta el siguiente reinicio. El listener
+          // de InitialSyncService dispara _tryHydrate al pasar isSyncing→false.
+          await InitialSyncService.clearHydrationFlag(userId);
         }
 
         if (_cancelled) return;

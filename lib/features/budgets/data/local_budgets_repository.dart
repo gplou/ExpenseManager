@@ -114,6 +114,34 @@ class LocalBudgetsRepository implements BudgetsRepositoryContract {
     );
   }
 
+  // ── Migración FREE↔PRO (BudgetsSyncService) ───────────────────────────────
+
+  /// Todos los presupuestos del usuario (alias de [getBudgets] para paralelismo
+  /// con las repos de transacciones).
+  Future<List<BudgetModel>> getAllForUser() => getBudgets();
+
+  /// Inserta una lista de presupuestos (download cloud→local). Idempotente:
+  /// `ConflictAlgorithm.replace` evita duplicados al reintentar.
+  Future<void> insertAll(List<BudgetModel> budgets) async {
+    final db = await _db;
+    final batch = db.batch();
+    for (final b in budgets) {
+      batch.insert(
+        'budgets',
+        _toRow(b),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  /// Borra todos los presupuestos locales del usuario (tras subir a la nube en
+  /// FREE→PRO, el espejo se rehidrata desde el cloud).
+  Future<void> clearAllForUser() async {
+    final db = await _db;
+    await db.delete('budgets', where: 'user_id = ?', whereArgs: [userId]);
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   Map<String, dynamic> _toRow(BudgetModel b) => {

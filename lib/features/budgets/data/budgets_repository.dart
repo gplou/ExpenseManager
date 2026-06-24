@@ -15,7 +15,7 @@ import 'local_budgets_repository.dart';
 
 class SupabaseBudgetsRepository
     with AuthenticatedRepository
-    implements BudgetsRepositoryContract {
+    implements BudgetsRepositoryContract, CloudBudgetsRepo {
   SupabaseBudgetsRepository(this._client);
   final SupabaseClient _client;
 
@@ -55,6 +55,41 @@ class SupabaseBudgetsRepository
       _mapToFailure(e);
     }
   }
+
+  /// Sube un presupuesto a la nube de forma **aditiva**, preservando su id
+  /// (UUID local) para que el id mostrado en la UI no cambie tras la migración
+  /// FREE→PRO. El conflicto se resuelve sobre la clave natural
+  /// `(user_id, category)`: si la categoría ya tiene presupuesto en la nube se
+  /// actualiza en lugar de fallar por la restricción UNIQUE.
+  ///
+  /// Usado por [BudgetsSyncService.migrateToCloud]; no forma parte del CRUD
+  /// normal (los `create`/`update` de la UI pasan por los métodos de arriba).
+  @override
+  Future<BudgetModel> upsertBudget(BudgetModel budget) async {
+    try {
+      final data = {
+        'id': budget.id,
+        'user_id': userId,
+        'category': budget.category,
+        'amount': budget.amount,
+        'period': budget.period,
+        'currency': budget.currency,
+      };
+      final response = await _client
+          .from('budgets')
+          .upsert(data, onConflict: 'user_id,category')
+          .select()
+          .single();
+      return _fromRow(response);
+    } catch (e) {
+      _mapToFailure(e);
+    }
+  }
+
+  /// Lee todos los presupuestos del usuario (alias semántico de [getBudgets]
+  /// para uso en migraciones, en paralelo a `getAllForUser` de transacciones).
+  @override
+  Future<List<BudgetModel>> getAllForUser() => getBudgets();
 
   @override
   Future<BudgetModel> updateBudget(BudgetModel budget) async {

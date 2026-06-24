@@ -17,3 +17,17 @@ abstract class BudgetsRepositoryContract {
 
   Future<void> deleteBudget(String id);
 }
+
+/// Subconjunto de operaciones cloud que necesita `BudgetsSyncService` para la
+/// migración FREE↔PRO. Lo implementa `SupabaseBudgetsRepository`; los tests
+/// pasan un fake en memoria sin tocar Supabase.
+abstract class CloudBudgetsRepo {
+  /// Sube un presupuesto de forma aditiva (conflicto por `(user_id, category)`),
+  /// preservando el id local.
+  Future<BudgetModel> upsertBudget(BudgetModel budget);
+
+  /// Todos los presupuestos del usuario en la nube.
+  Future<List<BudgetModel>> getAllForUser();
+
+  Future<void> deleteBudget(String id);
+}
