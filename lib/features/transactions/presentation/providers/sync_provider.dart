@@ -12,6 +12,22 @@ import 'package:expense_manager/features/transactions/data/recurring_transaction
 import 'package:expense_manager/features/transactions/data/sync_queue_repository.dart';
 import 'package:expense_manager/features/transactions/data/transaction_sync_service.dart';
 import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
+import 'package:expense_manager/features/transactions/domain/recurring_transactions_repository_contract.dart';
+import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
+
+/// Cloud repos used exclusively by the FREE↔PRO migration ([SyncNotifier]).
+/// Exposed as providers (mirroring the hydration repos in
+/// initial_sync_service.dart) so tests can override them with in-memory fakes
+/// instead of stubbing the whole Supabase client.
+final cloudTxRepoForMigrationProvider =
+    Provider<TransactionsRepositoryContract>(
+  (ref) => TransactionsRepository(ref.read(supabaseClientProvider)),
+);
+
+final cloudRecurringRepoForMigrationProvider =
+    Provider<RecurringTransactionsRepositoryContract>(
+  (ref) => RecurringTransactionsRepository(ref.read(supabaseClientProvider)),
+);
 
 enum SyncStatus { idle, syncing, done, error }
 
@@ -110,14 +126,13 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
       try {
         if (_cancelled) return;
 
-        final supabase = ref.read(supabaseClientProvider);
         final queue = SyncQueueRepository(userId: userId);
 
         final service = TransactionSyncService(
           localTx: LocalTransactionsRepository(userId: userId),
-          cloudTx: TransactionsRepository(supabase),
+          cloudTx: ref.read(cloudTxRepoForMigrationProvider),
           localRecurring: LocalRecurringTransactionsRepository(userId: userId),
-          cloudRecurring: RecurringTransactionsRepository(supabase),
+          cloudRecurring: ref.read(cloudRecurringRepoForMigrationProvider),
         );
 
         if (wasPro) {
