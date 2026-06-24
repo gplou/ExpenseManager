@@ -151,7 +151,9 @@
       "mcp__claude_ai_Supabase__apply_migration",
       "Bash(python3 -c ' *)",
       "Bash(xargs -I{} ls {}/lib/)",
-      "mcp__f3ab3bdd-218f-43ce-aadb-0b53b3da13d0__get_sentry_resource"
+      "mcp__f3ab3bdd-218f-43ce-aadb-0b53b3da13d0__get_sentry_resource",
+      "mcp__claude_ai_Supabase__get_logs",
+      "Bash(git -C /Users/guillermo/Workspace/ExpenseManager diff --stat)"
     ]
   }
 }

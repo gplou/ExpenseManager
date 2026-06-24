@@ -294,26 +294,27 @@ void main() {
       expect(cloudRecurring.all.map((r) => r.id), contains('uuid-rec-1'));
     });
 
-    test('removes stale cloud transactions that no longer exist locally', () async {
-      // Cloud holds rows from a prior PRO period; local (FREE source of truth)
-      // only has a subset because the user deleted some while FREE.
+    test('does not delete cloud rows that are absent locally (additive merge)',
+        () async {
+      // Regression guard: migrateToCloud also runs on a PRO cold start where
+      // local may be a partial/empty view of the cloud. It must never wipe
+      // cloud rows just because they are missing from the local snapshot.
       cloudTx._data.addAll([
-        _tx(id: 'kept', amount: 100),
-        _tx(id: 'deleted-while-free', amount: 200),
+        _tx(id: 'cloud-only-1', amount: 100),
+        _tx(id: 'cloud-only-2', amount: 200),
       ]);
-      await localTx.insertAll([_tx(id: 'kept', amount: 100)]);
+      // Local has NO transactions.
 
       await service.migrateToCloud();
 
-      final cloudIds = cloudTx.all.map((t) => t.id);
-      expect(cloudIds, contains('kept'));
-      expect(cloudIds, isNot(contains('deleted-while-free')),
-          reason: 'rows deleted during FREE must not survive in the cloud');
+      expect(cloudTx.all.map((t) => t.id),
+          containsAll(['cloud-only-1', 'cloud-only-2']),
+          reason: 'cloud rows must survive an additive migrateToCloud');
     });
 
-    test('removes stale cloud recurring that no longer exists locally', () async {
+    test('does not delete cloud recurring that is absent locally', () async {
       cloudRecurring._data.add(RecurringTransactionModel(
-        id: 'rec-deleted-while-free',
+        id: 'cloud-only-rec',
         userId: 'user-1',
         amount: 30,
         type: TransactionType.expense,
@@ -322,20 +323,11 @@ void main() {
         nextOccurrence: DateTime(2024, 5, 1),
         createdAt: DateTime(2024, 1, 1),
       ));
-      // Local has no recurring rows (the only one was deleted while FREE).
+      // Local has no recurring rows.
 
       await service.migrateToCloud();
 
-      expect(cloudRecurring.all, isEmpty);
-    });
-
-    test('keeps cloud rows that still exist locally', () async {
-      cloudTx._data.add(_tx(id: 'still-here', amount: 50));
-      await localTx.insertAll([_tx(id: 'still-here', amount: 50)]);
-
-      await service.migrateToCloud();
-
-      expect(cloudTx.all.map((t) => t.id), contains('still-here'));
+      expect(cloudRecurring.all.map((r) => r.id), contains('cloud-only-rec'));
     });
 
     test('does not clear local if cloud write fails', () async {
