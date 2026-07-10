@@ -14,9 +14,11 @@ import 'package:expense_manager/features/transactions/domain/transactions_reposi
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/core/utils/app_logger.dart';
+import 'hydration_flag.dart';
 import 'local_recurring_transactions_repository.dart';
 import 'local_transactions_repository.dart';
 import 'recurring_transactions_repository.dart';
+import 'sync_queue_repository.dart';
 import 'transaction_sync_service.dart';
 import 'transactions_repository.dart';
 
@@ -109,7 +111,7 @@ class InitialSyncService {
     await LocalDatabase.instance.db;
 
     final prefs = await SharedPreferences.getInstance();
-    final key = _hydrationKey(user.id);
+    final key = HydrationFlag.key(user.id);
 
     // After upgrading from a pre-encryption schema the DB version bumped to 3.
     // Clear the stale hydration flag so we re-sync from Supabase — the local
@@ -123,14 +125,17 @@ class InitialSyncService {
 
     _running = true;
     try {
+      // Con la cola inyectada, la descarga excluye filas con lápida de borrado
+      // pendiente (borradas offline y aún no propagadas) para no resucitarlas.
       final service = TransactionSyncService(
         localTx: _ref.read(localTransactionsRepositoryProvider),
         cloudTx: _ref.read(cloudTxRepoForHydrationProvider),
         localRecurring: _ref.read(localRecurringTransactionsRepositoryProvider),
         cloudRecurring: _ref.read(cloudRecurringRepoForHydrationProvider),
+        queue: _ref.read(syncQueueRepositoryProvider),
       );
       await service.hydrateLocalFromCloud();
-      await prefs.setBool(key, true);
+      await HydrationFlag.markHydrated(user.id);
       await prefs.remove(LocalDatabase.needsHydrationResetKey);
       _ref.invalidate(allTransactionsProvider);
     } catch (e, st) {
@@ -142,14 +147,9 @@ class InitialSyncService {
     }
   }
 
-  /// SharedPreferences key used to track whether initial hydration has been
-  /// performed for a given user on this device installation.
-  static String _hydrationKey(String userId) => 'pro_hydrated_$userId';
-
   /// Clears the hydration flag for [userId]. Exposed for testing and for
   /// cases where a forced re-sync is needed (e.g. debug/support tooling).
-  static Future<void> clearHydrationFlag(String userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_hydrationKey(userId));
-  }
+  /// Delegates to [HydrationFlag], the single owner of the key.
+  static Future<void> clearHydrationFlag(String userId) =>
+      HydrationFlag.clear(userId);
 }

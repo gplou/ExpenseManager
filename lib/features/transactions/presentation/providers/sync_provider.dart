@@ -9,7 +9,7 @@ import 'package:expense_manager/features/budgets/data/budgets_repository.dart';
 import 'package:expense_manager/features/budgets/data/budgets_sync_service.dart';
 import 'package:expense_manager/features/budgets/data/local_budgets_repository.dart';
 import 'package:expense_manager/features/budgets/domain/budgets_repository_contract.dart';
-import 'package:expense_manager/features/transactions/data/initial_sync_service.dart';
+import 'package:expense_manager/features/transactions/data/hydration_flag.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/data/local_recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
@@ -97,6 +97,24 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
     _previousIsPro = isPro;
     _previousUserId = user.id;
 
+    // Mantenimiento al operar como FREE: las escrituras FREE son solo locales,
+    // así que el store local deja de ser un espejo puro de la nube. Invalidar
+    // el flag de hidratación mantiene su invariante (ver [HydrationFlag]) y
+    // descarta los create/update pendientes de la cola — el local ya los
+    // refleja y la próxima subida FREE→PRO (aditiva) los cubrirá; dejarlos
+    // encolados permitiría que un flush futuro re-aplicara versiones obsoletas.
+    // Las lápidas de borrado se conservan siempre.
+    var wasHydratedMirror = false;
+    if (!isPro) {
+      try {
+        wasHydratedMirror = await HydrationFlag.isSet(user.id);
+        await HydrationFlag.clear(user.id);
+        await SyncQueueRepository(userId: user.id).clearUpsertOps();
+      } catch (_) {
+        // Best-effort: sin prefs/DB no bloqueamos la evaluación del estado.
+      }
+    }
+
     // If the user changed (account switch) do NOT migrate — the isPro change
     // reflects the new account's subscription, not an upgrade/downgrade of the
     // previous one. Each account's local data is already isolated by user_id.
@@ -112,15 +130,30 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
       return const SyncState(status: SyncStatus.syncing);
     }
 
-    // First build for this user on this device. If they're already PRO but
-    // still have local transactions from a prior FREE period (e.g. the
-    // subscription was already active when this app version first added
-    // migration support, so no false→true transition was ever observed),
-    // migrate those orphaned rows to Supabase now.
-    if (previous == null && isPro) {
-      final hasOrphanedLocalData = await _hasLocalData(user.id);
-      if (hasOrphanedLocalData) {
-        _runMigration(wasPro: false, userId: user.id);
+    // First build for this user on this device.
+    if (previous == null) {
+      if (isPro) {
+        // PRO con datos locales NO hidratados: son filas huérfanas de un
+        // periodo FREE (p. ej. la suscripción se activó/renovó con la app
+        // cerrada, así que nunca se observó la transición false→true) —
+        // súbelas a Supabase ahora. Si el flag de hidratación está activo, lo
+        // local es el espejo de la nube de un PRO estable: re-migrarlo en cada
+        // arranque sería una subida+descarga completa e innecesaria del
+        // histórico.
+        final hydrated = await HydrationFlag.isSet(user.id);
+        if (!hydrated && await _hasLocalData(user.id)) {
+          _runMigration(wasPro: false, userId: user.id);
+          return const SyncState(status: SyncStatus.syncing);
+        }
+      } else if (wasHydratedMirror) {
+        // FREE cuyo flag de hidratación estaba activo: era PRO en este
+        // dispositivo y la expiración se detectó con la app cerrada (nunca se
+        // observó la transición true→false). Ejecuta la misma migración
+        // PRO→FREE que el downgrade en caliente para traer las filas creadas
+        // desde otros dispositivos. Si falla (p. ej. sin red) no pasa nada: el
+        // espejo local ya está completo y el flag quedó limpio, así que no se
+        // reintenta en cada arranque.
+        _runMigration(wasPro: true, userId: user.id);
         return const SyncState(status: SyncStatus.syncing);
       }
     }
@@ -170,6 +203,7 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
           cloudTx: ref.read(cloudTxRepoForMigrationProvider),
           localRecurring: LocalRecurringTransactionsRepository(userId: userId),
           cloudRecurring: ref.read(cloudRecurringRepoForMigrationProvider),
+          queue: queue,
         );
 
         final budgetsService = BudgetsSyncService(
@@ -178,9 +212,12 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
         );
 
         if (wasPro) {
-          // PRO expired: download cloud data to local. Las ops pendientes son
-          // irrelevantes — la nube es la fuente de verdad que se copia abajo.
-          await queue.clearAll();
+          // PRO expired: download cloud data to local, sin tocar la nube ni la
+          // cola. Las lápidas de borrado pendientes (borrados offline que la
+          // nube aún no vio) se conservan: migrateToLocal filtra esas filas de
+          // la descarga para que no resuciten, y la próxima migración FREE→PRO
+          // las aplicará contra la nube. Los create/update pendientes ya los
+          // descartó build() al confirmarse FREE (el local los refleja).
           await service.migrateToLocal();
           await budgetsService.migrateToLocal();
         } else {
@@ -202,12 +239,12 @@ class SyncNotifier extends AsyncNotifier<SyncState> {
           await queue.clearAll();
 
           // migrateToCloud vació el espejo local tras subir a la nube. Forzamos
-          // la rehidratación limpiando el flag: si el usuario ya fue PRO antes
-          // en este dispositivo el flag estaría puesto y InitialSyncService no
+          // la rehidratación limpiando el flag (normalmente ya está limpio: los
+          // builds FREE lo invalidan): si quedara puesto, InitialSyncService no
           // repoblaría el espejo, dejando getTransactions (y por tanto el gasto
           // de cada presupuesto) en 0 hasta el siguiente reinicio. El listener
           // de InitialSyncService dispara _tryHydrate al pasar isSyncing→false.
-          await InitialSyncService.clearHydrationFlag(userId);
+          await HydrationFlag.clear(userId);
         }
 
         if (_cancelled) return;

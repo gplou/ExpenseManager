@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:expense_manager/core/local_db/local_database.dart';
@@ -97,6 +98,11 @@ Future<SyncState> _setAndRead(
 void main() {
   sqfliteFfiInit();
 
+  setUp(() {
+    // SyncNotifier.build reads/writes the hydration flag (SharedPreferences).
+    SharedPreferences.setMockInitialValues({});
+  });
+
   setUpAll(() async {
     // Provide an in-memory DB so background migrations don't crash trying to
     // open a real file; errors are caught inside _runMigration anyway.
@@ -161,6 +167,68 @@ void main() {
       final state = await _setAndRead(container, user: _userA, isPro: true);
 
       expect(state.isSyncing, isTrue);
+    });
+
+    test(
+        'no migration on PRO cold start when the local data is the hydrated '
+        'mirror (hydration flag set)', () async {
+      // Regresión: sin este guard, TODOS los arranques en frío de un usuario
+      // PRO re-subían el espejo local entero a Supabase, lo vaciaban y lo
+      // re-descargaban (el espejo siempre tiene filas, así que el chequeo de
+      // "datos huérfanos" disparaba siempre).
+      SharedPreferences.setMockInitialValues(
+          {'pro_hydrated_${_userA.id}': true});
+
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      final db = await LocalDatabase.instance.db;
+      await db.insert('transactions', {
+        'id': 'tx-mirror-1',
+        'user_id': _userA.id,
+        'amount': 10.0,
+        'type': 'expense',
+        'category': 'food',
+        'date': '2026-01-01',
+        'created_at': '2026-01-01T00:00:00.000',
+        'currency': 'EUR',
+      });
+      addTearDown(() async {
+        await db.delete(
+          'transactions',
+          where: 'id = ?',
+          whereArgs: ['tx-mirror-1'],
+        );
+      });
+
+      final state = await _setAndRead(container, user: _userA, isPro: true);
+
+      expect(state.isSyncing, isFalse,
+          reason: 'hydrated mirror rows are not orphaned FREE data; '
+              're-migrating them every start is a full re-upload + re-download');
+    });
+
+    test(
+        'FREE cold start with the hydration flag set triggers the PRO→FREE '
+        'migration (expiry detected while the app was closed)', () async {
+      // El flag activo significa que el dispositivo quedó en estado espejo-PRO
+      // y nunca se observó la transición true→false en caliente.
+      SharedPreferences.setMockInitialValues(
+          {'pro_hydrated_${_userA.id}': true});
+
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      final state = await _setAndRead(container, user: _userA, isPro: false);
+
+      expect(state.isSyncing, isTrue,
+          reason: 'cold-start-detected expiry must run the same PRO→FREE '
+              'download as an in-session downgrade');
+
+      // El flag queda invalidado: el local deja de ser un espejo puro en
+      // cuanto el usuario opera como FREE (y evita reintentar en cada arranque).
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('pro_hydrated_${_userA.id}'), isNot(true));
     });
   });
 

@@ -27,6 +27,7 @@ import 'package:expense_manager/features/transactions/data/local_recurring_trans
 import 'package:expense_manager/features/transactions/data/local_tombstoning_recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/local_tombstoning_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/pending_operation.dart';
 import 'package:expense_manager/features/transactions/data/sync_queue_repository.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transactions_repository_contract.dart';
@@ -353,6 +354,67 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('pro_hydrated_$_userId'), isNot(true),
         reason: 'migration must clear the flag so the mirror re-hydrates');
+  });
+
+  test(
+      'PRO→FREE migration preserves pending delete tombstones, does not '
+      'resurrect the deleted row locally, and the next FREE→PRO applies the '
+      'delete to the cloud', () async {
+    // Regresión: el downgrade hacía queue.clearAll() ANTES de migrateToLocal,
+    // descartando las lápidas de borrados offline aún no propagados; la
+    // descarga re-insertaba en local la fila ya borrada (resurrección) y la
+    // nube nunca aplicaba el borrado.
+    final container = makeContainer();
+    addTearDown(container.dispose);
+
+    // Estado inicial: PRO con A y B en la nube y espejados en local.
+    container.read(_isProLever.notifier).state = true;
+    await container.read(subscriptionProvider.future);
+    await container.read(syncProvider.future);
+    container.listen(syncProvider, (_, __) {});
+
+    cloudTx.data.addAll([_tx('A'), _tx('B')]);
+    final localTx = LocalTransactionsRepository(userId: _userId);
+    final queue = SyncQueueRepository(userId: _userId);
+    await localTx.insertAll([_tx('A'), _tx('B')]);
+
+    // Siendo PRO y offline, el usuario borra B: borrado local + lápida en la
+    // cola (la nube no lo vio — el flush nunca llegó a ejecutarse).
+    await localTx.deleteTransaction('B');
+    await queue.enqueue(PendingOperation(
+      id: 'B_delete',
+      userId: _userId,
+      opType: SyncOpType.delete,
+      entityId: 'B',
+      createdAt: DateTime(2026, 6, 1),
+    ));
+
+    // Expira la suscripción: downgrade PRO→FREE.
+    container.read(_isProLever.notifier).state = false;
+    await waitForMigration(container);
+
+    final localIds =
+        (await localTx.getAllForUser()).map((t) => t.id).toList();
+    expect(localIds, contains('A'));
+    expect(localIds, isNot(contains('B')),
+        reason: 'la descarga debe filtrar las filas con lápida pendiente — '
+            'un borrado offline no puede resucitar en el downgrade');
+    expect(await queue.pendingDeleteEntityIds(), contains('B'),
+        reason: 'la lápida debe sobrevivir al downgrade para que la próxima '
+            'migración FREE→PRO la aplique contra la nube');
+    expect(cloudTx.data.map((t) => t.id), contains('B'),
+        reason: 'el downgrade nunca escribe en la nube');
+
+    // Re-suscripción: FREE→PRO debe aplicar la lápida contra la nube.
+    container.read(_isProLever.notifier).state = true;
+    for (var i = 0; i < 200; i++) {
+      if (!cloudTx.data.map((t) => t.id).contains('B')) break;
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    expect(cloudTx.data.map((t) => t.id), contains('A'));
+    expect(cloudTx.data.map((t) => t.id), isNot(contains('B')),
+        reason: 'el borrado hecho siendo PRO offline debe llegar a la nube '
+            'en la siguiente subida');
   });
 
   test(

@@ -31,13 +31,23 @@ class OfflineAwareTransactionsRepository
     required CloudTransactionSyncContract cloud,
     required LocalTransactionsRepository local,
     required SyncQueueRepository queue,
+    bool deferCloud = false,
   })  : _cloud = cloud,
         _local = local,
-        _queue = queue;
+        _queue = queue,
+        _deferCloud = deferCloud;
 
   final CloudTransactionSyncContract _cloud;
   final LocalTransactionsRepository _local;
   final SyncQueueRepository _queue;
+
+  /// Cuando es true (tier aún desconocido: la suscripción no ha resuelto), las
+  /// escrituras NO tocan Supabase: van a SQLite y se encolan. Si la suscripción
+  /// resuelve PRO, el flush de [OfflineSyncService] drena la cola; si resuelve
+  /// FREE, [SyncNotifier] descarta los create/update encolados (el local ya los
+  /// refleja) y así los datos de un usuario FREE nunca acaban en la nube. Solo
+  /// si la escritura local falla se intenta la nube como último recurso.
+  final bool _deferCloud;
 
   // ── Lecturas ─────────────────────────────────────────────────────────────
 
@@ -80,6 +90,11 @@ class OfflineAwareTransactionsRepository
       );
     }
 
+    if (_deferCloud && localOk) {
+      await _enqueue(SyncOpType.create, saved);
+      return saved;
+    }
+
     try {
       await _cloud.upsertTransaction(saved);
       return saved;
@@ -104,6 +119,11 @@ class OfflineAwareTransactionsRepository
       AppLogger.log(
         'OfflineAware.updateTransaction: local failed, trying cloud only — $e\n$st',
       );
+    }
+
+    if (_deferCloud && localOk) {
+      await _enqueue(SyncOpType.update, saved);
+      return saved;
     }
 
     try {
@@ -131,6 +151,11 @@ class OfflineAwareTransactionsRepository
       );
     }
 
+    if (_deferCloud && localOk) {
+      await _enqueueDelete(id);
+      return;
+    }
+
     try {
       await _cloud.deleteTransaction(id);
     } catch (e) {
@@ -153,6 +178,11 @@ class OfflineAwareTransactionsRepository
       AppLogger.log(
         'OfflineAware.upsertTransaction: local failed, trying cloud only — $e\n$st',
       );
+    }
+
+    if (_deferCloud && localOk) {
+      await _enqueue(SyncOpType.update, transaction);
+      return;
     }
 
     try {

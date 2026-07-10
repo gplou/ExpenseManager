@@ -154,7 +154,8 @@
       "mcp__f3ab3bdd-218f-43ce-aadb-0b53b3da13d0__get_sentry_resource",
       "mcp__claude_ai_Supabase__get_logs",
       "Bash(git -C /Users/guillermo/Workspace/ExpenseManager diff --stat)",
-      "mcp__claude_ai_Supabase__get_organization"
+      "mcp__claude_ai_Supabase__get_organization",
+      "Bash(git -C /Users/guillermo/Workspace/ExpenseManager status --short)"
     ]
   }
 }

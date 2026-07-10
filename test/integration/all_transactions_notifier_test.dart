@@ -349,6 +349,133 @@ void main() {
         reason: 'localToKeep entries must be re-inserted into the cache.',
       );
     });
+
+    test(
+        'without the hydration flag, local rows absent from the cloud survive '
+        'the refresh even with no pending op (failed FREE→PRO migration)',
+        () async {
+      // Regresión (pérdida de datos): tras una migración FREE→PRO fallida a
+      // medias, local tiene filas que la nube nunca recibió y que NO tienen op
+      // de create en la cola (el tier FREE no encola creates). El merge las
+      // clasificaba como "borradas desde otro dispositivo" y replaceRange las
+      // eliminaba de SQLite de forma permanente. Sin flag de hidratación el
+      // local no es un espejo puro y no se pueden inferir borrados por ausencia.
+      final now = DateTime.now();
+      final monthStart = DateTime(now.year, now.month, 1);
+
+      final freeOnlyTx = _tx('free-unmigrated', monthStart, TransactionType.expense);
+      final syncedTx = _tx('synced', monthStart, TransactionType.income);
+
+      final localRepo = LocalTransactionsRepository(userId: _userId);
+      await localRepo.insertAll([freeOnlyTx, syncedTx]);
+
+      // Cloud only knows the synced tx; queue is EMPTY (no create op).
+      final cloudRepo = _FakeCloudTxRepo(data: [syncedTx]);
+      final container = _makeContainer(cloudRepo: cloudRepo);
+      addTearDown(container.dispose);
+
+      final sub = container.listen(allTransactionsProvider, (_, __) {});
+      addTearDown(sub.close);
+
+      await container.read(allTransactionsProvider.future);
+      await _pump();
+
+      final finalIds =
+          container.read(allTransactionsProvider).value?.map((t) => t.id);
+      expect(finalIds, containsAll(['free-unmigrated', 'synced']));
+
+      final cached = await localRepo.getTransactions(from: monthStart, to: now);
+      expect(
+        cached.map((t) => t.id),
+        contains('free-unmigrated'),
+        reason: 'un-uploaded local rows must never be wiped from SQLite while '
+            'the local store is not a hydrated mirror of the cloud.',
+      );
+    });
+
+    test(
+        'with the hydration flag set, a pre-existing local row absent from the '
+        'cloud IS dropped (deletion made on another device propagates)',
+        () async {
+      SharedPreferences.setMockInitialValues({_hydrationKey: true});
+
+      final now = DateTime.now();
+      final monthStart = DateTime(now.year, now.month, 1);
+
+      final deletedElsewhereTx =
+          _tx('deleted-elsewhere', monthStart, TransactionType.expense);
+      final syncedTx = _tx('synced', monthStart, TransactionType.income);
+
+      final localRepo = LocalTransactionsRepository(userId: _userId);
+      await localRepo.insertAll([deletedElsewhereTx, syncedTx]);
+
+      final cloudRepo = _FakeCloudTxRepo(data: [syncedTx]);
+      final container = _makeContainer(cloudRepo: cloudRepo);
+      addTearDown(container.dispose);
+
+      final sub = container.listen(allTransactionsProvider, (_, __) {});
+      addTearDown(sub.close);
+
+      await container.read(allTransactionsProvider.future);
+      await _pump();
+
+      final finalIds =
+          container.read(allTransactionsProvider).value?.map((t) => t.id);
+      expect(finalIds, isNot(contains('deleted-elsewhere')),
+          reason: 'a hydrated mirror row missing from the cloud (and not '
+              'pending) was deleted from another device — drop it.');
+    });
+
+    test(
+        'a cloud row with a pending delete tombstone does not resurrect via '
+        'the background refresh', () async {
+      // El usuario borró la fila en este dispositivo pero la nube aún no lo
+      // sabe (lápida pendiente en la cola). El snapshot cloud la trae de
+      // vuelta; el merge debe excluirla de la UI y de la caché — si se
+      // re-insertara en SQLite, una migración FREE→PRO posterior saltaría su
+      // borrado (guard "presente en local") y la resucitaría del todo.
+      SharedPreferences.setMockInitialValues({_hydrationKey: true});
+
+      final now = DateTime.now();
+      final monthStart = DateTime(now.year, now.month, 1);
+
+      final deletedTx = _tx('deleted-offline', monthStart, TransactionType.expense);
+      final syncedTx = _tx('synced', monthStart, TransactionType.income);
+
+      // Local ya no tiene la fila borrada; la cola guarda su lápida.
+      final localRepo = LocalTransactionsRepository(userId: _userId);
+      await localRepo.insertAll([syncedTx]);
+      final queue = SyncQueueRepository(userId: _userId);
+      await queue.enqueue(PendingOperation(
+        id: 'deleted-offline_delete',
+        userId: _userId,
+        opType: SyncOpType.delete,
+        entityId: 'deleted-offline',
+        createdAt: now,
+      ));
+
+      // La nube todavía devuelve ambas.
+      final cloudRepo = _FakeCloudTxRepo(data: [deletedTx, syncedTx]);
+      final container = _makeContainer(cloudRepo: cloudRepo);
+      addTearDown(container.dispose);
+
+      final sub = container.listen(allTransactionsProvider, (_, __) {});
+      addTearDown(sub.close);
+
+      await container.read(allTransactionsProvider.future);
+      await _pump();
+
+      final finalIds =
+          container.read(allTransactionsProvider).value?.map((t) => t.id);
+      expect(finalIds, contains('synced'));
+      expect(finalIds, isNot(contains('deleted-offline')),
+          reason: 'una fila con borrado pendiente de propagar no debe '
+              'reaparecer en la UI');
+
+      final cached = await localRepo.getTransactions(from: monthStart, to: now);
+      expect(cached.map((t) => t.id), isNot(contains('deleted-offline')),
+          reason: 'ni volver a escribirse en SQLite');
+    });
   });
 
   // ── Bug 2: _saveToCache skipped until InitialSyncService hydrates ─────────

@@ -126,24 +126,41 @@ void main() {
       expect(repo, isA<TransactionsRepository>());
     });
 
-    test('returns cloud repo during sync (isSyncing=true) even if not PRO', () {
+    test('returns cloud repo during a FREE→PRO sync (isSyncing + PRO)', () {
+      // Durante la subida a la nube el local está a punto de vaciarse, así que
+      // leer/escribir contra Supabase directo es lo correcto.
       final container =
-          _makeContainer(isPro: false, user: _fakeUser, isSyncing: true);
+          _makeContainer(isPro: true, user: _fakeUser, isSyncing: true);
       addTearDown(container.dispose);
 
       final repo = container.read(transactionsRepositoryProvider);
       expect(repo, isA<TransactionsRepository>());
     });
 
-    test('switches to local after sync completes', () async {
-      // isSyncing = true → cloud (doesn't depend on subscriptionLoaded)
-      final containerSyncing =
+    test(
+        'returns local tombstoning repo during a PRO→FREE sync '
+        '(writes must land in the destination store, not the cloud)', () async {
+      // Regresión: antes isSyncing forzaba Supabase directo en ambas
+      // direcciones; una transacción creada durante el downgrade acababa solo
+      // en la nube y quedaba invisible para el usuario FREE.
+      final container =
           _makeContainer(isPro: false, user: _fakeUser, isSyncing: true);
+      addTearDown(container.dispose);
+      await container.read(subscriptionProvider.future);
+
+      final repo = container.read(transactionsRepositoryProvider);
+      expect(repo, isA<LocalTombstoningTransactionsRepository>());
+    });
+
+    test('switches from cloud to local when the user ends up FREE', () async {
+      // FREE→PRO sync in progress (PRO) → cloud.
+      final containerSyncing =
+          _makeContainer(isPro: true, user: _fakeUser, isSyncing: true);
       addTearDown(containerSyncing.dispose);
       expect(containerSyncing.read(transactionsRepositoryProvider),
           isA<TransactionsRepository>());
 
-      // isSyncing = false → local (subscriptionLoaded must be true)
+      // isSyncing = false, FREE → local (subscriptionLoaded must be true)
       final containerDone =
           _makeContainer(isPro: false, user: _fakeUser, isSyncing: false);
       addTearDown(containerDone.dispose);
@@ -252,9 +269,20 @@ void main() {
       expect(repo, isA<RecurringTransactionsRepository>());
     });
 
-    test('returns cloud repo during sync even if not PRO', () {
+    test('returns local tombstoning repo during a PRO→FREE sync', () {
+      // Igual que con las transacciones: durante el downgrade las escrituras
+      // de recurrentes deben ir al store local (el destino), no a Supabase.
       final container =
           _makeContainer(isPro: false, user: _fakeUser, isSyncing: true);
+      addTearDown(container.dispose);
+
+      final repo = container.read(recurringTransactionsRepositoryProvider);
+      expect(repo, isA<LocalTombstoningRecurringTransactionsRepository>());
+    });
+
+    test('returns cloud repo during a FREE→PRO sync (PRO)', () {
+      final container =
+          _makeContainer(isPro: true, user: _fakeUser, isSyncing: true);
       addTearDown(container.dispose);
 
       final repo = container.read(recurringTransactionsRepositoryProvider);
@@ -328,26 +356,24 @@ void main() {
         'transactionsRepositoryProvider DOES return new instance '
         'when isSyncing changes true → false (sync completes)', () async {
       final container = makeContainerWithLiveSyncNotifier(
-        isPro: false,
+        isPro: true,
         user: _fakeUser,
       );
       addTearDown(container.dispose);
 
-      // Ensure subscription is loaded so free users get the local (tombstoning)
-      // repo once sync is no longer in progress.
       await container.read(subscriptionProvider.future);
 
-      // During sync: cloud repo.
+      // During a FREE→PRO sync: direct cloud repo.
       container.read(syncProvider.notifier).state =
           const AsyncData(SyncState(status: SyncStatus.syncing));
       final repoSyncing = container.read(transactionsRepositoryProvider);
       expect(repoSyncing, isA<TransactionsRepository>());
 
-      // Sync done: local (tombstoning) repo.
+      // Sync done: PRO offline-aware repo.
       container.read(syncProvider.notifier).state =
           const AsyncData(SyncState(status: SyncStatus.done));
       final repoDone = container.read(transactionsRepositoryProvider);
-      expect(repoDone, isA<LocalTombstoningTransactionsRepository>());
+      expect(repoDone, isA<OfflineAwareTransactionsRepository>());
     });
   });
 }

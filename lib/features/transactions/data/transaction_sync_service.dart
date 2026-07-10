@@ -2,6 +2,7 @@ import 'package:expense_manager/features/transactions/domain/recurring_transacti
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'local_recurring_transactions_repository.dart';
 import 'local_transactions_repository.dart';
+import 'sync_queue_repository.dart';
 
 /// Migrates transaction data bidirectionally between local SQLite and Supabase.
 ///
@@ -15,12 +16,19 @@ class TransactionSyncService {
     required this.cloudTx,
     required this.localRecurring,
     required this.cloudRecurring,
+    this.queue,
   });
 
   final LocalTransactionsRepository localTx;
   final TransactionsRepositoryContract cloudTx;
   final LocalRecurringTransactionsRepository localRecurring;
   final RecurringTransactionsRepositoryContract cloudRecurring;
+
+  /// Cola de operaciones pendientes. Cuando está presente, las descargas
+  /// nube→local ([migrateToLocal] / [hydrateLocalFromCloud]) filtran las filas
+  /// con lápida de borrado pendiente para que un borrado que la nube aún no ha
+  /// visto no resucite en local.
+  final SyncQueueRepository? queue;
 
   /// FREE → PRO: copy all local data to Supabase, then clear local.
   /// Recurring transactions are migrated first to preserve FK references.
@@ -86,20 +94,11 @@ class TransactionSyncService {
   ///
   /// Idempotent — uses [insertAll] which calls [ConflictAlgorithm.replace], so
   /// re-running after a partial failure is safe and produces no duplicates.
-  Future<void> hydrateLocalFromCloud() async {
-    // Recurring first (FK dependency)
-    final allRecurring = await cloudRecurring.getAllForUser();
-    final allTransactions = await cloudTx.getTransactions(
-      from: DateTime(2000, 1, 1),
-      to: DateTime(2099, 12, 31),
-    );
-    await localRecurring.insertAll(allRecurring);
-    await localTx.insertAll(allTransactions);
-  }
+  Future<void> hydrateLocalFromCloud() => migrateToLocal();
 
   /// PRO → FREE: copy all Supabase data down into the local cache.
   ///
-  /// IMPORTANT: this NO LONGER deletes anything from the cloud. Borrar la nube
+  /// IMPORTANT: this NEVER deletes anything from the cloud. Borrar la nube
   /// aquí era destructivo y sin red de seguridad: si el usuario alternaba de
   /// plan (o dos migraciones se solapaban) se perdía todo el histórico. Dejar
   /// la nube intacta la convierte en un respaldo de solo-lectura mientras el
@@ -107,13 +106,36 @@ class TransactionSyncService {
   /// id) y reconcilia sin duplicar. Los borrados que el usuario haga siendo
   /// FREE se propagan luego vía las lápidas de la cola, no por ausencia.
   ///
+  /// Las filas con lápida de borrado pendiente en [queue] se excluyen de la
+  /// descarga: la nube aún las tiene (el borrado no se ha propagado), pero el
+  /// usuario ya las borró en este dispositivo y re-insertarlas las resucitaría.
+  /// Las lápidas se leen DESPUÉS de la descarga para minimizar la ventana con
+  /// un borrado concurrente durante el fetch. La lápida sigue en la cola y la
+  /// próxima migración FREE→PRO la aplicará contra la nube.
+  ///
   /// Idempotente: [insertAll] usa [ConflictAlgorithm.replace].
   Future<void> migrateToLocal() async {
-    final allRecurring = await cloudRecurring.getAllForUser();
-    final allTransactions = await cloudTx.getTransactions(
+    var allRecurring = await cloudRecurring.getAllForUser();
+    var allTransactions = await cloudTx.getTransactions(
       from: DateTime(2000, 1, 1),
       to: DateTime(2099, 12, 31),
     );
+
+    if (queue != null) {
+      final deletedTxIds = (await queue!.pendingDeleteEntityIds()).toSet();
+      final deletedRecurringIds =
+          (await queue!.pendingRecurringDeleteEntityIds()).toSet();
+      if (deletedTxIds.isNotEmpty) {
+        allTransactions = allTransactions
+            .where((t) => !deletedTxIds.contains(t.id))
+            .toList();
+      }
+      if (deletedRecurringIds.isNotEmpty) {
+        allRecurring = allRecurring
+            .where((r) => !deletedRecurringIds.contains(r.id))
+            .toList();
+      }
+    }
 
     // Recurring first (FK dependency).
     await localRecurring.insertAll(allRecurring);

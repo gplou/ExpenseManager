@@ -425,6 +425,62 @@ void main() {
     });
   });
 
+  // ── deferCloud (tier desconocido: suscripción aún cargando) ────────────────
+
+  group('deferCloud', () {
+    OfflineAwareTransactionsRepository makeDeferredRepo() =>
+        OfflineAwareTransactionsRepository(
+          cloud: cloud,
+          local: local,
+          queue: queue,
+          deferCloud: true,
+        );
+
+    test('create writes local + enqueues, without touching the cloud',
+        () async {
+      final saved = await makeDeferredRepo()
+          .createTransaction(makeTx(id: 'tx-defer-1'));
+
+      expect(cloud.upsertedIds, isEmpty,
+          reason: 'con el tier sin resolver, los datos de un usuario FREE '
+              'no deben acabar en Supabase');
+      final pending = await queue.getPending();
+      expect(pending.single.entityId, saved.id);
+      expect(pending.single.opType, SyncOpType.create);
+      final inLocal = await local.getTransactions(
+          from: DateTime(2024, 1, 1), to: DateTime(2024, 12, 31));
+      expect(inLocal.map((t) => t.id), contains(saved.id));
+    });
+
+    test('delete removes local + enqueues tombstone, cloud untouched',
+        () async {
+      await local.createTransaction(makeTx(id: 'tx-defer-2'));
+
+      await makeDeferredRepo().deleteTransaction('tx-defer-2');
+
+      expect(cloud.deletedIds, isEmpty);
+      final pending = await queue.getPending();
+      expect(pending.single.opType, SyncOpType.delete);
+      expect(pending.single.entityId, 'tx-defer-2');
+    });
+
+    test('falls back to the cloud as last resort when local fails', () async {
+      final failable = _FailableLocal(userId: _userId)..failNext = true;
+      final repo = OfflineAwareTransactionsRepository(
+        cloud: cloud,
+        local: failable,
+        queue: queue,
+        deferCloud: true,
+      );
+
+      await repo.createTransaction(makeTx(id: 'tx-defer-3'));
+
+      expect(cloud.upsertedIds, contains('tx-defer-3'),
+          reason: 'sin local disponible, mejor guardar en la nube que perder '
+              'la transacción');
+    });
+  });
+
   // ── getSummary ─────────────────────────────────────────────────────────────
 
   group('getSummary', () {

@@ -2,15 +2,16 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/core/services/analytics_service.dart';
 import 'package:expense_manager/core/services/sentry_service.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/data/hydration_flag.dart';
 import 'package:expense_manager/features/transactions/data/initial_sync_service.dart';
 import 'package:expense_manager/features/transactions/data/local_transactions_repository.dart';
+import 'package:expense_manager/features/transactions/data/pending_operation.dart';
 import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/sync_queue_repository.dart';
 import 'package:expense_manager/features/transactions/data/transactions_repository.dart';
@@ -132,8 +133,7 @@ class AllTransactionsNotifier
       // Solo guardar en caché si InitialSyncService ya completó su hidratación.
       // Si no, InitialSyncService escribirá en SQLite cuando termine, evitando
       // así una carrera de escrituras concurrentes en el primer arranque.
-      final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool('pro_hydrated_${user.id}') == true) {
+      if (await HydrationFlag.isSet(user.id)) {
         _saveToCache(localRepo, fresh);
       }
       return fresh;
@@ -179,18 +179,52 @@ class AllTransactionsNotifier
         // txs creadas DURANTE este refresh). Lectura local best-effort: si la
         // caché es ilegible confiamos solo en el snapshot del cloud en vez de
         // descartar datos frescos.
+        //
+        // Inferir borrados por ausencia ("está en local pero no en la nube y
+        // no está pendiente → lo borraron desde otro dispositivo") solo es
+        // seguro cuando el local es un espejo puro de la nube — flag de
+        // hidratación activo (ver [HydrationFlag]). Sin él, el local puede
+        // contener filas que la nube nunca ha visto (p. ej. datos FREE cuya
+        // migración FREE→PRO falló a medias, que no tienen op de create en la
+        // cola) y descartarlas aquí las borraría de forma permanente vía
+        // replaceRange. En ese caso conservamos TODO lo local que la nube no
+        // tenga; la reconciliación real la hará la migración/hidratación.
+        // Si el flag no es legible asumimos NO hidratado: la opción segura es
+        // conservar lo local, nunca inferir borrados.
+        var hydrated = false;
+        try {
+          hydrated = await HydrationFlag.isSet(localRepo.userId);
+        } catch (_) {}
+
+        var cloudRows = fresh;
         List<TransactionModel> localToKeep = [];
         try {
           final queue = ref.read(syncQueueRepositoryProvider);
           final pending = await queue.getPending();
           final pendingIds = pending.map((op) => op.entityId).toSet();
-          final cloudIds = fresh.map((t) => t.id).toSet();
+
+          // Excluir del snapshot cloud las filas con lápida de borrado
+          // pendiente: el usuario ya las borró aquí pero la nube aún no lo
+          // sabe. Sin este filtro reaparecerían en la UI y —peor— replaceRange
+          // las re-insertaría en SQLite, y una migración FREE→PRO posterior
+          // saltaría su borrado (el guard "presente en local" las tomaría por
+          // vivas), consumiendo la lápida y resucitándolas del todo.
+          final pendingDeleteIds = pending
+              .where((op) => op.opType == SyncOpType.delete)
+              .map((op) => op.entityId)
+              .toSet();
+          if (pendingDeleteIds.isNotEmpty) {
+            cloudRows =
+                fresh.where((t) => !pendingDeleteIds.contains(t.id)).toList();
+          }
+          final cloudIds = cloudRows.map((t) => t.id).toSet();
 
           final localInRange =
               await localRepo.getTransactions(from: range.from, to: range.to);
           localToKeep = localInRange.where((t) {
             if (cloudIds.contains(t.id)) return false;
             if (pendingIds.contains(t.id)) return true;
+            if (!hydrated) return true;
             return !preFetchLocalIds.contains(t.id);
           }).toList();
         } catch (e) {
@@ -198,7 +232,7 @@ class AllTransactionsNotifier
               'localToKeep merge read failed: $e', category: 'sync');
         }
 
-        final merged = [...fresh, ...localToKeep]
+        final merged = [...cloudRows, ...localToKeep]
           ..sort((a, b) {
             final cmp = b.date.compareTo(a.date);
             return cmp != 0 ? cmp : b.createdAt.compareTo(a.createdAt);

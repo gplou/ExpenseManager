@@ -91,6 +91,24 @@ class SyncQueueRepository {
     );
   }
 
+  /// Elimina solo las ops `create`/`update` pendientes, conservando las
+  /// lápidas de borrado (`delete`/`deleteRecurring`).
+  ///
+  /// Se usa al confirmarse que el usuario es FREE: el store local ya refleja
+  /// esos create/update (la próxima migración FREE→PRO sube el local entero,
+  /// aditiva) y dejarlas encoladas es peligroso — un flush tras un futuro
+  /// upgrade podría re-aplicar una versión obsoleta pisando ediciones hechas
+  /// mientras era FREE. Las lápidas en cambio deben sobrevivir: son la única
+  /// constancia de los borrados que aún no ha visto la nube.
+  Future<void> clearUpsertOps() async {
+    final db = await _db;
+    await db.delete(
+      'pending_operations',
+      where: 'user_id = ? AND op_type IN (?, ?)',
+      whereArgs: [userId, SyncOpType.create.name, SyncOpType.update.name],
+    );
+  }
+
   /// Elimina toda la cola del usuario (p.ej. al cambiar de plan).
   Future<void> clearAll() async {
     final db = await _db;

@@ -204,15 +204,23 @@ final transactionsRepositoryProvider =
     subscriptionProvider.select((s) => s.hasValue),
   );
 
-  // No autenticado o migración en curso → Supabase directo.
-  if (user == null || isSyncing) {
+  // No autenticado, o migración FREE→PRO en curso → Supabase directo.
+  // Durante la subida a la nube el local está a punto de vaciarse, así que
+  // escribir/leer contra Supabase es lo correcto. La migración PRO→FREE
+  // (isSyncing con isPro=false) NO entra aquí: su destino es el store local,
+  // y una escritura hecha solo en la nube durante esa ventana quedaría
+  // invisible para el usuario FREE hasta un futuro upgrade.
+  if (user == null || (isSyncing && isPro)) {
     AppLogger.log('transactionsRepo → DirectSupabase (user=${user?.id.substring(0, 8)}, syncing=$isSyncing)');
     return TransactionsRepository(ref.watch(supabaseClientProvider));
   }
 
   // PRO confirmado, o suscripción todavía cargando.
-  // Usamos OfflineAware mientras carga para evitar que transacciones creadas
-  // en esa ventana se guarden solo en SQLite sin intentar Supabase.
+  // Mientras carga usamos OfflineAware en modo deferCloud: las escrituras van
+  // a SQLite y se encolan sin tocar Supabase (el tier aún es desconocido y los
+  // datos de un usuario FREE no deben acabar en la nube). Si resuelve PRO, el
+  // flush drena la cola; si resuelve FREE, SyncNotifier descarta los
+  // create/update encolados (el local ya los refleja).
   // No watchear conectividad aquí: reconstruiría el repo (y recargaría
   // allTransactionsProvider) en cada cambio de red. El fallback offline ya lo
   // resuelve OfflineAwareTransactionsRepository por operación (try cloud →
@@ -223,13 +231,15 @@ final transactionsRepositoryProvider =
       cloud: TransactionsRepository(ref.watch(supabaseClientProvider)),
       local: ref.watch(localTransactionsRepositoryProvider),
       queue: ref.watch(syncQueueRepositoryProvider),
+      deferCloud: !subscriptionLoaded,
     );
   }
 
-  // FREE confirmado → SQLite local. Las escrituras no tocan Supabase, pero los
-  // borrados se registran como lápidas (tombstones) para que la futura
-  // migración FREE→PRO los elimine también de la nube. Ver
-  // [LocalTombstoningTransactionsRepository].
+  // FREE confirmado → SQLite local (también durante una migración PRO→FREE en
+  // curso: el espejo local ya está completo y es el store de destino). Las
+  // escrituras no tocan Supabase, pero los borrados se registran como lápidas
+  // (tombstones) para que la futura migración FREE→PRO los elimine también de
+  // la nube. Ver [LocalTombstoningTransactionsRepository].
   AppLogger.log('transactionsRepo → LocalOnly+Tombstones (FREE user, subscription loaded)');
   return LocalTombstoningTransactionsRepository(
     local: ref.watch(localTransactionsRepositoryProvider),

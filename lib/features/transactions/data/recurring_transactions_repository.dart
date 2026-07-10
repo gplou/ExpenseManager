@@ -11,7 +11,6 @@ import 'package:expense_manager/features/transactions/domain/recurring_transacti
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
-import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
 import 'local_recurring_transactions_repository.dart';
 import 'local_tombstoning_recurring_transactions_repository.dart';
 import 'sync_queue_repository.dart';
@@ -165,11 +164,13 @@ final recurringTransactionsRepositoryProvider =
     Provider<RecurringTransactionsRepositoryContract>((ref) {
   final isPro = ref.watch(isProProvider);
   final user = ref.watch(currentUserProvider);
-  final isSyncing = ref.watch(
-    syncProvider.select((s) => s.value?.isSyncing ?? false),
-  );
 
-  if (isPro || user == null || isSyncing) {
+  // PRO (incluida la migración FREE→PRO en curso, cubierta por isPro) o sin
+  // sesión → Supabase directo. Una migración PRO→FREE en curso (isSyncing con
+  // isPro=false) NO va a la nube: su destino es el store local y una escritura
+  // hecha solo en Supabase durante esa ventana quedaría invisible para el
+  // usuario FREE hasta un futuro upgrade.
+  if (isPro || user == null) {
     return RecurringTransactionsRepository(ref.watch(supabaseClientProvider));
   }
   // FREE: SQLite local, pero los borrados se registran como lápidas para que la
