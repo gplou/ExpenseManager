@@ -432,64 +432,93 @@ Future<String?> showNoteSheet(
   required String initial,
   required Color accent,
 }) {
-  final controller = TextEditingController(text: initial);
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (ctx) {
-      final l10n = AppLocalizations.of(ctx);
-      return Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.xl,
-          right: AppSpacing.xl,
-          bottom: MediaQuery.viewInsetsOf(ctx).bottom + AppSpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Text(
-                  l10n.note.toUpperCase(),
-                  style: const TextStyle(
-                    fontFamily: 'GeneralSans',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                    color: AppColors.textMuted,
-                  ),
+    builder: (_) => _NoteSheet(initial: initial, accent: accent),
+  );
+}
+
+/// El controller vive en el State para que se libere en dispose(), es decir,
+/// cuando la ruta ya salió del árbol — liberarlo en whenComplete del pop
+/// deja al EditableText usando un controller muerto durante la animación de
+/// cierre del sheet.
+class _NoteSheet extends StatefulWidget {
+  const _NoteSheet({required this.initial, required this.accent});
+
+  final String initial;
+  final Color accent;
+
+  @override
+  State<_NoteSheet> createState() => _NoteSheetState();
+}
+
+class _NoteSheetState extends State<_NoteSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initial);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(
+                l10n.note.toUpperCase(),
+                style: const TextStyle(
+                  fontFamily: 'GeneralSans',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                  color: AppColors.textMuted,
                 ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () =>
-                      Navigator.pop(ctx, controller.text.trim()),
-                  child: Text(l10n.save, style: TextStyle(color: accent)),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              maxLines: 1,
-              maxLength: 100,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-              decoration: InputDecoration(
-                hintText: l10n.descriptionHint,
-                counterText: '',
               ),
+              const Spacer(),
+              TextButton(
+                onPressed: () =>
+                    Navigator.pop(context, _controller.text.trim()),
+                child: Text(l10n.save, style: TextStyle(color: widget.accent)),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            maxLines: 1,
+            maxLength: 100,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (v) => Navigator.pop(context, v.trim()),
+            decoration: InputDecoration(
+              hintText: l10n.descriptionHint,
+              counterText: '',
             ),
-          ],
-        ),
-      );
-    },
-  ).whenComplete(() {
-    // El sheet puede cerrarse por gesto; liberar tras el frame del pop.
-    WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
-  });
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Recurrence sheet ──────────────────────────────────────────────────────────

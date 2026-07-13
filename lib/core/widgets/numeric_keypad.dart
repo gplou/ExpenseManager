@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
@@ -322,6 +323,7 @@ class NumericKeypad extends StatelessWidget {
 
   Widget _submitKey(Color accent) {
     return _KeypadKey(
+      key: TestKeys.keypadSubmit,
       label: submitLabel ?? 'OK',
       icon: Icons.check_rounded,
       filled: true,
@@ -342,6 +344,7 @@ class NumericKeypad extends StatelessWidget {
 
 class _KeypadKey extends StatefulWidget {
   const _KeypadKey({
+    super.key,
     this.label,
     this.icon,
     this.semanticLabel,

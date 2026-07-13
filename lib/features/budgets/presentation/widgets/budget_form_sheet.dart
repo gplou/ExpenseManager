@@ -108,10 +108,14 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       ...TransactionCategories.expense.map((c) => c.name),
       ...custom.map((c) => c.name),
     ];
+    // La categoría seleccionada debe permanecer en los items aunque acabe de
+    // pasar a "usada" (tras crear, el sheet se rebuild-ea antes del pop y el
+    // Dropdown afirma que su value siga presente).
     final used = (ref.watch(budgetsProvider).value ?? const [])
         .map((b) => b.category)
         .toSet()
-      ..remove(widget.existing?.category);
+      ..remove(widget.existing?.category)
+      ..remove(_category);
     return [
       for (final name in all)
         if (!used.contains(name)) name,

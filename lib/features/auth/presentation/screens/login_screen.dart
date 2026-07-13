@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/config/router.dart';
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/errors/failure_localizations.dart';
 import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -131,6 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const Gap(40),
                 TextFormField(
+                  key: TestKeys.loginEmailField,
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -146,6 +148,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const Gap(16),
                 TextFormField(
+                  key: TestKeys.loginPasswordField,
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.done,
@@ -181,6 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const Gap(24),
                 ElevatedButton(
+                  key: TestKeys.loginSubmitButton,
                   onPressed: isLoading ? null : _handleLogin,
                   child: isLoading
                       ? const SizedBox(

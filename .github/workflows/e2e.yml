@@ -1,0 +1,104 @@
+name: E2E
+
+# Flujos E2E sobre emulador Android. Corren en cada tag de release (v*) y
+# bajo demanda (workflow_dispatch). No corren en cada PR: cada archivo de
+# integration_test implica un build completo + emulador (~10 min).
+#
+# Secrets requeridos (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL, SUPABASE_ANON_KEY  → reales (el login E2E es contra Supabase)
+#   E2E_EMAIL, E2E_PASSWORD          → credenciales del usuario E2E dedicado
+#   GOOGLE_WEB_CLIENT_ID, REVENUECAT_ANDROID_KEY,
+#   REVENUECAT_IOS_KEY, POSTHOG_API_KEY → pueden ser dummies (la app tolera
+#                                          su fallo de inicialización)
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+env:
+  FLUTTER_VERSION: stable
+  API_LEVEL: 34
+
+jobs:
+  e2e-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # El emulador necesita KVM (aceleración por hardware) en el runner.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create dart_defines.json from secrets
+        run: |
+          cat > dart_defines.json <<EOF
+          {
+            "SUPABASE_URL": "${{ secrets.SUPABASE_URL }}",
+            "SUPABASE_ANON_KEY": "${{ secrets.SUPABASE_ANON_KEY }}",
+            "GOOGLE_WEB_CLIENT_ID": "${{ secrets.GOOGLE_WEB_CLIENT_ID }}",
+            "REVENUECAT_ANDROID_KEY": "${{ secrets.REVENUECAT_ANDROID_KEY }}",
+            "REVENUECAT_IOS_KEY": "${{ secrets.REVENUECAT_IOS_KEY }}",
+            "POSTHOG_API_KEY": "${{ secrets.POSTHOG_API_KEY }}",
+            "E2E_EMAIL": "${{ secrets.E2E_EMAIL }}",
+            "E2E_PASSWORD": "${{ secrets.E2E_PASSWORD }}"
+          }
+          EOF
+
+      - name: Generate code (build_runner + l10n)
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          flutter gen-l10n
+
+      # Cachea el AVD para no crearlo (+bootearlo en frío) en cada run.
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ env.API_LEVEL }}
+
+      - name: Create AVD snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.API_LEVEL }}
+          arch: x86_64
+          target: google_apis
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run E2E flows
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.API_LEVEL }}
+          arch: x86_64
+          target: google_apis
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: flutter test integration_test --dart-define-from-file=dart_defines.json -d emulator-5554 -r expanded

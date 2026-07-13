@@ -169,4 +169,4 @@ Full conventions live in `test/README.md`. Key points for new tests:
 - **Time**: production code should depend on `package:clock` and call `clock.now()` (not `DateTime.now()`). Tests pin time with `withFixedClock()` / `withFakeAsyncAndClock()` from `helpers/clock_helper.dart`.
 - **Widget tests**: use `pumpWithProviders` / `pumpScreen` from `helpers/pump_app.dart` for `ProviderScope` + `MaterialApp` + l10n preloaded.
 
-Don't hit the real network, RevenueCat, or platform channels from `test/` — those belong in `integration_test/` (currently a device smoke test, `integration_test/smoke_test.dart`).
+Don't hit the real network, RevenueCat, or platform channels from `test/` — those belong in `integration_test/` (E2E flows on a device/emulator against the real backend with a dedicated FREE test user; see `integration_test/README.md`). E2E flows find widgets via `TestKeys` (`lib/core/constants/test_keys.dart`) — keep those keys attached when refactoring the tagged widgets. CI runs them on an Android emulator on release tags (`.github/workflows/e2e.yml`).

@@ -36,7 +36,7 @@ class TutorialState {
 
 // ── SharedPreferences key ─────────────────────────────────────────────────────
 
-const _kTutorialSeenKey = 'interactive_tutorial_seen_v1';
+const kTutorialSeenKey = 'interactive_tutorial_seen_v1';
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
@@ -47,7 +47,7 @@ class TutorialNotifier extends Notifier<TutorialState> {
   /// Returns true if the user has already completed (or skipped) the tutorial.
   Future<bool> hasSeen() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTutorialSeenKey) ?? false;
+    return prefs.getBool(kTutorialSeenKey) ?? false;
   }
 
   /// Starts the tutorial from the first step.
@@ -78,7 +78,7 @@ class TutorialNotifier extends Notifier<TutorialState> {
   /// Used when the user dismisses the welcome dialog without starting the tour.
   Future<void> markSeen() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kTutorialSeenKey, true);
+    await prefs.setBool(kTutorialSeenKey, true);
   }
 
   Future<void> _complete() async {

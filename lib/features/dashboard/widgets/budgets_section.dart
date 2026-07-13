@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:expense_manager/core/config/router.dart';
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/features/budgets/presentation/providers/budgets_provider.dart';
@@ -87,6 +88,7 @@ class BudgetsSection extends ConsumerWidget {
                     button: true,
                     label: l10n.budgetsManage,
                     child: InkWell(
+                      key: TestKeys.budgetsSectionLink,
                       onTap: () => context.push(AppRoutes.budgets),
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
@@ -138,6 +140,7 @@ class _EmptyCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.colors;
     return InkWell(
+      key: TestKeys.budgetsSectionLink,
       onTap: () => context.push(AppRoutes.budgets),
       borderRadius: BorderRadius.circular(12),
       child: Container(

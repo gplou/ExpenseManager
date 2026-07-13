@@ -46,6 +46,7 @@ app.*.map.json
 
 # Secrets — never commit real values
 dart_defines.json
+dart_defines_e2e.json
 .env.sentry
 android/key.properties
 android/app/upload-keystore.jks
