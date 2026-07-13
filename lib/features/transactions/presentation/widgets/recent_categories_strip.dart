@@ -32,9 +32,12 @@ const int _maxQuickCategories = 8;
 
 final quickCategoriesProvider = FutureProvider.autoDispose
     .family<List<String>, TransactionType>((ref, type) async {
-  final recent = await ref.watch(recentCategoriesProvider(type).future);
+  // Watches síncronos ANTES del await: usar ref tras el gap lanza
+  // UnmountedRefException si el provider fue invalidado mientras esperaba
+  // (p. ej. un CRUD invalida allTransactionsProvider con el sheet abierto).
   final custom = ref.watch(customCategoriesSyncProvider)[type] ?? const [];
   final hidden = ref.watch(hiddenBuiltInCategoriesProvider)[type];
+  final recent = await ref.watch(recentCategoriesProvider(type).future);
 
   final result = <String>[...recent];
   final fallback = <String>[

@@ -119,7 +119,11 @@ final budgetProgressProvider =
   final budgets = await ref.watch(budgetsProvider.future);
   if (budgets.isEmpty) return const [];
 
+  // Usar ref tras un await lanza UnmountedRefException si el provider fue
+  // invalidado mientras esperaba (cada CRUD de transacciones lo invalida).
+  if (!ref.mounted) return const [];
   await ref.watch(allTransactionsProvider.future);
+  if (!ref.mounted) return const [];
 
   final now = clock.now();
   final from = DateTime(now.year, now.month, 1);

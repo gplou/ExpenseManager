@@ -30,9 +30,12 @@ final transactionSearchQueryProvider =
 /// lista completa sin recorrerla.
 final filteredTransactionsProvider =
     FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
-  final all = await ref.watch(allTransactionsProvider.future);
+  // Watch síncrono antes del await: usar ref tras el gap lanza
+  // UnmountedRefException si el provider fue invalidado mientras esperaba.
   final query = ref.watch(transactionSearchQueryProvider);
+  final all = await ref.watch(allTransactionsProvider.future);
   if (query.trim().isEmpty) return all;
+  if (!ref.mounted) return all;
   // Las categorías se guardan como clave en español en la BD; el usuario busca
   // por el nombre que ve en pantalla, así que resolvemos las l10n del locale
   // activo sin BuildContext.

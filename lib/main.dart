@@ -279,6 +279,14 @@ Future<void> _initSentry(PackageInfo packageInfo) async {
             msg.contains('auth/v1/token');
       });
       if (isOfflineAuthRefresh) return null;
+      // Riverpod completa el `.future` de un provider que muere en pleno load
+      // con este StateError (p. ej. logout/login desmonta
+      // allTransactionsProvider mientras carga). Es ruido de teardown sin
+      // acción posible: el awaiter o se re-construye (watch) o murió con el
+      // mismo scope.
+      final isProviderDisposedMidLoad = exceptions.any((ex) =>
+          (ex.value ?? '').contains('was disposed during loading state'));
+      if (isProviderDisposedMidLoad) return null;
       return event;
     };
   });
