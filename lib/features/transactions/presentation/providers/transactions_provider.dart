@@ -77,8 +77,7 @@ final effectiveDateRangeProvider =
 // Para usuarios free (SQLite local):
 //   Consulta directa a SQLite, ya es rápida por naturaleza.
 
-class AllTransactionsNotifier
-    extends AsyncNotifier<List<TransactionModel>> {
+class AllTransactionsNotifier extends AsyncNotifier<List<TransactionModel>> {
   // Generación actual del build. Incrementa en cada rebuild para cancelar
   // refreshes de fondo que quedaron obsoletos.
   int _generation = 0;
@@ -187,7 +186,7 @@ class AllTransactionsNotifier
         // contener filas que la nube nunca ha visto (p. ej. datos FREE cuya
         // migración FREE→PRO falló a medias, que no tienen op de create en la
         // cola) y descartarlas aquí las borraría de forma permanente vía
-        // replaceRange. En ese caso conservamos TODO lo local que la nube no
+        // replaceRange. En ese caso conservamos todo lo local que la nube no
         // tenga; la reconciliación real la hará la migración/hidratación.
         // Si el flag no es legible asumimos NO hidratado: la opción segura es
         // conservar lo local, nunca inferir borrados.
@@ -228,12 +227,11 @@ class AllTransactionsNotifier
             return !preFetchLocalIds.contains(t.id);
           }).toList();
         } catch (e) {
-          SentryService.addBreadcrumb(
-              'localToKeep merge read failed: $e', category: 'sync');
+          SentryService.addBreadcrumb('localToKeep merge read failed: $e',
+              category: 'sync');
         }
 
-        final merged = [...cloudRows, ...localToKeep]
-          ..sort((a, b) {
+        final merged = [...cloudRows, ...localToKeep]..sort((a, b) {
             final cmp = b.date.compareTo(a.date);
             return cmp != 0 ? cmp : b.createdAt.compareTo(a.createdAt);
           });
@@ -255,14 +253,14 @@ class AllTransactionsNotifier
         try {
           await localRepo.replaceRange(range.from, range.to, merged);
         } catch (e) {
-          SentryService.addBreadcrumb(
-              'local cache sync write failed: $e', category: 'sync');
+          SentryService.addBreadcrumb('local cache sync write failed: $e',
+              category: 'sync');
         }
       } catch (e) {
         // El refresh de fondo falló antes de obtener datos del cloud; el
         // usuario sigue viendo la caché sin ninguna interrupción.
-        SentryService.addBreadcrumb(
-            'background refresh failed: $e', category: 'sync');
+        SentryService.addBreadcrumb('background refresh failed: $e',
+            category: 'sync');
       } finally {
         keepAlive.close();
       }
@@ -279,8 +277,8 @@ class AllTransactionsNotifier
       try {
         await localRepo.insertAll(transactions);
       } catch (e) {
-        SentryService.addBreadcrumb(
-            'initial cache save failed: $e', category: 'sync');
+        SentryService.addBreadcrumb('initial cache save failed: $e',
+            category: 'sync');
       }
     });
   }
@@ -359,7 +357,9 @@ class TransactionsNotifier extends Notifier<void> {
   }
 
   Future<void> update(TransactionModel transaction) async {
-    await ref.read(transactionsRepositoryProvider).updateTransaction(transaction);
+    await ref
+        .read(transactionsRepositoryProvider)
+        .updateTransaction(transaction);
     ref.invalidate(allTransactionsProvider);
   }
 
@@ -414,7 +414,8 @@ class TransactionsNotifier extends Notifier<void> {
             recurrenceType: recurrenceType,
             nextOccurrence: nextDate,
           );
-          await update(transaction.copyWith(recurringTransactionId: recurringId));
+          await update(
+              transaction.copyWith(recurringTransactionId: recurringId));
         }
       } else {
         if (existingRecurringId != null) {

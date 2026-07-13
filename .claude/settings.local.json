@@ -155,7 +155,26 @@
       "mcp__claude_ai_Supabase__get_logs",
       "Bash(git -C /Users/guillermo/Workspace/ExpenseManager diff --stat)",
       "mcp__claude_ai_Supabase__get_organization",
-      "Bash(git -C /Users/guillermo/Workspace/ExpenseManager status --short)"
+      "Bash(git -C /Users/guillermo/Workspace/ExpenseManager status --short)",
+      "Bash(openssl rand *)",
+      "Bash(python3 -c \"import json;print\\(json.load\\(open\\('/Users/guillermo/Workspace/ExpenseManager/dart_defines.json'\\)\\)['SUPABASE_URL']\\)\")",
+      "Bash(python3 -c \"import json;print\\(json.load\\(open\\('/Users/guillermo/Workspace/ExpenseManager/dart_defines.json'\\)\\)['SUPABASE_ANON_KEY']\\)\")",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST __CMDSUB_OUTPUT__/auth/v1/token?grant_type=password -H 'apikey: __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"email\":\"guillermop98+e2e@gmail.com\",\"password\":\"R0LZOoxVMRHZzZi93z4wcu9a\"}')",
+      "Bash(~/Library/Android/sdk/emulator/emulator -list-avds)",
+      "Bash(~/Library/Android/sdk/emulator/emulator -avd Pixel_10 -no-snapshot-save -no-boot-anim -netdelay none -netspeed full)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb wait-for-device *)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb devices *)",
+      "Bash(gh auth *)",
+      "Bash(git -C /Users/guillermo/Workspace/ExpenseManager remote -v)",
+      "Bash(env)",
+      "Bash(git credential *)",
+      "Bash(gh secret *)",
+      "Bash(git -C /Users/guillermo/Workspace/ExpenseManager diff CLAUDE.md)",
+      "Bash(git -C /Users/guillermo/Workspace/ExpenseManager diff lib/features/transactions/presentation/providers/transactions_provider.dart)",
+      "Bash(git push *)",
+      "Bash(gh workflow *)",
+      "Bash(gh run *)",
+      "mcp__claude_ai_Sentry__execute_sentry_tool"
     ]
   }
 }
