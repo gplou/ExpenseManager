@@ -60,3 +60,22 @@ android/app/upload-keystore.jks
 # Claude Code local state
 .claude/scheduled_tasks.lock
 .claude/worktrees/
+# Imágenes — solo en local, nunca al repositorio
+# (capturas de tienda, exports, pruebas visuales…)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+*.heic
+*.heif
+*.tiff
+*.psd
+*.ico
+*.svg
+
+# Excepciones: assets que la app necesita para compilar
+!assets/images/**
+!android/app/src/main/res/**
+!ios/Runner/Assets.xcassets/**

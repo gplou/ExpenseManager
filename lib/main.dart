@@ -18,6 +18,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_manager/core/utils/app_logger.dart';
 
 import 'core/config/app_config.dart';
+import 'core/config/screenshot_mode.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/sentry_provider_observer.dart';
@@ -30,8 +31,19 @@ import 'core/providers/locale_provider.dart' show localeProvider, kLocaleKey, su
 import 'core/providers/theme_provider.dart' show themeModeProvider, kThemeModeKey;
 import 'core/providers/widget_action_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/network/supabase_client.dart';
+import 'features/auth/data/auth_repository.dart';
+import 'features/auth/presentation/providers/auth_provider.dart';
+import 'features/budgets/data/budgets_repository.dart';
+import 'features/budgets/data/local_budgets_repository.dart';
+import 'features/subscription/subscription_provider.dart';
 import 'features/transactions/data/initial_sync_service.dart';
+import 'features/transactions/data/local_recurring_transactions_repository.dart';
+import 'features/transactions/data/local_transactions_repository.dart';
 import 'features/transactions/data/offline_sync_service.dart';
+import 'features/transactions/data/recurring_transactions_repository.dart';
+import 'features/transactions/data/transactions_repository.dart';
+import 'features/transactions/presentation/providers/sync_provider.dart';
 import 'features/transactions/presentation/providers/home_widget_sync_provider.dart';
 import 'features/transactions/presentation/providers/recurring_reminders_provider.dart';
 import 'l10n/app_localizations.dart';
@@ -189,6 +201,54 @@ Future<void> main() async {
               pendingWidgetActionProvider.overrideWith(
                 (ref) => initialWidgetAction,
               ),
+            // ANDAMIAJE TEMPORAL: modo capturas (ver screenshot_mode.dart).
+            // Desbloquea la UI PRO pero mantiene TODA la persistencia en SQLite
+            // y apaga el sync, para que la cuenta de demo no escriba ni una
+            // fila en Supabase. Sin el no-op de syncProvider, forzar isPro
+            // dispararía la migración FREE→PRO (migrateToCloud).
+            if (ScreenshotMode.enabled) ...[
+              isProProvider.overrideWith((ref) => true),
+              // La cuenta de demo no tiene nombre en Supabase y el saludo del
+              // dashboard sale como "Hola, usuario". Se pone aquí en vez de
+              // escribir el metadata del usuario real.
+              currentUserProvider.overrideWith((ref) {
+                ref.watch(authStateProvider);
+                return ref
+                    .watch(authRepositoryProvider)
+                    .currentUser
+                    ?.copyWith(name: 'Lucía');
+              }),
+              syncProvider.overrideWith(_NoopSyncNotifier.new),
+              offlineSyncServiceProvider.overrideWith((ref) {}),
+              initialSyncServiceProvider.overrideWith((ref) {}),
+              transactionsRepositoryProvider.overrideWith((ref) {
+                final user = ref.watch(currentUserProvider);
+                if (user == null) {
+                  return TransactionsRepository(
+                    ref.watch(supabaseClientProvider),
+                  );
+                }
+                return ref.watch(localTransactionsRepositoryProvider);
+              }),
+              recurringTransactionsRepositoryProvider.overrideWith((ref) {
+                final user = ref.watch(currentUserProvider);
+                if (user == null) {
+                  return RecurringTransactionsRepository(
+                    ref.watch(supabaseClientProvider),
+                  );
+                }
+                return ref.watch(localRecurringTransactionsRepositoryProvider);
+              }),
+              budgetsRepositoryProvider.overrideWith((ref) {
+                final user = ref.watch(currentUserProvider);
+                if (user == null) {
+                  return SupabaseBudgetsRepository(
+                    ref.watch(supabaseClientProvider),
+                  );
+                }
+                return ref.watch(localBudgetsRepositoryProvider);
+              }),
+            ],
           ],
           child: MyApp(
             initialTheme: initialTheme,
@@ -207,6 +267,17 @@ Future<void> main() async {
   }
 }
 
+// ── ANDAMIAJE TEMPORAL: modo capturas ────────────────────────────────────────
+// Solo activo con --dart-define=SCREENSHOT_MODE=true. Ver screenshot_mode.dart.
+// Desbloquea la UI PRO pero mantiene TODA la persistencia en SQLite y apaga los
+// servicios de sync, para que la cuenta de demo no escriba nada en Supabase.
+// Borrar junto con screenshot_mode.dart cuando termine la tanda de capturas.
+
+class _NoopSyncNotifier extends SyncNotifier {
+  @override
+  Future<SyncState> build() async => const SyncState();
+}
+
 /// Release-only fallback for widget build/layout/paint errors. Avoids Flutter's
 /// default grey box; renders a neutral surface without needing a theme/context.
 Widget _releaseErrorWidget(FlutterErrorDetails details) {
@@ -223,6 +294,9 @@ Widget _releaseErrorWidget(FlutterErrorDetails details) {
 
 Future<void> _requestTrackingAuthorization() async {
   if (!Platform.isIOS) return;
+  // ANDAMIAJE TEMPORAL: el diálogo ATT es una alerta del sistema y bloquea la
+  // automatización de la tanda de capturas.
+  if (ScreenshotMode.enabled) return;
   final status = await AppTrackingTransparency.trackingAuthorizationStatus;
   // Solo pedimos permiso si aún no se ha tomado ninguna decisión
   if (status == TrackingStatus.notDetermined) {
@@ -407,6 +481,8 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    // ANDAMIAJE TEMPORAL: siembra datos de demo en SQLite (modo capturas).
+    if (ScreenshotMode.enabled) ref.watch(screenshotSeedProvider);
     // Arranca el servicio de sync offline una vez y lo mantiene vivo.
     ref.watch(offlineSyncServiceProvider);
     // Hidrata la BD local desde Supabase en el primer arranque para usuarios PRO.
