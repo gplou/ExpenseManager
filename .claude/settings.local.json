@@ -175,7 +175,10 @@
       "Bash(gh workflow *)",
       "Bash(gh run *)",
       "mcp__claude_ai_Sentry__execute_sentry_tool",
-      "mcp__claude_ai_Sentry__update_issue"
+      "mcp__claude_ai_Sentry__update_issue",
+      "Bash(~/Library/Android/sdk/emulator/emulator -avd Pixel_10 -no-snapshot-load -no-boot-anim)",
+      "Bash(python3 -c \"import json;print\\(list\\(json.load\\(open\\('/Users/guillermo/Workspace/ExpenseManager/dart_defines_e2e.json'\\)\\).keys\\(\\)\\)\\)\")",
+      "Bash(chmod +x /private/tmp/claude-501/-Users-guillermo-Workspace-ExpenseManager/2e05fccb-7719-4619-a9ff-66ac61bd1fbe/scratchpad/cap.sh)"
     ]
   }
 }
