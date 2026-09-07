@@ -48,10 +48,20 @@ extension DateTimeExtensions on DateTime {
 
   bool get isOverdue => isBefore(clock.now());
 
+  /// Etiqueta para fechas *futuras* (próxima ocurrencia de una recurrente):
+  /// "Hoy" / "Mañana" / "Vencida" si ya pasó.
   String relativeDateL10n(AppLocalizations l10n) {
     if (isToday) return l10n.relToday;
     if (isTomorrow) return l10n.relTomorrow;
     if (isOverdue) return l10n.relOverdue;
+    return formattedDate;
+  }
+
+  /// Etiqueta para fechas *pasadas* (una transacción ya registrada): "Hoy" o
+  /// la fecha. Nunca "Vencida" — un gasto de ayer no está vencido, y
+  /// [relativeDateL10n] marcaría así todo el histórico.
+  String pastDateL10n(AppLocalizations l10n) {
+    if (isToday) return l10n.relToday;
     return formattedDate;
   }
 }

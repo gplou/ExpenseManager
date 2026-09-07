@@ -130,7 +130,7 @@ class RecentTransactionTile extends ConsumerWidget {
                 const Gap(2),
                 Text(
                   transaction.date
-                      .relativeDateL10n(AppLocalizations.of(context)),
+                      .pastDateL10n(AppLocalizations.of(context)),
                   style: tt.bodySmall?.copyWith(
                     color: secondaryText,
                     fontSize: 11,
