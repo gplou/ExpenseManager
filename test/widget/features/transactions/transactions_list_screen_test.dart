@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,7 +104,7 @@ void main() {
 
   group('search mode', () {
     Future<void> enterSearch(WidgetTester tester, String query) async {
-      await tester.tap(find.byIcon(Icons.search_rounded));
+      await tester.tap(find.byIcon(PhosphorIcons.magnifyingGlass()));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), query);
       // Debounce de 300ms antes de aplicar la query.
@@ -157,7 +158,7 @@ void main() {
       await enterSearch(tester, 'zzz');
       expect(find.text('Comida'), findsNothing);
 
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(PhosphorIcons.arrowLeft()));
       await tester.pumpAndSettle();
 
       expect(find.text('Comida'), findsOneWidget);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_elevation.dart';
@@ -217,7 +218,7 @@ class AppCompactRow extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontFamily: 'GeneralSans',
+                fontFamily: 'Inter',
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: disabled
@@ -229,7 +230,7 @@ class AppCompactRow extends StatelessWidget {
             ),
           ),
           Icon(
-            Icons.chevron_right_rounded,
+            PhosphorIcons.caretRight(),
             size: 18,
             color: disabled
                 ? cs.onSurface.withValues(alpha: 0.3)

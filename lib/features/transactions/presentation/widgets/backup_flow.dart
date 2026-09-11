@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -42,12 +43,12 @@ Future<void> runBackupExportFlow(BuildContext context, WidgetRef ref) async {
               child: Text(l10n.backupExport, style: ctx.textTheme.titleMedium),
             ),
             ListTile(
-              leading: const Icon(Icons.data_object_rounded),
+              leading: Icon(PhosphorIcons.database()),
               title: Text(l10n.backupExportJson),
               onTap: () => Navigator.pop(ctx, 'json'),
             ),
             ListTile(
-              leading: const Icon(Icons.table_chart_outlined),
+              leading: Icon(PhosphorIcons.table()),
               title: Text(l10n.backupExportCsv),
               onTap: () => Navigator.pop(ctx, 'csv'),
             ),

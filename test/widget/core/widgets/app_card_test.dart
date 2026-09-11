@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:expense_manager/core/theme/app_theme.dart';
@@ -146,7 +147,7 @@ void main() {
         ),
       );
       expect(find.text('Category'), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.caretRight()), findsOneWidget);
     });
 
     testWidgets('renders emoji when provided', (tester) async {

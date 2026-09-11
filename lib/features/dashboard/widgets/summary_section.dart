@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -6,6 +7,7 @@ import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/fading_divider.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
@@ -129,8 +131,8 @@ class SummarySection extends StatelessWidget {
             children: [
               Icon(
                 isPositive
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded,
+                    ? PhosphorIcons.arrowUp()
+                    : PhosphorIcons.arrowDown(),
                 size: 14,
                 color: isPositive
                     ? AppColors.positive
@@ -150,8 +152,8 @@ class SummarySection extends StatelessWidget {
           ),
           const Gap(20),
 
-          // ── Hairline divider ──────────────────────────────────────────
-          Container(height: 1, color: dividerColor),
+          // ── Hairline divider (se desvanece en los extremos) ─────────────
+          FadingDivider(color: dividerColor),
           const Gap(18),
 
           // ── Bento 2-col: income / expense ─────────────────────────────
@@ -210,7 +212,7 @@ class SummarySection extends StatelessWidget {
                     ),
                     const Gap(4),
                     Icon(
-                      Icons.arrow_forward_rounded,
+                      PhosphorIcons.arrowRight(),
                       size: 14,
                       color: cs.primary,
                     ),

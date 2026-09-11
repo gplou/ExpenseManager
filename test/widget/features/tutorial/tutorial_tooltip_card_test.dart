@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:expense_manager/features/tutorial/tutorial_step.dart';
@@ -61,11 +62,11 @@ void main() {
 
     testWidgets('renders icon when provided', (tester) async {
       await tester.pumpWidget(_card(
-        step: _step(icon: Icons.star_rounded),
+        step: _step(icon: PhosphorIcons.star()),
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.star()), findsOneWidget);
     });
 
     testWidgets('does not render icon when null', (tester) async {
@@ -75,21 +76,21 @@ void main() {
       await tester.pumpAndSettle();
 
       // No icon widget at all (back arrow and forward are the only icons)
-      expect(find.byIcon(Icons.star_rounded), findsNothing);
+      expect(find.byIcon(PhosphorIcons.star()), findsNothing);
     });
 
     testWidgets('back button is hidden on first step', (tester) async {
       await tester.pumpWidget(_card(isFirst: true));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+      expect(find.byIcon(PhosphorIcons.arrowLeft()), findsNothing);
     });
 
     testWidgets('back button is visible on non-first step', (tester) async {
       await tester.pumpWidget(_card(isFirst: false, stepIndex: 1));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.arrowLeft()), findsOneWidget);
     });
 
     testWidgets('next button shows "Siguiente" when not last step', (tester) async {
@@ -97,7 +98,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Siguiente'), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_forward_rounded), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.arrowRight()), findsOneWidget);
     });
 
     testWidgets('next button shows "Finalizar" on last step', (tester) async {
@@ -105,7 +106,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Finalizar'), findsOneWidget);
-      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.check()), findsOneWidget);
     });
 
     testWidgets('onNext is called when next button is tapped', (tester) async {
@@ -126,7 +127,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(PhosphorIcons.arrowLeft()));
       expect(called, isTrue);
     });
   });

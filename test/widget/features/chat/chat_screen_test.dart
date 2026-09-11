@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -44,7 +45,7 @@ void main() {
     expect(find.byType(ActionChip), findsNWidgets(3));
     // The input placeholder is rendered.
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.byIcon(Icons.send_rounded), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.paperPlaneTilt()), findsOneWidget);
   });
 
   testWidgets('typing + tapping send invokes the repository', (tester) async {
@@ -61,7 +62,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), '¿Cuánto gasté en marzo?');
-    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.tap(find.byIcon(PhosphorIcons.paperPlaneTilt()));
     await tester.pump();
 
     verify(() => repo.sendMessage(
@@ -106,7 +107,7 @@ void main() {
     await tester.pumpWidget(_wrap(repo));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.tap(find.byIcon(PhosphorIcons.paperPlaneTilt()));
     await tester.pump();
 
     verifyNever(() => repo.sendMessage(

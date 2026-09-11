@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -212,12 +213,12 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.camera_alt_outlined),
+                  leading: Icon(PhosphorIcons.camera()),
                   title: Text(l10n.cameraOption),
                   onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.photo_library_outlined),
+                  leading: Icon(PhosphorIcons.imagesSquare()),
                   title: Text(l10n.galleryOption),
                   onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
                 ),
@@ -341,7 +342,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _MiniFab(
-                  icon: Icons.mic_rounded,
+                  icon: PhosphorIcons.microphone(),
                   label: l10n.labelVoice,
                   hint: l10n.voiceHintStartListening,
                   onTap: _onTapVoice,
@@ -355,14 +356,14 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
                     width: _fabSize,
                     height: _fabSize,
                     child: NeoFab(
-                      icon: Icons.add,
+                      icon: PhosphorIcons.plus(),
                       onTap: _openAddSheet,
                     ),
                   ),
                 ),
                 const SizedBox(width: _clusterSpacing),
                 _MiniFab(
-                  icon: Icons.camera_alt_rounded,
+                  icon: PhosphorIcons.camera(),
                   label: l10n.labelPhoto,
                   hint: l10n.photoHintStartCamera,
                   onTap: _onTapPhoto,
@@ -424,7 +425,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
             color: Colors.red,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.stop_rounded, color: Colors.white, size: 28),
+          child: Icon(PhosphorIcons.stop(), color: Colors.white, size: 28),
         ),
       ),
     );
@@ -500,12 +501,7 @@ class _MiniFabState extends State<_MiniFab>
                 decoration: BoxDecoration(
                   color: bg,
                   shape: BoxShape.circle,
-                  boxShadow: isDark
-                      ? null
-                      : AppElevation.tinted(
-                          AppColors.dustyTeal,
-                          opacity: 0.14,
-                        ),
+                  boxShadow: AppElevation.tinted(iconColor, opacity: 0.20),
                 ),
                 child: Icon(
                   widget.icon,

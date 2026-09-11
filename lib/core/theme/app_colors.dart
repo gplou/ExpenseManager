@@ -1,46 +1,63 @@
 import 'package:flutter/material.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// Quiet Wealth · paleta de la app
+/// Nocturne · paleta de la app
 ///
-/// Identidad: papel cálido + tinta azul profunda. Sobriedad editorial, no
-/// opulencia. Los valores legacy (dustyTeal, boneWhite, sageGreen…) se
-/// mantienen como aliases reapuntados para no romper consumidores.
+/// Evolución in-place de la paleta anterior (Quiet Wealth): mismos tokens
+/// canónicos, valores nuevos. Fondo azul-gris casi neutro, acento lila usado
+/// como línea/brillo — nunca como relleno grande. Contraste por rampas
+/// tonales, no por saturación. Los valores legacy (dustyTeal, boneWhite,
+/// sageGreen…) se mantienen como aliases reapuntados para no romper
+/// consumidores.
 /// ─────────────────────────────────────────────────────────────────────────────
 class AppColors {
   AppColors._();
 
-  // ── Marca ─────────────────────────────────────────────────────────────────
-  /// Color de marca. Azul tinta profundo, tipo banca privada.
-  static const Color inkBlue        = Color(0xFF1B2A4E);
-  /// Variante para fondos suaves (chips, badges, selected states).
-  static const Color inkBlueSoft    = Color(0xFFE3E8F2);
-  /// Variante luminosa para dark mode (debe alcanzar AA sobre ink).
-  static const Color inkBlueLight   = Color(0xFF8AA0CE);
+  // ── Marca / acento ────────────────────────────────────────────────────────
+  /// Acento de marca (light). Lila apagado — línea, borde, icono; no relleno.
+  static const Color inkBlue        = Color(0xFF6A5CC6);
+  /// Fondo tintado del acento (light) — chips/badges/selected states.
+  static const Color inkBlueSoft    = Color(0xFFE7E5FE);
+  /// Acento (dark) — debe alcanzar AA sobre ink/inkDark.
+  static const Color inkBlueLight   = Color(0xFF9184D9);
+  /// Fondo tintado del acento (dark).
+  static const Color inkBlueSoftDark = Color(0xFF2B2741);
+  /// Texto/icono legible sobre [inkBlueSoft] (light) — más profundo que
+  /// [inkBlue] para no perder contraste sobre el tinte pálido.
+  static const Color inkBlueDeep    = Color(0xFF4B409A);
+  /// Texto/icono legible sobre [inkBlueSoftDark] (dark) — más claro que
+  /// [inkBlueLight] para no perder contraste sobre el tinte oscuro.
+  static const Color inkBlueDeepDark = Color(0xFFD2CEFD);
 
   // ── Superficies light ─────────────────────────────────────────────────────
-  /// Scaffold: papel cálido. No es blanco puro — suaviza la luz.
-  static const Color paper          = Color(0xFFFAF8F4);
+  /// Scaffold: azul-gris casi neutro. No es blanco puro.
+  static const Color paper          = Color(0xFFF3F3F8);
   /// Card / surface principal.
   static const Color surface        = Color(0xFFFFFFFF);
-  /// Superficie elevada / agrupada (raised). Tinte cálido.
-  static const Color raised         = Color(0xFFF2EFE9);
+  /// Superficie elevada / agrupada (raised).
+  static const Color raised         = Color(0xFFEBECF3);
   /// Hairline divider — sutil pero visible sobre paper.
-  static const Color divider        = Color(0xFFE0D9C8);
+  static const Color divider        = Color(0xFFDCDDE8);
   /// Borde más marcado (activo, focused).
-  static const Color borderStrong   = Color(0xFFCFC8B5);
+  static const Color borderStrong   = Color(0xFFC5C7D6);
 
   // ── Texto light ───────────────────────────────────────────────────────────
-  /// Texto principal. Casi negro, ligerísimo tinte verde. 18.7:1 sobre paper.
-  static const Color ink            = Color(0xFF0B0F0C);
-  /// Texto secundario. 7.1:1 sobre paper — AA estricto AAA.
-  static const Color graphite       = Color(0xFF5C625E);
-  /// Hints, labels secundarios. 4.6:1 sobre paper — AA mínimo.
-  static const Color graphiteSoft   = Color(0xFF7C8181);
-  /// Decorativo. NO usar para texto (2.6:1).
-  static const Color whisper        = Color(0xFF9AA09C);
+  /// Texto principal.
+  static const Color ink            = Color(0xFF1B1C28);
+  /// Texto secundario.
+  static const Color graphite       = Color(0xFF6B6F82);
+  /// Hints, labels secundarios.
+  static const Color graphiteSoft   = Color(0xFF9295A8);
+  /// Decorativo. NO usar para texto.
+  static const Color whisper        = Color(0xFFB7B9C8);
 
   // ── Acentos semánticos (apagados, no chillones) ───────────────────────────
+  // Nocturne define ok/warn/over en OKLCH (L 0.70-0.74) pensados para texto
+  // sobre fondo oscuro; usarlos literalmente aquí rompería el contraste en
+  // light mode y en los usos de relleno sólido (colorScheme.secondary/error).
+  // Se mantienen los tonos actuales — ya comparten familia de matiz
+  // (verde/ámbar/coral apagados) y funcionan en ambos modos vía el patrón
+  // color-base + *Soft ya establecido.
   /// Income / positive. Sage profundo, no verde primario.
   static const Color positive       = Color(0xFF3C7A5C);
   static const Color positiveSoft   = Color(0xFFDCE7E0);
@@ -52,22 +69,23 @@ class AppColors {
   static const Color warningSoft    = Color(0xFFF3EAD3);
 
   // ── Superficies dark ──────────────────────────────────────────────────────
-  /// Scaffold dark. No es negro puro — tinte cálido, evita el OLED frío.
-  static const Color paperDark      = Color(0xFF0C0D0B);
+  /// Scaffold dark. Azul-gris casi neutro — no es negro puro.
+  static const Color paperDark      = Color(0xFF161826);
   /// Card / surface dark.
-  static const Color surfaceDarkMode = Color(0xFF15171A);
-  /// Superficie elevada dark.
-  static const Color raisedDark     = Color(0xFF1E2126);
+  static const Color surfaceDarkMode = Color(0xFF232532);
+  /// Superficie elevada dark. También usada como fondo del teclado numérico
+  /// (token "keypad" de Nocturne — no hace falta un campo separado).
+  static const Color raisedDark     = Color(0xFF292B31);
   /// Divider dark — sube luminosidad para que se vea sobre paperDark.
-  static const Color dividerDark    = Color(0xFF323841);
+  static const Color dividerDark    = Color(0xFF3F424D);
   /// Borde marcado dark.
-  static const Color borderStrongDark = Color(0xFF4A515B);
+  static const Color borderStrongDark = Color(0xFF565A68);
 
-  /// Texto principal dark — mismo papel del light invertido.
-  static const Color inkDark        = Color(0xFFF2EFE9);
-  static const Color graphiteDark   = Color(0xFFB7B5AE);
-  static const Color graphiteSoftDark = Color(0xFF8F8E88);
-  static const Color whisperDark    = Color(0xFF6C6B66);
+  /// Texto principal dark.
+  static const Color inkDark        = Color(0xFFE9E9ED);
+  static const Color graphiteDark   = Color(0xFF9397AB);
+  static const Color graphiteSoftDark = Color(0xFF6F7386);
+  static const Color whisperDark    = Color(0xFF52566A);
 
   // ── Categorías curadas (14 colores armónicos) ─────────────────────────────
   /// Todos comparten saturación moderada para convivir en gráficas sin chillar.

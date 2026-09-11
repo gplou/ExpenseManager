@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -178,7 +179,7 @@ Widget _wrap({
 /// Taps the keypad submit key (✓), which saves directly in the single-screen
 /// quick-entry flow.
 Future<void> _tapSave(WidgetTester tester) async {
-  await tester.tap(find.byIcon(Icons.check_rounded).first);
+  await tester.tap(find.byIcon(PhosphorIcons.check()).first);
   await tester.pumpAndSettle();
 }
 
@@ -210,8 +211,8 @@ void main() {
     await tester.pumpWidget(_wrap(quickCategories: ['Comida', 'Transporte']));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.trending_up_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.trending_down_rounded), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trendUp()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trendDown()), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
     expect(find.text('9'), findsOneWidget);
@@ -257,7 +258,7 @@ void main() {
 
     await _tapSave(tester);
 
-    expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.warningCircle()), findsOneWidget);
   });
 
   // ── Type toggle ──────────────────────────────────────────────────────────────
@@ -270,14 +271,14 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.trending_up_rounded));
+    await tester.tap(find.byIcon(PhosphorIcons.trendUp()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.trending_down_rounded));
+    await tester.tap(find.byIcon(PhosphorIcons.trendDown()));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.trending_up_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.trending_down_rounded), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trendUp()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trendDown()), findsOneWidget);
   });
 
   testWidgets('switching type clears the selected category', (tester) async {
@@ -293,9 +294,9 @@ void main() {
 
     await tester.tap(find.text('Comida'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.trending_up_rounded));
+    await tester.tap(find.byIcon(PhosphorIcons.trendUp()));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.trending_down_rounded));
+    await tester.tap(find.byIcon(PhosphorIcons.trendDown()));
     await tester.pumpAndSettle();
 
     // Saving now must complain about the missing category.
@@ -347,7 +348,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trash()), findsOneWidget);
   });
 
   // ── Voice mode pre-populates ─────────────────────────────────────────────────
@@ -666,7 +667,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.delete_outline_rounded));
+    await tester.tap(find.byIcon(PhosphorIcons.trash()));
     await tester.pumpAndSettle();
 
     expect(find.byType(AlertDialog), findsOneWidget);

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/core/services/sentry_service.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/app_list_row.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
@@ -40,42 +42,36 @@ class AppDrawer extends ConsumerWidget {
                 children: [
                   // ── Ajustes de usuario ────────────────────────────────────
                   _SectionLabel(l10n.userSettings),
-                  ListTile(
-                    leading: const Icon(Icons.person_outline),
-                    title: Text(l10n.username),
-                    subtitle: Text(
-                      user?.name?.isNotEmpty == true
-                          ? user!.name!
-                          : l10n.noName,
-                    ),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
+                  AppListRow(
+                    icon: PhosphorIcons.user(),
+                    title: l10n.username,
+                    subtitle: user?.name?.isNotEmpty == true
+                        ? user!.name!
+                        : l10n.noName,
                     onTap: () => _showEditNameSheet(context, ref, user?.name),
                   ),
                   if (ref.watch(isEmailPasswordUserProvider))
-                    ListTile(
-                      leading: const Icon(Icons.lock_outline),
-                      title: Text(l10n.changePassword),
-                      trailing: const Icon(Icons.chevron_right, size: 18),
+                    AppListRow(
+                      icon: PhosphorIcons.lock(),
+                      title: l10n.changePassword,
                       onTap: () =>
                           _confirmChangePassword(context, ref, user?.email),
                     ),
                   const Gap(8),
 
                   // ── Ajustes de la app ──────────────────────────────────────
-                  ListTile(
-                    leading: const Icon(Icons.settings_outlined),
-                    title: Text(l10n.appSettings),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
+                  AppListRow(
+                    icon: PhosphorIcons.gear(),
+                    title: l10n.appSettings,
                     onTap: () {
                       Navigator.of(context).pop();
                       context.push(AppRoutes.appSettings);
                     },
                   ),
                   // ── Tutorial ──────────────────────────────────────────────
-                  ListTile(
-                    leading: const Icon(Icons.help_outline_rounded),
-                    title: Text(l10n.tutorialTitle),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
+                  AppListRow(
+                    icon: PhosphorIcons.question(),
+                    title: l10n.tutorialTitle,
                     onTap: () {
                       final tutNotifier =
                           ref.read(tutorialProvider.notifier);
@@ -93,7 +89,7 @@ class AppDrawer extends ConsumerWidget {
                       final sub = ref.watch(subscriptionProvider).value;
                       return ListTile(
                         leading: Icon(
-                          Icons.star_rounded,
+                          PhosphorIcons.star(),
                           color: isPro
                               ? AppColors.warmAmber
                               : AppColors.textMuted,
@@ -121,7 +117,7 @@ class AppDrawer extends ConsumerWidget {
                               : l10n.proDrawerSubtitle,
                         ),
                         trailing:
-                            const Icon(Icons.chevron_right, size: 18),
+                            Icon(PhosphorIcons.caretRight(), size: 18),
                         onTap: () {
                           Navigator.of(context).pop();
                           context.push(AppRoutes.pro);
@@ -129,10 +125,9 @@ class AppDrawer extends ConsumerWidget {
                       );
                     },
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.local_offer_outlined),
-                    title: Text(AppLocalizations.of(context).promoCodeTitle),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
+                  AppListRow(
+                    icon: PhosphorIcons.tag(),
+                    title: AppLocalizations.of(context).promoCodeTitle,
                     onTap: () => _showPromoCodeDialog(context),
                   ),
                 ],
@@ -142,27 +137,21 @@ class AppDrawer extends ConsumerWidget {
             const Divider(height: 1),
 
             // ── Logout ────────────────────────────────────────────────────
-            ListTile(
-              leading: Icon(
-                Icons.logout_outlined,
-                color: context.colors.error,
-              ),
-              title: Text(
-                l10n.logout,
-                style: TextStyle(color: context.colors.error),
-              ),
+            AppListRow(
+              icon: PhosphorIcons.signOut(),
+              iconColor: context.colors.error,
+              title: l10n.logout,
+              titleColor: context.colors.error,
+              trailing: const SizedBox.shrink(),
               onTap: () => _confirmLogout(context, ref),
             ),
             // ── Delete account ────────────────────────────────────────────
-            ListTile(
-              leading: Icon(
-                Icons.delete_forever_outlined,
-                color: context.colors.error,
-              ),
-              title: Text(
-                l10n.deleteAccount,
-                style: TextStyle(color: context.colors.error),
-              ),
+            AppListRow(
+              icon: PhosphorIcons.trash(),
+              iconColor: context.colors.error,
+              title: l10n.deleteAccount,
+              titleColor: context.colors.error,
+              trailing: const SizedBox.shrink(),
               onTap: () => _confirmDeleteAccount(context, ref),
             ),
             const Gap(8),
@@ -366,7 +355,7 @@ class _DrawerHeader extends StatelessWidget {
               child: Text(
                 initials,
                 style: const TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontWeight: FontWeight.w700,
                   fontSize: 20,
                   color: AppColors.pureWhite,
@@ -493,7 +482,7 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
             labelText: l10n.fullName,
-            prefixIcon: const Icon(Icons.person_outline),
+            prefixIcon: Icon(PhosphorIcons.user()),
           ),
           onSubmitted: (_) => _save(),
         ),

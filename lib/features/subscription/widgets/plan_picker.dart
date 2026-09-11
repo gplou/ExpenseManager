@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -47,8 +48,8 @@ class PlanPicker extends StatelessWidget {
               children: [
                 Icon(
                   isSelected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_off_rounded,
+                      ? PhosphorIcons.radioButton(PhosphorIconsStyle.fill)
+                      : PhosphorIcons.circle(),
                   color: isSelected ? AppColors.dustyTeal : AppColors.textMuted,
                   size: 20,
                 ),
@@ -62,7 +63,7 @@ class PlanPicker extends StatelessWidget {
                           Text(
                             _periodLabel(context, pkg),
                             style: TextStyle(
-                              fontFamily: 'GeneralSans',
+                              fontFamily: 'Inter',
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: isSelected
@@ -82,7 +83,7 @@ class PlanPicker extends StatelessWidget {
                               child: Text(
                                 savingsLabel,
                                 style: const TextStyle(
-                                  fontFamily: 'GeneralSans',
+                                  fontFamily: 'Inter',
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white,
@@ -95,7 +96,7 @@ class PlanPicker extends StatelessWidget {
                       Text(
                         _perMonthLabel(context, pkg),
                         style: const TextStyle(
-                          fontFamily: 'GeneralSans',
+                          fontFamily: 'Inter',
                           fontSize: 11,
                           color: AppColors.textMuted,
                         ),
@@ -106,7 +107,7 @@ class PlanPicker extends StatelessWidget {
                 Text(
                   price,
                   style: TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: isSelected ? AppColors.dustyTeal : null,
@@ -186,7 +187,7 @@ class PlanPickerFallback extends StatelessWidget {
           Text(
             l10n.proPriceSubtitle,
             style: const TextStyle(
-              fontFamily: 'GeneralSans',
+              fontFamily: 'Inter',
               fontSize: 13,
               color: AppColors.textMuted,
             ),

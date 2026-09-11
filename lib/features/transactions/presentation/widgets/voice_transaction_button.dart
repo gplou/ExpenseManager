@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -144,13 +145,13 @@ class _VoiceTransactionButtonState extends ConsumerState<VoiceTransactionButton>
             // Rojo de grabación: convención universal de UI (recording),
             // intencionadamente distinto del coral AppColors.negative ('gasto').
             backgroundColor: Colors.red,
-            child: const Icon(Icons.stop_rounded),
+            child: Icon(PhosphorIcons.stop()),
           ),
         ),
       _VoiceState.idle => FloatingActionButton(
           heroTag: 'voiceFab',
           onPressed: _onTap,
-          child: const Icon(Icons.mic_outlined),
+          child: Icon(PhosphorIcons.microphone()),
         ),
     };
   }

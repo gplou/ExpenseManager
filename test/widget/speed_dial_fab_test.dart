@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -197,7 +198,7 @@ void main() {
       // fake-async del tester.
       await tester.runAsync(() async {
         // Mini-FAB de cámara → bottom sheet de origen → Galería.
-        await tester.tap(find.byIcon(Icons.camera_alt_rounded));
+        await tester.tap(find.byIcon(PhosphorIcons.camera()));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Galería'));

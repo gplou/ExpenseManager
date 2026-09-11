@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -78,7 +79,7 @@ void main() {
     expect(find.byKey(const ValueKey('pie')), findsOneWidget);
     expect(find.byKey(const ValueKey('bar')), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.bar_chart_rounded));
+    await tester.tap(find.byIcon(PhosphorIcons.chartBar()));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('bar')), findsOneWidget);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -96,7 +97,7 @@ class QuickCategoryStrip extends ConsumerWidget {
           if (i == names.length) {
             return _QuickChip(
               key: const ValueKey('quick-chip-more'),
-              icon: Icons.grid_view_rounded,
+              icon: PhosphorIcons.squaresFour(),
               label: l10n.more,
               semanticLabel: l10n.allCategories,
               isSelected: false,
@@ -184,7 +185,7 @@ class _QuickChip extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: isSelected ? accentColor : AppColors.textMuted,

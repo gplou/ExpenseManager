@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -29,7 +30,7 @@ class CategoryFilterButton extends ConsumerWidget {
     final isActive = selectedCategory != null;
     return PopupMenuButton<String?>(
       icon: Icon(
-        Icons.filter_list_rounded,
+        PhosphorIcons.funnel(),
         color: isActive ? AppColors.dustyTeal : null,
       ),
       tooltip: l10n.category,
@@ -40,7 +41,7 @@ class CategoryFilterButton extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                Icons.clear_all_rounded,
+                PhosphorIcons.x(),
                 size: 18,
                 color: selectedCategory == null
                     ? AppColors.dustyTeal
@@ -50,7 +51,7 @@ class CategoryFilterButton extends ConsumerWidget {
               Text(
                 l10n.allCategories,
                 style: TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontWeight: selectedCategory == null
                       ? FontWeight.w600
                       : FontWeight.normal,
@@ -67,8 +68,8 @@ class CategoryFilterButton extends ConsumerWidget {
                 children: [
                   Icon(
                     cat == selectedCategory
-                        ? Icons.check_rounded
-                        : Icons.label_outline_rounded,
+                        ? PhosphorIcons.check()
+                        : PhosphorIcons.tag(),
                     size: 18,
                     color: cat == selectedCategory
                         ? AppColors.dustyTeal
@@ -78,7 +79,7 @@ class CategoryFilterButton extends ConsumerWidget {
                   Text(
                     TransactionCategories.localizedName(cat, l10n),
                     style: TextStyle(
-                      fontFamily: 'GeneralSans',
+                      fontFamily: 'Inter',
                       fontWeight: cat == selectedCategory
                           ? FontWeight.w600
                           : FontWeight.normal,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:expense_manager/core/widgets/neo_card.dart';
@@ -97,16 +98,16 @@ void main() {
   group('NeoFab', () {
     testWidgets('renders the requested icon', (tester) async {
       await tester.pumpWidget(wrap(
-        NeoFab(icon: Icons.add, onTap: () {}),
+        NeoFab(icon: PhosphorIcons.plus(), onTap: () {}),
       ));
-      expect(find.byIcon(Icons.add), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.plus()), findsOneWidget);
     });
 
     testWidgets('invokes onTap after the press-release animation',
         (tester) async {
       var taps = 0;
       await tester.pumpWidget(wrap(
-        NeoFab(icon: Icons.add, onTap: () => taps++),
+        NeoFab(icon: PhosphorIcons.plus(), onTap: () => taps++),
       ));
       await tester.tap(find.byType(NeoFab));
       await tester.pumpAndSettle();

@@ -17,6 +17,7 @@ test/
   regression/             # tests guarding specific historical bugs
   features/<name>/        # feature-scoped tests that don't fit above buckets
   core/                   # tests for shared core/ services
+  golden/                 # pixel golden tests, tagged `golden` — see below
 ```
 
 `integration/` here are **in-process** Dart tests, not the on-device
@@ -99,6 +100,17 @@ setUp(() async {
   the root cause (often a missing fallback or a wrong matcher).
 - Don't `await Future.delayed` in tests — use `fakeAsync` or rebuild the
   state via the notifier API.
+
+### Golden tests
+- Live in `test/golden/`, tagged `golden` (see `dart_test.yaml`). Baselines
+  are generated on macOS and **excluded from CI** (`--exclude-tags golden`
+  in `ci.yml`) — Skia font rendering differs enough on `ubuntu-latest` to
+  produce false positives. See `lib/core/theme/README.md` for the full
+  rationale and how to regenerate them.
+- `test/golden/flutter_test_config.dart` loads the real Inter font before
+  these tests run (`flutter test` renders text as placeholder boxes by
+  default); Phosphor icon glyphs still show as boxes — a known harness
+  limitation, not a bug.
 
 ## Running
 

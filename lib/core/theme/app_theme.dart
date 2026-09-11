@@ -5,16 +5,15 @@ import 'app_semantic_colors.dart';
 import 'app_spacing.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// Quiet Wealth · theme de la app
+/// Nocturne · theme de la app
 ///
-/// Sistema editorial calmado: papel cálido + tinta azul profunda, tipografía
-/// humanista General Sans, radios generosos, sombras de humo. La identidad
-/// vive en la jerarquía tipográfica y el espacio, no en color saturado.
+/// Evolución in-place del sistema anterior (Quiet Wealth): interfaz oscura,
+/// tranquila y compacta. Tipografía Inter en peso medio (400/500, nunca
+/// 600+), radios suaves de 8px, acento usado como línea y brillo — no como
+/// relleno grande. Contraste por rampas tonales, no por saturación.
 /// ─────────────────────────────────────────────────────────────────────────────
 class AppTheme {
   AppTheme._();
-
-  static const String _fontFamily = 'GeneralSans';
 
   // ── LIGHT THEME (principal) ───────────────────────────────────────────────
   static ThemeData get lightTheme => ThemeData(
@@ -22,7 +21,7 @@ class AppTheme {
         brightness: Brightness.light,
         extensions: const [AppSemanticColors.light],
         scaffoldBackgroundColor: AppColors.paper,
-        fontFamily: _fontFamily,
+        fontFamily: 'Inter',
         splashFactory: InkSparkle.splashFactory,
         colorScheme: const ColorScheme.light(
           primary: AppColors.inkBlue,
@@ -45,7 +44,7 @@ class AppTheme {
         ),
 
         // ── AppBar — discreto, sin elevación ──────────────────────────────
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: AppColors.paper,
           foregroundColor: AppColors.ink,
           elevation: 0,
@@ -53,21 +52,20 @@ class AppTheme {
           centerTitle: false,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
-          systemOverlayStyle: SystemUiOverlayStyle(
+          systemOverlayStyle: const SystemUiOverlayStyle(
             systemNavigationBarColor: Colors.transparent,
             systemNavigationBarDividerColor: Colors.transparent,
             systemNavigationBarIconBrightness: Brightness.dark,
           ),
-          titleTextStyle: TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 19,
-            fontWeight: FontWeight.w600,
+          titleTextStyle: TextStyle(fontFamily: 'Inter', 
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
             color: AppColors.ink,
-            letterSpacing: -0.4,
+            letterSpacing: -0.17,
           ),
         ),
 
-        // ── Cards ─────────────────────────────────────────────────────────
+        // ── Cards — fondo surface, radio 8, hairline, sin sombra ──────────
         cardTheme: CardThemeData(
           color: AppColors.surface,
           elevation: 0,
@@ -79,7 +77,7 @@ class AppTheme {
           margin: EdgeInsets.zero,
         ),
 
-        // ── FAB ───────────────────────────────────────────────────────────
+        // ── FAB — glow de acento, no relleno sólido pesado ────────────────
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: AppColors.inkBlue,
           foregroundColor: AppColors.paper,
@@ -92,28 +90,52 @@ class AppTheme {
           highlightElevation: 0,
         ),
 
-        // ── ElevatedButton ────────────────────────────────────────────────
+        // ── ElevatedButton (CTA primario) — borde de acento, fondo
+        // transparente. El acento va como línea/brillo, nunca como relleno.
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.inkBlue,
-            foregroundColor: AppColors.paper,
+            backgroundColor: Colors.transparent,
+            foregroundColor: AppColors.inkBlue,
+            disabledForegroundColor: AppColors.graphiteSoft,
+            minimumSize: const Size(double.infinity, 56),
+            elevation: 0,
+            side: const BorderSide(color: AppColors.inkBlue, width: 1),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMd,
+            ),
+            textStyle: TextStyle(fontFamily: 'Inter', 
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.1,
+            ),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.all(
+              AppColors.inkBlue.withValues(alpha: 0.08),
+            ),
+          ),
+        ),
+
+        // ── FilledButton (CTA de hoja) — fondo accentTint, texto accentDeep
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.inkBlueSoft,
+            foregroundColor: AppColors.inkBlueDeep,
             disabledBackgroundColor: AppColors.raised,
-            disabledForegroundColor: AppColors.graphite,
+            disabledForegroundColor: AppColors.graphiteSoft,
             minimumSize: const Size(double.infinity, 56),
             elevation: 0,
             shape: const RoundedRectangleBorder(
               borderRadius: AppRadius.radiusMd,
             ),
-            textStyle: const TextStyle(
-              fontFamily: _fontFamily,
+            textStyle: TextStyle(fontFamily: 'Inter', 
               fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               letterSpacing: 0.1,
             ),
           ),
         ),
 
-        // ── OutlinedButton ────────────────────────────────────────────────
+        // ── OutlinedButton (secundario, neutro) ───────────────────────────
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.ink,
@@ -122,10 +144,9 @@ class AppTheme {
             shape: const RoundedRectangleBorder(
               borderRadius: AppRadius.radiusMd,
             ),
-            textStyle: const TextStyle(
-              fontFamily: _fontFamily,
+            textStyle: TextStyle(fontFamily: 'Inter', 
               fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               letterSpacing: 0.1,
             ),
           ),
@@ -135,72 +156,69 @@ class AppTheme {
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: AppColors.inkBlue,
-            textStyle: const TextStyle(
-              fontFamily: _fontFamily,
-              fontWeight: FontWeight.w600,
+            textStyle: TextStyle(fontFamily: 'Inter', 
+              fontWeight: FontWeight.w500,
               fontSize: 14,
             ),
           ),
         ),
 
-        // ── Inputs — fill cálido, focus tinte marca ───────────────────────
-        inputDecorationTheme: const InputDecorationTheme(
+        // ── Inputs — fill sutil, focus con línea de acento ────────────────
+        inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.raised,
-          border: OutlineInputBorder(
+          border: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: Colors.transparent, width: 1),
           ),
-          enabledBorder: OutlineInputBorder(
+          enabledBorder: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: Colors.transparent, width: 1),
           ),
-          focusedBorder: OutlineInputBorder(
+          focusedBorder: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: AppColors.inkBlue, width: 1.5),
           ),
-          errorBorder: OutlineInputBorder(
+          errorBorder: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: AppColors.negative, width: 1.5),
           ),
-          focusedErrorBorder: OutlineInputBorder(
+          focusedErrorBorder: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: AppColors.negative, width: 1.5),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          labelStyle: TextStyle(
-            fontFamily: _fontFamily,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          labelStyle: TextStyle(fontFamily: 'Inter', 
             color: AppColors.graphite,
             fontWeight: FontWeight.w500,
           ),
-          hintStyle: TextStyle(
-            fontFamily: _fontFamily,
+          hintStyle: TextStyle(fontFamily: 'Inter', 
             color: AppColors.graphiteSoft,
             fontWeight: FontWeight.w400,
           ),
         ),
 
-        // ── Chips ─────────────────────────────────────────────────────────
-        chipTheme: const ChipThemeData(
-          backgroundColor: AppColors.raised,
-          selectedColor: AppColors.inkBlue,
-          labelStyle: TextStyle(
-            fontFamily: _fontFamily,
+        // ── Chips / segmented — transparente por defecto, borde 1px;
+        // seleccionado con fondo accentTint + texto accentDeep ────────────
+        chipTheme: ChipThemeData(
+          backgroundColor: Colors.transparent,
+          selectedColor: AppColors.inkBlueSoft,
+          labelStyle: TextStyle(fontFamily: 'Inter', 
             fontWeight: FontWeight.w500,
             fontSize: 12,
             color: AppColors.ink,
             letterSpacing: 0.1,
           ),
-          secondaryLabelStyle: TextStyle(
-            fontFamily: _fontFamily,
+          secondaryLabelStyle: TextStyle(fontFamily: 'Inter', 
             fontWeight: FontWeight.w500,
             fontSize: 12,
-            color: AppColors.paper,
+            color: AppColors.inkBlueDeep,
             letterSpacing: 0.1,
           ),
-          side: BorderSide(color: Colors.transparent, width: 0),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusPill),
-          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          side: const BorderSide(color: AppColors.divider, width: 1),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusPill),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         ),
 
         // ── Switch ───────────────────────────────────────────────────────
@@ -214,16 +232,15 @@ class AppTheme {
           trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
         ),
 
-        // ── SegmentedButton ──────────────────────────────────────────────
+        // ── SegmentedButton — borde de acento en el seleccionado ──────────
         segmentedButtonTheme: SegmentedButtonThemeData(
           style: SegmentedButton.styleFrom(
-            backgroundColor: AppColors.raised,
-            selectedBackgroundColor: AppColors.surface,
-            selectedForegroundColor: AppColors.ink,
+            backgroundColor: Colors.transparent,
+            selectedBackgroundColor: AppColors.inkBlueSoft,
+            selectedForegroundColor: AppColors.inkBlueDeep,
             foregroundColor: AppColors.graphite,
-            side: BorderSide.none,
-            textStyle: const TextStyle(
-              fontFamily: _fontFamily,
+            side: const BorderSide(color: AppColors.divider, width: 1),
+            textStyle: TextStyle(fontFamily: 'Inter', 
               fontWeight: FontWeight.w500,
               fontSize: 13,
               letterSpacing: 0,
@@ -241,7 +258,8 @@ class AppTheme {
           circularTrackColor: AppColors.raised,
         ),
 
-        // ── Divider — hairline ─────────────────────────────────────────────
+        // ── Divider — hairline que se desvanece en los extremos vive en
+        // FadingDivider (lib/core/widgets/); aquí solo el default sólido ──
         dividerTheme: const DividerThemeData(
           color: AppColors.divider,
           thickness: 1,
@@ -253,10 +271,10 @@ class AppTheme {
           backgroundColor: AppColors.surface,
           surfaceTintColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          scrimColor: Color(0x520B0F0C),
+          scrimColor: Color(0x52000000),
         ),
 
-        // ── BottomSheet ──────────────────────────────────────────────────
+        // ── BottomSheet — radio 24 arriba, handle 36×4 en border ──────────
         bottomSheetTheme: const BottomSheetThemeData(
           backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(
@@ -264,28 +282,42 @@ class AppTheme {
           ),
           showDragHandle: true,
           dragHandleColor: AppColors.borderStrong,
+          dragHandleSize: Size(36, 4),
         ),
 
         // ── Dialog ───────────────────────────────────────────────────────
-        dialogTheme: const DialogThemeData(
+        dialogTheme: DialogThemeData(
           backgroundColor: AppColors.surface,
           elevation: 0,
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: AppRadius.radiusXl,
           ),
-          shadowColor: Color(0x140B0F0C),
-          titleTextStyle: TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 19,
-            fontWeight: FontWeight.w600,
+          shadowColor: const Color(0x1F000000),
+          titleTextStyle: TextStyle(fontFamily: 'Inter', 
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
             color: AppColors.ink,
-            letterSpacing: -0.3,
+            letterSpacing: -0.22,
           ),
-          contentTextStyle: TextStyle(
-            fontFamily: _fontFamily,
+          contentTextStyle: TextStyle(fontFamily: 'Inter', 
             fontSize: 14,
             color: AppColors.graphite,
             height: 1.55,
+          ),
+        ),
+
+        // ── SnackBar ─────────────────────────────────────────────────────
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: AppColors.ink,
+          contentTextStyle: TextStyle(fontFamily: 'Inter', 
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppColors.paper,
+          ),
+          actionTextColor: AppColors.inkBlueLight,
+          behavior: SnackBarBehavior.floating,
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMd,
           ),
         ),
 
@@ -299,7 +331,7 @@ class AppTheme {
         brightness: Brightness.dark,
         extensions: const [AppSemanticColors.dark],
         scaffoldBackgroundColor: AppColors.paperDark,
-        fontFamily: _fontFamily,
+        fontFamily: 'Inter',
         splashFactory: InkSparkle.splashFactory,
         colorScheme: const ColorScheme.dark(
           primary: AppColors.inkBlueLight,
@@ -321,7 +353,7 @@ class AppTheme {
           outlineVariant: AppColors.raisedDark,
         ),
 
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: AppColors.paperDark,
           foregroundColor: AppColors.inkDark,
           elevation: 0,
@@ -329,17 +361,16 @@ class AppTheme {
           centerTitle: false,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
-          systemOverlayStyle: SystemUiOverlayStyle(
+          systemOverlayStyle: const SystemUiOverlayStyle(
             systemNavigationBarColor: Colors.transparent,
             systemNavigationBarDividerColor: Colors.transparent,
             systemNavigationBarIconBrightness: Brightness.light,
           ),
-          titleTextStyle: TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 19,
-            fontWeight: FontWeight.w600,
+          titleTextStyle: TextStyle(fontFamily: 'Inter', 
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
             color: AppColors.inkDark,
-            letterSpacing: -0.4,
+            letterSpacing: -0.17,
           ),
         ),
 
@@ -366,19 +397,41 @@ class AppTheme {
 
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.inkBlueLight,
-            foregroundColor: AppColors.paperDark,
+            backgroundColor: Colors.transparent,
+            foregroundColor: AppColors.inkBlueLight,
+            disabledForegroundColor: AppColors.graphiteSoftDark,
+            minimumSize: const Size(double.infinity, 56),
+            elevation: 0,
+            side: const BorderSide(color: AppColors.inkBlueLight, width: 1),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.radiusMd,
+            ),
+            textStyle: TextStyle(fontFamily: 'Inter', 
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.1,
+            ),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.all(
+              AppColors.inkBlueLight.withValues(alpha: 0.10),
+            ),
+          ),
+        ),
+
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.inkBlueSoftDark,
+            foregroundColor: AppColors.inkBlueDeepDark,
             disabledBackgroundColor: AppColors.raisedDark,
-            disabledForegroundColor: AppColors.graphiteDark,
+            disabledForegroundColor: AppColors.graphiteSoftDark,
             minimumSize: const Size(double.infinity, 56),
             elevation: 0,
             shape: const RoundedRectangleBorder(
               borderRadius: AppRadius.radiusMd,
             ),
-            textStyle: const TextStyle(
-              fontFamily: _fontFamily,
+            textStyle: TextStyle(fontFamily: 'Inter', 
               fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               letterSpacing: 0.1,
             ),
           ),
@@ -392,10 +445,9 @@ class AppTheme {
             shape: const RoundedRectangleBorder(
               borderRadius: AppRadius.radiusMd,
             ),
-            textStyle: const TextStyle(
-              fontFamily: _fontFamily,
+            textStyle: TextStyle(fontFamily: 'Inter', 
               fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               letterSpacing: 0.1,
             ),
           ),
@@ -404,70 +456,66 @@ class AppTheme {
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: AppColors.inkBlueLight,
-            textStyle: const TextStyle(
-              fontFamily: _fontFamily,
-              fontWeight: FontWeight.w600,
+            textStyle: TextStyle(fontFamily: 'Inter', 
+              fontWeight: FontWeight.w500,
               fontSize: 14,
             ),
           ),
         ),
 
-        inputDecorationTheme: const InputDecorationTheme(
+        inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.raisedDark,
-          border: OutlineInputBorder(
+          border: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: Colors.transparent, width: 1),
           ),
-          enabledBorder: OutlineInputBorder(
+          enabledBorder: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: Colors.transparent, width: 1),
           ),
-          focusedBorder: OutlineInputBorder(
+          focusedBorder: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: AppColors.inkBlueLight, width: 1.5),
           ),
-          errorBorder: OutlineInputBorder(
+          errorBorder: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: AppColors.negative, width: 1.5),
           ),
-          focusedErrorBorder: OutlineInputBorder(
+          focusedErrorBorder: const OutlineInputBorder(
             borderRadius: AppRadius.radiusLg,
             borderSide: BorderSide(color: AppColors.negative, width: 1.5),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          labelStyle: TextStyle(
-            fontFamily: _fontFamily,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          labelStyle: TextStyle(fontFamily: 'Inter', 
             color: AppColors.graphiteDark,
             fontWeight: FontWeight.w500,
           ),
-          hintStyle: TextStyle(
-            fontFamily: _fontFamily,
+          hintStyle: TextStyle(fontFamily: 'Inter', 
             color: AppColors.graphiteSoftDark,
             fontWeight: FontWeight.w400,
           ),
         ),
 
-        chipTheme: const ChipThemeData(
-          backgroundColor: AppColors.raisedDark,
-          selectedColor: AppColors.inkBlueLight,
-          labelStyle: TextStyle(
-            fontFamily: _fontFamily,
+        chipTheme: ChipThemeData(
+          backgroundColor: Colors.transparent,
+          selectedColor: AppColors.inkBlueSoftDark,
+          labelStyle: TextStyle(fontFamily: 'Inter', 
             fontWeight: FontWeight.w500,
             fontSize: 12,
             color: AppColors.inkDark,
             letterSpacing: 0.1,
           ),
-          secondaryLabelStyle: TextStyle(
-            fontFamily: _fontFamily,
+          secondaryLabelStyle: TextStyle(fontFamily: 'Inter', 
             fontWeight: FontWeight.w500,
             fontSize: 12,
-            color: AppColors.paperDark,
+            color: AppColors.inkBlueDeepDark,
             letterSpacing: 0.1,
           ),
-          side: BorderSide(color: Colors.transparent, width: 0),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.radiusPill),
-          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          side: const BorderSide(color: AppColors.dividerDark, width: 1),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusPill),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         ),
 
         switchTheme: SwitchThemeData(
@@ -482,13 +530,12 @@ class AppTheme {
 
         segmentedButtonTheme: SegmentedButtonThemeData(
           style: SegmentedButton.styleFrom(
-            backgroundColor: AppColors.raisedDark,
-            selectedBackgroundColor: AppColors.surfaceDarkMode,
-            selectedForegroundColor: AppColors.inkDark,
+            backgroundColor: Colors.transparent,
+            selectedBackgroundColor: AppColors.inkBlueSoftDark,
+            selectedForegroundColor: AppColors.inkBlueDeepDark,
             foregroundColor: AppColors.graphiteDark,
-            side: BorderSide.none,
-            textStyle: const TextStyle(
-              fontFamily: _fontFamily,
+            side: const BorderSide(color: AppColors.dividerDark, width: 1),
+            textStyle: TextStyle(fontFamily: 'Inter', 
               fontWeight: FontWeight.w500,
               fontSize: 13,
               letterSpacing: 0,
@@ -515,7 +562,7 @@ class AppTheme {
           backgroundColor: AppColors.surfaceDarkMode,
           surfaceTintColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          scrimColor: Color(0x520B0F0C),
+          scrimColor: Color(0x73000000),
         ),
 
         bottomSheetTheme: const BottomSheetThemeData(
@@ -525,108 +572,122 @@ class AppTheme {
           ),
           showDragHandle: true,
           dragHandleColor: AppColors.borderStrongDark,
+          dragHandleSize: Size(36, 4),
         ),
 
-        dialogTheme: const DialogThemeData(
+        dialogTheme: DialogThemeData(
           backgroundColor: AppColors.surfaceDarkMode,
           elevation: 0,
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: AppRadius.radiusXl,
             side: BorderSide(color: AppColors.dividerDark, width: 1),
           ),
-          titleTextStyle: TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 19,
-            fontWeight: FontWeight.w600,
+          titleTextStyle: TextStyle(fontFamily: 'Inter', 
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
             color: AppColors.inkDark,
-            letterSpacing: -0.3,
+            letterSpacing: -0.22,
           ),
-          contentTextStyle: TextStyle(
-            fontFamily: _fontFamily,
+          contentTextStyle: TextStyle(fontFamily: 'Inter', 
             fontSize: 14,
             color: AppColors.graphiteDark,
             height: 1.55,
           ),
         ),
 
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: AppColors.raisedDark,
+          contentTextStyle: TextStyle(fontFamily: 'Inter', 
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppColors.inkDark,
+          ),
+          actionTextColor: AppColors.inkBlueLight,
+          behavior: SnackBarBehavior.floating,
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadius.radiusMd,
+          ),
+        ),
+
         textTheme: _buildTextTheme(AppColors.inkDark, AppColors.graphiteDark),
       );
 
-  // ── Tipografía Quiet Wealth ───────────────────────────────────────────────
+  // ── Tipografía Nocturne ──────────────────────────────────────────────────
   //
-  // GeneralSans tiene 5 pesos (300–700). Tracking apretado en displays para
-  // sensación editorial; pesos altos solo en hero numbers, el resto vive en
-  // 400/500/600. Heights cómodos para lectura calmada.
+  // Inter, pesos 400/500 únicamente (nunca 600+, ni en títulos). Escala densa
+  // (~0.7× de la anterior). letterSpacing negativo (-0.02em) en la franja
+  // display/headline; labelMedium es el estilo "kicker" — úsalo con
+  // `.toUpperCase()` para eyebrows/section heads.
   static TextTheme _buildTextTheme(Color primary, Color muted) => TextTheme(
         // Hero numbers (balance, totales en cards)
-        displayLarge: TextStyle(
-          fontFamily: _fontFamily, fontSize: 52, fontWeight: FontWeight.w700,
-          color: primary, letterSpacing: -2.0, height: 1.05,
+        displayLarge: TextStyle(fontFamily: 'Inter', 
+          fontSize: 46, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.92, height: 1.05,
         ),
-        displayMedium: TextStyle(
-          fontFamily: _fontFamily, fontSize: 42, fontWeight: FontWeight.w700,
-          color: primary, letterSpacing: -1.4, height: 1.08,
+        displayMedium: TextStyle(fontFamily: 'Inter', 
+          fontSize: 38, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.76, height: 1.08,
         ),
-        displaySmall: TextStyle(
-          fontFamily: _fontFamily, fontSize: 32, fontWeight: FontWeight.w600,
-          color: primary, letterSpacing: -0.9, height: 1.12,
+        displaySmall: TextStyle(fontFamily: 'Inter', 
+          fontSize: 32, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.64, height: 1.12,
         ),
 
         // Headlines (section headers)
-        headlineLarge: TextStyle(
-          fontFamily: _fontFamily, fontSize: 28, fontWeight: FontWeight.w600,
-          color: primary, letterSpacing: -0.6, height: 1.18,
+        headlineLarge: TextStyle(fontFamily: 'Inter', 
+          fontSize: 28, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.56, height: 1.18,
         ),
-        headlineMedium: TextStyle(
-          fontFamily: _fontFamily, fontSize: 22, fontWeight: FontWeight.w600,
-          color: primary, letterSpacing: -0.4, height: 1.25,
+        headlineMedium: TextStyle(fontFamily: 'Inter', 
+          fontSize: 25, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.5, height: 1.22,
         ),
-        headlineSmall: TextStyle(
-          fontFamily: _fontFamily, fontSize: 19, fontWeight: FontWeight.w600,
-          color: primary, letterSpacing: -0.3, height: 1.3,
+        headlineSmall: TextStyle(fontFamily: 'Inter', 
+          fontSize: 24, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.48, height: 1.25,
         ),
 
         // Titles (card titles, list section heads)
-        titleLarge: TextStyle(
-          fontFamily: _fontFamily, fontSize: 17, fontWeight: FontWeight.w600,
-          color: primary, letterSpacing: -0.2, height: 1.35,
+        titleLarge: TextStyle(fontFamily: 'Inter', 
+          fontSize: 22, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.22, height: 1.3,
         ),
-        titleMedium: TextStyle(
-          fontFamily: _fontFamily, fontSize: 15, fontWeight: FontWeight.w500,
-          color: primary, letterSpacing: 0, height: 1.4,
+        titleMedium: TextStyle(fontFamily: 'Inter', 
+          fontSize: 17, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.17, height: 1.35,
         ),
-        titleSmall: TextStyle(
-          fontFamily: _fontFamily, fontSize: 13, fontWeight: FontWeight.w500,
-          color: primary, letterSpacing: 0, height: 1.4,
+        titleSmall: TextStyle(fontFamily: 'Inter', 
+          fontSize: 15, fontWeight: FontWeight.w500,
+          color: primary, letterSpacing: -0.15, height: 1.4,
         ),
 
         // Body
-        bodyLarge: TextStyle(
-          fontFamily: _fontFamily, fontSize: 16, fontWeight: FontWeight.w400,
+        bodyLarge: TextStyle(fontFamily: 'Inter', 
+          fontSize: 15, fontWeight: FontWeight.w400,
           color: primary, height: 1.55,
         ),
-        bodyMedium: TextStyle(
-          fontFamily: _fontFamily, fontSize: 14, fontWeight: FontWeight.w400,
+        bodyMedium: TextStyle(fontFamily: 'Inter', 
+          fontSize: 14, fontWeight: FontWeight.w400,
           color: primary, height: 1.55,
         ),
-        bodySmall: TextStyle(
-          fontFamily: _fontFamily, fontSize: 12, fontWeight: FontWeight.w400,
+        bodySmall: TextStyle(fontFamily: 'Inter', 
+          fontSize: 13, fontWeight: FontWeight.w400,
           color: muted, height: 1.5,
         ),
 
-        // Labels (UI chips, badges, "eyebrow" headers)
-        labelLarge: TextStyle(
-          fontFamily: _fontFamily, fontSize: 13, fontWeight: FontWeight.w500,
+        // Labels (UI chips, badges, botones, tabs)
+        labelLarge: TextStyle(fontFamily: 'Inter', 
+          fontSize: 13, fontWeight: FontWeight.w500,
           color: primary, letterSpacing: 0.1, height: 1.4,
         ),
-        // Eyebrow style — usa con `.toUpperCase()` para section heads
-        labelMedium: TextStyle(
-          fontFamily: _fontFamily, fontSize: 11, fontWeight: FontWeight.w600,
-          color: muted, letterSpacing: 1.2,
+        // Kicker — usa con `.toUpperCase()` para eyebrows / section heads.
+        labelMedium: TextStyle(fontFamily: 'Inter', 
+          fontSize: 12, fontWeight: FontWeight.w500,
+          color: muted, letterSpacing: 0.96,
         ),
-        labelSmall: TextStyle(
-          fontFamily: _fontFamily, fontSize: 10, fontWeight: FontWeight.w600,
-          color: muted, letterSpacing: 1.4,
+        labelSmall: TextStyle(fontFamily: 'Inter', 
+          fontSize: 11, fontWeight: FontWeight.w500,
+          color: muted, letterSpacing: 0.3,
         ),
       );
 }

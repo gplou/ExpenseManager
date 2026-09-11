@@ -58,7 +58,7 @@ class PeriodChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontFamily: 'GeneralSans',
+            fontFamily: 'Inter',
             fontSize: 13,
             fontWeight: weight,
             color: textColor,

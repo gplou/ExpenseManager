@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-/// Escala de elevación Quiet Wealth.
+/// Escala de elevación Nocturne.
 ///
-/// Sombras de "humo": tinte ink (`#0B0F0C`) muy diluido en vez de negro puro.
-/// Difusión amplia y desplazamiento bajo — sensación de papel flotando, no de
-/// elemento que pesa. `e1`–`e3` jerarquía progresiva; `tinted` para acentos.
+/// Elevación = borde + una sola sombra ambiental suave, nunca sombras
+/// apiladas. Negro puro muy diluido (no tinte de color) para que funcione
+/// igual sobre fondo claro u oscuro. `e1`–`e3` jerarquía progresiva; `tinted`
+/// para glows de acento.
 class AppElevation {
   AppElevation._();
 
@@ -14,47 +15,36 @@ class AppElevation {
   /// Reposo: tarjeta apenas separada del fondo.
   static const List<BoxShadow> e1 = [
     BoxShadow(
-      color: Color(0x0A0B0F0C), // ink @ 4%
+      color: Color(0x1A000000), // negro @ 10%
       blurRadius: 16,
-      offset: Offset(0, 4),
+      offset: Offset(0, 6),
     ),
   ];
 
-  /// Hover/focus, hero cards y tarjetas elevadas.
+  /// Hover/focus, hero cards y tarjetas elevadas. shadow-md de Nocturne.
   static const List<BoxShadow> e2 = [
     BoxShadow(
-      color: Color(0x140B0F0C), // ink @ 8%
+      color: Color(0x73000000), // negro @ 45%
       blurRadius: 32,
       offset: Offset(0, 12),
-    ),
-    BoxShadow(
-      color: Color(0x080B0F0C), // halo cercano
-      blurRadius: 6,
-      offset: Offset(0, 2),
     ),
   ];
 
   /// Diálogos, bottom sheets, popovers.
   static const List<BoxShadow> e3 = [
     BoxShadow(
-      color: Color(0x1F0B0F0C), // ink @ 12%
-      blurRadius: 64,
-      offset: Offset(0, 24),
-    ),
-    BoxShadow(
-      color: Color(0x0F0B0F0C),
-      blurRadius: 12,
-      offset: Offset(0, 4),
+      color: Color(0x73000000),
+      blurRadius: 48,
+      offset: Offset(0, 16),
     ),
   ];
 
-  /// Glow de color para CTAs primarios. Halo amplio y de baja opacidad —
-  /// presencia sin neón.
-  static List<BoxShadow> tinted(Color color, {double opacity = 0.18}) => [
+  /// Glow de color para CTAs primarios (FAB, botón primario). Halo amplio y
+  /// centrado — sin offset — para que lea como brillo, no como sombra.
+  static List<BoxShadow> tinted(Color color, {double opacity = 0.28}) => [
         BoxShadow(
           color: color.withValues(alpha: opacity),
           blurRadius: 24,
-          offset: const Offset(0, 8),
         ),
       ];
 }

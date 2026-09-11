@@ -104,7 +104,7 @@ class ChartPieSection extends StatelessWidget {
                   Text(
                     centerLabel,
                     style: TextStyle(
-                      fontFamily: 'GeneralSans',
+                      fontFamily: 'Inter',
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: centerColor,
@@ -116,7 +116,7 @@ class ChartPieSection extends StatelessWidget {
                   Text(
                     '$cSymbol${formatAmount(centerValue, numFmtStyle)}',
                     style: TextStyle(
-                      fontFamily: 'GeneralSans',
+                      fontFamily: 'Inter',
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
                       color: inkColor,
@@ -135,7 +135,7 @@ class ChartPieSection extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontFamily: 'GeneralSans',
+                          fontFamily: 'Inter',
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           color: mutedColor,
@@ -212,7 +212,7 @@ class ChartBarSection extends StatelessWidget {
                   BarTooltipItem(
                 '$cSymbol${formatAmount(rod.toY, numFmtStyle)}',
                 TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   color: context.appColors.background,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
@@ -276,7 +276,7 @@ class ChartBarSection extends StatelessWidget {
                     child: Text(
                       '$cSymbol${formatAmount(value, numFmtStyle, decimals: 0)}',
                       style: TextStyle(
-                        fontFamily: 'GeneralSans',
+                        fontFamily: 'Inter',
                         fontSize: 10,
                         fontWeight: FontWeight.w400,
                         color: softColor,
@@ -394,7 +394,7 @@ class ChartLegend extends StatelessWidget {
                         child: Text(
                           '${i + 1}'.padLeft(2, '0'),
                           style: TextStyle(
-                            fontFamily: 'GeneralSans',
+                            fontFamily: 'Inter',
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
                             color: textFaint,
@@ -428,7 +428,7 @@ class ChartLegend extends StatelessWidget {
                                   child: Text(
                                     name,
                                     style: TextStyle(
-                                      fontFamily: 'GeneralSans',
+                                      fontFamily: 'Inter',
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w500,
                                       color: textPrimary,
@@ -441,7 +441,7 @@ class ChartLegend extends StatelessWidget {
                                 Text(
                                   '$pctLabel%',
                                   style: TextStyle(
-                                    fontFamily: 'GeneralSans',
+                                    fontFamily: 'Inter',
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
                                     color: textMuted,
@@ -455,7 +455,7 @@ class ChartLegend extends StatelessWidget {
                                 Text(
                                   '$cSymbol${formatAmount(entry.value, numFmtStyle)}',
                                   style: TextStyle(
-                                    fontFamily: 'GeneralSans',
+                                    fontFamily: 'Inter',
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w600,
                                     color: textPrimary,

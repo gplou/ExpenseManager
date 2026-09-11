@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -100,25 +101,25 @@ class _ProBodyState extends ConsumerState<_ProBody> {
           ),
           const Gap(14),
           BenefitRow(
-            icon: Icons.cloud_sync_outlined,
+            icon: PhosphorIcons.cloudCheck(),
             iconColor: AppColors.dustyTeal,
             title: l10n.proCloudSync,
             subtitle: l10n.proCloudSyncSubtitle,
           ),
           BenefitRow(
-            icon: Icons.mic_outlined,
+            icon: PhosphorIcons.microphone(),
             iconColor: AppColors.dustyTeal,
             title: l10n.proVoiceImage,
             subtitle: l10n.proVoiceImageSubtitle,
           ),
           BenefitRow(
-            icon: Icons.smart_toy_outlined,
+            icon: PhosphorIcons.robot(),
             iconColor: AppColors.warmAmber,
             title: l10n.proAIChat,
             subtitle: l10n.proAIChatSubtitle,
           ),
           BenefitRow(
-            icon: Icons.block_outlined,
+            icon: PhosphorIcons.prohibit(),
             iconColor: AppColors.sageGreen,
             title: l10n.proNoBannerAds,
             subtitle: l10n.proNoBannerAdsSubtitle,
@@ -141,7 +142,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
                     vertical: 12, horizontal: 16),
                 child: Row(
                   children: [
-                    const Icon(Icons.local_offer_outlined,
+                    Icon(PhosphorIcons.tag(),
                         color: AppColors.sageGreen, size: 22),
                     const Gap(10),
                     Expanded(
@@ -151,7 +152,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
                           sub.discountBonusDays,
                         ),
                         style: const TextStyle(
-                          fontFamily: 'GeneralSans',
+                          fontFamily: 'Inter',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColors.sageGreen,
@@ -190,7 +191,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
               Text(
                 subscriptionErrorMessage(l10n, sub.errorCode!),
                 style: TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   color: cs.error,
                   fontSize: 13,
                 ),
@@ -240,7 +241,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
               child: Text(
                 l10n.proRestorePurchases,
                 style: const TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   color: AppColors.textMuted,
                   fontSize: 13,
                 ),
@@ -258,7 +259,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
               child: Text(
                 l10n.promoCodeTitle,
                 style: const TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   color: AppColors.textMuted,
                   fontSize: 13,
                 ),
@@ -271,7 +272,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
             OutlinedButton.icon(
               onPressed: () =>
                   ref.read(subscriptionProvider.notifier).forceRefresh(),
-              icon: const Icon(Icons.refresh_outlined, size: 18),
+              icon: Icon(PhosphorIcons.arrowsClockwise(), size: 18),
               label: Text(l10n.proRefreshStatus),
             ),
 
@@ -281,7 +282,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
           Text(
             l10n.proLegalDisclaimer,
             style: const TextStyle(
-              fontFamily: 'GeneralSans',
+              fontFamily: 'Inter',
               fontSize: 11,
               color: AppColors.textSubtle,
             ),

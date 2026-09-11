@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -26,8 +27,8 @@ class ProHeader extends StatelessWidget {
             color: AppColors.warmAmberLight,
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.star_rounded,
+          child: Icon(
+            PhosphorIcons.star(),
             size: 44,
             color: AppColors.warmAmber,
           ),
@@ -46,7 +47,7 @@ class ProHeader extends StatelessWidget {
               ? l10n.proHeaderActiveSubtitle
               : l10n.proHeaderInactiveSubtitle,
           style: TextStyle(
-            fontFamily: 'GeneralSans',
+            fontFamily: 'Inter',
             fontSize: 14,
             color: context.colors.onSurface.withValues(alpha: 0.55),
           ),
@@ -85,8 +86,8 @@ class ActiveProCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       child: Row(
         children: [
-          const Icon(
-            Icons.verified_rounded,
+          Icon(
+            PhosphorIcons.sealCheck(),
             color: AppColors.sageGreen,
             size: 28,
           ),
@@ -98,7 +99,7 @@ class ActiveProCard extends StatelessWidget {
                 Text(
                   l10n.proActiveCardTitle,
                   style: const TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                     color: AppColors.sageGreen,
@@ -108,7 +109,7 @@ class ActiveProCard extends StatelessWidget {
                 Text(
                   l10n.proActiveCardExpiry(remaining, sourceLabel),
                   style: const TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 12,
                     color: AppColors.textMuted,
                   ),
@@ -160,7 +161,7 @@ class BenefitRow extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -168,7 +169,7 @@ class BenefitRow extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 12,
                     color: AppColors.textMuted,
                   ),
@@ -176,8 +177,8 @@ class BenefitRow extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(
-            Icons.check_circle_outline,
+          Icon(
+            PhosphorIcons.checkCircle(),
             color: AppColors.sageGreen,
             size: 18,
           ),
@@ -202,8 +203,8 @@ class FreeTrialCard extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          const Icon(
-            Icons.rocket_launch_outlined,
+          Icon(
+            PhosphorIcons.rocketLaunch(),
             color: AppColors.dustyTeal,
             size: 32,
           ),
@@ -219,7 +220,7 @@ class FreeTrialCard extends ConsumerWidget {
           Text(
             l10n.proFreeTrialSubtitle,
             style: const TextStyle(
-              fontFamily: 'GeneralSans',
+              fontFamily: 'Inter',
               fontSize: 13,
               color: AppColors.textMuted,
             ),

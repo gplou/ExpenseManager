@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:expense_manager/features/dashboard/widgets/summary_section.dart';
@@ -28,8 +29,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_downward_rounded), findsNothing);
+      expect(find.byIcon(PhosphorIcons.arrowUp()), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.arrowDown()), findsNothing);
     });
 
     testWidgets('negative balance shows a downward arrow', (tester) async {
@@ -43,8 +44,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_upward_rounded), findsNothing);
+      expect(find.byIcon(PhosphorIcons.arrowDown()), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.arrowUp()), findsNothing);
     });
 
     testWidgets('view charts link invokes the callback', (tester) async {
@@ -59,7 +60,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.arrow_forward_rounded));
+      await tester.tap(find.byIcon(PhosphorIcons.arrowRight()));
       await tester.pumpAndSettle();
       expect(taps, 1);
     });

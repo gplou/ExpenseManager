@@ -55,6 +55,7 @@ dependencies:
   # UI
   flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
+  phosphor_flutter: ^2.1.0
 
   # Social auth
   google_sign_in: ^7.0.0
@@ -128,3 +129,9 @@ flutter:
           weight: 600
         - asset: assets/fonts/GeneralSans-Bold.ttf
           weight: 700
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500

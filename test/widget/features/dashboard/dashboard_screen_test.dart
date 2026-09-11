@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -61,7 +62,7 @@ void main() {
     await tester.pumpWidget(_wrap(dashboardOverrides(user: _alice())));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.menu), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.list()), findsOneWidget);
     expect(find.byType(RefreshIndicator), findsOneWidget);
   });
 
@@ -75,7 +76,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.sparkle()), findsOneWidget);
   });
 
   testWidgets('non-PRO user does NOT see the chat shortcut', (tester) async {
@@ -87,7 +88,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.auto_awesome_outlined), findsNothing);
+    expect(find.byIcon(PhosphorIcons.sparkle()), findsNothing);
   });
 
   testWidgets('summary block renders income and expense values',

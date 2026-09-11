@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -76,8 +77,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 color: AppColors.dustyTeal,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.auto_awesome,
+              child: Icon(
+                PhosphorIcons.sparkle(),
                 color: Colors.white,
                 size: 18,
               ),
@@ -130,8 +131,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 color: AppColors.dustyTeal.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.auto_awesome,
+              child: Icon(
+                PhosphorIcons.sparkle(),
                 color: AppColors.dustyTeal,
                 size: 32,
               ),
@@ -295,8 +296,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       color: AppColors.dustyTeal,
                     ),
                   )
-                : const Icon(
-                    Icons.send_rounded,
+                : Icon(
+                    PhosphorIcons.paperPlaneTilt(),
                     color: AppColors.dustyTeal,
                   ),
           ),

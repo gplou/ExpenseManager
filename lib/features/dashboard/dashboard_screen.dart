@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -89,7 +90,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.auto_awesome_rounded,
+            Icon(PhosphorIcons.sparkle(),
                 color: AppColors.dustyTeal, size: 22),
             const Gap(10),
             Expanded(child: Text(l10n.tutorialDialogTitle)),
@@ -161,7 +162,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         leading: Builder(
           builder: (ctx) => IconButton(
             key: TutorialKeys.drawerBtnKey,
-            icon: const Icon(Icons.menu),
+            icon: Icon(PhosphorIcons.list()),
             tooltip: MaterialLocalizations.of(ctx).openAppDrawerTooltip,
             onPressed: () => Scaffold.of(ctx).openDrawer(),
           ),
@@ -192,7 +193,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           if (ref.watch(isProProvider))
             IconButton(
               key: TutorialKeys.chatBtnKey,
-              icon: Icon(Icons.auto_awesome_outlined, color: cs.onSurface),
+              icon: Icon(PhosphorIcons.sparkle(), color: cs.onSurface),
               tooltip: l10n.chatTitle,
               onPressed: () => context.push(AppRoutes.chat),
             ),
@@ -244,7 +245,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             );
                           }),
                           IconChip(
-                            icon: Icons.calendar_month_outlined,
+                            icon: PhosphorIcons.calendarBlank(),
                             isActive: customRange != null,
                             onTap: () async {
                               final range = await showCustomDateRangePicker(
@@ -323,7 +324,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     ),
                                     const Gap(2),
                                     Icon(
-                                      Icons.arrow_forward_rounded,
+                                      PhosphorIcons.arrowRight(),
                                       size: 14,
                                       color: cs.primary,
                                     ),
@@ -493,7 +494,7 @@ class _EmptyTransactions extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.inbox_outlined,
+                  PhosphorIcons.tray(),
                   size: 24,
                   color: cs.onSurface.withValues(alpha: 0.5),
                 ),

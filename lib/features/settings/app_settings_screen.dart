@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -59,44 +60,44 @@ class AppSettingsScreen extends ConsumerWidget {
           SwitchListTile(
             secondary: Icon(
               isDark
-                  ? Icons.dark_mode_outlined
-                  : Icons.light_mode_outlined,
+                  ? PhosphorIcons.moon()
+                  : PhosphorIcons.sun(),
             ),
             title: Text(l10n.darkMode),
             value: isDark,
             onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
           ),
           ListTile(
-            leading: const Icon(Icons.language_outlined),
+            leading: Icon(PhosphorIcons.globe()),
             title: Text(l10n.language),
             subtitle: Text(currentLocaleName),
-            trailing: const Icon(Icons.chevron_right, size: 18),
+            trailing: Icon(PhosphorIcons.caretRight(), size: 18),
             onTap: () => _showLanguageSheet(context, ref),
           ),
           ListTile(
-            leading: const Icon(Icons.attach_money_outlined),
+            leading: Icon(PhosphorIcons.coins()),
             title: Text(l10n.currency),
             subtitle: Text(
                 '${currentCurrency.flag} ${currentCurrency.code} — ${currentCurrency.name}'),
-            trailing: const Icon(Icons.chevron_right, size: 18),
+            trailing: Icon(PhosphorIcons.caretRight(), size: 18),
             onTap: () => _showCurrencySheet(context, ref),
           ),
           ListTile(
-            leading: const Icon(Icons.pin_outlined),
+            leading: Icon(PhosphorIcons.password()),
             title: Text(l10n.numberFormat),
             subtitle: Text(numFmtLabel),
-            trailing: const Icon(Icons.chevron_right, size: 18),
+            trailing: Icon(PhosphorIcons.caretRight(), size: 18),
             onTap: () => _showNumberFormatSheet(context, ref),
           ),
           SwitchListTile(
-            secondary: const Icon(Icons.fingerprint),
+            secondary: Icon(PhosphorIcons.fingerprint()),
             title: Text(l10n.appLock),
             subtitle: Text(l10n.appLockSubtitle),
             value: ref.watch(appLockProvider).value ?? false,
             onChanged: (enable) => _toggleAppLock(context, ref, enable),
           ),
           SwitchListTile(
-            secondary: const Icon(Icons.notifications_outlined),
+            secondary: Icon(PhosphorIcons.bell()),
             title: Text(l10n.recurringReminders),
             subtitle: Text(l10n.recurringRemindersSubtitle),
             value: ref.watch(recurringRemindersProvider).value ?? false,
@@ -104,28 +105,28 @@ class AppSettingsScreen extends ConsumerWidget {
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.file_upload_outlined),
+            leading: Icon(PhosphorIcons.uploadSimple()),
             title: Text(l10n.backupExport),
-            trailing: const Icon(Icons.chevron_right, size: 18),
+            trailing: Icon(PhosphorIcons.caretRight(), size: 18),
             onTap: () => runBackupExportFlow(context, ref),
           ),
           ListTile(
-            leading: const Icon(Icons.file_download_outlined),
+            leading: Icon(PhosphorIcons.downloadSimple()),
             title: Text(l10n.backupImport),
-            trailing: const Icon(Icons.chevron_right, size: 18),
+            trailing: Icon(PhosphorIcons.caretRight(), size: 18),
             onTap: () => runBackupImportFlow(context, ref),
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
+            leading: Icon(PhosphorIcons.shieldCheck()),
             title: Text(l10n.privacyPolicy),
-            trailing: const Icon(Icons.chevron_right, size: 18),
+            trailing: Icon(PhosphorIcons.caretRight(), size: 18),
             onTap: () => context.push(AppRoutes.privacyPolicy),
           ),
           ListTile(
-            leading: const Icon(Icons.description_outlined),
+            leading: Icon(PhosphorIcons.fileText()),
             title: Text(l10n.termsOfService),
-            trailing: const Icon(Icons.chevron_right, size: 18),
+            trailing: Icon(PhosphorIcons.caretRight(), size: 18),
             onTap: () => context.push(AppRoutes.termsOfService),
           ),
           // Herramienta temporal de soporte (migración FREE→PRO huérfana).
@@ -134,12 +135,12 @@ class AppSettingsScreen extends ConsumerWidget {
           if (kDebugMode) ...[
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.cloud_upload_outlined),
+              leading: Icon(PhosphorIcons.cloudArrowUp()),
               title: const Text('Recuperar datos locales'),
               subtitle: const Text(
                 'Sube transacciones guardadas en este dispositivo a tu cuenta',
               ),
-              trailing: const Icon(Icons.chevron_right, size: 18),
+              trailing: Icon(PhosphorIcons.caretRight(), size: 18),
               onTap: () => context.push(AppRoutes.dataRecovery),
             ),
           ],
@@ -220,10 +221,10 @@ class AppSettingsScreen extends ConsumerWidget {
                       style: ctx.textTheme.titleMedium),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.looks_one_outlined),
+                  leading: Icon(PhosphorIcons.numberCircleOne()),
                   title: Text(l10n.numberFormatDotDecimal),
                   trailing: current == NumberFormatStyle.dotDecimal
-                      ? Icon(Icons.check, color: ctx.colors.primary)
+                      ? Icon(PhosphorIcons.check(), color: ctx.colors.primary)
                       : null,
                   onTap: () {
                     ref
@@ -233,10 +234,10 @@ class AppSettingsScreen extends ConsumerWidget {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.looks_two_outlined),
+                  leading: Icon(PhosphorIcons.numberCircleTwo()),
                   title: Text(l10n.numberFormatCommaDecimal),
                   trailing: current == NumberFormatStyle.commaDecimal
-                      ? Icon(Icons.check, color: ctx.colors.primary)
+                      ? Icon(PhosphorIcons.check(), color: ctx.colors.primary)
                       : null,
                   onTap: () {
                     ref
@@ -283,7 +284,7 @@ class AppSettingsScreen extends ConsumerWidget {
                     ),
                     title: Text(locale.name),
                     trailing: isSelected
-                        ? Icon(Icons.check, color: ctx.colors.primary)
+                        ? Icon(PhosphorIcons.check(), color: ctx.colors.primary)
                         : null,
                     onTap: () {
                       ref
@@ -332,7 +333,7 @@ class AppSettingsScreen extends ConsumerWidget {
                         title: Text('${c.code} — ${c.name}'),
                         subtitle: Text(c.symbol),
                         trailing: isSelected
-                            ? Icon(Icons.check, color: ctx.colors.primary)
+                            ? Icon(PhosphorIcons.check(), color: ctx.colors.primary)
                             : null,
                         onTap: () {
                           ref

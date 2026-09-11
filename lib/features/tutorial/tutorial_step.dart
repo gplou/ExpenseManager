@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
 import 'tutorial_keys.dart';
@@ -32,7 +33,7 @@ List<TutorialStep> buildTutorialSteps(AppLocalizations l10n) => [
     title: l10n.tutorialAddTitle,
     body: l10n.tutorialAddBody,
     targetKey: TutorialKeys.fabKey,
-    icon: Icons.add_circle_outline_rounded,
+    icon: PhosphorIcons.plusCircle(),
     spotlightPadding: 10,
     spotlightRadius: 32,
   ),
@@ -42,7 +43,7 @@ List<TutorialStep> buildTutorialSteps(AppLocalizations l10n) => [
     title: l10n.tutorialBalanceTitle,
     body: l10n.tutorialBalanceBody,
     targetKey: TutorialKeys.balanceCardKey,
-    icon: Icons.account_balance_wallet_outlined,
+    icon: PhosphorIcons.wallet(),
     spotlightPadding: 10,
     spotlightRadius: 24,
   ),
@@ -52,7 +53,7 @@ List<TutorialStep> buildTutorialSteps(AppLocalizations l10n) => [
     title: l10n.tutorialChartsStepTitle,
     body: l10n.tutorialChartsStepBody,
     targetKey: TutorialKeys.chartsBtnKey,
-    icon: Icons.pie_chart_outline_rounded,
+    icon: PhosphorIcons.chartPie(),
     spotlightPadding: 8,
     spotlightRadius: 14,
   ),
@@ -62,7 +63,7 @@ List<TutorialStep> buildTutorialSteps(AppLocalizations l10n) => [
     title: l10n.tutorialHistoryStepTitle,
     body: l10n.tutorialHistoryStepBody,
     targetKey: TutorialKeys.seeAllBtnKey,
-    icon: Icons.list_alt_outlined,
+    icon: PhosphorIcons.listBullets(),
     spotlightPadding: 8,
     spotlightRadius: 100,
   ),
@@ -72,7 +73,7 @@ List<TutorialStep> buildTutorialSteps(AppLocalizations l10n) => [
     title: l10n.tutorialChatStepTitle,
     body: l10n.tutorialChatStepBody,
     targetKey: TutorialKeys.chatBtnKey,
-    icon: Icons.auto_awesome,
+    icon: PhosphorIcons.sparkle(),
     spotlightPadding: 6,
     spotlightRadius: 12,
     skipIfKeyMissing: true,
@@ -83,7 +84,7 @@ List<TutorialStep> buildTutorialSteps(AppLocalizations l10n) => [
     title: l10n.tutorialDrawerTitle,
     body: l10n.tutorialDrawerBody,
     targetKey: TutorialKeys.drawerBtnKey,
-    icon: Icons.menu_rounded,
+    icon: PhosphorIcons.list(),
     spotlightPadding: 6,
     spotlightRadius: 12,
   ),

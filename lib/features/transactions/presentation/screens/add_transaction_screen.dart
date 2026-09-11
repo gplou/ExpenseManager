@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/providers/currency_provider.dart';
@@ -352,8 +353,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             IconButton(
               tooltip: l10n.delete,
               onPressed: _delete,
-              icon: const Icon(
-                Icons.delete_outline_rounded,
+              icon: Icon(
+                PhosphorIcons.trash(),
                 color: AppColors.mutedTerra,
               ),
             ),
@@ -439,7 +440,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         padding: EdgeInsets.zero,
         children: [
           DetailPill(
-            icon: Icons.calendar_today_outlined,
+            icon: PhosphorIcons.calendar(),
             label: dateLabel,
             active: !isToday,
             accent: _accentColor,
@@ -450,7 +451,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           if (_selectedCategory != null) ...[
             const SizedBox(width: AppSpacing.sm),
             DetailPill(
-              icon: Icons.label_outline_rounded,
+              icon: PhosphorIcons.tag(),
               label: _selectedSubcategory ?? l10n.subcategory,
               active: _selectedSubcategory != null,
               accent: _accentColor,
@@ -462,7 +463,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ],
           const SizedBox(width: AppSpacing.sm),
           DetailPill(
-            icon: Icons.edit_note_rounded,
+            icon: PhosphorIcons.notePencil(),
             label: _note.trim().isEmpty ? l10n.note : _note.trim(),
             active: _note.trim().isNotEmpty,
             accent: _accentColor,
@@ -472,7 +473,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ),
           const SizedBox(width: AppSpacing.sm),
           DetailPill(
-            icon: Icons.repeat_rounded,
+            icon: PhosphorIcons.repeat(),
             label: recurrenceLabel,
             active: _recurrenceType != null,
             accent: _accentColor,

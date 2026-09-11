@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -32,7 +33,7 @@ class TypeToggle extends StatelessWidget {
           Expanded(
             child: TypeTab(
               label: l10n.typeIncome,
-              icon: Icons.arrow_downward_rounded,
+              icon: PhosphorIcons.arrowDown(),
               isSelected: type.isIncome,
               selectedColor: AppColors.positive,
               onTap: () => onChanged(TransactionType.income),
@@ -42,7 +43,7 @@ class TypeToggle extends StatelessWidget {
           Expanded(
             child: TypeTab(
               label: l10n.typeExpense,
-              icon: Icons.arrow_upward_rounded,
+              icon: PhosphorIcons.arrowUp(),
               isSelected: !type.isIncome,
               selectedColor: AppColors.negative,
               onTap: () => onChanged(TransactionType.expense),
@@ -96,7 +97,7 @@ class TypeTab extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'GeneralSans',
+                fontFamily: 'Inter',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.1,
@@ -158,7 +159,7 @@ class FilterDropdown extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontSize: 13,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   letterSpacing: -0.1,
@@ -170,7 +171,7 @@ class FilterDropdown extends StatelessWidget {
             ),
             const Gap(AppSpacing.xs),
             Icon(
-              Icons.keyboard_arrow_down_rounded,
+              PhosphorIcons.caretDown(),
               size: 18,
               color: isActive ? accentColor : context.appColors.textSoft,
             ),
@@ -228,7 +229,7 @@ class PickerOption extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   letterSpacing: -0.1,
@@ -238,7 +239,7 @@ class PickerOption extends StatelessWidget {
             ),
             if (isSelected)
               Icon(
-                Icons.check_rounded,
+                PhosphorIcons.check(),
                 size: 18,
                 color: accentColor,
               ),

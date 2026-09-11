@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_elevation.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
@@ -138,7 +139,7 @@ class _NeoBrutalButtonState extends State<NeoBrutalButton> {
                     Text(
                       widget.label,
                       style: TextStyle(
-                        fontFamily: 'GeneralSans',
+                        fontFamily: 'Inter',
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: fg,
@@ -158,14 +159,14 @@ class NeoFab extends StatefulWidget {
   const NeoFab({
     super.key,
     required this.onTap,
-    this.icon = Icons.add,
+    this.icon,
     this.accentColor = AppColors.inkBlue,
     this.size = 60.0,
     this.heroTag,
   });
 
   final VoidCallback onTap;
-  final IconData icon;
+  final IconData? icon;
   final Color accentColor;
   final double size;
   final Object? heroTag;
@@ -218,12 +219,10 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
           decoration: BoxDecoration(
             color: effectiveColor,
             shape: BoxShape.circle,
-            boxShadow: isDark
-                ? null
-                : AppElevation.tinted(widget.accentColor, opacity: 0.24),
+            boxShadow: AppElevation.tinted(effectiveColor, opacity: 0.28),
           ),
           child: Icon(
-            widget.icon,
+            widget.icon ?? PhosphorIcons.plus(),
             color: iconColor,
             size: 26,
           ),

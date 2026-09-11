@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -30,7 +31,7 @@ void main() {
 
       // Generic folder emoji when no category is picked
       expect(find.text('📂'), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+      expect(find.byIcon(PhosphorIcons.caretRight()), findsOneWidget);
     });
 
     testWidgets('shows category emoji and localized name when selected',

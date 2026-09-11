@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -27,8 +28,8 @@ class ErrorState extends StatelessWidget {
                 color: AppColors.negativeSoft,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.error_outline_rounded,
+              child: Icon(
+                PhosphorIcons.warningCircle(),
                 color: AppColors.negative,
                 size: 24,
               ),
@@ -60,7 +61,7 @@ class ErrorState extends StatelessWidget {
                     ),
                     const Gap(4),
                     Icon(
-                      Icons.refresh_rounded,
+                      PhosphorIcons.arrowsClockwise(),
                       size: 14,
                       color: cs.primary,
                     ),
@@ -99,7 +100,7 @@ class EmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.inbox_outlined,
+                PhosphorIcons.tray(),
                 size: 26,
                 color: cs.onSurface.withValues(alpha: 0.5),
               ),
@@ -152,7 +153,7 @@ class SearchEmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.search_off_rounded,
+                PhosphorIcons.magnifyingGlass(),
                 size: 26,
                 color: cs.onSurface.withValues(alpha: 0.5),
               ),

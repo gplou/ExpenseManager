@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -168,7 +169,7 @@ class TutorialTooltipCard extends StatelessWidget {
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       textStyle: const TextStyle(
-                        fontFamily: 'GeneralSans',
+                        fontFamily: 'Inter',
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -176,7 +177,7 @@ class TutorialTooltipCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.arrow_back_rounded, size: 14),
+                        Icon(PhosphorIcons.arrowLeft(), size: 14),
                         const Gap(4),
                         Text(AppLocalizations.of(context).tutorialBack),
                       ],
@@ -209,10 +210,10 @@ class TutorialTooltipCard extends StatelessWidget {
                           : AppLocalizations.of(context).tutorialNext),
                       if (!isLast) ...[
                         const Gap(4),
-                        const Icon(Icons.arrow_forward_rounded, size: 14),
+                        Icon(PhosphorIcons.arrowRight(), size: 14),
                       ] else ...[
                         const Gap(4),
-                        const Icon(Icons.check_rounded, size: 14),
+                        Icon(PhosphorIcons.check(), size: 14),
                       ],
                     ],
                   ),

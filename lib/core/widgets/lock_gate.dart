@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -111,7 +112,7 @@ class _LockGateState extends ConsumerState<LockGate>
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.lock_outline_rounded,
+                          PhosphorIcons.lock(),
                           size: 28,
                           color: cs.onSurface.withValues(alpha: 0.6),
                         ),
@@ -128,7 +129,7 @@ class _LockGateState extends ConsumerState<LockGate>
                       const Gap(24),
                       FilledButton.icon(
                         onPressed: _authenticate,
-                        icon: const Icon(Icons.fingerprint_rounded, size: 20),
+                        icon: Icon(PhosphorIcons.fingerprint(), size: 20),
                         label: Text(l10n.unlock),
                       ),
                     ],

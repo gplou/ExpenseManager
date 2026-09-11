@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -98,7 +99,7 @@ class CategorySelectorRow extends StatelessWidget {
                         selectedCategory!, l10n)
                     : l10n.selectCategoryPrompt,
                 style: TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: hasSelection ? accentColor : AppColors.textMuted,
@@ -106,7 +107,7 @@ class CategorySelectorRow extends StatelessWidget {
               ),
             ),
             Icon(
-              Icons.chevron_right_rounded,
+              PhosphorIcons.caretRight(),
               color: hasSelection ? accentColor : AppColors.textSubtle,
             ),
           ],

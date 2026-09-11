@@ -39,19 +39,20 @@ class AppSpacing {
 
 /// Tokens de border radius.
 ///
-/// Escala intencional con propósito documentado. No introducir valores nuevos
-/// sin justificación.
+/// Escala Nocturne: 8 por defecto, 12 en botones grandes/hojas, 24 en el top
+/// de bottom sheets, 999 en chips/pills. Escala intencional con propósito
+/// documentado. No introducir valores nuevos sin justificación.
 class AppRadius {
   AppRadius._();
 
   static const double xs = 8.0;       // badges, mini-icons
-  static const double sm = 10.0;      // small icon containers
-  static const double md = 14.0;      // segmented buttons, small chips, buttons
-  static const double lg = 20.0;      // cards, inputs (default) — generoso
-  static const double xl = 28.0;      // hero cards, dialogs
-  static const double xxl = 32.0;     // bottom sheets, big surfaces
-  static const double sheet = 32.0;   // bottom sheets
-  static const double pill = 100.0;   // chips, pills
+  static const double sm = 8.0;       // small icon containers
+  static const double md = 12.0;      // segmented buttons, chips, buttons
+  static const double lg = 8.0;       // cards, inputs (default)
+  static const double xl = 16.0;      // hero cards, dialogs
+  static const double xxl = 24.0;     // bottom sheets, big surfaces
+  static const double sheet = 24.0;   // bottom sheets (top corners)
+  static const double pill = 999.0;   // chips, pills
 
   static const BorderRadius radiusXs = BorderRadius.all(Radius.circular(xs));
   static const BorderRadius radiusSm = BorderRadius.all(Radius.circular(sm));
