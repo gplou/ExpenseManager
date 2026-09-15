@@ -19,7 +19,8 @@ class AppColors {
   /// Fondo tintado del acento (light) — chips/badges/selected states.
   static const Color inkBlueSoft    = Color(0xFFE7E5FE);
   /// Acento (dark) — debe alcanzar AA sobre ink/inkDark.
-  static const Color inkBlueLight   = Color(0xFF9184D9);
+  /// 5.7:1 sobre [paperDark]: cumple AA para texto normal.
+  static const Color inkBlueLight   = Color(0xFF8B7CF6);
   /// Fondo tintado del acento (dark).
   static const Color inkBlueSoftDark = Color(0xFF2B2741);
   /// Texto/icono legible sobre [inkBlueSoft] (light) — más profundo que
@@ -69,15 +70,17 @@ class AppColors {
   static const Color warningSoft    = Color(0xFFF3EAD3);
 
   // ── Superficies dark ──────────────────────────────────────────────────────
-  /// Scaffold dark. Azul-gris casi neutro — no es negro puro.
-  static const Color paperDark      = Color(0xFF161826);
+  /// Scaffold dark. Azul-gris muy oscuro — no es negro puro.
+  static const Color paperDark      = Color(0xFF0F1117);
   /// Card / surface dark.
-  static const Color surfaceDarkMode = Color(0xFF232532);
-  /// Superficie elevada dark. También usada como fondo del teclado numérico
-  /// (token "keypad" de Nocturne — no hace falta un campo separado).
-  static const Color raisedDark     = Color(0xFF292B31);
-  /// Divider dark — sube luminosidad para que se vea sobre paperDark.
-  static const Color dividerDark    = Color(0xFF3F424D);
+  static const Color surfaceDarkMode = Color(0xFF191B24);
+  /// Superficie elevada dark. Fondo de los chips de icono y del teclado
+  /// numérico (token "keypad" de Nocturne — no hace falta un campo separado).
+  static const Color raisedDark     = Color(0xFF22242E);
+  /// Divider dark. Hairline deliberadamente tenue: separa filas sin dibujar
+  /// una rejilla. Los bordes que deben leerse como borde usan
+  /// [borderStrongDark].
+  static const Color dividerDark    = Color(0xFF2A2C36);
   /// Borde marcado dark.
   static const Color borderStrongDark = Color(0xFF565A68);
 

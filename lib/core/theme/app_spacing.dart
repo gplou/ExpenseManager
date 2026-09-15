@@ -39,17 +39,18 @@ class AppSpacing {
 
 /// Tokens de border radius.
 ///
-/// Escala Nocturne: 8 por defecto, 12 en botones grandes/hojas, 24 en el top
-/// de bottom sheets, 999 en chips/pills. Escala intencional con propósito
-/// documentado. No introducir valores nuevos sin justificación.
+/// Escala: 16 por defecto en cards, 14 en chips de icono y botones, 24 en el
+/// top de bottom sheets, 999 en pills. Radios generosos — las superficies
+/// deben leerse como tarjetas blandas, no como cajas. Escala intencional con
+/// propósito documentado: no introducir valores nuevos sin justificación.
 class AppRadius {
   AppRadius._();
 
   static const double xs = 8.0;       // badges, mini-icons
-  static const double sm = 8.0;       // small icon containers
-  static const double md = 12.0;      // segmented buttons, chips, buttons
-  static const double lg = 8.0;       // cards, inputs (default)
-  static const double xl = 16.0;      // hero cards, dialogs
+  static const double sm = 10.0;      // small icon containers
+  static const double md = 14.0;      // segmented buttons, chips, buttons
+  static const double lg = 16.0;      // cards, inputs (default)
+  static const double xl = 20.0;      // hero cards, dialogs
   static const double xxl = 24.0;     // bottom sheets, big surfaces
   static const double sheet = 24.0;   // bottom sheets (top corners)
   static const double pill = 999.0;   // chips, pills

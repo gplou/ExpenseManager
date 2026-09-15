@@ -266,6 +266,39 @@ class AppTheme {
           space: 1,
         ),
 
+        // ── Barra inferior ───────────────────────────────────────────────
+        // Plana y sin indicador de píldora: la pestaña activa se marca solo
+        // tintando icono y etiqueta con el acento, como el resto del sistema
+        // (el acento es línea y brillo, nunca relleno grande).
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: AppColors.paper,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          elevation: 0,
+          height: 64,
+          indicatorColor: Colors.transparent,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          iconTheme: WidgetStateProperty.resolveWith(
+            (states) => IconThemeData(
+              size: 24,
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.inkBlue
+                  : AppColors.graphiteSoft,
+            ),
+          ),
+          labelTextStyle: WidgetStateProperty.resolveWith(
+            (states) => TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.1,
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.inkBlue
+                  : AppColors.graphiteSoft,
+            ),
+          ),
+        ),
+
         // ── Drawer ───────────────────────────────────────────────────────
         drawerTheme: const DrawerThemeData(
           backgroundColor: AppColors.surface,
@@ -558,6 +591,39 @@ class AppTheme {
           space: 1,
         ),
 
+        // ── Barra inferior ───────────────────────────────────────────────
+        // Espejo del tema claro. Fondo = scaffold (no surface): la barra se
+        // funde con el fondo y la separa del contenido un hairline, no un
+        // escalón de color.
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: AppColors.paperDark,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          elevation: 0,
+          height: 64,
+          indicatorColor: Colors.transparent,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          iconTheme: WidgetStateProperty.resolveWith(
+            (states) => IconThemeData(
+              size: 24,
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.inkBlueLight
+                  : AppColors.graphiteSoftDark,
+            ),
+          ),
+          labelTextStyle: WidgetStateProperty.resolveWith(
+            (states) => TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.1,
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.inkBlueLight
+                  : AppColors.graphiteSoftDark,
+            ),
+          ),
+        ),
+
         drawerTheme: const DrawerThemeData(
           backgroundColor: AppColors.surfaceDarkMode,
           surfaceTintColor: Colors.transparent,
@@ -612,21 +678,25 @@ class AppTheme {
         textTheme: _buildTextTheme(AppColors.inkDark, AppColors.graphiteDark),
       );
 
-  // ── Tipografía Nocturne ──────────────────────────────────────────────────
+  // ── Tipografía ───────────────────────────────────────────────────────────
   //
-  // Inter, pesos 400/500 únicamente (nunca 600+, ni en títulos). Escala densa
-  // (~0.7× de la anterior). letterSpacing negativo (-0.02em) en la franja
-  // display/headline; labelMedium es el estilo "kicker" — úsalo con
-  // `.toUpperCase()` para eyebrows/section heads.
+  // Inter en cuatro pesos: 300 solo para cifras hero, 400 cuerpo, 500 títulos
+  // y UI, 600 reservado al saludo del dashboard. letterSpacing negativo
+  // (-0.02em) en la franja display/headline; labelMedium es el estilo
+  // "kicker" — úsalo con `.toUpperCase()` para eyebrows/section heads.
+  //
+  // La franja display va en Light (300) a propósito: a 40px+ el peso medio
+  // ensucia la cifra, y el contraste de la pantalla lo da el tamaño, no el
+  // grosor. No subir de peso ahí sin mirarlo en pantalla.
   static TextTheme _buildTextTheme(Color primary, Color muted) => TextTheme(
         // Hero numbers (balance, totales en cards)
-        displayLarge: TextStyle(fontFamily: 'Inter', 
-          fontSize: 46, fontWeight: FontWeight.w500,
-          color: primary, letterSpacing: -0.92, height: 1.05,
+        displayLarge: TextStyle(fontFamily: 'Inter',
+          fontSize: 56, fontWeight: FontWeight.w300,
+          color: primary, letterSpacing: -1.68, height: 1.05,
         ),
-        displayMedium: TextStyle(fontFamily: 'Inter', 
-          fontSize: 38, fontWeight: FontWeight.w500,
-          color: primary, letterSpacing: -0.76, height: 1.08,
+        displayMedium: TextStyle(fontFamily: 'Inter',
+          fontSize: 40, fontWeight: FontWeight.w300,
+          color: primary, letterSpacing: -1.0, height: 1.08,
         ),
         displaySmall: TextStyle(fontFamily: 'Inter', 
           fontSize: 32, fontWeight: FontWeight.w500,
