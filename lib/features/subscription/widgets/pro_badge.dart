@@ -19,7 +19,7 @@ class ProBadge extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'Inter',
           fontSize: 10,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           color: Colors.white,
           letterSpacing: 0.5,
         ),

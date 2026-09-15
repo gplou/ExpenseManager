@@ -118,7 +118,7 @@ class ChartPieSection extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: inkColor,
                       letterSpacing: -0.6,
                       height: 1.0,

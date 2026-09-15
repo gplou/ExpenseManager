@@ -356,7 +356,7 @@ class _DrawerHeader extends StatelessWidget {
                 initials,
                 style: const TextStyle(
                   fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   fontSize: 20,
                   color: AppColors.pureWhite,
                 ),
@@ -371,7 +371,7 @@ class _DrawerHeader extends StatelessWidget {
                 Text(
                   name?.isNotEmpty == true ? name! : l10n.displayUser,
                   style: context.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

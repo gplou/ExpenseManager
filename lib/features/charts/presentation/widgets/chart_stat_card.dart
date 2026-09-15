@@ -74,7 +74,7 @@ class ChartStatCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 26,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: context.appColors.text,
                       letterSpacing: -0.6,
                       height: 1.1,
@@ -93,7 +93,7 @@ class ChartStatCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 26,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: context.appColors.text,
                       letterSpacing: -0.6,
                       height: 1.1,

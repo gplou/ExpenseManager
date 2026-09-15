@@ -11,7 +11,7 @@ import 'package:expense_manager/features/subscription/subscription_repository.da
 ///
 /// Sigue el patrón de diálogos de la app: TextButton para cancelar,
 /// FilledButton para la acción primaria, y snackbar flotante de éxito
-/// (los estilos de texto vienen del theme — GeneralSans global).
+/// (los estilos de texto vienen del theme — Inter global).
 class PromoCodeDialog extends ConsumerStatefulWidget {
   const PromoCodeDialog({super.key});
 

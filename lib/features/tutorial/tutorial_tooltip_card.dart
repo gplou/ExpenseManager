@@ -125,7 +125,7 @@ class TutorialTooltipCard extends StatelessWidget {
                   child: Text(
                     step.title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: textColor,
                     ),
                   ),

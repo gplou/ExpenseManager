@@ -86,7 +86,7 @@ class _CategoryPickerContent extends ConsumerWidget {
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
                     color: AppColors.textMuted,
                   ),

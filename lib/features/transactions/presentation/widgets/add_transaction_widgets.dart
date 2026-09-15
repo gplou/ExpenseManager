@@ -160,7 +160,7 @@ class AmountDisplay extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 44,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: hasValue
                               ? accent
                               : accent.withValues(alpha: 0.25),
@@ -183,7 +183,7 @@ class AmountDisplay extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: accent,
                       ),
                     ),
@@ -337,7 +337,7 @@ Future<DateTime?> showQuickDateSheet(
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
                     color: AppColors.textMuted,
                   ),
@@ -490,7 +490,7 @@ class _NoteSheetState extends State<_NoteSheet> {
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 10,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: 1.5,
                   color: AppColors.textMuted,
                 ),
@@ -560,7 +560,7 @@ Future<RecurrenceChoice?> showRecurrenceSheet(
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
                     color: AppColors.textMuted,
                   ),
@@ -720,7 +720,7 @@ class SubcategoryPickerSheet extends ConsumerWidget {
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
                     color: AppColors.textMuted,
                   ),

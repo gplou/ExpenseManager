@@ -223,7 +223,7 @@ class _OnboardingPage extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: context.appColors.text,
             ),
           ),
@@ -332,7 +332,7 @@ class _VoicePage extends StatelessWidget {
                   l10n.onboardingVoiceImportant,
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: AppColors.warmAmber,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],

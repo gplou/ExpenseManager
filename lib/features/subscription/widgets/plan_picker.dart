@@ -65,7 +65,7 @@ class PlanPicker extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                               color: isSelected
                                   ? AppColors.dustyTeal
                                   : null,
@@ -85,7 +85,7 @@ class PlanPicker extends StatelessWidget {
                                 style: const TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w600,
                                   color: Colors.white,
                                 ),
                               ),
@@ -109,7 +109,7 @@ class PlanPicker extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: isSelected ? AppColors.dustyTeal : null,
                   ),
                 ),
@@ -179,7 +179,7 @@ class PlanPickerFallback extends StatelessWidget {
           Text(
             l10n.planMonthly,
             style: context.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppColors.dustyTeal,
             ),
           ),

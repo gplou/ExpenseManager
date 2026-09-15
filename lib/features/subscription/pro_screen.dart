@@ -96,7 +96,7 @@ class _ProBodyState extends ConsumerState<_ProBody> {
           Text(
             l10n.proBenefitsTitle,
             style: context.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const Gap(14),

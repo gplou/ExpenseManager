@@ -37,7 +37,7 @@ class ProHeader extends StatelessWidget {
         Text(
           isPro ? l10n.proHeaderActiveTitle : l10n.proHeaderInactiveTitle,
           style: context.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: -0.5,
           ),
         ),
@@ -100,7 +100,7 @@ class ActiveProCard extends StatelessWidget {
                   l10n.proActiveCardTitle,
                   style: const TextStyle(
                     fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
                     color: AppColors.sageGreen,
                   ),
@@ -212,7 +212,7 @@ class FreeTrialCard extends ConsumerWidget {
           Text(
             l10n.proFreeTrialButton,
             style: context.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppColors.dustyTeal,
             ),
           ),
