@@ -70,6 +70,24 @@ class AnalyticsService {
     }());
   }
 
+  // ── Screen tracking ────────────────────────────────────────────────────────
+
+  /// Registra una vista de pantalla. Fire-and-forget.
+  ///
+  /// [AnalyticsRouteObserver] cubre las navegaciones push/replace, pero
+  /// cambiar de pestaña en la barra inferior no es ninguna de las dos: el
+  /// shell mantiene las ramas vivas en un `IndexedStack` y solo cambia el
+  /// índice. Esas pantallas tienen que anunciarse por aquí.
+  static void screen(String name) {
+    unawaited(() async {
+      try {
+        await Posthog().screen(screenName: name);
+      } catch (e) {
+        AppLogger.log('[Analytics] screen($name) error: $e');
+      }
+    }());
+  }
+
   // ── Event tracking ─────────────────────────────────────────────────────────
 
   /// Track any named event with optional properties. Fire-and-forget.

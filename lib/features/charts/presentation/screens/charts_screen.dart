@@ -10,7 +10,6 @@ import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
-import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -18,7 +17,6 @@ import 'package:expense_manager/features/transactions/domain/transaction_model.d
 import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/features/charts/presentation/providers/chart_providers.dart';
-import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/charts/presentation/widgets/chart_area.dart';
 import 'package:expense_manager/features/charts/presentation/widgets/chart_filters.dart';
 import 'package:expense_manager/features/charts/presentation/widgets/chart_stat_card.dart';
@@ -61,7 +59,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
         : period.l10nLabel(l10n);
 
     return Scaffold(
-      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
+
       appBar: AppBar(
         title: Text(l10n.charts),
       ),

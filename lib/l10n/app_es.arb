@@ -766,5 +766,14 @@
   "errorPromoTooManyAttempts": "Demasiados intentos. Espera {seconds} segundos.",
   "@errorPromoTooManyAttempts": {
     "placeholders": { "seconds": { "type": "int" } }
-  }
+  },
+
+  "navHome": "Inicio",
+  "@navHome": {},
+  "navActivity": "Actividad",
+  "@navActivity": {},
+  "navBudgets": "Presupuestos",
+  "@navBudgets": {},
+  "navInsights": "Análisis",
+  "@navInsights": {}
 }

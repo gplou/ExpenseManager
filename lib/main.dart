@@ -27,6 +27,7 @@ import 'core/services/sentry_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/config/router.dart';
 import 'core/widgets/lock_gate.dart';
+import 'features/transactions/presentation/widgets/quick_capture_host.dart';
 import 'core/local_db/local_database.dart';
 import 'core/providers/locale_provider.dart' show localeProvider, kLocaleKey, supportedLocales;
 import 'core/providers/theme_provider.dart' show themeModeProvider, kThemeModeKey;
@@ -521,7 +522,11 @@ class _MyAppState extends ConsumerState<MyApp> {
           data: mq.copyWith(textScaler: clamped),
           // App lock: overlay opaco por encima del Navigator (cubre cualquier
           // ruta/diálogo) cuando el bloqueo biométrico está activado.
-          child: LockGate(child: child!),
+          //
+          // La captura rápida va por dentro del LockGate: debe quedar tapada
+          // por el bloqueo, pero por encima del Navigator para seguir viva al
+          // cambiar de pestaña y ser alcanzable desde las hojas modales.
+          child: LockGate(child: QuickCaptureHost(child: child!)),
         );
       },
     );

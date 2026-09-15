@@ -90,7 +90,7 @@ class BudgetsSection extends ConsumerWidget {
                     label: l10n.budgetsManage,
                     child: InkWell(
                       key: TestKeys.budgetsSectionLink,
-                      onTap: () => context.push(AppRoutes.budgets),
+                      onTap: () => context.go(AppRoutes.budgets),
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -122,7 +122,7 @@ class BudgetsSection extends ConsumerWidget {
                 progress: p,
                 cSymbol: cSymbol,
                 numFmtStyle: numFmtStyle,
-                onTap: () => context.push(AppRoutes.budgets),
+                onTap: () => context.go(AppRoutes.budgets),
               ),
             ),
           ],
@@ -142,7 +142,7 @@ class _EmptyCta extends StatelessWidget {
     final cs = context.colors;
     return InkWell(
       key: TestKeys.budgetsSectionLink,
-      onTap: () => context.push(AppRoutes.budgets),
+      onTap: () => context.go(AppRoutes.budgets),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

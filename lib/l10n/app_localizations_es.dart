@@ -1114,4 +1114,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String errorPromoTooManyAttempts(int seconds) {
     return 'Demasiados intentos. Espera $seconds segundos.';
   }
+
+  @override
+  String get navHome => 'Inicio';
+
+  @override
+  String get navActivity => 'Actividad';
+
+  @override
+  String get navBudgets => 'Presupuestos';
+
+  @override
+  String get navInsights => 'Análisis';
 }

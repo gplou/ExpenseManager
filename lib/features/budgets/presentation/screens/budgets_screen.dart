@@ -10,7 +10,6 @@ import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
-import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/features/budgets/presentation/providers/budgets_provider.dart';
 import 'package:expense_manager/features/budgets/presentation/widgets/budget_form_sheet.dart';
 import 'package:expense_manager/features/budgets/presentation/widgets/budget_progress_tile.dart';
@@ -80,8 +79,7 @@ class BudgetsScreen extends ConsumerWidget {
         ref.watch(numberFormatProvider).value ?? NumberFormatStyle.dotDecimal;
 
     return Scaffold(
-      bottomNavigationBar:
-          ref.watch(isProProvider) ? null : const AdBannerFooter(),
+      // El banner y la barra inferior los aporta AppShell.
       appBar: AppBar(title: Text(l10n.budgets)),
       floatingActionButton: FloatingActionButton(
         tooltip: l10n.budgetNew,
@@ -146,7 +144,7 @@ class BudgetsScreen extends ConsumerWidget {
               20,
               8,
               20,
-              MediaQuery.of(context).padding.bottom + 88,
+              88, // hueco para el FAB de "nuevo presupuesto"; el shell ya descuenta la barra
             ),
             itemCount: progresses.length,
             itemBuilder: (context, index) {

@@ -470,5 +470,14 @@
   "errorFreeTrialFailed": "Impossible d'activer l'essai gratuit. Réessaie.",
   "errorPurchaseGeneric": "Impossible de finaliser l'achat. Réessaie.",
   "errorRestoreGeneric": "Impossible de restaurer tes achats. Réessaie.",
-  "errorPromoTooManyAttempts": "Trop de tentatives. Patiente {seconds} secondes."
+  "errorPromoTooManyAttempts": "Trop de tentatives. Patiente {seconds} secondes.",
+
+  "navHome": "Accueil",
+  "@navHome": {},
+  "navActivity": "Activité",
+  "@navActivity": {},
+  "navBudgets": "Budgets",
+  "@navBudgets": {},
+  "navInsights": "Analyses",
+  "@navInsights": {}
 }

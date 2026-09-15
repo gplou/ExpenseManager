@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/features/auth/domain/user_model.dart';
 import 'package:expense_manager/features/dashboard/dashboard_screen.dart';
+import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
@@ -54,7 +55,7 @@ void main() {
     expect(find.textContaining('Alice'), findsOneWidget);
   });
 
-  testWidgets('renders the drawer menu icon and the body chrome',
+  testWidgets('renders the settings button and the body chrome',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -62,7 +63,9 @@ void main() {
     await tester.pumpWidget(_wrap(dashboardOverrides(user: _alice())));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(PhosphorIcons.list()), findsOneWidget);
+    // Por key, no por icono: el glifo cambió de hamburguesa a engranaje al
+    // pasar la navegación a la barra inferior.
+    expect(find.byKey(TutorialKeys.drawerBtnKey), findsOneWidget);
     expect(find.byType(RefreshIndicator), findsOneWidget);
   });
 

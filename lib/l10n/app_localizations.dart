@@ -2123,6 +2123,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Demasiados intentos. Espera {seconds} segundos.'**
   String errorPromoTooManyAttempts(int seconds);
+
+  /// No description provided for @navHome.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicio'**
+  String get navHome;
+
+  /// No description provided for @navActivity.
+  ///
+  /// In es, this message translates to:
+  /// **'Actividad'**
+  String get navActivity;
+
+  /// No description provided for @navBudgets.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuestos'**
+  String get navBudgets;
+
+  /// No description provided for @navInsights.
+  ///
+  /// In es, this message translates to:
+  /// **'Análisis'**
+  String get navInsights;
 }
 
 class _AppLocalizationsDelegate

@@ -8,14 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
-import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/data/export_excel_service.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transaction_search_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/core/services/analytics_service.dart';
-import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/transactions_filter_button.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/transactions_list_footer.dart';
@@ -170,7 +168,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final cs = context.colors;
 
     return Scaffold(
-      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
+
       appBar: AppBar(
         leading: _isSelecting
             ? IconButton(

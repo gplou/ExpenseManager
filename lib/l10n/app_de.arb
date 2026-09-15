@@ -470,5 +470,14 @@
   "errorFreeTrialFailed": "Kostenlose Testphase konnte nicht aktiviert werden. Bitte versuche es erneut.",
   "errorPurchaseGeneric": "Kauf konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
   "errorRestoreGeneric": "Deine Käufe konnten nicht wiederhergestellt werden. Bitte versuche es erneut.",
-  "errorPromoTooManyAttempts": "Zu viele Versuche. Warte {seconds} Sekunden."
+  "errorPromoTooManyAttempts": "Zu viele Versuche. Warte {seconds} Sekunden.",
+
+  "navHome": "Start",
+  "@navHome": {},
+  "navActivity": "Aktivität",
+  "@navActivity": {},
+  "navBudgets": "Budgets",
+  "@navBudgets": {},
+  "navInsights": "Analysen",
+  "@navInsights": {}
 }

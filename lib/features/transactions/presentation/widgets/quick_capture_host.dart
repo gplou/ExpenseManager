@@ -2,49 +2,73 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/app_constants.dart';
+import 'package:expense_manager/core/providers/locale_provider.dart';
 import 'package:expense_manager/core/providers/widget_action_provider.dart';
+import 'package:expense_manager/core/services/analytics_service.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
 import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
-import 'package:expense_manager/core/theme/app_elevation.dart';
-import 'package:expense_manager/core/widgets/neo_card.dart';
-import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
-import 'package:expense_manager/core/providers/locale_provider.dart';
-import 'package:expense_manager/core/services/analytics_service.dart';
-import 'package:expense_manager/core/services/sentry_service.dart';
 import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
-import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 
 enum VoiceInputState { idle, listening, processing, cameraProcessing }
 
-/// Floating "+" button rendered at the bottom-center of the dashboard.
+/// Acciones de captura rápida, accesibles desde cualquier punto del árbol.
 ///
-/// Tapping it opens the [AddTransactionScreen] bottom sheet, which contains
-/// the voice / photo / manual entry points. This widget keeps the voice and
-/// camera processing logic only because the home-screen widget can deep-link
-/// directly into voice/photo capture without going through the sheet.
-class SpeedDialFab extends ConsumerStatefulWidget {
-  const SpeedDialFab({super.key});
+/// Se expone como `InheritedWidget` y no como provider porque [QuickCaptureHost]
+/// se monta por encima del Navigator: así lo alcanzan tanto la barra inferior
+/// como las hojas modales, que son rutas hijas de ese Navigator.
+class QuickCapture extends InheritedWidget {
+  const QuickCapture({
+    super.key,
+    required this.startVoice,
+    required this.startPhoto,
+    required this.openAddSheet,
+    required super.child,
+  });
+
+  final VoidCallback startVoice;
+  final VoidCallback startPhoto;
+  final VoidCallback openAddSheet;
+
+  static QuickCapture? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<QuickCapture>();
 
   @override
-  ConsumerState<SpeedDialFab> createState() => _SpeedDialFabState();
+  bool updateShouldNotify(QuickCapture oldWidget) => false;
 }
 
-class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
+/// Dueño del pipeline de voz e imagen y del despacho de acciones del widget
+/// de pantalla de inicio.
+///
+/// Vive por encima del Navigator (en el `builder` de MaterialApp) por dos
+/// motivos: sigue vivo al cambiar de pestaña —los deep links
+/// `expensemanager://widget/*` pueden llegar en cualquier momento— y queda al
+/// alcance de las hojas modales, que necesitan los accesos de voz y foto.
+class QuickCaptureHost extends ConsumerStatefulWidget {
+  const QuickCaptureHost({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<QuickCaptureHost> createState() => _QuickCaptureHostState();
+}
+
+class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
   VoiceInputState _voiceState = VoiceInputState.idle;
   bool _handledInitialWidgetAction = false;
 
@@ -53,9 +77,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
   late final ImageInputGateway _imagePicker;
   late final ImageTransactionParser _imageParser;
 
-  static const double _fabSize = 64;
-  static const double _miniFabSize = 48;
-  static const double _clusterSpacing = 24;
+  static const double _overlaySize = 64;
 
   @override
   void initState() {
@@ -81,25 +103,54 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     super.dispose();
   }
 
+  // ── Acceso al Navigator raíz ─────────────────────────────────────────────
+  //
+  // El contexto propio de este widget queda POR ENCIMA del Navigator, así que
+  // `Navigator.of` no lo encontraría. Todo lo que necesite un contexto pasa
+  // por estos helpers, que lo resuelven desde la GlobalKey en el momento de
+  // usarlo: nunca se guarda un contexto entre awaits.
+
+  void _showSnack(String Function(AppLocalizations l10n) message) {
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
+    ScaffoldMessenger.of(ctx).showSnackBar(
+      SnackBar(content: Text(message(AppLocalizations.of(ctx)))),
+    );
+  }
+
+  void _openSheet({ParsedVoiceTransaction? voiceData}) {
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
+    showAddTransactionSheet(ctx, voiceData: voiceData).ignore();
+  }
+
+  void _pushRoute(String path) {
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
+    ctx.push(path).ignore();
+  }
+
   static String _speechLocaleId(String langCode) => switch (langCode) {
-    'es' => 'es_ES',
-    'en' => 'en_US',
-    'fr' => 'fr_FR',
-    'de' => 'de_DE',
-    _ => 'en_US',
-  };
+        'es' => 'es_ES',
+        'en' => 'en_US',
+        'fr' => 'fr_FR',
+        'de' => 'de_DE',
+        _ => 'en_US',
+      };
 
   bool _requirePro() {
     if (ref.read(isProProvider)) return true;
-    context.push(AppRoutes.pro);
+    _pushRoute(AppRoutes.pro);
     return false;
   }
 
   Future<void> _handleWidgetAction(String action) async {
-    // Wait for subscription to finish loading before gating on pro status
-    // (cold-start from widget would otherwise always see isPro == false).
+    // Espera a que la suscripción termine de cargar antes de aplicar el gate
+    // PRO (en arranque en frío desde el widget, isPro sería siempre false).
     if (ref.read(subscriptionProvider).isLoading) {
-      await ref.read(subscriptionProvider.future).catchError((_) => const SubscriptionState());
+      await ref
+          .read(subscriptionProvider.future)
+          .catchError((_) => const SubscriptionState());
     }
     if (!mounted) return;
 
@@ -107,20 +158,17 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       if (!_requirePro()) return;
       _startVoice().ignore();
     } else if (action == WidgetActions.add) {
-      showAddTransactionSheet(context).ignore();
+      _openAddSheet();
     } else if (action == WidgetActions.chat) {
       if (!_requirePro()) return;
-      context.push(AppRoutes.chat).ignore();
+      _pushRoute(AppRoutes.chat);
     } else if (action == WidgetActions.photo) {
       if (!_requirePro()) return;
       _startCamera().ignore();
     }
   }
 
-  void _openAddSheet() {
-    HapticFeedback.lightImpact();
-    showAddTransactionSheet(context);
-  }
+  void _openAddSheet() => _openSheet();
 
   void _onTapVoice() {
     if (!_requirePro()) return;
@@ -140,12 +188,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     );
 
     if (!available) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.micUnavailable)),
-        );
-      }
+      _showSnack((l10n) => l10n.micUnavailable);
       return;
     }
 
@@ -176,35 +219,31 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       unawaited(SentryService.captureException(e, stackTrace: st));
       if (!mounted) return;
       setState(() => _voiceState = VoiceInputState.idle);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).aiProcessingError)),
-      );
+      _showSnack((l10n) => l10n.aiProcessingError);
       return;
     }
     if (!mounted) return;
     if (parsed == null) {
       setState(() => _voiceState = VoiceInputState.idle);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).voiceInterpretError),
-        ),
-      );
+      _showSnack((l10n) => l10n.voiceInterpretError);
       return;
     }
     await _speech.stop();
     setState(() => _voiceState = VoiceInputState.idle);
-    if (!mounted) return;
-    showAddTransactionSheet(context, voiceData: parsed).ignore();
+    _openSheet(voiceData: parsed);
   }
 
   Future<void> _startCamera() async {
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
+
     final source = await showModalBottomSheet<ImageSource>(
-      context: context,
+      context: ctx,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) {
-        final l10n = AppLocalizations.of(ctx);
+      builder: (sheetCtx) {
+        final l10n = AppLocalizations.of(sheetCtx);
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -214,12 +253,12 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
                 ListTile(
                   leading: Icon(PhosphorIcons.camera()),
                   title: Text(l10n.cameraOption),
-                  onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+                  onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
                 ),
                 ListTile(
                   leading: Icon(PhosphorIcons.imagesSquare()),
                   title: Text(l10n.galleryOption),
-                  onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+                  onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
                 ),
               ],
             ),
@@ -252,28 +291,23 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       final imageBytes = await tempFile.readAsBytes();
 
       final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
-      final ParsedVoiceTransaction? parsed = await _imageParser.parse(imageBytes, subcategories: subcats);
+      final ParsedVoiceTransaction? parsed =
+          await _imageParser.parse(imageBytes, subcategories: subcats);
 
       if (!mounted) return;
       setState(() => _voiceState = VoiceInputState.idle);
 
       if (parsed == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).imageTransactionNotDetected),
-          ),
-        );
+        _showSnack((l10n) => l10n.imageTransactionNotDetected);
         return;
       }
-      showAddTransactionSheet(context, voiceData: parsed).ignore();
+      _openSheet(voiceData: parsed);
     } catch (e, st) {
       // El detalle técnico va a Sentry; al usuario solo un mensaje accionable.
       unawaited(SentryService.captureException(e, stackTrace: st));
       if (mounted) {
         setState(() => _voiceState = VoiceInputState.idle);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).aiProcessingError)),
-        );
+        _showSnack((l10n) => l10n.aiProcessingError);
       }
     } finally {
       try {
@@ -284,83 +318,7 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    ref.listen<String?>(pendingWidgetActionProvider, (_, action) {
-      if (action == null) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _handleWidgetAction(action);
-        ref.read(pendingWidgetActionProvider.notifier).state = null;
-      });
-    });
-
-    final l10n = AppLocalizations.of(context);
-    final fabBottom = MediaQuery.paddingOf(context).bottom + 16.0;
-
-    if (_voiceState != VoiceInputState.idle) {
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            bottom: fabBottom,
-            left: 0,
-            right: 0,
-            child: Center(child: _buildVoiceWidget()),
-          ),
-        ],
-      );
-    }
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned(
-          bottom: fabBottom,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _MiniFab(
-                  icon: PhosphorIcons.microphone(),
-                  label: l10n.labelVoice,
-                  hint: l10n.voiceHintStartListening,
-                  onTap: _onTapVoice,
-                ),
-                const SizedBox(width: _clusterSpacing),
-                Semantics(
-                  button: true,
-                  label: l10n.fabOpenMenu,
-                  child: SizedBox(
-                    key: TutorialKeys.fabKey,
-                    width: _fabSize,
-                    height: _fabSize,
-                    child: NeoFab(
-                      icon: PhosphorIcons.plus(),
-                      onTap: _openAddSheet,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: _clusterSpacing),
-                _MiniFab(
-                  icon: PhosphorIcons.camera(),
-                  label: l10n.labelPhoto,
-                  hint: l10n.photoHintStartCamera,
-                  onTap: _onTapPhoto,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildVoiceWidget() {
-    const fabSize = _fabSize;
+  Widget _buildOverlay(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     if (_voiceState == VoiceInputState.processing ||
         _voiceState == VoiceInputState.cameraProcessing) {
@@ -372,8 +330,8 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
         liveRegion: true,
         excludeSemantics: true,
         child: Container(
-          width: fabSize,
-          height: fabSize,
+          width: _overlaySize,
+          height: _overlaySize,
           decoration: const BoxDecoration(
             color: AppColors.dustyTeal,
             shape: BoxShape.circle,
@@ -400,8 +358,8 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
           if (mounted) setState(() => _voiceState = VoiceInputState.idle);
         },
         child: Container(
-          width: fabSize,
-          height: fabSize,
+          width: _overlaySize,
+          height: _overlaySize,
           decoration: const BoxDecoration(
             // Rojo de grabación: convención universal de UI (recording),
             // intencionadamente distinto del coral AppColors.negative ('gasto').
@@ -413,88 +371,33 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
       ),
     );
   }
-}
-
-class _MiniFab extends StatefulWidget {
-  const _MiniFab({
-    required this.icon,
-    required this.label,
-    required this.hint,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final String hint;
-  final VoidCallback onTap;
-
-  @override
-  State<_MiniFab> createState() => _MiniFabState();
-}
-
-class _MiniFabState extends State<_MiniFab>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 140),
-    );
-    _scale = Tween(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleTap() async {
-    HapticFeedback.lightImpact().ignore();
-    await _ctrl.forward();
-    await _ctrl.reverse();
-    widget.onTap();
-  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.raisedDark : AppColors.dustyTealLight;
-    final iconColor = isDark ? AppColors.inkBlueLight : AppColors.dustyTeal;
-    return Semantics(
-      button: true,
-      label: widget.label,
-      hint: widget.hint,
-      child: Tooltip(
-        message: widget.label,
-        child: SizedBox(
-          width: _SpeedDialFabState._miniFabSize,
-          height: _SpeedDialFabState._miniFabSize,
-          child: GestureDetector(
-            onTap: _handleTap,
-            child: ScaleTransition(
-              scale: _scale,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: bg,
-                  shape: BoxShape.circle,
-                  boxShadow: AppElevation.tinted(iconColor, opacity: 0.20),
-                ),
-                child: Icon(
-                  widget.icon,
-                  color: iconColor,
-                  size: 22,
-                ),
-              ),
+    ref.listen<String?>(pendingWidgetActionProvider, (_, action) {
+      if (action == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _handleWidgetAction(action);
+        ref.read(pendingWidgetActionProvider.notifier).state = null;
+      });
+    });
+
+    return QuickCapture(
+      startVoice: _onTapVoice,
+      startPhoto: _onTapPhoto,
+      openAddSheet: _openAddSheet,
+      child: Stack(
+        children: [
+          widget.child,
+          if (_voiceState != VoiceInputState.idle)
+            Positioned(
+              bottom: MediaQuery.paddingOf(context).bottom + 96,
+              left: 0,
+              right: 0,
+              child: Center(child: _buildOverlay(context)),
             ),
-          ),
-        ),
+        ],
       ),
     );
   }

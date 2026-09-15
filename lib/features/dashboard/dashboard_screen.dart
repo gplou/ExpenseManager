@@ -17,12 +17,10 @@ import 'package:expense_manager/core/providers/widget_action_provider.dart';
 import 'package:expense_manager/core/services/home_widget_gateway.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
-import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/budgets_section.dart';
-import 'widgets/dashboard_fab.dart';
 import 'widgets/period_selector.dart';
 import 'widgets/recent_transaction_tile.dart';
 import 'widgets/summary_section.dart';
@@ -157,13 +155,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return Stack(
       children: [
       Scaffold(
+      // El drawer se queda aquí, no en AppShell: lo abre el engranaje de esta
+      // cabecera, y `Scaffold.of` resuelve al Scaffold más cercano.
       drawer: const AppDrawer(),
-      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
+      // El banner y la barra inferior los aporta AppShell. Repetirlos aquí
+      // apilaría dos banners y descontaría el hueco dos veces.
       appBar: AppBar(
         leading: Builder(
           builder: (ctx) => IconButton(
             key: TutorialKeys.drawerBtnKey,
-            icon: Icon(PhosphorIcons.list()),
+            icon: Icon(PhosphorIcons.gearSix()),
             tooltip: MaterialLocalizations.of(ctx).openAppDrawerTooltip,
             onPressed: () => Scaffold.of(ctx).openDrawer(),
           ),
@@ -279,7 +280,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         summary: summary,
                         cSymbol: cSymbol,
                         numFmtStyle: numFmt,
-                        onViewCharts: () => context.push(AppRoutes.charts),
+                        onViewCharts: () => context.go(AppRoutes.charts),
                       ),
                     ),
                     const Gap(12),
@@ -308,7 +309,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             label: l10n.seeAll,
                             child: InkWell(
                               key: TutorialKeys.seeAllBtnKey,
-                              onTap: () => context.push(AppRoutes.transactions),
+                              onTap: () => context.go(AppRoutes.transactions),
                               borderRadius: BorderRadius.circular(8),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -367,16 +368,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
                   ),
             const Gap(12),
-            SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
+            // El shell ya descuenta barra + banner del alto del body: aquí
+            // solo hace falta un respiro al final de la lista.
+            const Gap(16),
           ],
         ),
       ),
     ),
   ),
       ),
-          const Positioned.fill(
-            child: SpeedDialFab(),
-          ),
         ],
       ),
       ),

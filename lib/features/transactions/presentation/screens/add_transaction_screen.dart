@@ -24,6 +24,7 @@ import 'package:expense_manager/features/transactions/presentation/providers/sub
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/add_transaction_widgets.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/category_picker_sheet.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/quick_capture_host.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/recent_categories_strip.dart';
 
 /// Presents [AddTransactionScreen] as a draggable bottom sheet covering ~94%
@@ -350,6 +351,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       appBar: AppBar(
         title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
         actions: [
+          // Entradas de IA. Antes eran dos mini-FAB en el dashboard; al
+          // pasar el FAB a la barra inferior se mudan aquí, que es la
+          // superficie de captura. Ocultas al editar: sobre una
+          // transacción que ya existe no aplican.
+          if (!_isEditing) ...[
+            IconButton(
+              tooltip: l10n.labelVoice,
+              onPressed: () => QuickCapture.maybeOf(context)?.startVoice(),
+              icon: Icon(PhosphorIcons.microphone()),
+            ),
+            IconButton(
+              tooltip: l10n.labelPhoto,
+              onPressed: () => QuickCapture.maybeOf(context)?.startPhoto(),
+              icon: Icon(PhosphorIcons.camera()),
+            ),
+          ],
           if (_isEditing)
             IconButton(
               key: TestKeys.transactionDeleteButton,
