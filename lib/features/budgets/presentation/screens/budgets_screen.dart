@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/errors/failure_localizations.dart';
 import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
@@ -160,6 +161,7 @@ class BudgetsScreen extends ConsumerWidget {
                   existing: progress.budget,
                 ),
                 trailing: IconButton(
+                  key: TestKeys.budgetDeleteButton,
                   tooltip: l10n.delete,
                   icon: Icon(
                     PhosphorIcons.trash(),

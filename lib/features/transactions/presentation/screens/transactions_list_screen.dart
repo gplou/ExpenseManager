@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
@@ -179,6 +180,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               )
             : _isSearching
                 ? IconButton(
+                    key: TestKeys.transactionsSearchBack,
                     tooltip: l10n.cancel,
                     icon: Icon(PhosphorIcons.arrowLeft()),
                     onPressed: _exitSearchMode,
@@ -229,6 +231,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           else ...[
             transactionsAsync.whenOrNull(
               data: (_) => IconButton(
+                key: TestKeys.transactionsSearchButton,
                 tooltip: l10n.search,
                 icon: Icon(PhosphorIcons.magnifyingGlass()),
                 onPressed: _enterSearchMode,

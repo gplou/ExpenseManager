@@ -306,7 +306,7 @@ void main() {
     // El dashboard entra casi entero en 6,9": no hay una segunda captura
     // "recientes" como en Android, saldría igual que la 03.
     await shot(tester, '06-rango-personalizado', () async {
-      await tap(tester, find.byIcon(Icons.calendar_month_outlined));
+      await tap(tester, find.byKey(TestKeys.dashboardDateRangeButton));
     });
     await step(tester, 'cerrar selector', () async => pop(tester));
 
@@ -321,10 +321,10 @@ void main() {
       await scrollBy(tester, -480);
     });
     await shot(tester, '09-graficos-barras', () async {
-      await tap(tester, find.byIcon(Icons.bar_chart_rounded));
+      await tap(tester, find.byKey(TestKeys.chartsModeBar));
     });
     await step(tester, 'volver a tarta', () async {
-      await tap(tester, find.byIcon(Icons.pie_chart_rounded));
+      await tap(tester, find.byKey(TestKeys.chartsModePie));
     });
     await shot(tester, '10-graficos-ingresos', () async {
       await tap(tester, find.text(l10n.typeIncome));
@@ -333,13 +333,13 @@ void main() {
       await tap(tester, find.text(l10n.typeExpense));
     });
     await shot(tester, '11-graficos-anual', () async {
-      await tap(tester, find.byIcon(Icons.calendar_today_rounded));
+      await tap(tester, find.byKey(TestKeys.chartsPeriodButton));
       await tap(tester, find.text(l10n.periodYear).last);
     });
     // El periodo lo comparten dashboard y gráficos (`selectedPeriodProvider`):
     // sin restaurarlo, todo lo que viene después sale en vista anual.
     await step(tester, 'restaurar periodo mensual', () async {
-      await tap(tester, find.byIcon(Icons.calendar_today_rounded));
+      await tap(tester, find.byKey(TestKeys.chartsPeriodButton));
       await tap(tester, find.text(l10n.periodMonth).last);
     });
 
@@ -357,11 +357,11 @@ void main() {
       go(tester, AppRoutes.transactions);
     });
     await shot(tester, '15-historial-filtros', () async {
-      await tap(tester, find.byIcon(Icons.filter_list_rounded));
+      await tap(tester, find.byKey(TestKeys.transactionsFilterButton));
     });
     await step(tester, 'cerrar filtros', () async => pop(tester));
     await shot(tester, '16-historial-busqueda', () async {
-      await tap(tester, find.byIcon(Icons.search_rounded));
+      await tap(tester, find.byKey(TestKeys.transactionsSearchButton));
       await tester.enterText(find.byType(TextField).first, 'super');
       await settle(tester);
       // Sin cerrar el teclado, tapa los resultados y la captura no enseña nada.
@@ -369,7 +369,7 @@ void main() {
       await settle(tester);
     });
     await step(tester, 'salir de búsqueda', () async {
-      await tap(tester, find.byIcon(Icons.arrow_back_rounded));
+      await tap(tester, find.byKey(TestKeys.transactionsSearchBack));
     });
 
     // ── 17-18 · Alta / edición de transacción ───────────────────────────────

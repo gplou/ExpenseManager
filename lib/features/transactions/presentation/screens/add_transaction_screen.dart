@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
@@ -351,6 +352,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         actions: [
           if (_isEditing)
             IconButton(
+              key: TestKeys.transactionDeleteButton,
               tooltip: l10n.delete,
               onPressed: _delete,
               icon: Icon(
@@ -463,6 +465,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ],
           const SizedBox(width: AppSpacing.sm),
           DetailPill(
+            key: TestKeys.transactionNotePill,
             icon: PhosphorIcons.notePencil(),
             label: _note.trim().isEmpty ? l10n.note : _note.trim(),
             active: _note.trim().isNotEmpty,

@@ -8,6 +8,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/app_constants.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
@@ -245,6 +246,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             );
                           }),
                           IconChip(
+                            key: TestKeys.dashboardDateRangeButton,
                             icon: PhosphorIcons.calendarBlank(),
                             isActive: customRange != null,
                             onTap: () async {

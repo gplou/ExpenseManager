@@ -55,7 +55,7 @@ void main() {
       await tester.pump();
 
       // Nota única para localizar el tile después.
-      await tester.tap(find.byIcon(Icons.edit_note_rounded));
+      await tester.tap(find.byKey(TestKeys.transactionNotePill));
       await settle(tester);
       await tester.enterText(find.byType(TextField).first, note);
       await tester.tap(find.widgetWithText(TextButton, l10nEn.save));
@@ -72,7 +72,7 @@ void main() {
       // ── Editar ──────────────────────────────────────────────────────────
       await tester.tap(find.text(note));
       await settle(tester);
-      await tester.tap(find.byIcon(Icons.edit_note_rounded));
+      await tester.tap(find.byKey(TestKeys.transactionNotePill));
       await settle(tester);
       await tester.enterText(find.byType(TextField).first, noteEdited);
       await tester.tap(find.widgetWithText(TextButton, l10nEn.save));
@@ -87,7 +87,7 @@ void main() {
       // ── Borrar ──────────────────────────────────────────────────────────
       await tester.tap(find.text(noteEdited));
       await settle(tester);
-      await tester.tap(find.byIcon(Icons.delete_outline_rounded));
+      await tester.tap(find.byKey(TestKeys.transactionDeleteButton));
       await settle(tester);
       // Diálogo de confirmación: el botón "Delete" (el título no es botón).
       await tester.tap(find.widgetWithText(TextButton, l10nEn.delete));

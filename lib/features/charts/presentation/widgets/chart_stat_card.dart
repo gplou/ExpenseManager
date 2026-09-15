@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
@@ -159,12 +160,14 @@ class ChartModeSwitch extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ChartModeIcon(
+            key: TestKeys.chartsModePie,
             icon: PhosphorIcons.chartPie(),
             isSelected: mode == ChartMode.pie,
             onTap: () => onChanged(ChartMode.pie),
           ),
           const Gap(2),
           ChartModeIcon(
+            key: TestKeys.chartsModeBar,
             icon: PhosphorIcons.chartBar(),
             isSelected: mode == ChartMode.bar,
             onTap: () => onChanged(ChartMode.bar),

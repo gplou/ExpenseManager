@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -29,6 +30,7 @@ class CategoryFilterButton extends ConsumerWidget {
     if (categories.isEmpty) return const SizedBox.shrink();
     final isActive = selectedCategory != null;
     return PopupMenuButton<String?>(
+      key: TestKeys.transactionsFilterButton,
       icon: Icon(
         PhosphorIcons.funnel(),
         color: isActive ? AppColors.dustyTeal : null,
