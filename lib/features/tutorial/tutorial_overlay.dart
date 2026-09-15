@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'tutorial_keys.dart';
 import 'tutorial_notifier.dart';
 import 'tutorial_step.dart';
 import 'tutorial_tooltip_card.dart';
@@ -21,7 +20,6 @@ class TutorialOverlay extends ConsumerWidget {
     final tut = ref.watch(tutorialProvider);
     final l10n = AppLocalizations.of(context);
     final steps = buildTutorialSteps(l10n);
-    final fabRect = ref.watch(fabRectProvider);
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 280),
@@ -33,7 +31,6 @@ class TutorialOverlay extends ConsumerWidget {
               totalSteps: steps.length,
               isLast: tut.isLastStep,
               isFirst: tut.isFirstStep,
-              fabRect: fabRect,
               onNext: () => ref.read(tutorialProvider.notifier).next(),
               onBack: () => ref.read(tutorialProvider.notifier).previous(),
               onSkip: () => ref.read(tutorialProvider.notifier).skip(),
@@ -56,7 +53,6 @@ class _TutorialOverlayContent extends StatefulWidget {
     required this.onNext,
     required this.onBack,
     required this.onSkip,
-    this.fabRect,
   });
 
   final TutorialStep step;
@@ -67,8 +63,6 @@ class _TutorialOverlayContent extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
   final VoidCallback onSkip;
-  /// Pre-computed FAB screen rect (bypasses GlobalKey measurement for the FAB step).
-  final Rect? fabRect;
 
   @override
   State<_TutorialOverlayContent> createState() =>
@@ -106,67 +100,62 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
   }
 
   @override
-  void didUpdateWidget(_TutorialOverlayContent oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Re-measure when the pre-computed FAB rect arrives or changes.
-    if (widget.step.targetKey == TutorialKeys.fabKey &&
-        widget.fabRect != oldWidget.fabRect &&
-        widget.fabRect != null) {
-      _measureTarget();
-    }
-  }
-
-  @override
   void dispose() {
     _ctrl.dispose();
     super.dispose();
   }
 
+  /// Reencola una medición para el siguiente frame, mientras el paso viva.
+  ///
+  /// Antes la medición se encolaba desde `build`, así que solo se repetía si
+  /// algo provocaba rebuild: al fallar o al estabilizarse dejaba de mirar, y
+  /// cualquier cambio de layout posterior (carga del banner de anuncios,
+  /// llegada de datos asíncronos, fin de una transición de ruta) dejaba el
+  /// spotlight congelado en una posición que ya no era la del objetivo.
+  ///
+  /// No es un bucle activo: un post-frame callback no provoca frames por sí
+  /// mismo, así que en reposo se queda pendiente hasta que haya un frame por
+  /// otro motivo. Y el encadenado muere con el widget del paso.
+  void _scheduleRemeasure() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _measureTarget();
+    });
+  }
+
   void _measureTarget() {
-    // For the FAB step the rect is computed directly by _SpeedDialFabState to
-    // avoid GlobalKey measurement inaccuracies inside nested Positioned/Stacks.
-    if (widget.step.targetKey == TutorialKeys.fabKey) {
-      final newRect = widget.fabRect;
-      if (newRect != null && mounted && newRect != _targetRect) {
-        setState(() => _targetRect = newRect);
-      }
+    final ctx = widget.step.targetKey.currentContext;
+    final box = ctx?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) {
+      // El objetivo aún no está en el árbol (datos asíncronos, transición de
+      // ruta en curso...). Reintentar en el siguiente frame.
+      _scheduleRemeasure();
       return;
     }
 
-    final ctx = widget.step.targetKey.currentContext;
-    if (ctx == null) return;
-    final box = ctx.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return;
     final pos = box.localToGlobal(Offset.zero);
-    final newRect = Rect.fromLTWH(pos.dx, pos.dy, box.size.width, box.size.height);
-    if (mounted && newRect != _targetRect) {
-      setState(() => _targetRect = newRect);
+    final newRect =
+        Rect.fromLTWH(pos.dx, pos.dy, box.size.width, box.size.height);
+
+    // Durante una transición de ruta `localToGlobal` devuelve coordenadas
+    // transformadas: el rect llega y cambia frame a frame. Se sigue midiendo
+    // hasta agotar el presupuesto para no congelar el primer valor, que es
+    // justo lo que dejaba el spotlight a media pantalla.
+    if (newRect != _targetRect) {
+      if (mounted) setState(() => _targetRect = newRect);
     }
+    _scheduleRemeasure();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Re-measure every frame so the spotlight tracks the target even if a late
-    // layout change (async data load, keyboard dismissal, ad banner, etc.) shifts
-    // the widget after the initial measurement.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measureTarget());
-
     final screen = MediaQuery.sizeOf(context);
     final rect = _targetRect;
+    final spotlight = rect?.inflate(widget.step.spotlightPadding);
 
-    if (rect == null) {
-      // Still measuring – show a semi-transparent backdrop without spotlight.
-      return FadeTransition(
-        opacity: _fade,
-        child: _Backdrop(onTap: widget.onSkip),
-      );
-    }
-
-    final spotlight = rect.inflate(widget.step.spotlightPadding);
-
-    // Decide whether to show the tooltip above or below the spotlight.
-    final spaceBelow = screen.height - spotlight.bottom;
-    final spaceAbove = spotlight.top;
+    // Reparto vertical. Sin spotlight (objetivo no medible) la tarjeta va
+    // abajo, que es donde cae la mano.
+    final spaceBelow = spotlight == null ? 0.0 : screen.height - spotlight.bottom;
+    final spaceAbove = spotlight?.top ?? screen.height;
     final tooltipBelow = spaceBelow >= 220 && spaceBelow >= spaceAbove;
 
     return FadeTransition(
@@ -178,27 +167,30 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {}, // absorb taps on backdrop
-            child: CustomPaint(
-              size: screen,
-              painter: TutorialSpotlightPainter(
-                spotlightRect: spotlight,
-                radius: widget.step.spotlightRadius,
-              ),
-            ),
+            child: spotlight == null
+                ? Container(color: Colors.black.withValues(alpha: 0.72))
+                : CustomPaint(
+                    size: screen,
+                    painter: TutorialSpotlightPainter(
+                      spotlightRect: spotlight,
+                      radius: widget.step.spotlightRadius,
+                    ),
+                  ),
           ),
 
           // ── Tap-through on spotlight → advances step ─────────────────────
-          Positioned(
-            left: spotlight.left,
-            top: spotlight.top,
-            width: spotlight.width,
-            height: spotlight.height,
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: widget.onNext,
-              child: const SizedBox.expand(),
+          if (spotlight != null)
+            Positioned(
+              left: spotlight.left,
+              top: spotlight.top,
+              width: spotlight.width,
+              height: spotlight.height,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: widget.onNext,
+                child: const SizedBox.expand(),
+              ),
             ),
-          ),
 
           // ── Step counter ─────────────────────────────────────────────────
           Positioned(
@@ -248,40 +240,67 @@ class _TutorialOverlayContentState extends State<_TutorialOverlayContent>
           ),
 
           // ── Tooltip card ─────────────────────────────────────────────────
-          Positioned(
-            left: 16,
-            right: 16,
-            top: tooltipBelow ? spotlight.bottom + 14 : null,
-            bottom: tooltipBelow
-                ? null
-                : screen.height - spotlight.top + 14,
-            child: TutorialTooltipCard(
-              step: widget.step,
-              stepIndex: widget.stepIndex,
-              totalSteps: widget.totalSteps,
-              isLast: widget.isLast,
-              isFirst: widget.isFirst,
-              onNext: widget.onNext,
-              onBack: widget.onBack,
+          //
+          // El desplazamiento contra el spotlight va como padding de una capa
+          // que ocupa toda la pantalla, no como `top`/`bottom` de un
+          // `Positioned`. La diferencia importa: un `Positioned` admite
+          // valores que dejan la tarjeta fuera de pantalla — y ahí el usuario
+          // se queda sin botón con el que seguir, sin más salida que
+          // "Omitir". Con padding acotado a [_minCardSpace] la tarjeta
+          // siempre cae dentro, aunque el spotlight esté mal medido.
+          Positioned.fill(
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: tooltipBelow
+                      ? _cardInset(spotlight!.bottom + 14, screen)
+                      : 0,
+                  // Anclada abajo, la tarjeta tiene que dejar libre la fila
+                  // del contador y "Omitir" — de ahí el suelo.
+                  bottom: tooltipBelow
+                      ? 0
+                      : _cardInset(
+                          spotlight == null
+                              ? _controlsReserve
+                              : (screen.height - spotlight.top + 14)
+                                  .clamp(_controlsReserve, double.infinity),
+                          screen,
+                        ),
+                ),
+                child: Align(
+                  alignment:
+                      tooltipBelow ? Alignment.topCenter : Alignment.bottomCenter,
+                  child: SingleChildScrollView(
+                    child: TutorialTooltipCard(
+                      step: widget.step,
+                      stepIndex: widget.stepIndex,
+                      totalSteps: widget.totalSteps,
+                      isLast: widget.isLast,
+                      isFirst: widget.isFirst,
+                      onNext: widget.onNext,
+                      onBack: widget.onBack,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
   }
-}
 
-// ── Plain backdrop (shown while measuring) ────────────────────────────────────
+  /// Espacio mínimo que se le reserva siempre a la tarjeta.
+  static const double _minCardSpace = 200;
 
-class _Backdrop extends StatelessWidget {
-  const _Backdrop({required this.onTap});
-  final VoidCallback onTap;
+  /// Alto de la fila inferior (contador de pasos y "Omitir"), que la tarjeta
+  /// no debe tapar cuando va anclada abajo.
+  static const double _controlsReserve = 56;
 
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(color: Colors.black.withValues(alpha: 0.72)),
-      );
+  /// Acota el desplazamiento para que nunca deje a la tarjeta sin sitio.
+  static double _cardInset(double desired, Size screen) =>
+      desired.clamp(0.0, (screen.height - _minCardSpace).clamp(0.0, double.infinity));
 }
 

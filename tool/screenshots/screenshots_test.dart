@@ -145,14 +145,21 @@ Future<void> step(
 
 /// Navegación por ruta desde el árbol vivo: no depende de textos ni de la
 /// posición de los botones.
+/// Contexto raíz, estable sea cual sea la pila de rutas.
+///
+/// Antes se cogía `find.byType(Scaffold).last`, que deja de ser determinista
+/// en cuanto hay Scaffolds anidados (el del shell + el de la pestaña).
+/// `MaterialApp` es único, y tanto `GoRouter.of` como el navigator raíz se
+/// resuelven igual desde él.
+Element _rootContext(WidgetTester tester) =>
+    tester.element(find.byType(MaterialApp).first);
+
 void go(WidgetTester tester, String route) {
-  final ctx = tester.element(find.byType(Scaffold).last);
-  GoRouter.of(ctx).go(route);
+  GoRouter.of(_rootContext(tester)).go(route);
 }
 
 void push(WidgetTester tester, String route) {
-  final ctx = tester.element(find.byType(Scaffold).last);
-  GoRouter.of(ctx).push(route);
+  GoRouter.of(_rootContext(tester)).push(route);
 }
 
 Future<void> tap(WidgetTester tester, Finder finder) async {
@@ -162,21 +169,29 @@ Future<void> tap(WidgetTester tester, Finder finder) async {
 
 /// Cierra la ruta/sheet/diálogo superior.
 Future<void> pop(WidgetTester tester) async {
-  final ctx = tester.element(find.byType(Scaffold).last);
-  await Navigator.of(ctx, rootNavigator: true).maybePop();
+  await Navigator.of(_rootContext(tester), rootNavigator: true).maybePop();
   await settle(tester);
 }
 
-Finder verticalScrollable() => find.byWidgetPredicate(
+/// Scrollables verticales **visibles**.
+///
+/// El `.hitTestable()` no es cosmético: con `StatefulShellRoute.indexedStack`
+/// las pestañas no seleccionadas siguen montadas y con `ScrollPosition` viva,
+/// pero `IndexedStack` no las pinta, así que no responden al hit-test. Sin el
+/// filtro, la heurística de abajo podía desplazar una lista que no está en
+/// pantalla.
+Finder verticalScrollable() => find
+    .byWidgetPredicate(
       (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
-    );
+    )
+    .hitTestable();
 
 /// Desplaza la lista de la pantalla actual [dy] píxeles.
 ///
 /// Va contra la `ScrollPosition`, no con un gesto: `tester.drag` fallaba en las
 /// rutas apiladas con `push` (el finder cogía el scrollable del dashboard, que
-/// sigue vivo debajo) y la captura salía sin desplazar. Se elige la última
-/// posición con recorrido disponible, que es la de la ruta de encima.
+/// sigue vivo debajo) y la captura salía sin desplazar. Entre las visibles se
+/// elige la última con recorrido disponible, que es la de la ruta de encima.
 Future<void> scrollBy(WidgetTester tester, double dy) async {
   final scrollables = tester
       .stateList<ScrollableState>(verticalScrollable())

@@ -485,7 +485,11 @@ class _EmptyTransactions extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Column(
+          // Flexible acota el ancho de la columna: sin él el texto no tiene
+          // dónde partir y desborda con traducciones largas o escala de
+          // texto grande.
+          Flexible(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
@@ -510,6 +514,7 @@ class _EmptyTransactions extends StatelessWidget {
                 ),
               ),
             ],
+          ),
           ),
         ],
       ),

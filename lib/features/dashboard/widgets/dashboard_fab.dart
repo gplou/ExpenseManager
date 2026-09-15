@@ -28,7 +28,6 @@ import 'package:expense_manager/features/transactions/domain/parsed_voice_transa
 import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
-import 'package:expense_manager/features/tutorial/tutorial_notifier.dart';
 
 enum VoiceInputState { idle, listening, processing, cameraProcessing }
 
@@ -298,22 +297,6 @@ class _SpeedDialFabState extends ConsumerState<SpeedDialFab> {
 
     final l10n = AppLocalizations.of(context);
     final fabBottom = MediaQuery.paddingOf(context).bottom + 16.0;
-
-    // Report the FAB rect so the tutorial overlay can draw its spotlight
-    // without relying on GlobalKey measurement through nested Stacks.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final bodyBox = context.findRenderObject() as RenderBox?;
-      if (bodyBox == null || !bodyBox.hasSize) return;
-      final bodyOrigin = bodyBox.localToGlobal(Offset.zero);
-      final bodySize = bodyBox.size;
-      final fabX = bodyOrigin.dx + (bodySize.width - _fabSize) / 2;
-      final fabY = bodyOrigin.dy + bodySize.height - fabBottom - _fabSize;
-      final newRect = Rect.fromLTWH(fabX, fabY, _fabSize, _fabSize);
-      if (ref.read(fabRectProvider) != newRect) {
-        ref.read(fabRectProvider.notifier).state = newRect;
-      }
-    });
 
     if (_voiceState != VoiceInputState.idle) {
       return Stack(

@@ -17,8 +17,13 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     await loader.load();
   }
 
+  // Los cuatro pesos empaquetados. Si falta alguno, Flutter cae al más
+  // cercano y el golden deja de reflejar la tipografía real — justo lo que
+  // estos tests existen para vigilar.
+  await loadWeight('Inter', 'assets/fonts/Inter-Light.ttf');
   await loadWeight('Inter', 'assets/fonts/Inter-Regular.ttf');
   await loadWeight('Inter', 'assets/fonts/Inter-Medium.ttf');
+  await loadWeight('Inter', 'assets/fonts/Inter-SemiBold.ttf');
   // Note: Phosphor icon glyphs still render as placeholder boxes here —
   // `flutter test`'s asset bundle doesn't expose the icon package's bundled
   // font the way a real app build does. Icons were verified separately on a
