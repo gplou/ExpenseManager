@@ -24,6 +24,7 @@ import 'widgets/budgets_section.dart';
 import 'widgets/period_selector.dart';
 import 'widgets/recent_transaction_tile.dart';
 import 'widgets/summary_section.dart';
+import 'widgets/upcoming_bills_card.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/recurring_transactions_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
@@ -151,6 +152,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final cSymbol = currencySymbol(ref.watch(currencyProvider).value ?? 'EUR');
     final numFmt = ref.watch(numberFormatProvider).value ??
         NumberFormatStyle.dotDecimal;
+    final localeCode = Localizations.localeOf(context).languageCode;
+
+    // Rango efectivo del filtro activo: de ahí salen el nombre del periodo
+    // del eyebrow y los días sobre los que se promedia el gasto diario.
+    final range = ref.watch(effectiveDateRangeProvider);
+    final periodLabel = customRange != null
+        ? '${customRange.start.day}/${customRange.start.month} – '
+            '${customRange.end.day}/${customRange.end.month}'
+        : (period == TransactionPeriod.month
+            ? clock.now().monthName(localeCode)
+            : period.l10nLabel(l10n).toLowerCase());
+    final daysElapsed = range.to.difference(range.from).inDays + 1;
 
     return Stack(
       children: [
@@ -183,7 +196,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
             const Gap(2),
             Text(
-              clock.now().formattedDate,
+              clock.now().longDate(localeCode),
               style: context.textTheme.bodySmall?.copyWith(
                 color: cs.onSurface.withValues(alpha: 0.55),
                 letterSpacing: 0,
@@ -280,6 +293,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         summary: summary,
                         cSymbol: cSymbol,
                         numFmtStyle: numFmt,
+                        periodLabel: periodLabel,
+                        daysElapsed: daysElapsed,
                         onViewCharts: () => context.go(AppRoutes.charts),
                       ),
                     ),
@@ -288,6 +303,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // ── Budgets ──────────────────────────────────────────────
                     BudgetsSection(cSymbol: cSymbol, numFmtStyle: numFmt),
                     const Gap(12),
+
+                    // ── Próximos recibos ─────────────────────────────────────
+                    UpcomingBillsCard(cSymbol: cSymbol, numFmtStyle: numFmt),
 
                     // ── Recent transactions ──────────────────────────────────
                     Padding(

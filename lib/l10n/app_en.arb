@@ -444,4 +444,20 @@
   "@navBudgets": {},
   "navInsights": "Insights",
   "@navInsights": {}
+,
+
+  "spentInPeriod": "Spent in {period}",
+  "@spentInPeriod": {
+    "placeholders": { "period": { "type": "String" } }
+  },
+  "avgPerDay": "Avg / day",
+  "@avgPerDay": {},
+  "upcomingBills": "Upcoming bills",
+  "@upcomingBills": {},
+  "amountLeft": "{amount} left",
+  "@amountLeft": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "nothingScheduled": "Nothing scheduled",
+  "@nothingScheduled": {}
 }

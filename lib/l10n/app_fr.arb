@@ -480,4 +480,20 @@
   "@navBudgets": {},
   "navInsights": "Analyses",
   "@navInsights": {}
+,
+
+  "spentInPeriod": "Dépensé en {period}",
+  "@spentInPeriod": {
+    "placeholders": { "period": { "type": "String" } }
+  },
+  "avgPerDay": "Moy. / jour",
+  "@avgPerDay": {},
+  "upcomingBills": "Prochains prélèvements",
+  "@upcomingBills": {},
+  "amountLeft": "{amount} restant",
+  "@amountLeft": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "nothingScheduled": "Rien de prévu",
+  "@nothingScheduled": {}
 }

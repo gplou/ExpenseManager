@@ -1137,4 +1137,23 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get navInsights => 'Analysen';
+
+  @override
+  String spentInPeriod(String period) {
+    return 'Ausgegeben in $period';
+  }
+
+  @override
+  String get avgPerDay => 'Ø / Tag';
+
+  @override
+  String get upcomingBills => 'Anstehende Zahlungen';
+
+  @override
+  String amountLeft(String amount) {
+    return '$amount übrig';
+  }
+
+  @override
+  String get nothingScheduled => 'Nichts geplant';
 }

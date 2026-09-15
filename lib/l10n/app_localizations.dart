@@ -2147,6 +2147,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Análisis'**
   String get navInsights;
+
+  /// No description provided for @spentInPeriod.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastado en {period}'**
+  String spentInPeriod(String period);
+
+  /// No description provided for @avgPerDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Media / día'**
+  String get avgPerDay;
+
+  /// No description provided for @upcomingBills.
+  ///
+  /// In es, this message translates to:
+  /// **'Próximos recibos'**
+  String get upcomingBills;
+
+  /// No description provided for @amountLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} disponible'**
+  String amountLeft(String amount);
+
+  /// No description provided for @nothingScheduled.
+  ///
+  /// In es, this message translates to:
+  /// **'Nada programado'**
+  String get nothingScheduled;
 }
 
 class _AppLocalizationsDelegate

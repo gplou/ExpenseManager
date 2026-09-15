@@ -776,4 +776,20 @@
   "@navBudgets": {},
   "navInsights": "Análisis",
   "@navInsights": {}
+,
+
+  "spentInPeriod": "Gastado en {period}",
+  "@spentInPeriod": {
+    "placeholders": { "period": { "type": "String" } }
+  },
+  "avgPerDay": "Media / día",
+  "@avgPerDay": {},
+  "upcomingBills": "Próximos recibos",
+  "@upcomingBills": {},
+  "amountLeft": "{amount} disponible",
+  "@amountLeft": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "nothingScheduled": "Nada programado",
+  "@nothingScheduled": {}
 }
