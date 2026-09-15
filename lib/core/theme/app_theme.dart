@@ -270,6 +270,29 @@ class AppTheme {
         // Plana y sin indicador de píldora: la pestaña activa se marca solo
         // tintando icono y etiqueta con el acento, como el resto del sistema
         // (el acento es línea y brillo, nunca relleno grande).
+        // ── ListTile ─────────────────────────────────────────────────────
+        // Sin esto, cada lista de la app (ajustes, drawer, hojas) usa los
+        // defaults de Material y se sale del sistema: otro radio, otros
+        // paddings y otro tamaño de icono que el resto de filas.
+        listTileTheme: ListTileThemeData(
+          iconColor: AppColors.graphite,
+          textColor: AppColors.ink,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+          titleTextStyle: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppColors.ink,
+          ),
+          subtitleTextStyle: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: AppColors.graphite,
+          ),
+        ),
+
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: AppColors.paper,
           surfaceTintColor: Colors.transparent,
@@ -595,6 +618,29 @@ class AppTheme {
         // Espejo del tema claro. Fondo = scaffold (no surface): la barra se
         // funde con el fondo y la separa del contenido un hairline, no un
         // escalón de color.
+        // ── ListTile ─────────────────────────────────────────────────────
+        // Sin esto, cada lista de la app (ajustes, drawer, hojas) usa los
+        // defaults de Material y se sale del sistema: otro radio, otros
+        // paddings y otro tamaño de icono que el resto de filas.
+        listTileTheme: ListTileThemeData(
+          iconColor: AppColors.graphiteDark,
+          textColor: AppColors.inkDark,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.radiusMd),
+          titleTextStyle: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppColors.inkDark,
+          ),
+          subtitleTextStyle: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: AppColors.graphiteDark,
+          ),
+        ),
+
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: AppColors.paperDark,
           surfaceTintColor: Colors.transparent,

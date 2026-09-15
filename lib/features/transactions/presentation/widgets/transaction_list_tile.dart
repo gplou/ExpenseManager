@@ -86,7 +86,6 @@ class TransactionTile extends ConsumerWidget {
     final avatarBg = context.appColors.raised;
     final secondaryText = context.appColors.textMuted;
     final dividerColor = context.appColors.divider;
-    final emoji = _emojiForCategory(transaction.category, isIncome);
     final customCats =
         ref.watch(customCategoriesSyncProvider)[transaction.type] ?? const [];
     TransactionCategory? customCat;
@@ -121,13 +120,11 @@ class TransactionTile extends ConsumerWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: isSelecting && isSelected
-                  ? cs.primary
-                  : avatarBg,
-              shape: BoxShape.circle,
+              color: isSelecting && isSelected ? cs.primary : avatarBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Center(
               child: isSelecting
@@ -146,10 +143,15 @@ class TransactionTile extends ConsumerWidget {
                               style:
                                   const TextStyle(fontSize: AppEmojiSize.medium))
                           : Icon(customCat.icon,
-                              size: 18, color: cs.onSurface)
-                      : Text(emoji,
-                          style:
-                              const TextStyle(fontSize: AppEmojiSize.medium))),
+                              size: 20, color: cs.onSurface)
+                      : Icon(
+                          TransactionCategories.phosphorFor(
+                            transaction.category,
+                            isIncome: transaction.type.isIncome,
+                          ),
+                          size: 20,
+                          color: cs.onSurface,
+                        )),
             ),
           ),
           const Gap(14),
@@ -288,7 +290,4 @@ class TransactionTile extends ConsumerWidget {
       ),
     );
   }
-
-  String _emojiForCategory(String category, bool isIncome) =>
-      TransactionCategories.emojiFor(category, isIncome: isIncome);
 }
