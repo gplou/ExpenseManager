@@ -245,11 +245,12 @@ class _CategoryPickerContent extends ConsumerWidget {
     required bool isCustom,
   }) async {
     final l10n = AppLocalizations.of(context);
+    final displayName = TransactionCategories.localizedName(name, l10n);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.delete),
-        content: Text('"$name"'),
+        content: Text('"$displayName"'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
