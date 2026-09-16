@@ -1,0 +1,34 @@
+{
+  "app": "ExpenseManager",
+  "version": 1,
+  "exported_at": "2026-09-01T10:00:00.000Z",
+  "transactions": [
+    {
+      "id": "qa-fixture-1",
+      "userId": "qa-fixture",
+      "amount": 17.5,
+      "type": "expense",
+      "category": "Comida",
+      "subcategory": null,
+      "description": "Import QA - supermercado",
+      "date": "2026-08-20T12:00:00.000Z",
+      "createdAt": "2026-08-20T12:00:00.000Z",
+      "recurringTransactionId": null,
+      "currency": "EUR"
+    },
+    {
+      "id": "qa-fixture-2",
+      "userId": "qa-fixture",
+      "amount": 900.0,
+      "type": "income",
+      "category": "Salario",
+      "subcategory": null,
+      "description": "Import QA - nomina",
+      "date": "2026-08-25T09:00:00.000Z",
+      "createdAt": "2026-08-25T09:00:00.000Z",
+      "recurringTransactionId": null,
+      "currency": "EUR"
+    }
+  ],
+  "recurring_transactions": []
+}

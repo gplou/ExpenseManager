@@ -170,3 +170,5 @@ Full conventions live in `test/README.md`. Key points for new tests:
 - **Widget tests**: use `pumpWithProviders` / `pumpScreen` from `helpers/pump_app.dart` for `ProviderScope` + `MaterialApp` + l10n preloaded.
 
 Don't hit the real network, RevenueCat, or platform channels from `test/` — those belong in `integration_test/` (E2E flows on a device/emulator against the real backend with a dedicated FREE test user; see `integration_test/README.md`). E2E flows find widgets via `TestKeys` (`lib/core/constants/test_keys.dart`) — keep those keys attached when refactoring the tagged widgets. CI runs them on an Android emulator on release tags (`.github/workflows/e2e.yml`).
+
+**Manual "live-driven" QA plan**: `tool/qa/plan/` is a separate, non-automated test plan meant for Claude Code to execute by driving the real app on an emulator via `adb` (screenshots + taps), not by writing `integration_test` code. Start at `tool/qa/plan/00_mecanica_y_entorno.md` when asked to run it.
