@@ -471,6 +471,10 @@
   "errorPurchaseGeneric": "Kauf konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
   "errorRestoreGeneric": "Deine Käufe konnten nicht wiederhergestellt werden. Bitte versuche es erneut.",
   "errorPromoTooManyAttempts": "Zu viele Versuche. Warte {seconds} Sekunden.",
+  "errorPromoInvalidCode": "Dieser Code ist ungültig.",
+  "errorPromoExpiredCode": "Dieser Code ist abgelaufen.",
+  "errorPromoExhaustedCode": "Dieser Code hat sein Nutzungslimit erreicht.",
+  "errorPromoAlreadyRedeemed": "Du hast diesen Code bereits eingelöst.",
 
   "navHome": "Start",
   "@navHome": {},

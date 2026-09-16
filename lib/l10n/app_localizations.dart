@@ -2124,6 +2124,30 @@ abstract class AppLocalizations {
   /// **'Demasiados intentos. Espera {seconds} segundos.'**
   String errorPromoTooManyAttempts(int seconds);
 
+  /// No description provided for @errorPromoInvalidCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese código no es válido.'**
+  String get errorPromoInvalidCode;
+
+  /// No description provided for @errorPromoExpiredCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese código ha caducado.'**
+  String get errorPromoExpiredCode;
+
+  /// No description provided for @errorPromoExhaustedCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese código ha alcanzado su límite de usos.'**
+  String get errorPromoExhaustedCode;
+
+  /// No description provided for @errorPromoAlreadyRedeemed.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya has canjeado este código.'**
+  String get errorPromoAlreadyRedeemed;
+
   /// No description provided for @navHome.
   ///
   /// In es, this message translates to:

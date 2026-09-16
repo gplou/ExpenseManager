@@ -113,8 +113,30 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
             int.tryParse(hint.split(':').elementAtOrNull(1) ?? '') ?? 3600;
         throw PromoCooldownException(seconds);
       }
-      // The RPC raises P0001 with user-facing messages in Spanish.
-      throw PromoCodeException(e.message);
+      // The RPC raises P0001 with user-facing messages in Spanish (see
+      // redeem_promo_code in supabase/migrations) — never surfaced directly,
+      // mapped to a stable reason so the presentation layer can localize it.
+      throw PromoCodeException(e.message, reason: _mapPromoErrorReason(e.message));
+    }
+  }
+
+  /// Maps the Spanish text `redeem_promo_code` raises (there's no distinct
+  /// SQLSTATE per case, everything is P0001) to a stable, locale-independent
+  /// reason. Unrecognized text (e.g. a future server-side message this
+  /// client doesn't know about yet) falls back to [PromoCodeErrorReason.other].
+  PromoCodeErrorReason _mapPromoErrorReason(String message) {
+    switch (message) {
+      case 'Código no válido':
+      case 'Código inválido':
+        return PromoCodeErrorReason.invalidCode;
+      case 'Código expirado':
+        return PromoCodeErrorReason.expiredCode;
+      case 'Código agotado':
+        return PromoCodeErrorReason.exhaustedCode;
+      case 'Ya has canjeado este código':
+        return PromoCodeErrorReason.alreadyRedeemed;
+      default:
+        return PromoCodeErrorReason.other;
     }
   }
 
@@ -214,9 +236,26 @@ class PromoResult {
   bool get isDiscount => type == 'discount';
 }
 
+/// Stable, locale-independent classification of why a promo code redemption
+/// failed. The server only distinguishes cases by raw Spanish message text
+/// (see `redeem_promo_code` in supabase/migrations); [other] covers both a
+/// literally unrecognized message and the two purely defensive server cases
+/// (empty code, misconfigured promo) that the client already prevents or
+/// that should never happen in practice.
+enum PromoCodeErrorReason {
+  invalidCode,
+  expiredCode,
+  exhaustedCode,
+  alreadyRedeemed,
+  other,
+}
+
 class PromoCodeException implements Exception {
-  const PromoCodeException(this.message);
+  const PromoCodeException(this.message, {this.reason = PromoCodeErrorReason.other});
+
+  /// Raw server message, kept for logs/debugging — never shown to the user.
   final String message;
+  final PromoCodeErrorReason reason;
 }
 
 /// Thrown when the client-side promo rate limit is active. Carries the

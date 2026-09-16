@@ -471,6 +471,10 @@
   "errorPurchaseGeneric": "Impossible de finaliser l'achat. Réessaie.",
   "errorRestoreGeneric": "Impossible de restaurer tes achats. Réessaie.",
   "errorPromoTooManyAttempts": "Trop de tentatives. Patiente {seconds} secondes.",
+  "errorPromoInvalidCode": "Ce code n'est pas valide.",
+  "errorPromoExpiredCode": "Ce code a expiré.",
+  "errorPromoExhaustedCode": "Ce code a atteint sa limite d'utilisation.",
+  "errorPromoAlreadyRedeemed": "Tu as déjà utilisé ce code.",
 
   "navHome": "Accueil",
   "@navHome": {},

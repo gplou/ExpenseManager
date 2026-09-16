@@ -1120,6 +1120,19 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get errorPromoInvalidCode => 'Ce code n\'est pas valide.';
+
+  @override
+  String get errorPromoExpiredCode => 'Ce code a expiré.';
+
+  @override
+  String get errorPromoExhaustedCode =>
+      'Ce code a atteint sa limite d\'utilisation.';
+
+  @override
+  String get errorPromoAlreadyRedeemed => 'Tu as déjà utilisé ce code.';
+
+  @override
   String get navHome => 'Accueil';
 
   @override

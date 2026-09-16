@@ -767,6 +767,14 @@
   "@errorPromoTooManyAttempts": {
     "placeholders": { "seconds": { "type": "int" } }
   },
+  "errorPromoInvalidCode": "Ese código no es válido.",
+  "@errorPromoInvalidCode": {},
+  "errorPromoExpiredCode": "Ese código ha caducado.",
+  "@errorPromoExpiredCode": {},
+  "errorPromoExhaustedCode": "Ese código ha alcanzado su límite de usos.",
+  "@errorPromoExhaustedCode": {},
+  "errorPromoAlreadyRedeemed": "Ya has canjeado este código.",
+  "@errorPromoAlreadyRedeemed": {},
 
   "navHome": "Inicio",
   "@navHome": {},

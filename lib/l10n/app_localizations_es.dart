@@ -1116,6 +1116,19 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get errorPromoInvalidCode => 'Ese código no es válido.';
+
+  @override
+  String get errorPromoExpiredCode => 'Ese código ha caducado.';
+
+  @override
+  String get errorPromoExhaustedCode =>
+      'Ese código ha alcanzado su límite de usos.';
+
+  @override
+  String get errorPromoAlreadyRedeemed => 'Ya has canjeado este código.';
+
+  @override
   String get navHome => 'Inicio';
 
   @override

@@ -435,6 +435,10 @@
   "errorPurchaseGeneric": "Couldn't complete the purchase. Please try again.",
   "errorRestoreGeneric": "Couldn't restore your purchases. Please try again.",
   "errorPromoTooManyAttempts": "Too many attempts. Wait {seconds} seconds.",
+  "errorPromoInvalidCode": "That code isn't valid.",
+  "errorPromoExpiredCode": "That code has expired.",
+  "errorPromoExhaustedCode": "That code has reached its usage limit.",
+  "errorPromoAlreadyRedeemed": "You've already redeemed this code.",
 
   "navHome": "Home",
   "@navHome": {},

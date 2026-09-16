@@ -53,10 +53,17 @@ class _PromoCodeDialogState extends ConsumerState<PromoCodeDialog> {
         });
       }
     } on PromoCodeException catch (e) {
-      // Server-driven message (invalid/expired code) — surfaced as-is.
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _error = e.message;
+          _error = switch (e.reason) {
+            PromoCodeErrorReason.invalidCode => l10n.errorPromoInvalidCode,
+            PromoCodeErrorReason.expiredCode => l10n.errorPromoExpiredCode,
+            PromoCodeErrorReason.exhaustedCode => l10n.errorPromoExhaustedCode,
+            PromoCodeErrorReason.alreadyRedeemed =>
+              l10n.errorPromoAlreadyRedeemed,
+            PromoCodeErrorReason.other => l10n.proPromoUnexpectedError,
+          };
           _loading = false;
         });
       }
