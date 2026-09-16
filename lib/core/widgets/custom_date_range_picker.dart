@@ -431,6 +431,14 @@ class _CalendarActions extends StatelessWidget {
         const SizedBox(width: 8),
         FilledButton(
           onPressed: canConfirm ? onConfirm : null,
+          // El tema da a FilledButton `minimumSize` de ancho infinito
+          // (pensado para los CTA a ancho completo de las hojas). Este botón
+          // vive en un Row sin Expanded, que mide a sus hijos con ancho no
+          // acotado: ese mínimo infinito hace estallar el layout y todo el
+          // diálogo se queda sin tamaño — el barrier se ve pero el contenido
+          // nunca se dibuja. Mismo bug que ya se corrigió en el tutorial
+          // (tutorial_tooltip_card.dart).
+          style: FilledButton.styleFrom(minimumSize: Size.zero),
           child: Text(AppLocalizations.of(context).apply),
         ),
       ],

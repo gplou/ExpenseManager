@@ -3,11 +3,17 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'package:expense_manager/core/theme/app_theme.dart';
 import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
 Widget _harness({DateTimeRange? Function(DateTimeRange?)? onClosed}) {
   return MaterialApp(
+    // AppTheme.lightTheme da minimumSize de ancho infinito a los botones
+    // filled/outlined/elevated (pensado para CTAs a ancho completo). Sin
+    // este tema, el infinito no aparece y un botón roto dentro de un Row
+    // (como el "Aplicar" de _CalendarActions) pasaría el test igual.
+    theme: AppTheme.lightTheme,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('es'),
