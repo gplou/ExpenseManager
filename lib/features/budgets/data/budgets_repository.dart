@@ -204,14 +204,21 @@ class MirroredBudgetsRepository implements BudgetsRepositoryContract {
 // ── Selección FREE/PRO ───────────────────────────────────────────────────────
 
 /// FREE → SQLite local únicamente. PRO → cloud-first con espejo local.
-/// Mismo criterio que `transactionsRepositoryProvider`: mientras la
-/// suscripción carga usamos el camino PRO para no perder escrituras cloud.
+///
+/// A diferencia de `transactionsRepositoryProvider`, mientras la suscripción
+/// carga usamos el camino LOCAL (no el de PRO): `isProProvider` ya vale
+/// `false` en ese estado, así que basta con condicionar sobre `isPro`. Los
+/// presupuestos no tienen cola de sync que drenar al resolver PRO (a
+/// diferencia de transacciones), así que no hay una escritura cloud que
+/// "salvar" esperando — y sí hay un riesgo real de ir por el camino
+/// contrario: `MirroredBudgetsRepository.getBudgets()` hace
+/// `local.replaceAll(cloud)` en cada lectura, así que enrutar a un usuario
+/// FREE por ahí durante la carga (cloud vacío para él) borraba sus
+/// presupuestos locales en cada arranque en frío (bug reproducido y
+/// corregido 2026-09-16).
 final budgetsRepositoryProvider = Provider<BudgetsRepositoryContract>((ref) {
   final isPro = ref.watch(isProProvider);
   final user = ref.watch(currentUserProvider);
-  final subscriptionLoaded = ref.watch(
-    subscriptionProvider.select((s) => s.hasValue),
-  );
 
   if (user == null) {
     // Sin sesión no hay presupuestos; el cloud repo lanzará AuthFailure si se
@@ -219,7 +226,7 @@ final budgetsRepositoryProvider = Provider<BudgetsRepositoryContract>((ref) {
     return SupabaseBudgetsRepository(ref.watch(supabaseClientProvider));
   }
 
-  if (isPro || !subscriptionLoaded) {
+  if (isPro) {
     return MirroredBudgetsRepository(
       cloud: SupabaseBudgetsRepository(ref.watch(supabaseClientProvider)),
       local: ref.watch(localBudgetsRepositoryProvider),
