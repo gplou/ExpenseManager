@@ -9,8 +9,18 @@ import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 
+/// Sentinel para el ítem "All categories" del menú.
+///
+/// `PopupMenuButton<T>` no puede disparar `onSelected` para un ítem cuyo
+/// `value` sea `null`: su propia implementación (`showButtonMenu` en el SDK)
+/// interpreta cualquier retorno `null` de `showMenu` como "el usuario cerró
+/// el menú sin elegir nada" y llama a `onCanceled` en su lugar — nunca
+/// distingue eso de "el usuario eligió el ítem con `value: null`". Con un
+/// centinela no-nulo evitamos ese caso por completo.
+const _kAllCategoriesValue = '__all__';
+
 class CategoryFilterButton extends ConsumerWidget {
-  const CategoryFilterButton({super.key, 
+  const CategoryFilterButton({super.key,
     required this.l10n,
     required this.selectedCategory,
     required this.onSelected,
@@ -29,17 +39,18 @@ class CategoryFilterButton extends ConsumerWidget {
             const <String>[];
     if (categories.isEmpty) return const SizedBox.shrink();
     final isActive = selectedCategory != null;
-    return PopupMenuButton<String?>(
+    return PopupMenuButton<String>(
       key: TestKeys.transactionsFilterButton,
       icon: Icon(
         PhosphorIcons.funnel(),
         color: isActive ? AppColors.dustyTeal : null,
       ),
       tooltip: l10n.category,
-      onSelected: onSelected,
+      onSelected: (value) =>
+          onSelected(value == _kAllCategoriesValue ? null : value),
       itemBuilder: (_) => [
-        PopupMenuItem<String?>(
-          value: null,
+        PopupMenuItem<String>(
+          value: _kAllCategoriesValue,
           child: Row(
             children: [
               Icon(
@@ -50,21 +61,25 @@ class CategoryFilterButton extends ConsumerWidget {
                     : AppColors.textMuted,
               ),
               const Gap(10),
-              Text(
-                l10n.allCategories,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: selectedCategory == null
-                      ? FontWeight.w600
-                      : FontWeight.normal,
-                  color: selectedCategory == null ? AppColors.dustyTeal : null,
+              Flexible(
+                child: Text(
+                  l10n.allCategories,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: selectedCategory == null
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                    color:
+                        selectedCategory == null ? AppColors.dustyTeal : null,
+                  ),
                 ),
               ),
             ],
           ),
         ),
         const PopupMenuDivider(),
-        ...categories.map((cat) => PopupMenuItem<String?>(
+        ...categories.map((cat) => PopupMenuItem<String>(
               value: cat,
               child: Row(
                 children: [
@@ -78,16 +93,19 @@ class CategoryFilterButton extends ConsumerWidget {
                         : AppColors.textMuted,
                   ),
                   const Gap(10),
-                  Text(
-                    TransactionCategories.localizedName(cat, l10n),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: cat == selectedCategory
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                      color: cat == selectedCategory
-                          ? AppColors.dustyTeal
-                          : null,
+                  Flexible(
+                    child: Text(
+                      TransactionCategories.localizedName(cat, l10n),
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontWeight: cat == selectedCategory
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: cat == selectedCategory
+                            ? AppColors.dustyTeal
+                            : null,
+                      ),
                     ),
                   ),
                 ],
