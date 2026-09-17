@@ -178,7 +178,10 @@
       "mcp__claude_ai_Sentry__update_issue",
       "Bash(~/Library/Android/sdk/emulator/emulator -avd Pixel_10 -no-snapshot-load -no-boot-anim)",
       "Bash(python3 -c \"import json;print\\(list\\(json.load\\(open\\('/Users/guillermo/Workspace/ExpenseManager/dart_defines_e2e.json'\\)\\).keys\\(\\)\\)\\)\")",
-      "Bash(chmod +x /private/tmp/claude-501/-Users-guillermo-Workspace-ExpenseManager/2e05fccb-7719-4619-a9ff-66ac61bd1fbe/scratchpad/cap.sh)"
+      "Bash(chmod +x /private/tmp/claude-501/-Users-guillermo-Workspace-ExpenseManager/2e05fccb-7719-4619-a9ff-66ac61bd1fbe/scratchpad/cap.sh)",
+      "Bash(git merge *)",
+      "Bash(curl -s -H \"User-Agent: Mozilla/4.0 \\(compatible; MSIE 6.0; Windows NT 5.1\\)\" \"https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600\")",
+      "Bash(curl -s -H \"User-Agent: Mozilla/4.0 \\(compatible; MSIE 6.0; Windows NT 5.1\\)\" \"https://fonts.googleapis.com/css?family=Inter:300,400,500,600\")"
     ]
   }
 }

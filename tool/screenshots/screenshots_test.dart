@@ -201,8 +201,8 @@ Future<void> scrollBy(WidgetTester tester, double dy) async {
     (s) => s.position.maxScrollExtent > 0,
     orElse: () => throw StateError('Ninguna lista con recorrido en pantalla'),
   );
-  final to = (target.position.pixels + dy)
-      .clamp(0.0, target.position.maxScrollExtent);
+  final to =
+      (target.position.pixels + dy).clamp(0.0, target.position.maxScrollExtent);
   target.position.jumpTo(to);
   await settle(tester);
 }
