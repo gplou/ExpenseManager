@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -124,4 +126,5 @@ void registerCommonFallbacks() {
   registerFallbackValue(MockPackage());
   registerFallbackValue(<String, dynamic>{});
   registerFallbackValue(<String, String>{});
+  registerFallbackValue(Uint8List(0));
 }

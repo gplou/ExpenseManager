@@ -62,8 +62,8 @@ dependencies:
   sign_in_with_apple: ^7.0.0
   crypto: ^3.0.2
 
-  # Voz / recibos (parsing local, sin IA)
-  speech_to_text: ^7.0.0
+  # Voz (grabación → IA) / recibos (OCR local, sin IA)
+  record: ^6.2.1
   image_picker: ^1.1.2
   google_mlkit_text_recognition: ^0.16.0
 

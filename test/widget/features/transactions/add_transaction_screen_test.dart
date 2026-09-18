@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,9 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:speech_to_text/speech_recognition_error.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
@@ -42,7 +41,19 @@ class _MockSubRepo extends Mock implements SubcategoriesRepository {}
 
 class _FakeVoiceGateway extends Fake implements VoiceInputGateway {
   @override
-  Future<void> stop() async {}
+  String get mimeType => 'audio/wav';
+
+  @override
+  Future<bool> hasPermission() async => true;
+
+  @override
+  Future<void> start() async {}
+
+  @override
+  Future<String?> stop() async => null;
+
+  @override
+  Future<void> cancel() async {}
 }
 
 class _FakeImageGateway extends Fake implements ImageInputGateway {}
@@ -50,8 +61,8 @@ class _FakeImageGateway extends Fake implements ImageInputGateway {}
 class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
   @override
   Future<ParsedVoiceTransaction?> parse(
-    String transcription, {
-    required String langCode,
+    Uint8List audioBytes, {
+    String mimeType = 'audio/wav',
     List<Map<String, String>> subcategories = const [],
   }) async =>
       null;
@@ -62,75 +73,80 @@ class _FakeImageParser extends Fake implements ImageTransactionParser {
   Future<ParsedVoiceTransaction?> parse(String imagePath) async => null;
 }
 
-/// Immediately "hears" [text] as a final speech result — drives the in-screen
-/// mic button end-to-end without a real microphone.
+/// Immediately "records" a well-formed fake audio file — drives the
+/// in-screen mic button end-to-end without a real microphone. Pair with a
+/// parser fake (e.g. [_VoiceParserReturning]) to control what comes back.
 class _AutoVoiceGateway extends Fake implements VoiceInputGateway {
-  _AutoVoiceGateway(this.text);
-  final String text;
+  String? _path;
 
   @override
-  Future<bool> initialize({SpeechErrorListener? onError}) async => true;
+  String get mimeType => 'audio/wav';
 
   @override
-  Future<void> listen({
-    required String localeId,
-    required SpeechResultListener onResult,
-  }) async {
-    onResult(SpeechRecognitionResult(
-      [SpeechRecognitionWords(text, null, 1.0)],
-      true,
-    ));
+  Future<bool> hasPermission() async => true;
+
+  @override
+  Future<void> start() async {
+    final file = File(
+      '${Directory.systemTemp.path}/voice_test_${DateTime.now().microsecondsSinceEpoch}.wav',
+    );
+    await file.writeAsBytes(List.filled(8000, 1));
+    _path = file.path;
   }
 
   @override
-  Future<void> stop() async {}
+  Future<String?> stop() async => _path;
+
+  @override
+  Future<void> cancel() async {}
 }
 
-/// initialize() reports the recognizer as available, but listen() throws —
-/// reproduces EXPENSE-MANAGER-1G: the OS speech service can die (or a
-/// permission get revoked) in the gap between the two calls.
-class _ListenThrowsVoiceGateway extends Fake implements VoiceInputGateway {
+/// hasPermission() succeeds, but start() throws — the recording backend can
+/// fail to acquire the mic (hardware busy, permission revoked mid-session,
+/// etc.) even after the initial permission check passed.
+class _StartThrowsVoiceGateway extends Fake implements VoiceInputGateway {
   @override
-  Future<bool> initialize({SpeechErrorListener? onError}) async => true;
+  String get mimeType => 'audio/wav';
 
   @override
-  Future<void> listen({
-    required String localeId,
-    required SpeechResultListener onResult,
-  }) {
+  Future<bool> hasPermission() async => true;
+
+  @override
+  Future<void> start() async {
     throw PlatformException(
-      code: 'recognizerNotAvailable',
-      message: 'Speech recognition not available on this device',
+      code: 'recorderNotAvailable',
+      message: 'Recording not available on this device',
     );
   }
 
   @override
-  Future<void> stop() async {}
+  Future<void> cancel() async {}
 }
 
-/// initialize() succeeds, but the recognizer reports a transient "couldn't
-/// understand" error (e.g. no speech / no match) once listening starts,
-/// instead of ever calling onResult — this is `speech_to_text`'s normal way
-/// of saying it heard nothing useful, not a hard failure.
-class _NoMatchVoiceGateway extends Fake implements VoiceInputGateway {
-  SpeechErrorListener? _onError;
+/// Records successfully, but stop() resolves to a file with only a handful
+/// of bytes — e.g. an accidental instant tap. The screen should treat this
+/// like "nothing understood", not silently reset.
+class _TooShortRecordingVoiceGateway extends Fake implements VoiceInputGateway {
+  @override
+  String get mimeType => 'audio/wav';
 
   @override
-  Future<bool> initialize({SpeechErrorListener? onError}) async {
-    _onError = onError;
-    return true;
+  Future<bool> hasPermission() async => true;
+
+  @override
+  Future<void> start() async {}
+
+  @override
+  Future<String?> stop() async {
+    final file = File(
+      '${Directory.systemTemp.path}/voice_test_short_${DateTime.now().microsecondsSinceEpoch}.wav',
+    );
+    await file.writeAsBytes(const [1, 2, 3]);
+    return file.path;
   }
 
   @override
-  Future<void> listen({
-    required String localeId,
-    required SpeechResultListener onResult,
-  }) async {
-    _onError?.call(SpeechRecognitionError('error_no_match', false));
-  }
-
-  @override
-  Future<void> stop() async {}
+  Future<void> cancel() async {}
 }
 
 /// Immediately "picks" a fake file — drives the in-screen camera button
@@ -152,8 +168,8 @@ class _VoiceParserReturning extends Fake implements VoiceTransactionParser {
 
   @override
   Future<ParsedVoiceTransaction?> parse(
-    String transcription, {
-    required String langCode,
+    Uint8List audioBytes, {
+    String mimeType = 'audio/wav',
     List<Map<String, String>> subcategories = const [],
   }) async =>
       result;
@@ -168,8 +184,8 @@ class _QueuedVoiceParser extends Fake implements VoiceTransactionParser {
 
   @override
   Future<ParsedVoiceTransaction?> parse(
-    String transcription, {
-    required String langCode,
+    Uint8List audioBytes, {
+    String mimeType = 'audio/wav',
     List<Map<String, String>> subcategories = const [],
   }) async {
     final result = _results[_index];
@@ -542,7 +558,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(_wrap(
-      voiceGateway: _AutoVoiceGateway('gasté 20 en comida'),
+      voiceGateway: _AutoVoiceGateway(),
       voiceParser: _VoiceParserReturning(const ParsedVoiceTransaction(
         amount: 20,
         type: TransactionType.expense,
@@ -552,26 +568,37 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    // The fake gateway does real file IO (writes/reads a temp WAV), so this
+    // needs runAsync to escape the fake test zone, with a real (not
+    // fake-clock) delay to let that IO actually complete before pumping.
+    // First tap starts recording, second tap stops it and processes.
+    await tester.runAsync(() async {
+      await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+    });
     await tester.pumpAndSettle();
 
     expect(find.textContaining('20'), findsAtLeastNWidgets(1));
     expect(find.text('Comida'), findsOneWidget);
   });
 
-  // Regression: EXPENSE-MANAGER-1G — PlatformException(recognizerNotAvailable)
-  // from speech_to_text.listen() went unhandled (initialize() had already
-  // reported the recognizer as available, so the app had no reason to
-  // expect a failure right after). The mic UI should recover instead of
-  // leaving the screen stuck and crashing.
+  // Regression: EXPENSE-MANAGER-1G — a PlatformException from the recording
+  // backend starting to record went unhandled (hasPermission() had already
+  // succeeded, so the app had no reason to expect a failure right after).
+  // The mic UI should recover instead of leaving the screen stuck and
+  // crashing.
   testWidgets(
-      'listen() throwing recognizerNotAvailable resets the mic button '
+      'start() throwing recorderNotAvailable resets the mic button '
       'instead of crashing', (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(_wrap(
-      voiceGateway: _ListenThrowsVoiceGateway(),
+      voiceGateway: _StartThrowsVoiceGateway(),
     ));
     await tester.pumpAndSettle();
 
@@ -586,22 +613,28 @@ void main() {
     expect(find.text('Micrófono no disponible'), findsOneWidget);
   });
 
-  // Regression: the recognizer's onError callback (wired via initialize(),
-  // but invoked by speech_to_text for the whole listening session) reset
-  // _isListening without ever telling the user their speech wasn't
-  // understood — the mic just silently went back to idle.
+  // Regression: an accidental instant tap (or a recording the backend
+  // couldn't actually capture) used to reset the mic silently — the user
+  // never learned their voice input wasn't understood.
   testWidgets(
-      'a transient "no speech understood" error shows an actionable message '
-      'instead of silently resetting', (tester) async {
+      'a too-short recording shows an actionable message instead of '
+      'silently resetting', (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(_wrap(
-      voiceGateway: _NoMatchVoiceGateway(),
+      voiceGateway: _TooShortRecordingVoiceGateway(),
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    await tester.runAsync(() async {
+      await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+    });
     await tester.pumpAndSettle();
 
     expect(find.byIcon(PhosphorIcons.microphone()), findsOneWidget);
@@ -620,7 +653,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(_wrap(
-      voiceGateway: _AutoVoiceGateway('suscripción 10 cada mes'),
+      voiceGateway: _AutoVoiceGateway(),
       voiceParser: _QueuedVoiceParser(const [
         ParsedVoiceTransaction(
           amount: 10,
@@ -638,11 +671,26 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    // Each full capture is start-tap then stop-tap.
+    await tester.runAsync(() async {
+      await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+    });
     await tester.pumpAndSettle();
     expect(find.text('Mensual'), findsOneWidget);
 
-    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    await tester.runAsync(() async {
+      await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+    });
     await tester.pumpAndSettle();
 
     expect(find.text('No repetir'), findsOneWidget);

@@ -1,6 +1,8 @@
 @Tags(['golden'])
 library;
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,15 +41,18 @@ class _MockRecurringRepo extends Mock
 
 class _MockSubRepo extends Mock implements SubcategoriesRepository {}
 
-class _FakeVoiceGateway extends Fake implements VoiceInputGateway {}
+class _FakeVoiceGateway extends Fake implements VoiceInputGateway {
+  @override
+  Future<void> cancel() async {}
+}
 
 class _FakeImageGateway extends Fake implements ImageInputGateway {}
 
 class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
   @override
   Future<ParsedVoiceTransaction?> parse(
-    String transcription, {
-    required String langCode,
+    Uint8List audioBytes, {
+    String mimeType = 'audio/wav',
     List<Map<String, String>> subcategories = const [],
   }) async =>
       null;

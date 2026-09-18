@@ -9,15 +9,14 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:speech_to_text/speech_recognition_error.dart';
 
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/test_keys.dart';
+import 'package:expense_manager/core/errors/failure_localizations.dart';
+import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
-import 'package:expense_manager/core/providers/locale_provider.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
 import 'package:expense_manager/core/services/sentry_service.dart';
-import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
@@ -28,12 +27,12 @@ import 'package:expense_manager/features/subscription/subscription_provider.dart
 import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
-import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/voice_capture_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/add_transaction_widgets.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/category_picker_sheet.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/recent_categories_strip.dart';
@@ -85,8 +84,8 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   late TransactionType _type;
   late final AmountKeypadController _keypadController;
-  late final VoiceInputGateway _voiceGateway;
   late final ImageInputGateway _imageGateway;
+  late final VoiceCaptureNotifier _voiceCapture;
   String _note = '';
   String? _selectedCategory;
   String? _selectedSubcategory;
@@ -108,8 +107,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final v = widget.voiceData;
     _type = t?.type ?? v?.type ?? TransactionType.expense;
     _keypadController = AmountKeypadController();
-    _voiceGateway = ref.read(voiceInputGatewayProvider);
     _imageGateway = ref.read(imageInputGatewayProvider);
+    // Captured once: `ref.read` is unsafe from dispose() once the widget is
+    // being unmounted, so the notifier reference is stored instead.
+    _voiceCapture = ref.read(voiceCaptureProvider.notifier);
     final initialAmount = t?.amount ?? v?.amount;
     if (initialAmount != null && initialAmount > 0) {
       _keypadController.setValue(initialAmount);
@@ -194,79 +195,48 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     return false;
   }
 
+  Timer? _voiceMaxDurationTimer;
+
   Future<void> _onTapVoice() async {
     if (_isListening) {
-      await _voiceGateway.stop();
-      if (mounted) setState(() => _isListening = false);
+      await _stopAndProcessVoice();
       return;
     }
     if (!_requirePro()) return;
 
     final l10n = AppLocalizations.of(context);
-    final available = await _voiceGateway.initialize(onError: _handleVoiceError);
-    if (!available) {
-      if (mounted) context.showSnackbar(l10n.micUnavailable, isError: true);
-      return;
-    }
+    final started = await _voiceCapture.start();
     if (!mounted) return;
-    setState(() => _isListening = true);
-
-    final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
-    try {
-      await _voiceGateway.listen(
-        localeId: VoiceInputGateway.localeIdFor(langCode),
-        onResult: (result) {
-          if (result.finalResult) _handleVoiceResult(result.recognizedWords, langCode);
-        },
-      );
-    } catch (e, st) {
-      // El reconocedor puede dejar de estar disponible entre initialize() y
-      // listen() (servicio del sistema caído, permiso revocado, etc.).
-      unawaited(SentryService.captureException(e, stackTrace: st));
-      if (!mounted) return;
-      setState(() => _isListening = false);
+    if (!started) {
       context.showSnackbar(l10n.micUnavailable, isError: true);
-    }
-  }
-
-  /// `speech_to_text` keeps calling this for the lifetime of the recognizer,
-  /// not just during `initialize()` — most notably for "no speech"/"no
-  /// match" once listening has started, which previously reset the mic
-  /// silently with no feedback at all.
-  void _handleVoiceError(SpeechRecognitionError error) {
-    if (!mounted) return;
-    setState(() => _isListening = false);
-    final l10n = AppLocalizations.of(context);
-    context.showSnackbar(
-      error.permanent ? l10n.micUnavailable : l10n.voiceInterpretError,
-      isError: true,
-    );
-  }
-
-  Future<void> _handleVoiceResult(String text, String langCode) async {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-    if (text.trim().isEmpty) {
-      setState(() => _isListening = false);
       return;
     }
+    setState(() => _isListening = true);
+    _voiceMaxDurationTimer?.cancel();
+    _voiceMaxDurationTimer = Timer(VoiceCaptureNotifier.maxDuration, () {
+      if (_isListening) _stopAndProcessVoice();
+    });
+  }
+
+  Future<void> _stopAndProcessVoice() async {
+    _voiceMaxDurationTimer?.cancel();
     setState(() {
       _isListening = false;
       _isCapturing = true;
     });
+    final l10n = AppLocalizations.of(context);
     try {
       final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
-      final parsed = await ref.read(voiceTransactionParserProvider).parse(
-            text,
-            langCode: langCode,
-            subcategories: subcats,
-          );
+      final parsed =
+          await _voiceCapture.stopAndProcess(subcategories: subcats);
       if (!mounted) return;
       if (parsed == null) {
         context.showSnackbar(l10n.voiceInterpretError, isError: true);
       } else {
         _applyParsedTransaction(parsed);
       }
+    } on AppFailure catch (f) {
+      if (mounted) context.showSnackbar(f.localizedMessage(l10n), isError: true);
     } catch (e, st) {
       unawaited(SentryService.captureException(e, stackTrace: st));
       if (mounted) context.showSnackbar(l10n.aiProcessingError, isError: true);
@@ -346,7 +316,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   @override
   void dispose() {
     _keypadController.dispose();
-    _voiceGateway.stop().ignore();
+    _voiceMaxDurationTimer?.cancel();
+    // Only cancels if this screen's own recording is still active — a
+    // no-op if a different voice entry point owns the current capture.
+    if (_isListening) _voiceCapture.cancelIfRecording();
     super.dispose();
   }
 

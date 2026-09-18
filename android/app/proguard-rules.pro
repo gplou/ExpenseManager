@@ -76,10 +76,6 @@
 -keep class es.antonborri.home_widget.** { *; }
 -dontwarn es.antonborri.home_widget.**
 
-# speech_to_text
--keep class com.csdcorp.speech_to_text.** { *; }
--dontwarn com.csdcorp.speech_to_text.**
-
 # Suppress R8 warnings for missing Play Store classes
 -dontwarn com.google.android.play.**
 

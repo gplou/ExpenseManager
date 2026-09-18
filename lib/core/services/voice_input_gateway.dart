@@ -1,54 +1,79 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:speech_to_text/speech_to_text.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 
-/// Thin abstraction over `package:speech_to_text` so widgets that drive
-/// the microphone can be tested without the platform plugin.
+/// Thin abstraction over `package:record` so widgets that drive the
+/// microphone can be tested without the platform plugin.
 ///
-/// Only the subset actually used by the app is exposed (initialize, listen
-/// with a locale + result callback, stop). Keep it small.
+/// Records raw audio (never transcribes on-device) — the file is sent to
+/// [VoiceTransactionParser], which hands it to Gemini for both the
+/// transcription and the transaction field extraction.
 abstract interface class VoiceInputGateway {
-  Future<bool> initialize({SpeechErrorListener? onError});
+  /// The MIME type of the file [stop] resolves to — sent alongside the
+  /// audio bytes so the caller never has to know the concrete encoder.
+  String get mimeType;
 
-  Future<void> listen({
-    required String localeId,
-    required SpeechResultListener onResult,
-  });
+  /// Checks (and, unless already decided, requests) the microphone
+  /// permission.
+  Future<bool> hasPermission();
 
-  Future<void> stop();
+  /// Starts recording to a fresh temporary file.
+  Future<void> start();
 
-  /// Maps an app locale code (es/en/fr/de) to the speech_to_text locale id
-  /// it expects. Shared by every voice-capture entry point (quick-capture
-  /// widget and the in-screen mic button).
-  static String localeIdFor(String langCode) => switch (langCode) {
-        'es' => 'es_ES',
-        'en' => 'en_US',
-        'fr' => 'fr_FR',
-        'de' => 'de_DE',
-        _ => 'en_US',
-      };
+  /// Stops recording and returns the recorded file path, or `null` if
+  /// nothing was captured.
+  Future<String?> stop();
+
+  /// Stops and discards the current recording (e.g. on dispose).
+  Future<void> cancel();
 }
 
-class SpeechToTextGateway implements VoiceInputGateway {
-  SpeechToTextGateway() : _speech = SpeechToText();
-  final SpeechToText _speech;
+class AudioRecorderGateway implements VoiceInputGateway {
+  AudioRecorderGateway() : _recorder = AudioRecorder();
+  final AudioRecorder _recorder;
+
+  /// WAV needs no container/codec negotiation with Gemini (unlike e.g.
+  /// `record`'s AAC-LC, which writes an MPEG-4/m4a container that would
+  /// need relabeling), at the cost of a larger upload than a compressed
+  /// codec would produce. 16kHz mono keeps that cost down.
+  @override
+  final String mimeType = 'audio/wav';
 
   @override
-  Future<bool> initialize({SpeechErrorListener? onError}) {
-    return _speech.initialize(onError: onError);
+  Future<bool> hasPermission() => _recorder.hasPermission();
+
+  @override
+  Future<void> start() async {
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/voice_capture_${clock.now().microsecondsSinceEpoch}.wav';
+    await _recorder.start(
+      const RecordConfig(
+        encoder: AudioEncoder.wav,
+        sampleRate: 16000,
+        numChannels: 1,
+      ),
+      path: path,
+    );
+    // The platform recorder can silently fail to actually start (e.g. an
+    // AudioRecord init failure) while still resolving this call normally —
+    // isRecording() is the one reliable way to catch that immediately
+    // instead of only noticing 20s later from an unusably short file.
+    if (!await _recorder.isRecording()) {
+      throw StateError('Recorder failed to start');
+    }
   }
 
   @override
-  Future<void> listen({
-    required String localeId,
-    required SpeechResultListener onResult,
-  }) {
-    return _speech.listen(localeId: localeId, onResult: onResult);
-  }
+  Future<String?> stop() => _recorder.stop();
 
   @override
-  Future<void> stop() => _speech.stop();
+  Future<void> cancel() => _recorder.cancel();
 }
 
 final voiceInputGatewayProvider = Provider<VoiceInputGateway>((ref) {
-  return SpeechToTextGateway();
+  final gateway = AudioRecorderGateway();
+  ref.onDispose(() => gateway._recorder.dispose());
+  return gateway;
 });

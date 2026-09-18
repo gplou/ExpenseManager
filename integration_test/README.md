@@ -58,7 +58,7 @@ why it doesn't run per-PR.
 Reach for `integration_test/` when **any** of the following hold:
 
 - The flow needs platform channels we can't easily mock (RevenueCat
-  paywall, speech recognition, image picker, home widget callbacks,
+  paywall, audio recording, image picker, home widget callbacks,
   flutter_secure_storage hardware backing, etc.).
 - It exercises GoRouter navigation across more than 2-3 screens, since
   widget tests with a real router quickly become unmaintainable.

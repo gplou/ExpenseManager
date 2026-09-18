@@ -1,9 +1,10 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
-/// Simple sliding-window rate limiter for AI calls (currently just the
-/// financial chat — voice/image transaction parsing moved to on-device
-/// heuristics and no longer needs rate limiting).
+/// Simple sliding-window rate limiter for AI calls: the financial chat and
+/// voice transaction parsing share this single client-side budget (each
+/// also has its own separate server-side bucket). Image/receipt parsing
+/// runs on-device and needs no rate limiting.
 class AiRateLimiter {
   AiRateLimiter._();
   static final instance = AiRateLimiter._();

@@ -6,23 +6,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:speech_to_text/speech_recognition_error.dart';
 
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/app_constants.dart';
-import 'package:expense_manager/core/providers/locale_provider.dart';
+import 'package:expense_manager/core/errors/failure_localizations.dart';
+import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/providers/widget_action_provider.dart';
 import 'package:expense_manager/core/services/analytics_service.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
 import 'package:expense_manager/core/services/sentry_service.dart';
-import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
-import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
+import 'package:expense_manager/features/transactions/presentation/providers/voice_capture_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
@@ -73,20 +72,21 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
   VoiceInputState _voiceState = VoiceInputState.idle;
   bool _handledInitialWidgetAction = false;
 
-  late final VoiceInputGateway _speech;
-  late final VoiceTransactionParser _parser;
   late final ImageInputGateway _imagePicker;
   late final ImageTransactionParser _imageParser;
+  late final VoiceCaptureNotifier _voiceCapture;
 
   static const double _overlaySize = 64;
+  Timer? _voiceMaxDurationTimer;
 
   @override
   void initState() {
     super.initState();
-    _speech = ref.read(voiceInputGatewayProvider);
     _imagePicker = ref.read(imageInputGatewayProvider);
-    _parser = ref.read(voiceTransactionParserProvider);
     _imageParser = ref.read(imageTransactionParserProvider);
+    // Captured once: `ref.read` is unsafe from dispose() once the widget is
+    // being unmounted, so the notifier reference is stored instead.
+    _voiceCapture = ref.read(voiceCaptureProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _handledInitialWidgetAction) return;
       final action = ref.read(pendingWidgetActionProvider);
@@ -100,7 +100,13 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
 
   @override
   void dispose() {
-    _speech.stop();
+    _voiceMaxDurationTimer?.cancel();
+    // Only cancels if this host's own recording is still active — a no-op
+    // if a different voice entry point (e.g. the in-sheet mic) owns the
+    // current capture.
+    if (_voiceState == VoiceInputState.listening) {
+      _voiceCapture.cancelIfRecording();
+    }
     super.dispose();
   }
 
@@ -173,60 +179,34 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
     _startCamera();
   }
 
-  /// `speech_to_text` keeps calling this for the lifetime of the recognizer,
-  /// not just during `initialize()` — most notably for "no speech"/"no
-  /// match" once listening has started, which previously reset the voice
-  /// state silently with no feedback at all.
-  void _handleVoiceError(SpeechRecognitionError error) {
-    if (!mounted) return;
-    setState(() => _voiceState = VoiceInputState.idle);
-    _showSnack((l10n) => error.permanent ? l10n.micUnavailable : l10n.voiceInterpretError);
-  }
-
   Future<void> _startVoice() async {
-    final available = await _speech.initialize(onError: _handleVoiceError);
-
-    if (!available) {
+    final started = await _voiceCapture.start();
+    if (!mounted) return;
+    if (!started) {
       _showSnack((l10n) => l10n.micUnavailable);
       return;
     }
 
     setState(() => _voiceState = VoiceInputState.listening);
-    AnalyticsService.track(AnalyticsService.voiceUsed);
 
-    final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
-    try {
-      await _speech.listen(
-        localeId: VoiceInputGateway.localeIdFor(langCode),
-        onResult: (result) {
-          if (result.finalResult) _processVoice(result.recognizedWords);
-        },
-      );
-    } catch (e, st) {
-      // El reconocedor puede dejar de estar disponible entre initialize() y
-      // listen() (servicio del sistema caído, permiso revocado, etc.).
-      unawaited(SentryService.captureException(e, stackTrace: st));
-      if (!mounted) return;
-      setState(() => _voiceState = VoiceInputState.idle);
-      _showSnack((l10n) => l10n.micUnavailable);
-    }
+    _voiceMaxDurationTimer?.cancel();
+    _voiceMaxDurationTimer = Timer(VoiceCaptureNotifier.maxDuration, () {
+      if (_voiceState == VoiceInputState.listening) _stopAndProcessVoice();
+    });
   }
 
-  Future<void> _processVoice(String text) async {
-    if (text.trim().isEmpty) {
-      if (mounted) setState(() => _voiceState = VoiceInputState.idle);
-      return;
-    }
+  Future<void> _stopAndProcessVoice() async {
+    _voiceMaxDurationTimer?.cancel();
     setState(() => _voiceState = VoiceInputState.processing);
     ParsedVoiceTransaction? parsed;
     try {
       final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
-      final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
-      parsed = await _parser.parse(
-        text,
-        langCode: langCode,
-        subcategories: subcats,
-      );
+      parsed = await _voiceCapture.stopAndProcess(subcategories: subcats);
+    } on AppFailure catch (f) {
+      if (!mounted) return;
+      setState(() => _voiceState = VoiceInputState.idle);
+      _showSnack((l10n) => f.localizedMessage(l10n));
+      return;
     } catch (e, st) {
       // El detalle técnico va a Sentry; al usuario solo un mensaje accionable.
       unawaited(SentryService.captureException(e, stackTrace: st));
@@ -241,12 +221,14 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
       _showSnack((l10n) => l10n.voiceInterpretError);
       return;
     }
-    await _speech.stop();
     setState(() => _voiceState = VoiceInputState.idle);
     _openSheet(voiceData: parsed);
   }
 
   Future<void> _startCamera() async {
+    // A voice recording only this host can own is active — don't let a
+    // photo capture silently take over and orphan it.
+    if (_voiceState == VoiceInputState.listening) return;
     final ctx = rootNavigatorKey.currentContext;
     if (ctx == null || !ctx.mounted) return;
 
@@ -364,10 +346,7 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
       button: true,
       label: l10n.voiceListening,
       child: GestureDetector(
-        onTap: () async {
-          await _speech.stop();
-          if (mounted) setState(() => _voiceState = VoiceInputState.idle);
-        },
+        onTap: _stopAndProcessVoice,
         child: Container(
           width: _overlaySize,
           height: _overlaySize,

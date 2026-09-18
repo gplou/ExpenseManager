@@ -76,10 +76,11 @@ final reply = await repo.sendMessage(message: 'Hola', history: const []);
 expect(reply, '¡Hola! ¿En qué te ayudo?');
 ```
 
-Voice/receipt transaction parsing (`VoiceTransactionParser`, `ImageTransactionParser`)
-runs entirely on-device (no Edge Function, no Supabase mock needed) — see
-`local_nlp/` unit tests and `voice_transaction_parser_test.dart` /
-`image_transaction_parser_test.dart` for that pattern instead.
+`VoiceTransactionParser` also goes through an Edge Function
+(`parse-voice-transaction`) — same `stubFunctionInvoke()` pattern as above,
+see `voice_transaction_parser_test.dart`. `ImageTransactionParser` (receipt
+OCR) runs entirely on-device instead (no Edge Function, no Supabase mock
+needed) — see `local_nlp/` unit tests and `image_transaction_parser_test.dart`.
 
 ### SQLite-backed tests
 ```dart

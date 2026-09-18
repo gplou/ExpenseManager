@@ -103,16 +103,18 @@ RevenueCat (`purchases_flutter`) manages entitlements. `SubscriptionNotifier` (`
 
 ### AI Features
 
-Only the financial chat is AI-backed. It goes through a Supabase Edge Function that proxies to **Gemini 2.5 Flash Lite** (`GOOGLE_AI_KEY` set as a Supabase secret — not in `dart_defines.json`).
+The financial chat and voice transaction capture are AI-backed. Both go through a Supabase Edge Function that proxies to **Gemini 2.5 Flash Lite** (`GOOGLE_AI_KEY` set as a Supabase secret — not in `dart_defines.json`).
 
 - **Financial chat:** `ChatRepository` → Edge Function `chat-transactions`
-- Rate limiting: `AiRateLimiter` (`lib/core/utils/ai_rate_limiter.dart`) allows max 7 calls/minute
+- **Voice parsing:** `VoiceTransactionParser` (`lib/features/transactions/data/`) → Edge Function `parse-voice-transaction`. No on-device speech-to-text: `VoiceInputGateway` (`AudioRecorderGateway`, wraps `package:record`) records raw 16kHz mono WAV, and the audio bytes are sent straight to Gemini along with the device's local date (so relative phrases like "ayer" resolve against the user's calendar day, not the server's UTC clock), which transcribes **and** extracts amount/type/category/subcategory/description/date/recurrence in one call. `ParsedVoiceTransaction.fromAiJson` parses every field defensively (Gemini has no `responseSchema`) and clamps `category` back to "Otros" if it's the *other* type's built-in category (e.g. income-only "Regalo" on an expense).
+- **`VoiceCaptureNotifier`** (`presentation/providers/voice_capture_provider.dart`) is the single owner of the shared recorder: it guards against starting or stopping two captures at once (there's only one microphone), does the stop → read → size-check → parse → temp-file-cleanup sequence once for both entry points (in-screen mic button and the home-widget `QuickCaptureHost` overlay), and exposes `cancelIfRecording()` for `dispose()` hooks — safe to call unconditionally since it no-ops unless a recording is actually active. Each caller owns its own 20s max-duration `Timer` (`VoiceCaptureNotifier.maxDuration`) so its UI updates correctly on auto-stop.
+- Rate limiting: `AiRateLimiter` (`lib/core/utils/ai_rate_limiter.dart`) allows max 7 calls/minute, shared between chat and voice (each also has its own separate server-side bucket). Client timeouts are set above the edge function's own 25s Gemini-call abort (chat: 30s, voice: 30s) so the server's own result/timeout wins the race instead of the client discarding a call that might still succeed.
+- Edge functions share `supabase/functions/_shared/` (`http.ts`, `auth.ts`, `rate_limit.ts`, `gemini.ts`) for CORS, auth+PRO gating, rate-limit checks, and the Gemini fetch — don't reimplement these inline in a new function.
 
-Voice and photo transaction capture are **not** AI — both parse entirely on-device (no network call, no PRO-tier API cost), trading some accuracy for privacy and zero marginal cost:
+Photo/receipt transaction capture is **not** AI — it parses entirely on-device (no network call, no PRO-tier API cost), trading some accuracy for privacy and zero marginal cost:
 
-- **Voice parsing:** `VoiceTransactionParser` (`lib/features/transactions/data/`) takes the `speech_to_text` transcription and runs it through `lib/features/transactions/data/local_nlp/` — keyword/regex heuristics (amount, expense/income, category, date phrase, recurrence phrase), per locale (es/en/fr/de). The full transcription is kept as the description.
-- **Image parsing:** `ImageTransactionParser` runs on-device OCR via `ReceiptOcrGateway` (`lib/core/services/receipt_ocr_gateway.dart`, wraps `google_mlkit_text_recognition`) on the picked receipt photo, then applies the same `local_nlp` heuristics (`ReceiptAmountFinder` for the total, `CategoryMatcher` for the category from the recognized text).
-- Both remain gated behind the PRO entitlement (unchanged) even though there's no AI cost to protect anymore — kept simple, revisit if there's a product reason to free-gate them.
+- **Image parsing:** `ImageTransactionParser` runs on-device OCR via `ReceiptOcrGateway` (`lib/core/services/receipt_ocr_gateway.dart`, wraps `google_mlkit_text_recognition`) on the picked receipt photo, then applies `lib/features/transactions/data/local_nlp/` heuristics (`ReceiptAmountFinder` for the total, `CategoryMatcher` for the category from the recognized text).
+- Both voice and photo remain gated behind the PRO entitlement.
 
 ### Currency
 
@@ -169,7 +171,7 @@ Full conventions live in `test/README.md`. Key points for new tests:
 - **Mocks** are centralised in `test/helpers/mocks.dart`. Add new mocks there rather than declaring one-off mocks inside test files. Call `registerCommonFallbacks()` once in `setUpAll` when using `any()` with `DateTime`/`Duration`/`Package`/maps.
 - **Riverpod**: build containers with `makeContainer([overrides])` from `helpers/provider_container_helper.dart` — it auto-disposes. Override the repository provider, not the notifier.
 - **SQLite**: `await useInMemoryDatabase()` in `setUp` (from `helpers/local_db_helper.dart`) opens an in-memory DB, creates the schema, and registers tear-down.
-- **Supabase Edge Functions**: stub `SupabaseClient.functions.invoke(...)` via `stubFunctionInvoke()` + `okFunctionResponse()` from `helpers/supabase_function_helper.dart`. The AI parsers (`voice_transaction_parser`, `image_transaction_parser`) and `chat_repository` all go through this path.
+- **Supabase Edge Functions**: stub `SupabaseClient.functions.invoke(...)` via `stubFunctionInvoke()` + `okFunctionResponse()` from `helpers/supabase_function_helper.dart`. `voice_transaction_parser` and `chat_repository` go through this path (`image_transaction_parser` doesn't — it's on-device OCR).
 - **Time**: production code should depend on `package:clock` and call `clock.now()` (not `DateTime.now()`). Tests pin time with `withFixedClock()` / `withFakeAsyncAndClock()` from `helpers/clock_helper.dart`.
 - **Widget tests**: use `pumpWithProviders` / `pumpScreen` from `helpers/pump_app.dart` for `ProviderScope` + `MaterialApp` + l10n preloaded.
 
