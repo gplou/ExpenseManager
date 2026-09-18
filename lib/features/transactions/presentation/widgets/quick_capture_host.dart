@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/app_constants.dart';
@@ -172,12 +173,18 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
     _startCamera();
   }
 
+  /// `speech_to_text` keeps calling this for the lifetime of the recognizer,
+  /// not just during `initialize()` — most notably for "no speech"/"no
+  /// match" once listening has started, which previously reset the voice
+  /// state silently with no feedback at all.
+  void _handleVoiceError(SpeechRecognitionError error) {
+    if (!mounted) return;
+    setState(() => _voiceState = VoiceInputState.idle);
+    _showSnack((l10n) => error.permanent ? l10n.micUnavailable : l10n.voiceInterpretError);
+  }
+
   Future<void> _startVoice() async {
-    final available = await _speech.initialize(
-      onError: (_) {
-        if (mounted) setState(() => _voiceState = VoiceInputState.idle);
-      },
-    );
+    final available = await _speech.initialize(onError: _handleVoiceError);
 
     if (!available) {
       _showSnack((l10n) => l10n.micUnavailable);
@@ -188,12 +195,21 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
     AnalyticsService.track(AnalyticsService.voiceUsed);
 
     final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
-    await _speech.listen(
-      localeId: VoiceInputGateway.localeIdFor(langCode),
-      onResult: (result) {
-        if (result.finalResult) _processVoice(result.recognizedWords);
-      },
-    );
+    try {
+      await _speech.listen(
+        localeId: VoiceInputGateway.localeIdFor(langCode),
+        onResult: (result) {
+          if (result.finalResult) _processVoice(result.recognizedWords);
+        },
+      );
+    } catch (e, st) {
+      // El reconocedor puede dejar de estar disponible entre initialize() y
+      // listen() (servicio del sistema caído, permiso revocado, etc.).
+      unawaited(SentryService.captureException(e, stackTrace: st));
+      if (!mounted) return;
+      setState(() => _voiceState = VoiceInputState.idle);
+      _showSnack((l10n) => l10n.micUnavailable);
+    }
   }
 
   Future<void> _processVoice(String text) async {

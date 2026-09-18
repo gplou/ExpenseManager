@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -78,6 +80,53 @@ class _AutoVoiceGateway extends Fake implements VoiceInputGateway {
       [SpeechRecognitionWords(text, null, 1.0)],
       true,
     ));
+  }
+
+  @override
+  Future<void> stop() async {}
+}
+
+/// initialize() reports the recognizer as available, but listen() throws —
+/// reproduces EXPENSE-MANAGER-1G: the OS speech service can die (or a
+/// permission get revoked) in the gap between the two calls.
+class _ListenThrowsVoiceGateway extends Fake implements VoiceInputGateway {
+  @override
+  Future<bool> initialize({SpeechErrorListener? onError}) async => true;
+
+  @override
+  Future<void> listen({
+    required String localeId,
+    required SpeechResultListener onResult,
+  }) {
+    throw PlatformException(
+      code: 'recognizerNotAvailable',
+      message: 'Speech recognition not available on this device',
+    );
+  }
+
+  @override
+  Future<void> stop() async {}
+}
+
+/// initialize() succeeds, but the recognizer reports a transient "couldn't
+/// understand" error (e.g. no speech / no match) once listening starts,
+/// instead of ever calling onResult — this is `speech_to_text`'s normal way
+/// of saying it heard nothing useful, not a hard failure.
+class _NoMatchVoiceGateway extends Fake implements VoiceInputGateway {
+  SpeechErrorListener? _onError;
+
+  @override
+  Future<bool> initialize({SpeechErrorListener? onError}) async {
+    _onError = onError;
+    return true;
+  }
+
+  @override
+  Future<void> listen({
+    required String localeId,
+    required SpeechResultListener onResult,
+  }) async {
+    _onError?.call(SpeechRecognitionError('error_no_match', false));
   }
 
   @override
@@ -508,6 +557,56 @@ void main() {
 
     expect(find.textContaining('20'), findsAtLeastNWidgets(1));
     expect(find.text('Comida'), findsOneWidget);
+  });
+
+  // Regression: EXPENSE-MANAGER-1G — PlatformException(recognizerNotAvailable)
+  // from speech_to_text.listen() went unhandled (initialize() had already
+  // reported the recognizer as available, so the app had no reason to
+  // expect a failure right after). The mic UI should recover instead of
+  // leaving the screen stuck and crashing.
+  testWidgets(
+      'listen() throwing recognizerNotAvailable resets the mic button '
+      'instead of crashing', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(
+      voiceGateway: _ListenThrowsVoiceGateway(),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    await tester.pumpAndSettle();
+
+    // No unhandled exception reaches the test zone (pumpAndSettle would fail
+    // the test), the mic icon is back to its idle state, and the user gets
+    // an actionable message instead of a silently stuck spinner.
+    expect(find.byIcon(PhosphorIcons.microphone()), findsOneWidget);
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.text('Micrófono no disponible'), findsOneWidget);
+  });
+
+  // Regression: the recognizer's onError callback (wired via initialize(),
+  // but invoked by speech_to_text for the whole listening session) reset
+  // _isListening without ever telling the user their speech wasn't
+  // understood — the mic just silently went back to idle.
+  testWidgets(
+      'a transient "no speech understood" error shows an actionable message '
+      'instead of silently resetting', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(
+      voiceGateway: _NoMatchVoiceGateway(),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(PhosphorIcons.microphone()), findsOneWidget);
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.text('No se pudo interpretar. Inténtalo de nuevo.'), findsOneWidget);
   });
 
   // Regression: _applyParsedTransaction only *set* _recurrenceType when the

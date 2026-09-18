@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/test_keys.dart';
@@ -202,11 +203,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (!_requirePro()) return;
 
     final l10n = AppLocalizations.of(context);
-    final available = await _voiceGateway.initialize(
-      onError: (_) {
-        if (mounted) setState(() => _isListening = false);
-      },
-    );
+    final available = await _voiceGateway.initialize(onError: _handleVoiceError);
     if (!available) {
       if (mounted) context.showSnackbar(l10n.micUnavailable, isError: true);
       return;
@@ -215,11 +212,34 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     setState(() => _isListening = true);
 
     final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
-    await _voiceGateway.listen(
-      localeId: VoiceInputGateway.localeIdFor(langCode),
-      onResult: (result) {
-        if (result.finalResult) _handleVoiceResult(result.recognizedWords, langCode);
-      },
+    try {
+      await _voiceGateway.listen(
+        localeId: VoiceInputGateway.localeIdFor(langCode),
+        onResult: (result) {
+          if (result.finalResult) _handleVoiceResult(result.recognizedWords, langCode);
+        },
+      );
+    } catch (e, st) {
+      // El reconocedor puede dejar de estar disponible entre initialize() y
+      // listen() (servicio del sistema caído, permiso revocado, etc.).
+      unawaited(SentryService.captureException(e, stackTrace: st));
+      if (!mounted) return;
+      setState(() => _isListening = false);
+      context.showSnackbar(l10n.micUnavailable, isError: true);
+    }
+  }
+
+  /// `speech_to_text` keeps calling this for the lifetime of the recognizer,
+  /// not just during `initialize()` — most notably for "no speech"/"no
+  /// match" once listening has started, which previously reset the mic
+  /// silently with no feedback at all.
+  void _handleVoiceError(SpeechRecognitionError error) {
+    if (!mounted) return;
+    setState(() => _isListening = false);
+    final l10n = AppLocalizations.of(context);
+    context.showSnackbar(
+      error.permanent ? l10n.micUnavailable : l10n.voiceInterpretError,
+      isError: true,
     );
   }
 

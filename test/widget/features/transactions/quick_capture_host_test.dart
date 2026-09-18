@@ -1,16 +1,20 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/providers/locale_provider.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
+import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/core/theme/app_theme.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
@@ -50,6 +54,53 @@ class _ThrowingImageParser extends Fake implements ImageTransactionParser {
   @override
   Future<ParsedVoiceTransaction?> parse(String imagePath) async =>
       throw Exception('AI backend down');
+}
+
+/// initialize() reports the recognizer as available, but listen() throws —
+/// reproduces EXPENSE-MANAGER-1G: the OS speech service can die (or a
+/// permission get revoked) in the gap between the two calls.
+class _ListenThrowsVoiceGateway extends Fake implements VoiceInputGateway {
+  @override
+  Future<bool> initialize({SpeechErrorListener? onError}) async => true;
+
+  @override
+  Future<void> listen({
+    required String localeId,
+    required SpeechResultListener onResult,
+  }) {
+    throw PlatformException(
+      code: 'recognizerNotAvailable',
+      message: 'Speech recognition not available on this device',
+    );
+  }
+
+  @override
+  Future<void> stop() async {}
+}
+
+/// initialize() succeeds, but the recognizer reports a transient "couldn't
+/// understand" error (e.g. no speech / no match) once listening starts,
+/// instead of ever calling onResult — this is `speech_to_text`'s normal way
+/// of saying it heard nothing useful, not a hard failure.
+class _NoMatchVoiceGateway extends Fake implements VoiceInputGateway {
+  SpeechErrorListener? _onError;
+
+  @override
+  Future<bool> initialize({SpeechErrorListener? onError}) async {
+    _onError = onError;
+    return true;
+  }
+
+  @override
+  Future<void> listen({
+    required String localeId,
+    required SpeechResultListener onResult,
+  }) async {
+    _onError?.call(SpeechRecognitionError('error_no_match', false));
+  }
+
+  @override
+  Future<void> stop() async {}
 }
 
 class _FakeImageGateway implements ImageInputGateway {
@@ -159,5 +210,74 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('Exception'), findsNothing);
+  });
+
+  testWidgets(
+      'listen() throwing recognizerNotAvailable resets voice state instead '
+      'of crashing', (tester) async {
+    late QuickCapture capture;
+    await tester.pumpWidget(_wrap(
+      extraOverrides: [
+        voiceInputGatewayProvider.overrideWithValue(_ListenThrowsVoiceGateway()),
+        allSubcategoriesProvider.overrideWith((ref) async => const []),
+      ],
+      child: Builder(builder: (ctx) {
+        capture = QuickCapture.maybeOf(ctx)!;
+        return const SizedBox.shrink();
+      }),
+    ));
+    await tester.pumpAndSettle();
+
+    // La suscripción tiene que estar resuelta o el gate PRO redirige a /pro.
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MaterialApp)),
+    );
+    await container.read(subscriptionProvider.future);
+    await tester.pump();
+    expect(container.read(isProProvider), isTrue);
+
+    capture.startVoice();
+    await tester.pumpAndSettle();
+
+    // No unhandled exception reaches the test zone (pumpAndSettle would fail
+    // the test) and the user gets an actionable snackbar.
+    expect(find.text('Micrófono no disponible'), findsOneWidget);
+  });
+
+  // Regression: the recognizer's onError callback (wired via initialize(),
+  // but invoked by speech_to_text for the whole listening session) reset
+  // the voice state without ever telling the user their speech wasn't
+  // understood — it just silently went back to idle.
+  testWidgets(
+      'a transient "no speech understood" error shows an actionable '
+      'message instead of silently resetting', (tester) async {
+    late QuickCapture capture;
+    await tester.pumpWidget(_wrap(
+      extraOverrides: [
+        voiceInputGatewayProvider.overrideWithValue(_NoMatchVoiceGateway()),
+        allSubcategoriesProvider.overrideWith((ref) async => const []),
+      ],
+      child: Builder(builder: (ctx) {
+        capture = QuickCapture.maybeOf(ctx)!;
+        return const SizedBox.shrink();
+      }),
+    ));
+    await tester.pumpAndSettle();
+
+    // La suscripción tiene que estar resuelta o el gate PRO redirige a /pro.
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MaterialApp)),
+    );
+    await container.read(subscriptionProvider.future);
+    await tester.pump();
+    expect(container.read(isProProvider), isTrue);
+
+    capture.startVoice();
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('No se pudo interpretar. Inténtalo de nuevo.'),
+      findsOneWidget,
+    );
   });
 }
