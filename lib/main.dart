@@ -20,6 +20,7 @@ import 'package:expense_manager/core/utils/app_logger.dart';
 
 import 'core/config/app_config.dart';
 import 'core/config/screenshot_mode.dart';
+import 'core/config/sentry_filters.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/sentry_provider_observer.dart';
@@ -334,37 +335,7 @@ Future<void> _initSentry(PackageInfo packageInfo) async {
     // Adjunta stack trace también en eventos de mensaje (sin excepción).
     options.attachStacktrace = true;
     options.debug = AppConfig.isDevelopment;
-    // Los reportes de "OnePlus8Pro" con pantalla 288x448 / archs x86 provienen
-    // de emuladores y granjas de testing (pre-launch report de Google Play,
-    // revisores de tiendas) que falsifican el modelo. Corre tras el enriquecido
-    // nativo, así que device.simulator ya está poblado aquí.
-    options.beforeSend = (event, hint) {
-      final isSimulator = event.contexts.device?.simulator ?? false;
-      if (isSimulator) {
-        if (AppConfig.isProduction) return null; // descartar ruido en prod
-        event.tags = {...?event.tags, 'simulator': 'true'}; // visible en dev
-      }
-      // Supabase auto-refreshes the session token in the background. When the
-      // device is offline this always fails with a SocketException / host
-      // lookup error — expected behaviour, not a real bug worth alerting on.
-      final exceptions = event.exceptions ?? [];
-      final isOfflineAuthRefresh = exceptions.any((ex) {
-        final msg = ex.value ?? '';
-        return (msg.contains('Failed host lookup') ||
-                msg.contains('SocketException')) &&
-            msg.contains('auth/v1/token');
-      });
-      if (isOfflineAuthRefresh) return null;
-      // Riverpod completa el `.future` de un provider que muere en pleno load
-      // con este StateError (p. ej. logout/login desmonta
-      // allTransactionsProvider mientras carga). Es ruido de teardown sin
-      // acción posible: el awaiter o se re-construye (watch) o murió con el
-      // mismo scope.
-      final isProviderDisposedMidLoad = exceptions.any((ex) =>
-          (ex.value ?? '').contains('was disposed during loading state'));
-      if (isProviderDisposedMidLoad) return null;
-      return event;
-    };
+    options.beforeSend = filterExpectedNoise;
   });
 }
 
