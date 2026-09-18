@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:expense_manager/core/theme/app_theme.dart';
 import 'package:expense_manager/core/widgets/app_bottom_nav.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/quick_capture_host.dart';
 import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
@@ -70,5 +71,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tocar el botón central abre la hoja manual directamente',
+      (tester) async {
+    var manualCalled = false;
+
+    await tester.pumpWidget(
+      _wrap(
+        QuickCapture(
+          startVoice: () {},
+          startPhoto: () {},
+          openAddSheet: () => manualCalled = true,
+          child: AppBottomNav(currentIndex: 0, onSelect: (_) {}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(TutorialKeys.fabKey));
+    await tester.pumpAndSettle();
+
+    expect(manualCalled, isTrue);
   });
 }

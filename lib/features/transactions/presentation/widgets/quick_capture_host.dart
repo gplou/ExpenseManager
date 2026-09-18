@@ -130,14 +130,6 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
     ctx.push(path).ignore();
   }
 
-  static String _speechLocaleId(String langCode) => switch (langCode) {
-        'es' => 'es_ES',
-        'en' => 'en_US',
-        'fr' => 'fr_FR',
-        'de' => 'de_DE',
-        _ => 'en_US',
-      };
-
   bool _requirePro() {
     if (ref.read(isProProvider)) return true;
     _pushRoute(AppRoutes.pro);
@@ -197,7 +189,7 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
 
     final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
     await _speech.listen(
-      localeId: _speechLocaleId(langCode),
+      localeId: VoiceInputGateway.localeIdFor(langCode),
       onResult: (result) {
         if (result.finalResult) _processVoice(result.recognizedWords);
       },
@@ -213,7 +205,12 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
     ParsedVoiceTransaction? parsed;
     try {
       final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
-      parsed = await _parser.parse(text, subcategories: subcats);
+      final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
+      parsed = await _parser.parse(
+        text,
+        langCode: langCode,
+        subcategories: subcats,
+      );
     } catch (e, st) {
       // El detalle técnico va a Sentry; al usuario solo un mensaje accionable.
       unawaited(SentryService.captureException(e, stackTrace: st));
@@ -288,11 +285,9 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
     File? tempFile;
     try {
       tempFile = File(pickedFile.path);
-      final imageBytes = await tempFile.readAsBytes();
 
-      final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
       final ParsedVoiceTransaction? parsed =
-          await _imageParser.parse(imageBytes, subcategories: subcats);
+          await _imageParser.parse(pickedFile.path);
 
       if (!mounted) return;
       setState(() => _voiceState = VoiceInputState.idle);

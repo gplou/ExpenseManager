@@ -17,8 +17,8 @@ import 'mocks.dart';
 ///
 /// stubFunctionInvoke(
 ///   functions,
-///   functionName: 'parse-voice-transaction',
-///   response: okFunctionResponse({'result': '{"amount":12.5}'}),
+///   functionName: 'chat-transactions',
+///   response: okFunctionResponse({'reply': 'hola'}),
 /// );
 /// ```
 ///

@@ -67,14 +67,19 @@ when(() => supabase.functions).thenReturn(functions);
 
 stubFunctionInvoke(
   functions,
-  functionName: 'parse-voice-transaction',
-  response: okFunctionResponse({'result': '{"amount":12.5,"category":"Comida"}'}),
+  functionName: 'chat-transactions',
+  response: okFunctionResponse({'reply': '¡Hola! ¿En qué te ayudo?'}),
 );
 
-final parser = VoiceTransactionParser(supabase);
-final result = await parser.parse('café cinco euros');
-expect(result?.amount, 12.5);
+final repo = ChatRepository(supabase);
+final reply = await repo.sendMessage(message: 'Hola', history: const []);
+expect(reply, '¡Hola! ¿En qué te ayudo?');
 ```
+
+Voice/receipt transaction parsing (`VoiceTransactionParser`, `ImageTransactionParser`)
+runs entirely on-device (no Edge Function, no Supabase mock needed) — see
+`local_nlp/` unit tests and `voice_transaction_parser_test.dart` /
+`image_transaction_parser_test.dart` for that pattern instead.
 
 ### SQLite-backed tests
 ```dart

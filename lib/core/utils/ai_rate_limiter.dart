@@ -1,10 +1,9 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
-/// Simple sliding-window rate limiter for AI parse calls (voice + image).
-///
-/// Shared singleton so both voice and image parsing count toward the same
-/// per-minute quota.
+/// Simple sliding-window rate limiter for AI calls (currently just the
+/// financial chat — voice/image transaction parsing moved to on-device
+/// heuristics and no longer needs rate limiting).
 class AiRateLimiter {
   AiRateLimiter._();
   static final instance = AiRateLimiter._();

@@ -1,8 +1,6 @@
 @Tags(['golden'])
 library;
 
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +47,7 @@ class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
   @override
   Future<ParsedVoiceTransaction?> parse(
     String transcription, {
+    required String langCode,
     List<Map<String, String>> subcategories = const [],
   }) async =>
       null;
@@ -56,11 +55,7 @@ class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
 
 class _FakeImageParser extends Fake implements ImageTransactionParser {
   @override
-  Future<ParsedVoiceTransaction?> parse(
-    Uint8List imageBytes, {
-    List<Map<String, String>> subcategories = const [],
-  }) async =>
-      null;
+  Future<ParsedVoiceTransaction?> parse(String imagePath) async => null;
 }
 
 class _FakeCurrencyNotifier extends CurrencyNotifier {

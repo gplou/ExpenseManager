@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,6 +40,7 @@ class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
   @override
   Future<ParsedVoiceTransaction?> parse(
     String transcription, {
+    required String langCode,
     List<Map<String, String>> subcategories = const [],
   }) async =>
       null;
@@ -48,10 +48,7 @@ class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
 
 class _ThrowingImageParser extends Fake implements ImageTransactionParser {
   @override
-  Future<ParsedVoiceTransaction?> parse(
-    Uint8List imageBytes, {
-    List<Map<String, String>> subcategories = const [],
-  }) async =>
+  Future<ParsedVoiceTransaction?> parse(String imagePath) async =>
       throw Exception('AI backend down');
 }
 

@@ -103,12 +103,16 @@ RevenueCat (`purchases_flutter`) manages entitlements. `SubscriptionNotifier` (`
 
 ### AI Features
 
-All AI calls go through Supabase Edge Functions, which proxy to **Gemini 2.5 Flash Lite** (`GOOGLE_AI_KEY` set as a Supabase secret — not in `dart_defines.json`).
+Only the financial chat is AI-backed. It goes through a Supabase Edge Function that proxies to **Gemini 2.5 Flash Lite** (`GOOGLE_AI_KEY` set as a Supabase secret — not in `dart_defines.json`).
 
-- **Voice parsing:** `VoiceTransactionParser` (speech_to_text → Edge Function `parse-voice-transaction`) in `lib/features/transactions/data/`
-- **Image parsing:** `ImageTransactionParser` (image_picker → Edge Function `parse-image-transaction`)
 - **Financial chat:** `ChatRepository` → Edge Function `chat-transactions`
-- Rate limiting: `AiRateLimiter` (`lib/core/utils/ai_rate_limiter.dart`) allows max 7 calls/minute (shared across voice + image)
+- Rate limiting: `AiRateLimiter` (`lib/core/utils/ai_rate_limiter.dart`) allows max 7 calls/minute
+
+Voice and photo transaction capture are **not** AI — both parse entirely on-device (no network call, no PRO-tier API cost), trading some accuracy for privacy and zero marginal cost:
+
+- **Voice parsing:** `VoiceTransactionParser` (`lib/features/transactions/data/`) takes the `speech_to_text` transcription and runs it through `lib/features/transactions/data/local_nlp/` — keyword/regex heuristics (amount, expense/income, category, date phrase, recurrence phrase), per locale (es/en/fr/de). The full transcription is kept as the description.
+- **Image parsing:** `ImageTransactionParser` runs on-device OCR via `ReceiptOcrGateway` (`lib/core/services/receipt_ocr_gateway.dart`, wraps `google_mlkit_text_recognition`) on the picked receipt photo, then applies the same `local_nlp` heuristics (`ReceiptAmountFinder` for the total, `CategoryMatcher` for the category from the recognized text).
+- Both remain gated behind the PRO entitlement (unchanged) even though there's no AI cost to protect anymore — kept simple, revisit if there's a product reason to free-gate them.
 
 ### Currency
 

@@ -31,11 +31,5 @@ enable_signup = true
 [functions.revenuecat-webhook]
 verify_jwt = false
 
-[functions.parse-voice-transaction]
-verify_jwt = false
-
-[functions.parse-image-transaction]
-verify_jwt = false
-
 [functions.chat-transactions]
 verify_jwt = false

@@ -15,6 +15,17 @@ abstract interface class VoiceInputGateway {
   });
 
   Future<void> stop();
+
+  /// Maps an app locale code (es/en/fr/de) to the speech_to_text locale id
+  /// it expects. Shared by every voice-capture entry point (quick-capture
+  /// widget and the in-screen mic button).
+  static String localeIdFor(String langCode) => switch (langCode) {
+        'es' => 'es_ES',
+        'en' => 'en_US',
+        'fr' => 'fr_FR',
+        'de' => 'de_DE',
+        _ => 'en_US',
+      };
 }
 
 class SpeechToTextGateway implements VoiceInputGateway {

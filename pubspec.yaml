@@ -62,10 +62,10 @@ dependencies:
   sign_in_with_apple: ^7.0.0
   crypto: ^3.0.2
 
-  # Voz + IA
+  # Voz / recibos (parsing local, sin IA)
   speech_to_text: ^7.0.0
   image_picker: ^1.1.2
-  image: ^4.2.0
+  google_mlkit_text_recognition: ^0.16.0
 
   # Exportación
   excel: ^4.0.6

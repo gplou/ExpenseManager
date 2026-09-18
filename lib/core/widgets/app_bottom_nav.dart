@@ -135,6 +135,10 @@ class _NavItem extends StatelessWidget {
 
 /// Hueco central: botón de alta de transacción.
 ///
+/// Siempre abre la hoja manual directamente — voz y foto viven como botones
+/// dentro de [AddTransactionScreen] (además del acceso directo desde el
+/// widget de pantalla de inicio).
+///
 /// Lleva [TutorialKeys.fabKey] porque el tutorial mide el objetivo de su
 /// primer paso con esa key, y los flujos E2E la usan como señal de "hemos
 /// llegado al dashboard". Al vivir en el shell hay una única instancia en

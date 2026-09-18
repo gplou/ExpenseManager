@@ -1,13 +1,22 @@
+import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
+import 'package:expense_manager/core/providers/locale_provider.dart';
+import 'package:expense_manager/core/services/image_input_gateway.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
@@ -15,8 +24,10 @@ import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/core/widgets/numeric_keypad.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/data/recurring_transactions_repository.dart';
 import 'package:expense_manager/features/transactions/data/subcategories_repository.dart';
+import 'package:expense_manager/features/transactions/data/voice_transaction_parser.dart';
 import 'package:expense_manager/features/transactions/domain/parsed_voice_transaction.dart';
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
@@ -24,7 +35,6 @@ import 'package:expense_manager/features/transactions/presentation/providers/sub
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/add_transaction_widgets.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/category_picker_sheet.dart';
-import 'package:expense_manager/features/transactions/presentation/widgets/quick_capture_host.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/recent_categories_strip.dart';
 
 /// Presents [AddTransactionScreen] as a draggable bottom sheet covering ~94%
@@ -74,11 +84,15 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   late TransactionType _type;
   late final AmountKeypadController _keypadController;
+  late final VoiceInputGateway _voiceGateway;
+  late final ImageInputGateway _imageGateway;
   String _note = '';
   String? _selectedCategory;
   String? _selectedSubcategory;
   late DateTime _selectedDate;
   bool _isSaving = false;
+  bool _isListening = false;
+  bool _isCapturing = false;
 
   /// null = no repetir. Un valor activo marca la transacción como recurrente.
   RecurrenceType? _recurrenceType;
@@ -93,6 +107,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final v = widget.voiceData;
     _type = t?.type ?? v?.type ?? TransactionType.expense;
     _keypadController = AmountKeypadController();
+    _voiceGateway = ref.read(voiceInputGatewayProvider);
+    _imageGateway = ref.read(imageInputGatewayProvider);
     final initialAmount = t?.amount ?? v?.amount;
     if (initialAmount != null && initialAmount > 0) {
       _keypadController.setValue(initialAmount);
@@ -110,26 +126,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       };
     }
     if (v?.subcategory != null && v?.category != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        try {
-          final repo = ref.read(subcategoriesRepositoryProvider);
-          final existing = await repo.getForCategory(v!.category, v.type);
-          if (!existing.contains(v.subcategory)) {
-            await repo.add(v.category, v.type, v.subcategory!);
-            ref.invalidate(allSubcategoriesProvider);
-          }
-          ref.invalidate(subcategoriesProvider(
-            (category: v.category, type: v.type),
-          ));
-        } catch (e, st) {
-          developer.log(
-            'Failed to ensure voice subcategory',
-            error: e,
-            stackTrace: st,
-          );
-        }
-      });
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _ensureSubcategoryExists(v!));
     }
     if (t?.recurringTransactionId != null) {
       _recurrenceType = RecurrenceType.monthly;
@@ -146,9 +144,189 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
   }
 
+  /// Applies a voice/photo parse result onto the current form fields —
+  /// shared by the initial [widget.voiceData] (widget-triggered capture)
+  /// and the in-screen mic/camera buttons, so both paths behave identically.
+  void _applyParsedTransaction(ParsedVoiceTransaction v) {
+    setState(() {
+      _type = v.type;
+      if (v.amount > 0) _keypadController.setValue(v.amount);
+      if (v.description != null) _note = v.description!;
+      _selectedCategory = v.category;
+      _selectedSubcategory = v.subcategory;
+      if (v.date != null) _selectedDate = v.date!;
+      _recurrenceType = v.isRecurring
+          ? switch (v.recurrenceType) {
+              'weekly' => RecurrenceType.weekly,
+              'annual' => RecurrenceType.annual,
+              _ => RecurrenceType.monthly,
+            }
+          : null;
+    });
+    if (v.subcategory != null) _ensureSubcategoryExists(v);
+  }
+
+  Future<void> _ensureSubcategoryExists(ParsedVoiceTransaction v) async {
+    if (!mounted || v.subcategory == null) return;
+    try {
+      final repo = ref.read(subcategoriesRepositoryProvider);
+      final existing = await repo.getForCategory(v.category, v.type);
+      if (!existing.contains(v.subcategory)) {
+        await repo.add(v.category, v.type, v.subcategory!);
+        ref.invalidate(allSubcategoriesProvider);
+      }
+      ref.invalidate(subcategoriesProvider(
+        (category: v.category, type: v.type),
+      ));
+    } catch (e, st) {
+      developer.log(
+        'Failed to ensure voice subcategory',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  bool _requirePro() {
+    if (ref.read(isProProvider)) return true;
+    context.push(AppRoutes.pro);
+    return false;
+  }
+
+  Future<void> _onTapVoice() async {
+    if (_isListening) {
+      await _voiceGateway.stop();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+    if (!_requirePro()) return;
+
+    final l10n = AppLocalizations.of(context);
+    final available = await _voiceGateway.initialize(
+      onError: (_) {
+        if (mounted) setState(() => _isListening = false);
+      },
+    );
+    if (!available) {
+      if (mounted) context.showSnackbar(l10n.micUnavailable, isError: true);
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _isListening = true);
+
+    final langCode = ref.read(localeProvider).value?.languageCode ?? 'es';
+    await _voiceGateway.listen(
+      localeId: VoiceInputGateway.localeIdFor(langCode),
+      onResult: (result) {
+        if (result.finalResult) _handleVoiceResult(result.recognizedWords, langCode);
+      },
+    );
+  }
+
+  Future<void> _handleVoiceResult(String text, String langCode) async {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    if (text.trim().isEmpty) {
+      setState(() => _isListening = false);
+      return;
+    }
+    setState(() {
+      _isListening = false;
+      _isCapturing = true;
+    });
+    try {
+      final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
+      final parsed = await ref.read(voiceTransactionParserProvider).parse(
+            text,
+            langCode: langCode,
+            subcategories: subcats,
+          );
+      if (!mounted) return;
+      if (parsed == null) {
+        context.showSnackbar(l10n.voiceInterpretError, isError: true);
+      } else {
+        _applyParsedTransaction(parsed);
+      }
+    } catch (e, st) {
+      unawaited(SentryService.captureException(e, stackTrace: st));
+      if (mounted) context.showSnackbar(l10n.aiProcessingError, isError: true);
+    } finally {
+      if (mounted) setState(() => _isCapturing = false);
+    }
+  }
+
+  Future<void> _onTapPhoto() async {
+    if (!_requirePro()) return;
+    final l10n = AppLocalizations.of(context);
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) {
+        final sheetL10n = AppLocalizations.of(sheetCtx);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(PhosphorIcons.camera()),
+                  title: Text(sheetL10n.cameraOption),
+                  onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
+                ),
+                ListTile(
+                  leading: Icon(PhosphorIcons.imagesSquare()),
+                  title: Text(sheetL10n.galleryOption),
+                  onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (source == null || !mounted) return;
+
+    final picked = await _imageGateway.pickImage(
+      source: source,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() => _isCapturing = true);
+    File? tempFile;
+    try {
+      tempFile = File(picked.path);
+      final parsed =
+          await ref.read(imageTransactionParserProvider).parse(picked.path);
+      if (!mounted) return;
+      if (parsed == null) {
+        context.showSnackbar(l10n.imageTransactionNotDetected, isError: true);
+      } else {
+        _applyParsedTransaction(parsed);
+      }
+    } catch (e, st) {
+      unawaited(SentryService.captureException(e, stackTrace: st));
+      if (mounted) context.showSnackbar(l10n.aiProcessingError, isError: true);
+    } finally {
+      try {
+        if (tempFile != null && await tempFile.exists()) {
+          await tempFile.delete();
+        }
+      } catch (_) {}
+      if (mounted) setState(() => _isCapturing = false);
+    }
+  }
+
   @override
   void dispose() {
     _keypadController.dispose();
+    _voiceGateway.stop().ignore();
     super.dispose();
   }
 
@@ -351,19 +529,18 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       appBar: AppBar(
         title: Text(_isEditing ? l10n.editTransaction : l10n.newTransaction),
         actions: [
-          // Entradas de IA. Antes eran dos mini-FAB en el dashboard; al
-          // pasar el FAB a la barra inferior se mudan aquí, que es la
-          // superficie de captura. Ocultas al editar: sobre una
-          // transacción que ya existe no aplican.
           if (!_isEditing) ...[
             IconButton(
               tooltip: l10n.labelVoice,
-              onPressed: () => QuickCapture.maybeOf(context)?.startVoice(),
-              icon: Icon(PhosphorIcons.microphone()),
+              onPressed: _isCapturing ? null : _onTapVoice,
+              icon: _isListening
+                  ? Icon(PhosphorIcons.stop(), color: AppColors.mutedTerra)
+                  : Icon(PhosphorIcons.microphone()),
             ),
             IconButton(
               tooltip: l10n.labelPhoto,
-              onPressed: () => QuickCapture.maybeOf(context)?.startPhoto(),
+              onPressed:
+                  (_isListening || _isCapturing) ? null : _onTapPhoto,
               icon: Icon(PhosphorIcons.camera()),
             ),
           ],

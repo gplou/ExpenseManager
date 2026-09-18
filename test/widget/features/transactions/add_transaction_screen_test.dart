@@ -1,11 +1,12 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
@@ -48,6 +49,7 @@ class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
   @override
   Future<ParsedVoiceTransaction?> parse(
     String transcription, {
+    required String langCode,
     List<Map<String, String>> subcategories = const [],
   }) async =>
       null;
@@ -55,11 +57,84 @@ class _FakeVoiceParser extends Fake implements VoiceTransactionParser {
 
 class _FakeImageParser extends Fake implements ImageTransactionParser {
   @override
+  Future<ParsedVoiceTransaction?> parse(String imagePath) async => null;
+}
+
+/// Immediately "hears" [text] as a final speech result — drives the in-screen
+/// mic button end-to-end without a real microphone.
+class _AutoVoiceGateway extends Fake implements VoiceInputGateway {
+  _AutoVoiceGateway(this.text);
+  final String text;
+
+  @override
+  Future<bool> initialize({SpeechErrorListener? onError}) async => true;
+
+  @override
+  Future<void> listen({
+    required String localeId,
+    required SpeechResultListener onResult,
+  }) async {
+    onResult(SpeechRecognitionResult(
+      [SpeechRecognitionWords(text, null, 1.0)],
+      true,
+    ));
+  }
+
+  @override
+  Future<void> stop() async {}
+}
+
+/// Immediately "picks" a fake file — drives the in-screen camera button
+/// end-to-end without a real picker/camera.
+class _AutoImageGateway extends Fake implements ImageInputGateway {
+  @override
+  Future<XFile?> pickImage({
+    required ImageSource source,
+    double? maxWidth,
+    double? maxHeight,
+    int? imageQuality,
+  }) async =>
+      XFile('/tmp/fake_receipt.jpg');
+}
+
+class _VoiceParserReturning extends Fake implements VoiceTransactionParser {
+  _VoiceParserReturning(this.result);
+  final ParsedVoiceTransaction? result;
+
+  @override
   Future<ParsedVoiceTransaction?> parse(
-    Uint8List imageBytes, {
+    String transcription, {
+    required String langCode,
     List<Map<String, String>> subcategories = const [],
   }) async =>
-      null;
+      result;
+}
+
+/// Returns a different queued result on each successive `parse()` call —
+/// simulates re-tapping the mic to redo a capture.
+class _QueuedVoiceParser extends Fake implements VoiceTransactionParser {
+  _QueuedVoiceParser(this._results);
+  final List<ParsedVoiceTransaction?> _results;
+  int _index = 0;
+
+  @override
+  Future<ParsedVoiceTransaction?> parse(
+    String transcription, {
+    required String langCode,
+    List<Map<String, String>> subcategories = const [],
+  }) async {
+    final result = _results[_index];
+    if (_index < _results.length - 1) _index++;
+    return result;
+  }
+}
+
+class _ImageParserReturning extends Fake implements ImageTransactionParser {
+  _ImageParserReturning(this.result);
+  final ParsedVoiceTransaction? result;
+
+  @override
+  Future<ParsedVoiceTransaction?> parse(String imagePath) async => result;
 }
 
 class _FakeCurrencyNotifier extends CurrencyNotifier {
@@ -135,6 +210,10 @@ Widget _wrap({
   _MockSubRepo? subRepo,
   String currency = 'EUR',
   List<String>? quickCategories,
+  VoiceInputGateway? voiceGateway,
+  ImageInputGateway? imageGateway,
+  VoiceTransactionParser? voiceParser,
+  ImageTransactionParser? imageParser,
 }) {
   SharedPreferences.setMockInitialValues({});
   final repo = subRepo ?? _MockSubRepo();
@@ -147,10 +226,18 @@ Widget _wrap({
     overrides: [
       isProProvider.overrideWithValue(true),
       subcategoriesRepositoryProvider.overrideWithValue(repo),
-      voiceInputGatewayProvider.overrideWithValue(_FakeVoiceGateway()),
-      imageInputGatewayProvider.overrideWithValue(_FakeImageGateway()),
-      voiceTransactionParserProvider.overrideWithValue(_FakeVoiceParser()),
-      imageTransactionParserProvider.overrideWithValue(_FakeImageParser()),
+      voiceInputGatewayProvider.overrideWithValue(
+        voiceGateway ?? _FakeVoiceGateway(),
+      ),
+      imageInputGatewayProvider.overrideWithValue(
+        imageGateway ?? _FakeImageGateway(),
+      ),
+      voiceTransactionParserProvider.overrideWithValue(
+        voiceParser ?? _FakeVoiceParser(),
+      ),
+      imageTransactionParserProvider.overrideWithValue(
+        imageParser ?? _FakeImageParser(),
+      ),
       transactionsRepositoryProvider.overrideWithValue(txR),
       recurringTransactionsRepositoryProvider.overrideWithValue(recR),
       currencyProvider.overrideWith(() => _FakeCurrencyNotifier(currency)),
@@ -373,6 +460,123 @@ void main() {
     expect(find.text('Comida'), findsOneWidget);
     // The parsed note shows up in its pill.
     expect(find.text('Café'), findsOneWidget);
+  });
+
+  // ── In-screen mic/camera buttons ──────────────────────────────────────────────
+
+  testWidgets('mic and camera buttons are hidden while editing',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(
+      transaction: TransactionModel(
+        id: 'tx-1',
+        userId: 'u',
+        amount: 25,
+        type: TransactionType.expense,
+        category: 'Comida',
+        date: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026, 1, 1),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(PhosphorIcons.microphone()), findsNothing);
+    expect(find.byIcon(PhosphorIcons.camera()), findsNothing);
+  });
+
+  testWidgets(
+      'tapping the mic button captures voice and fills the form in place',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(
+      voiceGateway: _AutoVoiceGateway('gasté 20 en comida'),
+      voiceParser: _VoiceParserReturning(const ParsedVoiceTransaction(
+        amount: 20,
+        type: TransactionType.expense,
+        category: 'Comida',
+        description: 'gasté 20 en comida',
+      )),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('20'), findsAtLeastNWidgets(1));
+    expect(find.text('Comida'), findsOneWidget);
+  });
+
+  // Regression: _applyParsedTransaction only *set* _recurrenceType when the
+  // new capture was recurring, never clearing it back to null otherwise —
+  // so redoing a capture without a recurrence phrase kept the transaction
+  // recurring from an earlier, discarded capture.
+  testWidgets(
+      're-tapping the mic without a recurrence phrase clears a previous one',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(
+      voiceGateway: _AutoVoiceGateway('suscripción 10 cada mes'),
+      voiceParser: _QueuedVoiceParser(const [
+        ParsedVoiceTransaction(
+          amount: 10,
+          type: TransactionType.expense,
+          category: 'Ocio',
+          isRecurring: true,
+          recurrenceType: 'monthly',
+        ),
+        ParsedVoiceTransaction(
+          amount: 5,
+          type: TransactionType.expense,
+          category: 'Comida',
+        ),
+      ]),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    await tester.pumpAndSettle();
+    expect(find.text('Mensual'), findsOneWidget);
+
+    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No repetir'), findsOneWidget);
+    expect(find.text('Mensual'), findsNothing);
+  });
+
+  testWidgets(
+      'tapping the camera button opens the source sheet and fills the form',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(500, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_wrap(
+      imageGateway: _AutoImageGateway(),
+      imageParser: _ImageParserReturning(const ParsedVoiceTransaction(
+        amount: 17.5,
+        type: TransactionType.expense,
+        category: 'Comida',
+        description: 'Supermercado',
+      )),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(PhosphorIcons.camera()));
+    await tester.pumpAndSettle();
+
+    // Source picker sheet (Cámara/Galería).
+    expect(find.text('Galería'), findsOneWidget);
+    await tester.tap(find.text('Galería'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('17.5'), findsAtLeastNWidgets(1));
+    expect(find.text('Supermercado'), findsOneWidget);
   });
 
   // ── Category required validation ─────────────────────────────────────────────
