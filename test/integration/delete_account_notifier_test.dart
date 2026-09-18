@@ -59,8 +59,17 @@ class _FakeAuthRepo implements AuthRepositoryContract, SocialAuthContract {
   @override
   Future<void> sendPasswordReset({required String email}) async {}
 
+  /// When true, yields to the event loop before resolving — like a real
+  /// network call would. `container.read(provider.notifier)` schedules an
+  /// autoDispose check via a zero-duration Timer as soon as it's read (read
+  /// = listen + immediately unlisten); without a real async gap here, our
+  /// own `await` never gives that Timer a chance to fire before the method
+  /// resumes, which would hide the race this is meant to reproduce.
+  bool simulateNetworkDelay = false;
+
   @override
   Future<void> deleteAccount() async {
+    if (simulateNetworkDelay) await Future<void>.delayed(Duration.zero);
     if (failDeleteAccount) throw const UnexpectedFailure();
     _user = null;
   }
@@ -144,6 +153,23 @@ void main() {
 
       expect(result, isTrue);
       expect(repo.currentUser, isNull);
+    });
+
+    // Regression: same class of bug as EXPENSE-MANAGER-1E (UnmountedRefException)
+    // but for deleteAccount(), called from AppDrawer the same way as signOut()
+    // — nothing watches authProvider at that call site, so the autoDispose
+    // notifier can be gone by the time the method resumes after the await.
+    test('does not throw if the provider is disposed while deleteAccount is '
+        'in flight (no widget is watching authProvider, like AppDrawer)',
+        () async {
+      repo.simulateNetworkDelay = true;
+      final container = _makeContainer(repo);
+      addTearDown(container.dispose);
+
+      await expectLater(
+        container.read(authProvider.notifier).deleteAccount(),
+        completion(isTrue),
+      );
     });
   });
 

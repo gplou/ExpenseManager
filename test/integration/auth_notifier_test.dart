@@ -43,8 +43,19 @@ class _FakeAuthRepo implements AuthRepositoryContract, SocialAuthContract {
     return _user!;
   }
 
+  /// When true, yields to the event loop before resolving — like a real
+  /// network call would. `container.read(provider.notifier)` schedules an
+  /// autoDispose check via a zero-duration Timer as soon as it's read (read
+  /// = listen + immediately unlisten); without a real async gap here, our
+  /// own `await` never gives that Timer a chance to fire before the method
+  /// resumes, which would hide the race this is meant to reproduce.
+  bool simulateNetworkDelay = false;
+
   @override
-  Future<void> signOut() async => _user = null;
+  Future<void> signOut() async {
+    if (simulateNetworkDelay) await Future<void>.delayed(Duration.zero);
+    _user = null;
+  }
 
   @override
   Future<UserModel> signInWithGoogle() async {
@@ -221,6 +232,27 @@ void main() {
 
       await container.read(authProvider.notifier).signOut();
       expect(container.read(authProvider), isA<Idle>());
+    });
+
+    // Regression: EXPENSE-MANAGER-1E — UnmountedRefException thrown from
+    // `state = Idle()` after `await ...signOut()`. In production, AppDrawer
+    // calls `ref.read(authProvider.notifier).signOut()` with nothing ever
+    // watching `authProvider` (only login/register screens do). authProvider
+    // is autoDispose, so it can be disposed while signOut() is suspended at
+    // the await — this simulates exactly that by invalidating the provider
+    // mid-flight from inside the fake repo's signOut(), instead of relying on
+    // timing.
+    test('does not throw if the provider is disposed while signOut is in flight '
+        '(no widget is watching authProvider, like AppDrawer)', () async {
+      repo.simulateNetworkDelay = true;
+      final container = _makeContainer(repo);
+      addTearDown(container.dispose);
+
+      // No .listen()/.watch() on authProvider anywhere — matches AppDrawer.
+      await expectLater(
+        container.read(authProvider.notifier).signOut(),
+        completes,
+      );
     });
   });
 
