@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -69,8 +68,9 @@ void main() {
     expect(find.byType(RefreshIndicator), findsOneWidget);
   });
 
-  testWidgets('PRO user sees the chat shortcut in the app bar',
-      (tester) async {
+  testWidgets(
+      'the chat shortcut stays hidden in the app bar (no-AI first release), '
+      'for both PRO and non-PRO users', (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -78,20 +78,13 @@ void main() {
       _wrap(dashboardOverrides(user: _alice(), isPro: true)),
     );
     await tester.pumpAndSettle();
-
-    expect(find.byIcon(PhosphorIcons.sparkle()), findsOneWidget);
-  });
-
-  testWidgets('non-PRO user does NOT see the chat shortcut', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(500, 1000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    expect(find.byKey(TutorialKeys.chatBtnKey), findsNothing);
 
     await tester.pumpWidget(
       _wrap(dashboardOverrides(user: _alice(), isPro: false)),
     );
     await tester.pumpAndSettle();
-
-    expect(find.byIcon(PhosphorIcons.sparkle()), findsNothing);
+    expect(find.byKey(TutorialKeys.chatBtnKey), findsNothing);
   });
 
   testWidgets('summary block renders income and expense values',

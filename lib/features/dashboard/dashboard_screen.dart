@@ -204,15 +204,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
           ],
         ),
-        actions: [
-          if (ref.watch(isProProvider))
-            IconButton(
-              key: TutorialKeys.chatBtnKey,
-              icon: Icon(PhosphorIcons.sparkle(), color: cs.onSurface),
-              tooltip: l10n.chatTitle,
-              onPressed: () => context.push(AppRoutes.chat),
-            ),
-        ],
       ),
       body: Stack(
         children: [
