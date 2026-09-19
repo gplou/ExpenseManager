@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -123,13 +123,13 @@ void main() {
     await tester.pumpAndSettle();
 
     // Initially obscured → visibility_outlined icon present
-    expect(find.byIcon(PhosphorIcons.eye()), findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.eyeSlash()), findsNothing);
+    expect(find.byIcon(PhosphorIcons.eye), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.eyeSlash), findsNothing);
 
-    await tester.tap(find.byIcon(PhosphorIcons.eye()));
+    await tester.tap(find.byIcon(PhosphorIcons.eye));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(PhosphorIcons.eyeSlash()), findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.eye()), findsNothing);
+    expect(find.byIcon(PhosphorIcons.eyeSlash), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.eye), findsNothing);
   });
 }

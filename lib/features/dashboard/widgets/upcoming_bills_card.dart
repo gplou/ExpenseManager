@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
@@ -71,7 +71,7 @@ class UpcomingBillsCard extends ConsumerWidget {
                   color: cs.primary.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
-                child: Icon(PhosphorIcons.repeat(),
+                child: Icon(PhosphorIcons.repeat,
                     size: 20, color: cs.primary),
               ),
               const Gap(12),
@@ -110,7 +110,7 @@ class UpcomingBillsCard extends ConsumerWidget {
               ),
               if (onTap != null) ...[
                 const Gap(4),
-                Icon(PhosphorIcons.caretRight(),
+                Icon(PhosphorIcons.caretRight,
                     size: 16, color: appColors.textMuted),
               ],
             ],

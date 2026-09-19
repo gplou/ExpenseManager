@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/services/analytics_service.dart';
@@ -256,7 +256,7 @@ class _WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _OnboardingPage(
-      icon: PhosphorIcons.confetti(),
+      icon: PhosphorIcons.confetti,
       iconColor: AppColors.warmAmber,
       iconBg: AppColors.warmAmberLight,
       title: l10n.onboardingWelcomeTitle,
@@ -272,7 +272,7 @@ class _ManualPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _OnboardingPage(
-      icon: PhosphorIcons.notePencil(),
+      icon: PhosphorIcons.notePencil,
       iconColor: AppColors.dustyTeal,
       iconBg: AppColors.dustyTealLight,
       title: l10n.onboardingManualTitle,
@@ -288,7 +288,7 @@ class _PhotoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _OnboardingPage(
-      icon: PhosphorIcons.camera(),
+      icon: PhosphorIcons.camera,
       iconColor: AppColors.sageGreen,
       iconBg: AppColors.sageGreenLight,
       title: l10n.onboardingPhotoTitle,
@@ -308,7 +308,7 @@ class _VoicePage extends StatelessWidget {
     final tipBorder = context.appColors.borderStrong;
 
     return _OnboardingPage(
-      icon: PhosphorIcons.microphone(),
+      icon: PhosphorIcons.microphone,
       iconColor: AppColors.mutedTerra,
       iconBg: AppColors.mutedTerraLight,
       title: l10n.onboardingVoiceTitle,
@@ -325,7 +325,7 @@ class _VoicePage extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(PhosphorIcons.lightbulb(),
+                Icon(PhosphorIcons.lightbulb,
                     size: 18, color: AppColors.warmAmber),
                 const SizedBox(width: 8),
                 Text(
@@ -339,22 +339,22 @@ class _VoicePage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _VoiceBullet(
-              icon: PhosphorIcons.coins(),
+              icon: PhosphorIcons.coins,
               text: l10n.onboardingVoiceBulletAmount,
               theme: theme,
             ),
             _VoiceBullet(
-              icon: PhosphorIcons.squaresFour(),
+              icon: PhosphorIcons.squaresFour,
               text: l10n.onboardingVoiceBulletCategory,
               theme: theme,
             ),
             _VoiceBullet(
-              icon: PhosphorIcons.arrowElbowDownRight(),
+              icon: PhosphorIcons.arrowElbowDownRight,
               text: l10n.onboardingVoiceBulletSubcategory,
               theme: theme,
             ),
             _VoiceBullet(
-              icon: PhosphorIcons.fileText(),
+              icon: PhosphorIcons.fileText,
               text: l10n.onboardingVoiceBulletDescription,
               theme: theme,
             ),
@@ -412,7 +412,7 @@ class _ListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _OnboardingPage(
-      icon: PhosphorIcons.listBullets(),
+      icon: PhosphorIcons.listBullets,
       iconColor: AppColors.dustyTeal,
       iconBg: AppColors.dustyTealLight,
       title: l10n.onboardingListTitle,
@@ -428,7 +428,7 @@ class _ChartsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _OnboardingPage(
-      icon: PhosphorIcons.chartBar(),
+      icon: PhosphorIcons.chartBar,
       iconColor: AppColors.sageGreen,
       iconBg: AppColors.sageGreenLight,
       title: l10n.onboardingChartsTitle,
@@ -444,7 +444,7 @@ class _DonePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _OnboardingPage(
-      icon: PhosphorIcons.checkCircle(),
+      icon: PhosphorIcons.checkCircle,
       iconColor: AppColors.sageGreen,
       iconBg: AppColors.sageGreenLight,
       title: l10n.onboardingDoneTitle,

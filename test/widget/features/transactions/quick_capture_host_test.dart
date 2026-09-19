@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -324,7 +324,7 @@ void main() {
     // fake gateway does real file IO, so this needs runAsync plus a real
     // (not fake-clock) delay to let that IO actually complete.
     await tester.runAsync(() async {
-      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await tester.tap(find.byIcon(PhosphorIcons.stop));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
     });
@@ -365,7 +365,7 @@ void main() {
 
     capture.startVoice();
     await tester.pumpAndSettle();
-    expect(find.byIcon(PhosphorIcons.stop()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.stop), findsOneWidget);
 
     capture.startPhoto();
     await tester.pumpAndSettle();
@@ -373,6 +373,6 @@ void main() {
     expect(imageGateway.pickCalled, isFalse);
     expect(find.text('Galería'), findsNothing);
     // The voice recording is untouched — still showing as active.
-    expect(find.byIcon(PhosphorIcons.stop()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.stop), findsOneWidget);
   });
 }

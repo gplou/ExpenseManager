@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -344,7 +344,7 @@ Widget _wrap({
 /// Taps the keypad submit key (✓), which saves directly in the single-screen
 /// quick-entry flow.
 Future<void> _tapSave(WidgetTester tester) async {
-  await tester.tap(find.byIcon(PhosphorIcons.check()).first);
+  await tester.tap(find.byIcon(PhosphorIcons.check).first);
   await tester.pumpAndSettle();
 }
 
@@ -376,8 +376,8 @@ void main() {
     await tester.pumpWidget(_wrap(quickCategories: ['Comida', 'Transporte']));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(PhosphorIcons.trendUp()), findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.trendDown()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trendUp), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trendDown), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
     expect(find.text('9'), findsOneWidget);
@@ -423,7 +423,7 @@ void main() {
 
     await _tapSave(tester);
 
-    expect(find.byIcon(PhosphorIcons.warningCircle()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.warningCircle), findsOneWidget);
   });
 
   // ── Type toggle ──────────────────────────────────────────────────────────────
@@ -436,14 +436,14 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(PhosphorIcons.trendUp()));
+    await tester.tap(find.byIcon(PhosphorIcons.trendUp));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(PhosphorIcons.trendDown()));
+    await tester.tap(find.byIcon(PhosphorIcons.trendDown));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(PhosphorIcons.trendUp()), findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.trendDown()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trendUp), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trendDown), findsOneWidget);
   });
 
   testWidgets('switching type clears the selected category', (tester) async {
@@ -459,9 +459,9 @@ void main() {
 
     await tester.tap(find.text('Comida'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(PhosphorIcons.trendUp()));
+    await tester.tap(find.byIcon(PhosphorIcons.trendUp));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(PhosphorIcons.trendDown()));
+    await tester.tap(find.byIcon(PhosphorIcons.trendDown));
     await tester.pumpAndSettle();
 
     // Saving now must complain about the missing category.
@@ -513,7 +513,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(PhosphorIcons.trash()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.trash), findsOneWidget);
   });
 
   // ── Voice mode pre-populates ─────────────────────────────────────────────────
@@ -560,8 +560,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(PhosphorIcons.microphone()), findsNothing);
-    expect(find.byIcon(PhosphorIcons.camera()), findsNothing);
+    expect(find.byIcon(PhosphorIcons.microphone), findsNothing);
+    expect(find.byIcon(PhosphorIcons.camera), findsNothing);
   });
 
   testWidgets(
@@ -586,10 +586,10 @@ void main() {
     // fake-clock) delay to let that IO actually complete before pumping.
     // First tap starts recording, second tap stops it and processes.
     await tester.runAsync(() async {
-      await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+      await tester.tap(find.byIcon(PhosphorIcons.microphone));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
-      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await tester.tap(find.byIcon(PhosphorIcons.stop));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
     });
@@ -615,13 +615,13 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+    await tester.tap(find.byIcon(PhosphorIcons.microphone));
     await tester.pumpAndSettle();
 
     // No unhandled exception reaches the test zone (pumpAndSettle would fail
     // the test), the mic icon is back to its idle state, and the user gets
     // an actionable message instead of a silently stuck spinner.
-    expect(find.byIcon(PhosphorIcons.microphone()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.microphone), findsOneWidget);
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('Micrófono no disponible'), findsOneWidget);
   });
@@ -641,16 +641,16 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.runAsync(() async {
-      await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+      await tester.tap(find.byIcon(PhosphorIcons.microphone));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
-      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await tester.tap(find.byIcon(PhosphorIcons.stop));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
     });
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(PhosphorIcons.microphone()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.microphone), findsOneWidget);
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('No se pudo interpretar. Inténtalo de nuevo.'), findsOneWidget);
   });
@@ -686,10 +686,10 @@ void main() {
 
     // Each full capture is start-tap then stop-tap.
     await tester.runAsync(() async {
-      await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+      await tester.tap(find.byIcon(PhosphorIcons.microphone));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
-      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await tester.tap(find.byIcon(PhosphorIcons.stop));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
     });
@@ -697,10 +697,10 @@ void main() {
     expect(find.text('Mensual'), findsOneWidget);
 
     await tester.runAsync(() async {
-      await tester.tap(find.byIcon(PhosphorIcons.microphone()));
+      await tester.tap(find.byIcon(PhosphorIcons.microphone));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
-      await tester.tap(find.byIcon(PhosphorIcons.stop()));
+      await tester.tap(find.byIcon(PhosphorIcons.stop));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
     });
@@ -727,7 +727,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(PhosphorIcons.camera()));
+    await tester.tap(find.byIcon(PhosphorIcons.camera));
     await tester.pumpAndSettle();
 
     // Source picker sheet (Cámara/Galería).
@@ -1031,7 +1031,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(PhosphorIcons.trash()));
+    await tester.tap(find.byIcon(PhosphorIcons.trash));
     await tester.pumpAndSettle();
 
     expect(find.byType(AlertDialog), findsOneWidget);

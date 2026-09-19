@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -46,8 +46,8 @@ class TransactionTypeToggle extends StatelessWidget {
           final isIncome = type.isIncome;
           final color = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
           final iconData = isIncome
-              ? PhosphorIcons.trendUp()
-              : PhosphorIcons.trendDown();
+              ? PhosphorIcons.trendUp
+              : PhosphorIcons.trendDown;
           return Expanded(
             child: Semantics(
               selected: isSelected,
@@ -195,7 +195,7 @@ class AmountDisplay extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      PhosphorIcons.warningCircle(),
+                      PhosphorIcons.warningCircle,
                       size: 14,
                       color: AppColors.mutedTerra,
                     ),
@@ -543,10 +543,10 @@ Future<RecurrenceChoice?> showRecurrenceSheet(
     builder: (ctx) {
       final l10n = AppLocalizations.of(ctx);
       final options = <(RecurrenceType?, IconData, String)>[
-        (null, PhosphorIcons.prohibit(), l10n.noRepeat),
-        (RecurrenceType.weekly, PhosphorIcons.calendarDots(), l10n.weekly),
-        (RecurrenceType.monthly, PhosphorIcons.calendarBlank(), l10n.monthly),
-        (RecurrenceType.annual, PhosphorIcons.repeat(), l10n.yearly),
+        (null, PhosphorIcons.prohibit, l10n.noRepeat),
+        (RecurrenceType.weekly, PhosphorIcons.calendarDots, l10n.weekly),
+        (RecurrenceType.monthly, PhosphorIcons.calendarBlank, l10n.monthly),
+        (RecurrenceType.annual, PhosphorIcons.repeat, l10n.yearly),
       ];
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -667,7 +667,7 @@ class _RecurrenceOption extends StatelessWidget {
                 ),
               ),
               if (selected)
-                Icon(PhosphorIcons.check(), size: 20, color: accent),
+                Icon(PhosphorIcons.check, size: 20, color: accent),
             ],
           ),
         ),
@@ -802,7 +802,7 @@ class SubcategoryPickerSheet extends ConsumerWidget {
                                   .withValues(alpha: 0.12),
                             ),
                             child: Icon(
-                              PhosphorIcons.x(),
+                              PhosphorIcons.x,
                               size: 12,
                               color: isSelected
                                   ? accentColor
@@ -841,7 +841,7 @@ class SubcategoryPickerSheet extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(PhosphorIcons.plus(),
+                        Icon(PhosphorIcons.plus,
                             size: 14, color: AppColors.dustyTeal),
                         const SizedBox(width: AppSpacing.xs),
                         Text(

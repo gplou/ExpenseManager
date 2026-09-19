@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/utils/extensions.dart';
@@ -94,7 +94,7 @@ class _PromoCodeDialogState extends ConsumerState<PromoCodeDialog> {
             enabled: !_loading,
             decoration: InputDecoration(
               hintText: l10n.promoCodeHint,
-              prefixIcon: Icon(PhosphorIcons.tag()),
+              prefixIcon: Icon(PhosphorIcons.tag),
             ),
             onSubmitted: (_) => _applyCode(),
           ),

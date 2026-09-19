@@ -55,7 +55,7 @@ dependencies:
   # UI
   flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
-  phosphor_flutter: ^2.1.0
+  phosphoricons_flutter: ^1.0.0
 
   # Social auth
   google_sign_in: ^7.0.0

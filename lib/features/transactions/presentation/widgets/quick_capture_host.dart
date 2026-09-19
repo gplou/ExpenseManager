@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/app_constants.dart';
@@ -250,12 +250,12 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: Icon(PhosphorIcons.camera()),
+                  leading: Icon(PhosphorIcons.camera),
                   title: Text(l10n.cameraOption),
                   onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
                 ),
                 ListTile(
-                  leading: Icon(PhosphorIcons.imagesSquare()),
+                  leading: Icon(PhosphorIcons.imagesSquare),
                   title: Text(l10n.galleryOption),
                   onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
                 ),
@@ -360,7 +360,7 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
             color: Colors.red,
             shape: BoxShape.circle,
           ),
-          child: Icon(PhosphorIcons.stop(), color: Colors.white, size: 28),
+          child: Icon(PhosphorIcons.stop, color: Colors.white, size: 28),
         ),
       ),
     );

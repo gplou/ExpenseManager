@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_elevation.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
@@ -222,7 +222,7 @@ class _NeoFabState extends State<NeoFab> with SingleTickerProviderStateMixin {
             boxShadow: AppElevation.tinted(effectiveColor, opacity: 0.28),
           ),
           child: Icon(
-            widget.icon ?? PhosphorIcons.plus(),
+            widget.icon ?? PhosphorIcons.plus,
             color: iconColor,
             size: 26,
           ),

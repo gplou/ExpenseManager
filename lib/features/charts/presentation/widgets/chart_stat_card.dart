@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -109,8 +109,8 @@ class ChartStatCard extends StatelessWidget {
                   children: [
                     Icon(
                       isIncome
-                          ? PhosphorIcons.arrowDown()
-                          : PhosphorIcons.arrowUp(),
+                          ? PhosphorIcons.arrowDown
+                          : PhosphorIcons.arrowUp,
                       size: 13,
                       color: accentColor,
                     ),
@@ -161,14 +161,14 @@ class ChartModeSwitch extends StatelessWidget {
         children: [
           ChartModeIcon(
             key: TestKeys.chartsModePie,
-            icon: PhosphorIcons.chartPie(),
+            icon: PhosphorIcons.chartPie,
             isSelected: mode == ChartMode.pie,
             onTap: () => onChanged(ChartMode.pie),
           ),
           const Gap(2),
           ChartModeIcon(
             key: TestKeys.chartsModeBar,
-            icon: PhosphorIcons.chartBar(),
+            icon: PhosphorIcons.chartBar,
             isSelected: mode == ChartMode.bar,
             onTap: () => onChanged(ChartMode.bar),
           ),

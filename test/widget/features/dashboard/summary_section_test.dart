@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:expense_manager/core/theme/app_theme.dart';
@@ -96,7 +96,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(PhosphorIcons.arrowRight()));
+      await tester.tap(find.byIcon(PhosphorIcons.arrowRight));
       await tester.pumpAndSettle();
       expect(taps, 1);
     });

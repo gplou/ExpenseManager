@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -90,9 +90,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // The four benefit icons are present
-    expect(find.byIcon(PhosphorIcons.cloudCheck()), findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.microphone()), findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.robot()), findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.prohibit()), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.cloudCheck), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.microphone), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.robot), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.prohibit), findsOneWidget);
   });
 }

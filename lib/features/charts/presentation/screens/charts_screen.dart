@@ -1,6 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -92,7 +92,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                     Expanded(
                       child: FilterDropdown(
                         key: TestKeys.chartsPeriodButton,
-                        icon: PhosphorIcons.calendar(),
+                        icon: PhosphorIcons.calendar,
                         label: periodLabel,
                         accentColor: AppColors.inkBlue,
                         isActive: customRange != null,
@@ -107,7 +107,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                             ? TransactionCategories.iconFor(
                                 selectedCategory, type,
                                 extra: customCats[type] ?? [])
-                            : PhosphorIcons.squaresFour(),
+                            : PhosphorIcons.squaresFour,
                         label: selectedCategory != null
                             ? TransactionCategories.localizedName(
                                 selectedCategory, l10n)
@@ -235,7 +235,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                 );
               }),
               PickerOption(
-                icon: PhosphorIcons.calendarBlank(),
+                icon: PhosphorIcons.calendarBlank,
                 label: currentCustomRange != null
                     ? '${currentCustomRange.start.day}/${currentCustomRange.start.month}/${currentCustomRange.start.year} – ${currentCustomRange.end.day}/${currentCustomRange.end.month}/${currentCustomRange.end.year}'
                     : l10n.customRange,
@@ -268,11 +268,11 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
   IconData _periodIcon(TransactionPeriod p) {
     switch (p) {
       case TransactionPeriod.week:
-        return PhosphorIcons.calendarDots();
+        return PhosphorIcons.calendarDots;
       case TransactionPeriod.month:
-        return PhosphorIcons.calendarBlank();
+        return PhosphorIcons.calendarBlank;
       case TransactionPeriod.year:
-        return PhosphorIcons.calendar();
+        return PhosphorIcons.calendar;
     }
   }
 
@@ -334,7 +334,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   shrinkWrap: true,
                   children: [
                     PickerOption(
-                      icon: PhosphorIcons.squaresFour(),
+                      icon: PhosphorIcons.squaresFour,
                       label: l10n.allCategories,
                       isSelected: selectedCategory == null,
                       accentColor: accentColor,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
@@ -88,7 +88,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     labelText: l10n.nameLabel,
-                    prefixIcon: Icon(PhosphorIcons.user()),
+                    prefixIcon: Icon(PhosphorIcons.user),
                   ),
                   validator: (v) =>
                       v == null || v.isEmpty ? l10n.enterName : null,
@@ -100,7 +100,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     labelText: l10n.emailLabel,
-                    prefixIcon: Icon(PhosphorIcons.envelopeSimple()),
+                    prefixIcon: Icon(PhosphorIcons.envelopeSimple),
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return l10n.enterEmail;
@@ -116,7 +116,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   onFieldSubmitted: (_) => _handleRegister(),
                   decoration: InputDecoration(
                     labelText: l10n.passwordLabel,
-                    prefixIcon: Icon(PhosphorIcons.lock()),
+                    prefixIcon: Icon(PhosphorIcons.lock),
                     helperText: l10n.passwordMinChars,
                     suffixIcon: IconButton(
                       tooltip: _obscurePassword
@@ -124,8 +124,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           : l10n.hidePassword,
                       icon: Icon(
                         _obscurePassword
-                            ? PhosphorIcons.eye()
-                            : PhosphorIcons.eyeSlash(),
+                            ? PhosphorIcons.eye
+                            : PhosphorIcons.eyeSlash,
                       ),
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),

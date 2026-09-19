@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -78,7 +78,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                PhosphorIcons.sparkle(),
+                PhosphorIcons.sparkle,
                 color: Colors.white,
                 size: 18,
               ),
@@ -132,7 +132,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                PhosphorIcons.sparkle(),
+                PhosphorIcons.sparkle,
                 color: AppColors.dustyTeal,
                 size: 32,
               ),
@@ -297,7 +297,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   )
                 : Icon(
-                    PhosphorIcons.paperPlaneTilt(),
+                    PhosphorIcons.paperPlaneTilt,
                     color: AppColors.dustyTeal,
                   ),
           ),

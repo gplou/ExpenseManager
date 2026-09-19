@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:intl/intl.dart';
 
 import 'package:expense_manager/core/constants/test_keys.dart';
@@ -223,7 +223,7 @@ class NumericKeypad extends StatelessWidget {
                 _digit('8'),
                 _digit('9'),
                 _action(
-                  icon: PhosphorIcons.backspace(),
+                  icon: PhosphorIcons.backspace,
                   semanticLabel: 'Backspace',
                   onTap: controller.backspace,
                   onLongPress: controller.clear,
@@ -326,7 +326,7 @@ class NumericKeypad extends StatelessWidget {
     return _KeypadKey(
       key: TestKeys.keypadSubmit,
       label: submitLabel ?? 'OK',
-      icon: PhosphorIcons.check(),
+      icon: PhosphorIcons.check,
       filled: true,
       fill: fillVertical,
       backgroundColor: accent,

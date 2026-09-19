@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -190,7 +190,7 @@ class SummarySection extends StatelessWidget {
                     ),
                     const Gap(4),
                     Icon(
-                      PhosphorIcons.arrowRight(),
+                      PhosphorIcons.arrowRight,
                       size: 14,
                       color: cs.primary,
                     ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -33,7 +33,7 @@ class TypeToggle extends StatelessWidget {
           Expanded(
             child: TypeTab(
               label: l10n.typeIncome,
-              icon: PhosphorIcons.arrowDown(),
+              icon: PhosphorIcons.arrowDown,
               isSelected: type.isIncome,
               selectedColor: AppColors.positive,
               onTap: () => onChanged(TransactionType.income),
@@ -43,7 +43,7 @@ class TypeToggle extends StatelessWidget {
           Expanded(
             child: TypeTab(
               label: l10n.typeExpense,
-              icon: PhosphorIcons.arrowUp(),
+              icon: PhosphorIcons.arrowUp,
               isSelected: !type.isIncome,
               selectedColor: AppColors.negative,
               onTap: () => onChanged(TransactionType.expense),
@@ -171,7 +171,7 @@ class FilterDropdown extends StatelessWidget {
             ),
             const Gap(AppSpacing.xs),
             Icon(
-              PhosphorIcons.caretDown(),
+              PhosphorIcons.caretDown,
               size: 18,
               color: isActive ? accentColor : context.appColors.textSoft,
             ),
@@ -239,7 +239,7 @@ class PickerOption extends StatelessWidget {
             ),
             if (isSelected)
               Icon(
-                PhosphorIcons.check(),
+                PhosphorIcons.check,
                 size: 18,
                 color: accentColor,
               ),

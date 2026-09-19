@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:expense_manager/core/theme/app_elevation.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
@@ -41,30 +41,30 @@ class AppBottomNav extends StatelessWidget {
           child: Row(
             children: [
               _NavItem(
-                icon: PhosphorIcons.house(),
-                activeIcon: PhosphorIcons.house(PhosphorIconsStyle.fill),
+                icon: PhosphorIcons.house,
+                activeIcon: PhosphorIcons.houseFill,
                 label: l10n.navHome,
                 selected: currentIndex == 0,
                 onTap: () => onSelect(0),
               ),
               _NavItem(
-                icon: PhosphorIcons.listBullets(),
-                activeIcon: PhosphorIcons.listBullets(),
+                icon: PhosphorIcons.listBullets,
+                activeIcon: PhosphorIcons.listBullets,
                 label: l10n.navActivity,
                 selected: currentIndex == 1,
                 onTap: () => onSelect(1),
               ),
               const _FabSlot(),
               _NavItem(
-                icon: PhosphorIcons.target(),
-                activeIcon: PhosphorIcons.target(PhosphorIconsStyle.fill),
+                icon: PhosphorIcons.target,
+                activeIcon: PhosphorIcons.targetFill,
                 label: l10n.navBudgets,
                 selected: currentIndex == 2,
                 onTap: () => onSelect(2),
               ),
               _NavItem(
-                icon: PhosphorIcons.chartBar(),
-                activeIcon: PhosphorIcons.chartBar(PhosphorIconsStyle.fill),
+                icon: PhosphorIcons.chartBar,
+                activeIcon: PhosphorIcons.chartBarFill,
                 label: l10n.navInsights,
                 selected: currentIndex == 3,
                 onTap: () => onSelect(3),
@@ -177,7 +177,7 @@ class _FabSlot extends StatelessWidget {
                     boxShadow: AppElevation.tinted(accent, opacity: 0.22),
                   ),
                   child: Icon(
-                    PhosphorIcons.plus(),
+                    PhosphorIcons.plus,
                     color: accent,
                     size: 26,
                   ),

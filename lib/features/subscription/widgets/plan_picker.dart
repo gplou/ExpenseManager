@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -48,8 +48,8 @@ class PlanPicker extends StatelessWidget {
               children: [
                 Icon(
                   isSelected
-                      ? PhosphorIcons.radioButton(PhosphorIconsStyle.fill)
-                      : PhosphorIcons.circle(),
+                      ? PhosphorIcons.radioButtonFill
+                      : PhosphorIcons.circle,
                   color: isSelected ? AppColors.dustyTeal : AppColors.textMuted,
                   size: 20,
                 ),

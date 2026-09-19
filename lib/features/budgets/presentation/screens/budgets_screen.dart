@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -84,7 +84,7 @@ class BudgetsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         tooltip: l10n.budgetNew,
         onPressed: () => _addBudget(context, ref),
-        child: Icon(PhosphorIcons.plus()),
+        child: Icon(PhosphorIcons.plus),
       ),
       body: progressAsync.when(
         skipLoadingOnReload: true,
@@ -113,7 +113,7 @@ class BudgetsScreen extends ConsumerWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        PhosphorIcons.piggyBank(),
+                        PhosphorIcons.piggyBank,
                         size: 26,
                         color: cs.onSurface.withValues(alpha: 0.5),
                       ),
@@ -162,7 +162,7 @@ class BudgetsScreen extends ConsumerWidget {
                   key: TestKeys.budgetDeleteButton,
                   tooltip: l10n.delete,
                   icon: Icon(
-                    PhosphorIcons.trash(),
+                    PhosphorIcons.trash,
                     size: 20,
                     color: AppColors.mutedTerra,
                   ),

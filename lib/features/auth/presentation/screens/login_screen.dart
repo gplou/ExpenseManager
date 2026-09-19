@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -113,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      PhosphorIcons.wallet(),
+                      PhosphorIcons.wallet,
                       color: AppColors.paper,
                       size: 30,
                     ),
@@ -139,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     labelText: l10n.emailLabel,
-                    prefixIcon: Icon(PhosphorIcons.envelopeSimple()),
+                    prefixIcon: Icon(PhosphorIcons.envelopeSimple),
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return l10n.enterEmail;
@@ -156,15 +156,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onFieldSubmitted: (_) => _handleLogin(),
                   decoration: InputDecoration(
                     labelText: l10n.passwordLabel,
-                    prefixIcon: Icon(PhosphorIcons.lock()),
+                    prefixIcon: Icon(PhosphorIcons.lock),
                     suffixIcon: IconButton(
                       tooltip: _obscurePassword
                           ? l10n.showPassword
                           : l10n.hidePassword,
                       icon: Icon(
                         _obscurePassword
-                            ? PhosphorIcons.eye()
-                            : PhosphorIcons.eyeSlash(),
+                            ? PhosphorIcons.eye
+                            : PhosphorIcons.eyeSlash,
                       ),
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
@@ -225,7 +225,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const Gap(12),
                   _SocialButton(
                     onPressed: isLoading ? null : _handleAppleSignIn,
-                    icon: Icon(PhosphorIcons.appleLogo(), size: 22),
+                    icon: Icon(PhosphorIcons.appleLogo, size: 22),
                     label: l10n.continueWithApple,
                   ),
                 ],

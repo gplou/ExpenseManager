@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -43,7 +43,7 @@ class AppDrawer extends ConsumerWidget {
                   // ── Ajustes de usuario ────────────────────────────────────
                   _SectionLabel(l10n.userSettings),
                   AppListRow(
-                    icon: PhosphorIcons.user(),
+                    icon: PhosphorIcons.user,
                     title: l10n.username,
                     subtitle: user?.name?.isNotEmpty == true
                         ? user!.name!
@@ -52,7 +52,7 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   if (ref.watch(isEmailPasswordUserProvider))
                     AppListRow(
-                      icon: PhosphorIcons.lock(),
+                      icon: PhosphorIcons.lock,
                       title: l10n.changePassword,
                       onTap: () =>
                           _confirmChangePassword(context, ref, user?.email),
@@ -61,7 +61,7 @@ class AppDrawer extends ConsumerWidget {
 
                   // ── Ajustes de la app ──────────────────────────────────────
                   AppListRow(
-                    icon: PhosphorIcons.gear(),
+                    icon: PhosphorIcons.gear,
                     title: l10n.appSettings,
                     onTap: () {
                       Navigator.of(context).pop();
@@ -70,7 +70,7 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   // ── Tutorial ──────────────────────────────────────────────
                   AppListRow(
-                    icon: PhosphorIcons.question(),
+                    icon: PhosphorIcons.question,
                     title: l10n.tutorialTitle,
                     onTap: () {
                       final tutNotifier =
@@ -89,7 +89,7 @@ class AppDrawer extends ConsumerWidget {
                       final sub = ref.watch(subscriptionProvider).value;
                       return ListTile(
                         leading: Icon(
-                          PhosphorIcons.star(),
+                          PhosphorIcons.star,
                           color: isPro
                               ? AppColors.warmAmber
                               : AppColors.textMuted,
@@ -117,7 +117,7 @@ class AppDrawer extends ConsumerWidget {
                               : l10n.proDrawerSubtitle,
                         ),
                         trailing:
-                            Icon(PhosphorIcons.caretRight(), size: 18),
+                            Icon(PhosphorIcons.caretRight, size: 18),
                         onTap: () {
                           Navigator.of(context).pop();
                           context.push(AppRoutes.pro);
@@ -126,7 +126,7 @@ class AppDrawer extends ConsumerWidget {
                     },
                   ),
                   AppListRow(
-                    icon: PhosphorIcons.tag(),
+                    icon: PhosphorIcons.tag,
                     title: AppLocalizations.of(context).promoCodeTitle,
                     onTap: () => _showPromoCodeDialog(context),
                   ),
@@ -138,7 +138,7 @@ class AppDrawer extends ConsumerWidget {
 
             // ── Logout ────────────────────────────────────────────────────
             AppListRow(
-              icon: PhosphorIcons.signOut(),
+              icon: PhosphorIcons.signOut,
               iconColor: context.colors.error,
               title: l10n.logout,
               titleColor: context.colors.error,
@@ -147,7 +147,7 @@ class AppDrawer extends ConsumerWidget {
             ),
             // ── Delete account ────────────────────────────────────────────
             AppListRow(
-              icon: PhosphorIcons.trash(),
+              icon: PhosphorIcons.trash,
               iconColor: context.colors.error,
               title: l10n.deleteAccount,
               titleColor: context.colors.error,
@@ -482,7 +482,7 @@ class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
             labelText: l10n.fullName,
-            prefixIcon: Icon(PhosphorIcons.user()),
+            prefixIcon: Icon(PhosphorIcons.user),
           ),
           onSubmitted: (_) => _save(),
         ),

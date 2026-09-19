@@ -1,6 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
@@ -240,7 +240,7 @@ class _CalendarHeader extends StatelessWidget {
     return Row(
       children: [
         IconButton(
-          icon: Icon(PhosphorIcons.caretLeft()),
+          icon: Icon(PhosphorIcons.caretLeft),
           onPressed: canGoPrev ? onPrev : null,
         ),
         Expanded(
@@ -257,7 +257,7 @@ class _CalendarHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Icon(
-                  PhosphorIcons.caretDown(),
+                  PhosphorIcons.caretDown,
                   size: 20,
                   color: Theme.of(context).colorScheme.primary,
                 ),
@@ -266,7 +266,7 @@ class _CalendarHeader extends StatelessWidget {
           ),
         ),
         IconButton(
-          icon: Icon(PhosphorIcons.caretRight()),
+          icon: Icon(PhosphorIcons.caretRight),
           onPressed: canGoNext ? onNext : null,
         ),
       ],
@@ -480,7 +480,7 @@ class _MonthGridHeader extends StatelessWidget {
     return Row(
       children: [
         IconButton(
-          icon: Icon(PhosphorIcons.caretLeft()),
+          icon: Icon(PhosphorIcons.caretLeft),
           onPressed: canGoPrev ? onPrev : null,
         ),
         Expanded(
@@ -494,7 +494,7 @@ class _MonthGridHeader extends StatelessWidget {
           ),
         ),
         IconButton(
-          icon: Icon(PhosphorIcons.caretRight()),
+          icon: Icon(PhosphorIcons.caretRight),
           onPressed: canGoNext ? onNext : null,
         ),
       ],

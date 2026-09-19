@@ -4,7 +4,7 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -289,7 +289,7 @@ Widget _releaseErrorWidget(FlutterErrorDetails details) {
     child: ColoredBox(
       color: AppColors.paper,
       child: Center(
-        child: Icon(PhosphorIcons.warningCircle(), color: AppColors.graphite, size: 40),
+        child: Icon(PhosphorIcons.warningCircle, color: AppColors.graphite, size: 40),
       ),
     ),
   );
@@ -377,7 +377,7 @@ class _InitErrorApp extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(PhosphorIcons.warningCircle(), size: 48),
+                Icon(PhosphorIcons.warningCircle, size: 48),
                 const SizedBox(height: 16),
                 const Text(
                   AppConfig.appName,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -42,7 +42,7 @@ class CategoryFilterButton extends ConsumerWidget {
     return PopupMenuButton<String>(
       key: TestKeys.transactionsFilterButton,
       icon: Icon(
-        PhosphorIcons.funnel(),
+        PhosphorIcons.funnel,
         color: isActive ? AppColors.dustyTeal : null,
       ),
       tooltip: l10n.category,
@@ -54,7 +54,7 @@ class CategoryFilterButton extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                PhosphorIcons.x(),
+                PhosphorIcons.x,
                 size: 18,
                 color: selectedCategory == null
                     ? AppColors.dustyTeal
@@ -85,8 +85,8 @@ class CategoryFilterButton extends ConsumerWidget {
                 children: [
                   Icon(
                     cat == selectedCategory
-                        ? PhosphorIcons.check()
-                        : PhosphorIcons.tag(),
+                        ? PhosphorIcons.check
+                        : PhosphorIcons.tag,
                     size: 18,
                     color: cat == selectedCategory
                         ? AppColors.dustyTeal

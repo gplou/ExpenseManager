@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -67,7 +67,7 @@ void main() {
     await tester.pumpWidget(_harness());
     await openPicker(tester);
 
-    await tester.tap(find.byIcon(PhosphorIcons.caretRight()).first);
+    await tester.tap(find.byIcon(PhosphorIcons.caretRight).first);
     await tester.pumpAndSettle();
 
     expect(find.text('Junio 2026'), findsOneWidget);
@@ -77,7 +77,7 @@ void main() {
     await tester.pumpWidget(_harness());
     await openPicker(tester);
 
-    await tester.tap(find.byIcon(PhosphorIcons.caretLeft()).first);
+    await tester.tap(find.byIcon(PhosphorIcons.caretLeft).first);
     await tester.pumpAndSettle();
 
     expect(find.text('Abril 2026'), findsOneWidget);

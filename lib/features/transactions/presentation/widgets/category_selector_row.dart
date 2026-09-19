@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -107,7 +107,7 @@ class CategorySelectorRow extends StatelessWidget {
               ),
             ),
             Icon(
-              PhosphorIcons.caretRight(),
+              PhosphorIcons.caretRight,
               color: hasSelection ? accentColor : AppColors.textSubtle,
             ),
           ],

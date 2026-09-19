@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -120,7 +120,7 @@ void main() {
           .ancestor(of: find.text('Food'), matching: find.byType(Stack))
           .first;
       await tester.tap(
-        find.descendant(of: foodTile, matching: find.byIcon(PhosphorIcons.x())),
+        find.descendant(of: foodTile, matching: find.byIcon(PhosphorIcons.x)),
       );
       await tester.pumpAndSettle();
 

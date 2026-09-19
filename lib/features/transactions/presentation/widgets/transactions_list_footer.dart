@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
@@ -33,7 +33,7 @@ class ExportButton extends StatelessWidget {
                     color: AppColors.paper,
                   ),
                 )
-              : Icon(PhosphorIcons.downloadSimple(), size: 18),
+              : Icon(PhosphorIcons.downloadSimple, size: 18),
           label: Text(label),
         ),
       ),
@@ -68,7 +68,7 @@ class DeleteSelectedButton extends StatelessWidget {
                 AppColors.negative.withValues(alpha: 0.4),
             disabledForegroundColor: AppColors.paper,
           ),
-          icon: Icon(PhosphorIcons.trash(), size: 18),
+          icon: Icon(PhosphorIcons.trash, size: 18),
           label: Text('${l10n.delete} ($count)'),
         ),
       ),

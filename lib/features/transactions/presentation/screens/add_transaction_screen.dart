@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/config/router.dart';
@@ -267,12 +267,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: Icon(PhosphorIcons.camera()),
+                  leading: Icon(PhosphorIcons.camera),
                   title: Text(sheetL10n.cameraOption),
                   onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
                 ),
                 ListTile(
-                  leading: Icon(PhosphorIcons.imagesSquare()),
+                  leading: Icon(PhosphorIcons.imagesSquare),
                   title: Text(sheetL10n.galleryOption),
                   onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
                 ),
@@ -531,14 +531,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               tooltip: l10n.labelVoice,
               onPressed: _isCapturing ? null : _onTapVoice,
               icon: _isListening
-                  ? Icon(PhosphorIcons.stop(), color: AppColors.mutedTerra)
-                  : Icon(PhosphorIcons.microphone()),
+                  ? Icon(PhosphorIcons.stop, color: AppColors.mutedTerra)
+                  : Icon(PhosphorIcons.microphone),
             ),
             IconButton(
               tooltip: l10n.labelPhoto,
               onPressed:
                   (_isListening || _isCapturing) ? null : _onTapPhoto,
-              icon: Icon(PhosphorIcons.camera()),
+              icon: Icon(PhosphorIcons.camera),
             ),
           ],
           if (_isEditing)
@@ -547,7 +547,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               tooltip: l10n.delete,
               onPressed: _delete,
               icon: Icon(
-                PhosphorIcons.trash(),
+                PhosphorIcons.trash,
                 color: AppColors.mutedTerra,
               ),
             ),
@@ -633,7 +633,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         padding: EdgeInsets.zero,
         children: [
           DetailPill(
-            icon: PhosphorIcons.calendar(),
+            icon: PhosphorIcons.calendar,
             label: dateLabel,
             active: !isToday,
             accent: _accentColor,
@@ -644,7 +644,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           if (_selectedCategory != null) ...[
             const SizedBox(width: AppSpacing.sm),
             DetailPill(
-              icon: PhosphorIcons.tag(),
+              icon: PhosphorIcons.tag,
               label: _selectedSubcategory ?? l10n.subcategory,
               active: _selectedSubcategory != null,
               accent: _accentColor,
@@ -657,7 +657,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           const SizedBox(width: AppSpacing.sm),
           DetailPill(
             key: TestKeys.transactionNotePill,
-            icon: PhosphorIcons.notePencil(),
+            icon: PhosphorIcons.notePencil,
             label: _note.trim().isEmpty ? l10n.note : _note.trim(),
             active: _note.trim().isNotEmpty,
             accent: _accentColor,
@@ -667,7 +667,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ),
           const SizedBox(width: AppSpacing.sm),
           DetailPill(
-            icon: PhosphorIcons.repeat(),
+            icon: PhosphorIcons.repeat,
             label: recurrenceLabel,
             active: _recurrenceType != null,
             accent: _accentColor,

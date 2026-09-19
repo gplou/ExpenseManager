@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
@@ -32,7 +32,7 @@ class AppListRow extends StatelessWidget {
     Widget? effectiveTrailing = trailing;
     effectiveTrailing ??= onTap != null
         ? Icon(
-            PhosphorIcons.caretRight(),
+            PhosphorIcons.caretRight,
             size: 16,
             color: context.appColors.textMuted,
           )

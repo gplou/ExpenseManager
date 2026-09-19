@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -105,7 +105,7 @@ class _CategoryPickerContent extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(PhosphorIcons.plus(),
+                      Icon(PhosphorIcons.plus,
                           size: 14, color: AppColors.dustyTeal),
                       const Gap(4),
                       Text(
@@ -218,7 +218,7 @@ class _CategoryPickerContent extends ConsumerWidget {
                                 color: AppColors.textMuted.withValues(alpha: 0.12),
                               ),
                               child: Icon(
-                                PhosphorIcons.x(),
+                                PhosphorIcons.x,
                                 size: 11,
                                 color: AppColors.textMuted,
                               ),

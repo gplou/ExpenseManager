@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
@@ -130,8 +130,8 @@ class TransactionTile extends ConsumerWidget {
               child: isSelecting
                   ? Icon(
                       isSelected
-                          ? PhosphorIcons.check()
-                          : PhosphorIcons.circle(),
+                          ? PhosphorIcons.check
+                          : PhosphorIcons.circle,
                       color: isSelected
                           ? cs.onPrimary
                           : cs.onSurface.withValues(alpha: 0.5),
@@ -233,7 +233,7 @@ class TransactionTile extends ConsumerWidget {
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 24),
           color: AppColors.negativeSoft,
-          child: Icon(PhosphorIcons.trash(),
+          child: Icon(PhosphorIcons.trash,
               color: AppColors.negative, size: 22),
         ),
         confirmDismiss: isSelecting

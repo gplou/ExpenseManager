@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -106,7 +106,7 @@ class BudgetsSection extends ConsumerWidget {
                               ),
                             ),
                             const Gap(2),
-                            Icon(PhosphorIcons.caretRight(),
+                            Icon(PhosphorIcons.caretRight,
                                 size: 16, color: cs.primary),
                           ],
                         ),
@@ -153,7 +153,7 @@ class _EmptyCta extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              PhosphorIcons.piggyBank(),
+              PhosphorIcons.piggyBank,
               size: 20,
               color: cs.onSurface.withValues(alpha: 0.6),
             ),
@@ -166,7 +166,7 @@ class _EmptyCta extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(PhosphorIcons.caretRight(),
+            Icon(PhosphorIcons.caretRight,
                 size: 18, color: cs.onSurface.withValues(alpha: 0.4)),
           ],
         ),

@@ -1,6 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -28,7 +28,7 @@ class ProHeader extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            PhosphorIcons.star(),
+            PhosphorIcons.star,
             size: 44,
             color: AppColors.warmAmber,
           ),
@@ -87,7 +87,7 @@ class ActiveProCard extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            PhosphorIcons.sealCheck(),
+            PhosphorIcons.sealCheck,
             color: AppColors.sageGreen,
             size: 28,
           ),
@@ -178,7 +178,7 @@ class BenefitRow extends StatelessWidget {
             ),
           ),
           Icon(
-            PhosphorIcons.checkCircle(),
+            PhosphorIcons.checkCircle,
             color: AppColors.sageGreen,
             size: 18,
           ),
@@ -204,7 +204,7 @@ class FreeTrialCard extends ConsumerWidget {
       child: Column(
         children: [
           Icon(
-            PhosphorIcons.rocketLaunch(),
+            PhosphorIcons.rocketLaunch,
             color: AppColors.dustyTeal,
             size: 32,
           ),

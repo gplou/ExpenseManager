@@ -2,7 +2,7 @@ import 'package:clock/clock.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -90,7 +90,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(PhosphorIcons.sparkle(),
+            Icon(PhosphorIcons.sparkle,
                 color: AppColors.dustyTeal, size: 22),
             const Gap(10),
             Expanded(child: Text(l10n.tutorialDialogTitle)),
@@ -177,7 +177,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         leading: Builder(
           builder: (ctx) => IconButton(
             key: TutorialKeys.drawerBtnKey,
-            icon: Icon(PhosphorIcons.gearSix()),
+            icon: Icon(PhosphorIcons.gearSix),
             tooltip: MaterialLocalizations.of(ctx).openAppDrawerTooltip,
             onPressed: () => Scaffold.of(ctx).openDrawer(),
           ),
@@ -252,7 +252,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           }),
                           IconChip(
                             key: TestKeys.dashboardDateRangeButton,
-                            icon: PhosphorIcons.calendarBlank(),
+                            icon: PhosphorIcons.calendarBlank,
                             isActive: customRange != null,
                             onTap: () async {
                               final range = await showCustomDateRangePicker(
@@ -336,7 +336,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     ),
                                     const Gap(2),
                                     Icon(
-                                      PhosphorIcons.arrowRight(),
+                                      PhosphorIcons.arrowRight,
                                       size: 14,
                                       color: cs.primary,
                                     ),
@@ -509,7 +509,7 @@ class _EmptyTransactions extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  PhosphorIcons.tray(),
+                  PhosphorIcons.tray,
                   size: 24,
                   color: cs.onSurface.withValues(alpha: 0.5),
                 ),

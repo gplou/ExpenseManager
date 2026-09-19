@@ -1,4 +1,4 @@
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/material.dart';
 
 import 'package:expense_manager/l10n/app_localizations.dart';
@@ -147,19 +147,19 @@ class TransactionCategories {
   /// y no se guarda en ningún sitio.
   static IconData phosphorFor(String dbKey, {bool isIncome = false}) =>
       switch (dbKey) {
-        'Salario' => PhosphorIcons.briefcase(),
-        'Freelance' => PhosphorIcons.laptop(),
-        'Inversión' => PhosphorIcons.trendUp(),
-        'Regalo' => PhosphorIcons.gift(),
-        'Comida' => PhosphorIcons.forkKnife(),
-        'Transporte' => PhosphorIcons.car(),
-        'Vivienda' => PhosphorIcons.house(),
-        'Ocio' => PhosphorIcons.gameController(),
-        'Salud' => PhosphorIcons.pill(),
-        'Educación' => PhosphorIcons.books(),
-        'Ropa' => PhosphorIcons.tShirt(),
-        'Tecnología' => PhosphorIcons.lightning(),
-        _ => isIncome ? PhosphorIcons.coins() : PhosphorIcons.receipt(),
+        'Salario' => PhosphorIcons.briefcase,
+        'Freelance' => PhosphorIcons.laptop,
+        'Inversión' => PhosphorIcons.trendUp,
+        'Regalo' => PhosphorIcons.gift,
+        'Comida' => PhosphorIcons.forkKnife,
+        'Transporte' => PhosphorIcons.car,
+        'Vivienda' => PhosphorIcons.house,
+        'Ocio' => PhosphorIcons.gameController,
+        'Salud' => PhosphorIcons.pill,
+        'Educación' => PhosphorIcons.books,
+        'Ropa' => PhosphorIcons.tShirt,
+        'Tecnología' => PhosphorIcons.lightning,
+        _ => isIncome ? PhosphorIcons.coins : PhosphorIcons.receipt,
       };
 
   /// Resolves an emoji honoring user overrides on custom categories,
