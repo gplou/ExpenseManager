@@ -108,10 +108,10 @@ class ActiveProCard extends StatelessWidget {
                 const Gap(2),
                 Text(
                   l10n.proActiveCardExpiry(remaining, sourceLabel),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    color: context.appColors.textMuted,
                   ),
                 ),
               ],
@@ -168,10 +168,10 @@ class BenefitRow extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    color: context.appColors.textMuted,
                   ),
                 ),
               ],
@@ -219,10 +219,10 @@ class FreeTrialCard extends ConsumerWidget {
           const Gap(4),
           Text(
             l10n.proFreeTrialSubtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 13,
-              color: AppColors.textMuted,
+              color: context.appColors.textMuted,
             ),
             textAlign: TextAlign.center,
           ),

@@ -115,27 +115,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       current: _currentPage,
                     ),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: _next,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.dustyTeal,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: Text(
-                          _currentPage == _totalPages - 1
-                              ? l10n.tutorialStart
-                              : l10n.tutorialNext,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                    // El FilledButtonTheme ya da ancho completo, alto 56 y el
+                    // relleno tintado (nunca sólido) que pide Nocturne — no
+                    // hace falta overridear color/forma/tipografía aquí.
+                    FilledButton(
+                      onPressed: _next,
+                      child: Text(
+                        _currentPage == _totalPages - 1
+                            ? l10n.tutorialStart
+                            : l10n.tutorialNext,
                       ),
                     ),
                   ],
@@ -170,7 +158,7 @@ class _DotsIndicator extends StatelessWidget {
           height: 6.0,
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.dustyTeal
+                ? AppColors.inkBlue
                 : context.appColors.borderStrong,
             borderRadius: BorderRadius.circular(3),
           ),
@@ -257,8 +245,8 @@ class _WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _OnboardingPage(
       icon: PhosphorIcons.confetti,
-      iconColor: AppColors.warmAmber,
-      iconBg: AppColors.warmAmberLight,
+      iconColor: AppColors.warning,
+      iconBg: AppColors.warningSoft,
       title: l10n.onboardingWelcomeTitle,
       body: l10n.onboardingWelcomeBody,
     );
@@ -273,8 +261,8 @@ class _ManualPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _OnboardingPage(
       icon: PhosphorIcons.notePencil,
-      iconColor: AppColors.dustyTeal,
-      iconBg: AppColors.dustyTealLight,
+      iconColor: AppColors.inkBlue,
+      iconBg: AppColors.inkBlueSoft,
       title: l10n.onboardingManualTitle,
       body: l10n.onboardingManualBody,
     );
@@ -289,8 +277,8 @@ class _PhotoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _OnboardingPage(
       icon: PhosphorIcons.camera,
-      iconColor: AppColors.sageGreen,
-      iconBg: AppColors.sageGreenLight,
+      iconColor: AppColors.positive,
+      iconBg: AppColors.positiveSoft,
       title: l10n.onboardingPhotoTitle,
       body: l10n.onboardingPhotoBody,
     );
@@ -309,8 +297,8 @@ class _VoicePage extends StatelessWidget {
 
     return _OnboardingPage(
       icon: PhosphorIcons.microphone,
-      iconColor: AppColors.mutedTerra,
-      iconBg: AppColors.mutedTerraLight,
+      iconColor: AppColors.negative,
+      iconBg: AppColors.negativeSoft,
       title: l10n.onboardingVoiceTitle,
       body: l10n.onboardingVoiceBody,
       extra: Container(
@@ -326,12 +314,12 @@ class _VoicePage extends StatelessWidget {
             Row(
               children: [
                 Icon(PhosphorIcons.lightbulb,
-                    size: 18, color: AppColors.warmAmber),
+                    size: 18, color: AppColors.warning),
                 const SizedBox(width: 8),
                 Text(
                   l10n.onboardingVoiceImportant,
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: AppColors.warmAmber,
+                    color: AppColors.warning,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -413,8 +401,8 @@ class _ListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _OnboardingPage(
       icon: PhosphorIcons.listBullets,
-      iconColor: AppColors.dustyTeal,
-      iconBg: AppColors.dustyTealLight,
+      iconColor: AppColors.inkBlue,
+      iconBg: AppColors.inkBlueSoft,
       title: l10n.onboardingListTitle,
       body: l10n.onboardingListBody,
     );
@@ -429,8 +417,8 @@ class _ChartsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _OnboardingPage(
       icon: PhosphorIcons.chartBar,
-      iconColor: AppColors.sageGreen,
-      iconBg: AppColors.sageGreenLight,
+      iconColor: AppColors.positive,
+      iconBg: AppColors.positiveSoft,
       title: l10n.onboardingChartsTitle,
       body: l10n.onboardingChartsBody,
     );
@@ -445,8 +433,8 @@ class _DonePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _OnboardingPage(
       icon: PhosphorIcons.checkCircle,
-      iconColor: AppColors.sageGreen,
-      iconBg: AppColors.sageGreenLight,
+      iconColor: AppColors.positive,
+      iconBg: AppColors.positiveSoft,
       title: l10n.onboardingDoneTitle,
       body: l10n.onboardingDoneBody,
     );

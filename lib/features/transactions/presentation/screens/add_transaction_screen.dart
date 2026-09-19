@@ -64,6 +64,8 @@ Future<void> showAddTransactionSheet(
   );
 }
 
+enum _CaptureKind { voice, photo }
+
 /// Pantalla única de entrada rápida.
 ///
 /// Todo lo necesario para el caso común vive en una sola vista sin pasos:
@@ -93,6 +95,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   bool _isSaving = false;
   bool _isListening = false;
   bool _isCapturing = false;
+  // Cuál de los dos botones (voz/foto) está en la fase de parseo de
+  // _isCapturing, para poder mostrarle el spinner solo a ese botón.
+  _CaptureKind? _captureKind;
 
   /// null = no repetir. Un valor activo marca la transacción como recurrente.
   RecurrenceType? _recurrenceType;
@@ -227,6 +232,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     setState(() {
       _isListening = false;
       _isCapturing = true;
+      _captureKind = _CaptureKind.voice;
     });
     final l10n = AppLocalizations.of(context);
     try {
@@ -245,7 +251,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       unawaited(SentryService.captureException(e, stackTrace: st));
       if (mounted) context.showSnackbar(l10n.aiProcessingError, isError: true);
     } finally {
-      if (mounted) setState(() => _isCapturing = false);
+      if (mounted) {
+        setState(() {
+          _isCapturing = false;
+          _captureKind = null;
+        });
+      }
     }
   }
 
@@ -292,7 +303,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
     if (picked == null || !mounted) return;
 
-    setState(() => _isCapturing = true);
+    setState(() {
+      _isCapturing = true;
+      _captureKind = _CaptureKind.photo;
+    });
     File? tempFile;
     try {
       tempFile = File(picked.path);
@@ -313,7 +327,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           await tempFile.delete();
         }
       } catch (_) {}
-      if (mounted) setState(() => _isCapturing = false);
+      if (mounted) {
+        setState(() {
+          _isCapturing = false;
+          _captureKind = null;
+        });
+      }
     }
   }
 
@@ -528,17 +547,31 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         actions: [
           if (!_isEditing) ...[
             IconButton(
+              key: TestKeys.voiceCaptureButton,
               tooltip: l10n.labelVoice,
               onPressed: _isCapturing ? null : _onTapVoice,
-              icon: _isListening
-                  ? Icon(PhosphorIcons.stop, color: AppColors.mutedTerra)
-                  : Icon(PhosphorIcons.microphone),
+              icon: _captureKind == _CaptureKind.voice
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : _isListening
+                      ? Icon(PhosphorIcons.stop, color: AppColors.mutedTerra)
+                      : Icon(PhosphorIcons.microphone),
             ),
             IconButton(
+              key: TestKeys.photoCaptureButton,
               tooltip: l10n.labelPhoto,
               onPressed:
                   (_isListening || _isCapturing) ? null : _onTapPhoto,
-              icon: Icon(PhosphorIcons.camera),
+              icon: _captureKind == _CaptureKind.photo
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(PhosphorIcons.camera),
             ),
           ],
           if (_isEditing)

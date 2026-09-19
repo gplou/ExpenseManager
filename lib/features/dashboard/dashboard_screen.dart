@@ -11,6 +11,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/app_constants.dart';
+import 'package:expense_manager/core/errors/failure_localizations.dart';
+import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/providers/widget_action_provider.dart';
@@ -254,6 +256,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             key: TestKeys.dashboardDateRangeButton,
                             icon: PhosphorIcons.calendarBlank,
                             isActive: customRange != null,
+                            semanticLabel: l10n.customRange,
                             onTap: () async {
                               final range = await showCustomDateRangePicker(
                                 context: context,
@@ -352,7 +355,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     recentAsync.when(
                       skipLoadingOnReload: true,
                       loading: () => const _RecentTransactionsShimmer(),
-                      error: (e, _) => Text(e.toString()),
+                      error: (e, _) => Text(
+                        e is AppFailure ? e.localizedMessage(l10n) : l10n.errorLoading,
+                      ),
                       data: (transactions) {
                         if (transactions.isEmpty) {
                           return const _EmptyTransactions();

@@ -36,14 +36,24 @@ void main() {
   group('IconChip', () {
     testWidgets('renders icon', (tester) async {
       await tester.pumpWidget(wrap(
-        IconChip(icon: Icons.calendar_today, isActive: false, onTap: () {}),
+        IconChip(
+          icon: Icons.calendar_today,
+          isActive: false,
+          onTap: () {},
+          semanticLabel: 'Rango personalizado',
+        ),
       ));
       expect(find.byIcon(Icons.calendar_today), findsOneWidget);
     });
 
     testWidgets('isActive=true renders correctly', (tester) async {
       await tester.pumpWidget(wrap(
-        IconChip(icon: Icons.filter_alt, isActive: true, onTap: () {}),
+        IconChip(
+          icon: Icons.filter_alt,
+          isActive: true,
+          onTap: () {},
+          semanticLabel: 'Rango personalizado',
+        ),
       ));
       expect(find.byIcon(Icons.filter_alt), findsOneWidget);
     });
@@ -51,7 +61,12 @@ void main() {
     testWidgets('tap invokes callback', (tester) async {
       var taps = 0;
       await tester.pumpWidget(wrap(
-        IconChip(icon: Icons.star, isActive: false, onTap: () => taps++),
+        IconChip(
+          icon: Icons.star,
+          isActive: false,
+          onTap: () => taps++,
+          semanticLabel: 'Rango personalizado',
+        ),
       ));
       await tester.tap(find.byIcon(Icons.star));
       await tester.pumpAndSettle();

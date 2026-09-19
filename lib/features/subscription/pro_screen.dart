@@ -240,9 +240,9 @@ class _ProBodyState extends ConsumerState<_ProBody> {
                       ref.read(subscriptionProvider.notifier).restorePurchases(),
               child: Text(
                 l10n.proRestorePurchases,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
-                  color: AppColors.textMuted,
+                  color: context.appColors.textMuted,
                   fontSize: 13,
                 ),
               ),
@@ -258,9 +258,9 @@ class _ProBodyState extends ConsumerState<_ProBody> {
                       ),
               child: Text(
                 l10n.promoCodeTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
-                  color: AppColors.textMuted,
+                  color: context.appColors.textMuted,
                   fontSize: 13,
                 ),
               ),
@@ -281,10 +281,13 @@ class _ProBodyState extends ConsumerState<_ProBody> {
           // ── Legal disclaimer ──────────────────────────────────────────
           Text(
             l10n.proLegalDisclaimer,
-            style: const TextStyle(
+            // textSubtle/whisper es decorativo (app_colors.dart lo marca
+            // "NO usar para texto"): ~1.8:1 de contraste en claro. textMuted
+            // es el rol correcto para texto secundario legible.
+            style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 11,
-              color: AppColors.textSubtle,
+              color: context.appColors.textMuted,
             ),
             textAlign: TextAlign.center,
           ),
