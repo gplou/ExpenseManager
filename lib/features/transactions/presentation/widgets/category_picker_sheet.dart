@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -83,9 +84,9 @@ class _CategoryPickerContent extends ConsumerWidget {
                 Text(
                   l10n.category.toUpperCase(),
                   style: const TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
                     color: AppColors.textMuted,
                   ),
@@ -104,13 +105,13 @@ class _CategoryPickerContent extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.add_rounded,
+                      Icon(PhosphorIcons.plus,
                           size: 14, color: AppColors.dustyTeal),
                       const Gap(4),
                       Text(
                         l10n.newCategory,
                         style: const TextStyle(
-                          fontFamily: 'GeneralSans',
+                          fontFamily: 'Inter',
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.dustyTeal,
@@ -181,7 +182,7 @@ class _CategoryPickerContent extends ConsumerWidget {
                                 TransactionCategories.localizedName(
                                     cat.name, l10n),
                                 style: TextStyle(
-                                  fontFamily: 'GeneralSans',
+                                  fontFamily: 'Inter',
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: isSelected
@@ -216,8 +217,8 @@ class _CategoryPickerContent extends ConsumerWidget {
                                 shape: BoxShape.circle,
                                 color: AppColors.textMuted.withValues(alpha: 0.12),
                               ),
-                              child: const Icon(
-                                Icons.close_rounded,
+                              child: Icon(
+                                PhosphorIcons.x,
                                 size: 11,
                                 color: AppColors.textMuted,
                               ),
@@ -244,11 +245,12 @@ class _CategoryPickerContent extends ConsumerWidget {
     required bool isCustom,
   }) async {
     final l10n = AppLocalizations.of(context);
+    final displayName = TransactionCategories.localizedName(name, l10n);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.delete),
-        content: Text('"$name"'),
+        content: Text('"$displayName"'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),

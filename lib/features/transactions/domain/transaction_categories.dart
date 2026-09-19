@@ -1,3 +1,4 @@
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/material.dart';
 
 import 'package:expense_manager/l10n/app_localizations.dart';
@@ -136,6 +137,30 @@ class TransactionCategories {
   /// Returns the emoji for a built-in DB category key.
   static String emojiFor(String dbKey, {bool isIncome = false}) =>
       _emojis[dbKey] ?? (isIncome ? '💰' : '💸');
+
+  /// Icono de línea para una categoría built-in.
+  ///
+  /// Deliberadamente separado de [iconFor] y de [pickableIcons]: esos
+  /// exponen `IconData` de Material cuyo codePoint se persiste en
+  /// Supabase/SQLite para las categorías personalizadas. Cambiarlos
+  /// corrompería los iconos ya guardados. Este mapa es solo de presentación
+  /// y no se guarda en ningún sitio.
+  static IconData phosphorFor(String dbKey, {bool isIncome = false}) =>
+      switch (dbKey) {
+        'Salario' => PhosphorIcons.briefcase,
+        'Freelance' => PhosphorIcons.laptop,
+        'Inversión' => PhosphorIcons.trendUp,
+        'Regalo' => PhosphorIcons.gift,
+        'Comida' => PhosphorIcons.forkKnife,
+        'Transporte' => PhosphorIcons.car,
+        'Vivienda' => PhosphorIcons.house,
+        'Ocio' => PhosphorIcons.gameController,
+        'Salud' => PhosphorIcons.pill,
+        'Educación' => PhosphorIcons.books,
+        'Ropa' => PhosphorIcons.tShirt,
+        'Tecnología' => PhosphorIcons.lightning,
+        _ => isIncome ? PhosphorIcons.coins : PhosphorIcons.receipt,
+      };
 
   /// Resolves an emoji honoring user overrides on custom categories,
   /// falling back to [emojiFor] for built-ins.

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
-import 'package:expense_manager/core/theme/app_elevation.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 
-/// Chip de período (Hoy / Semana / Mes / Año). Quieto, sin color de marca:
-/// selected = surface elevada con hairline, idle = transparente.
+/// Chip de período (Semana / Mes / Año).
+///
+/// Seleccionado = contorno del acento sobre fondo transparente, no relleno:
+/// marca el estado sin competir en peso visual con la cifra héroe, que es
+/// lo que la pantalla quiere que mires.
 class PeriodChip extends StatelessWidget {
   const PeriodChip({
     super.key,
@@ -29,13 +31,13 @@ class PeriodChip extends StatelessWidget {
     final FontWeight weight;
 
     if (isSelected) {
-      bg = cs.surface;
-      borderColor = context.appColors.divider;
-      textColor = cs.onSurface;
-      weight = FontWeight.w600;
+      bg = Colors.transparent;
+      borderColor = cs.primary;
+      textColor = cs.primary;
+      weight = FontWeight.w500;
     } else {
       bg = Colors.transparent;
-      borderColor = Colors.transparent;
+      borderColor = context.appColors.divider;
       textColor = context.appColors.textMuted;
       weight = FontWeight.w500;
     }
@@ -53,12 +55,11 @@ class PeriodChip extends StatelessWidget {
           color: bg,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(color: borderColor, width: 1),
-          boxShadow: isSelected ? AppElevation.e1 : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontFamily: 'GeneralSans',
+            fontFamily: 'Inter',
             fontSize: 13,
             fontWeight: weight,
             color: textColor,

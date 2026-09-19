@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -9,7 +10,10 @@ import 'package:expense_manager/features/transactions/presentation/providers/cus
 import 'package:expense_manager/features/transactions/presentation/widgets/category_picker_sheet.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
-Widget _wrap({String? Function(String?)? capture}) {
+Widget _wrap({
+  String? Function(String?)? capture,
+  Locale locale = const Locale('es'),
+}) {
   SharedPreferences.setMockInitialValues({});
   return ProviderScope(
     overrides: [
@@ -30,7 +34,7 @@ Widget _wrap({String? Function(String?)? capture}) {
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('es'),
+      locale: locale,
       home: Scaffold(
         body: Builder(
           builder: (context) => Consumer(
@@ -96,4 +100,32 @@ void main() {
     // Sheet dismissed
     expect(find.text('CATEGORÍA'), findsNothing);
   });
+
+  testWidgets(
+    'delete-confirmation dialog shows the localized name, not the raw '
+    'Spanish DB key (regression)',
+    (tester) async {
+      await _enlargeViewport(tester);
+      await tester.pumpWidget(_wrap(locale: const Locale('en')));
+      await tester.tap(find.byKey(const Key('open-btn')));
+      await tester.pumpAndSettle();
+
+      // Built-in category name is localized to English here...
+      expect(find.text('Food'), findsOneWidget);
+
+      // ...but the delete "x" for that tile still keys off the raw DB
+      // category ('Comida'). Scope the icon lookup to the "Food" tile's
+      // own Stack so we don't tap another category's delete button.
+      final foodTile = find
+          .ancestor(of: find.text('Food'), matching: find.byType(Stack))
+          .first;
+      await tester.tap(
+        find.descendant(of: foodTile, matching: find.byIcon(PhosphorIcons.x)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('"Food"'), findsOneWidget);
+      expect(find.text('"Comida"'), findsNothing);
+    },
+  );
 }

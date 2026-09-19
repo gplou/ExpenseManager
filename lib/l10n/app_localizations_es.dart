@@ -1114,4 +1114,48 @@ class AppLocalizationsEs extends AppLocalizations {
   String errorPromoTooManyAttempts(int seconds) {
     return 'Demasiados intentos. Espera $seconds segundos.';
   }
+
+  @override
+  String get errorPromoInvalidCode => 'Ese código no es válido.';
+
+  @override
+  String get errorPromoExpiredCode => 'Ese código ha caducado.';
+
+  @override
+  String get errorPromoExhaustedCode =>
+      'Ese código ha alcanzado su límite de usos.';
+
+  @override
+  String get errorPromoAlreadyRedeemed => 'Ya has canjeado este código.';
+
+  @override
+  String get navHome => 'Inicio';
+
+  @override
+  String get navActivity => 'Actividad';
+
+  @override
+  String get navBudgets => 'Presupuestos';
+
+  @override
+  String get navInsights => 'Análisis';
+
+  @override
+  String spentInPeriod(String period) {
+    return 'Gastado en $period';
+  }
+
+  @override
+  String get avgPerDay => 'Media / día';
+
+  @override
+  String get upcomingBills => 'Próximos recibos';
+
+  @override
+  String amountLeft(String amount) {
+    return '$amount disponible';
+  }
+
+  @override
+  String get nothingScheduled => 'Nada programado';
 }

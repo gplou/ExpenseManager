@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,7 +104,7 @@ void main() {
 
   group('search mode', () {
     Future<void> enterSearch(WidgetTester tester, String query) async {
-      await tester.tap(find.byIcon(Icons.search_rounded));
+      await tester.tap(find.byIcon(PhosphorIcons.magnifyingGlass));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), query);
       // Debounce de 300ms antes de aplicar la query.
@@ -157,11 +158,52 @@ void main() {
       await enterSearch(tester, 'zzz');
       expect(find.text('Comida'), findsNothing);
 
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(PhosphorIcons.arrowLeft));
       await tester.pumpAndSettle();
 
       expect(find.text('Comida'), findsOneWidget);
       expect(find.text('Transporte'), findsOneWidget);
     });
+  });
+
+  group('category filter', () {
+    testWidgets(
+      'selecting "All categories" after a filter restores the full list',
+      (tester) async {
+        // Regression test: PopupMenuButton<T> can't fire onSelected for an
+        // item whose value is literally `null` — Flutter's own
+        // PopupMenuButtonState treats any `null` returned from showMenu as
+        // "dismissed without choosing" and calls onCanceled instead, with no
+        // way to tell that apart from a genuine tap on a `value: null` item.
+        // CategoryFilterButton works around it with a non-null sentinel.
+        await tester.binding.setSurfaceSize(const Size(500, 1000));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(_wrap([
+          _tx(id: 't1', category: 'Comida'),
+          _tx(id: 't2', category: 'Transporte'),
+        ]));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(PhosphorIcons.funnel));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(PopupMenuItem<String>, 'Transporte'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Transporte'), findsOneWidget);
+        expect(find.text('Comida'), findsNothing);
+
+        await tester.tap(find.byIcon(PhosphorIcons.funnel));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(
+          PopupMenuItem<String>,
+          'Todas las categorías',
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Comida'), findsOneWidget);
+        expect(find.text('Transporte'), findsOneWidget);
+      },
+    );
   });
 }

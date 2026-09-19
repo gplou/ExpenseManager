@@ -108,3 +108,38 @@ final processRecurringTransactionsProvider = FutureProvider<void>((ref) async {
   // toggle está desactivado; nunca lanza).
   resyncRecurringReminders(ref);
 });
+
+/// Recurrentes que vencen dentro de la ventana próxima, de la más cercana a
+/// la más lejana.
+///
+/// El dashboard resume aquí "lo que viene": cuánto se va a cargar y qué.
+/// Depende de `processRecurringTransactionsProvider` a propósito — ese es el
+/// que adelanta las `next_occurrence` vencidas, y sin esperarlo se listarían
+/// fechas pasadas como si fueran futuras.
+final upcomingRecurringProvider =
+    FutureProvider<List<RecurringTransactionModel>>((ref) async {
+  await ref.watch(processRecurringTransactionsProvider.future);
+
+  final repo = ref.watch(recurringTransactionsRepositoryProvider);
+  final all = await repo.getAllForUser();
+
+  final now = clock.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final horizon = today.add(const Duration(days: kUpcomingHorizonDays));
+
+  final upcoming = all.where((r) {
+    final due = DateTime(
+      r.nextOccurrence.year,
+      r.nextOccurrence.month,
+      r.nextOccurrence.day,
+    );
+    return !due.isBefore(today) && !due.isAfter(horizon);
+  }).toList()
+    ..sort((a, b) => a.nextOccurrence.compareTo(b.nextOccurrence));
+
+  return upcoming;
+});
+
+/// Ventana de "próximos recibos": un mes natural aproximado. Suficiente para
+/// cubrir mensuales y semanales sin convertir la tarjeta en una lista larga.
+const int kUpcomingHorizonDays = 31;

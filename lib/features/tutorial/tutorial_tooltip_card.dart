@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/theme/app_colors.dart';
@@ -124,7 +125,7 @@ class TutorialTooltipCard extends StatelessWidget {
                   child: Text(
                     step.title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: textColor,
                     ),
                   ),
@@ -146,11 +147,19 @@ class TutorialTooltipCard extends StatelessWidget {
             // Footer: dot indicators + next button
             Row(
               children: [
+                // Los botones mandan: con textos largos (de/fr) o escala de
+                // texto grande se comen el ancho y los puntos desbordaban su
+                // hueco y salían recortados. `FittedBox` los encoge en vez de
+                // desbordar.
                 Expanded(
-                  child: TutorialStepDots(
-                    totalSteps: totalSteps,
-                    stepIndex: stepIndex,
-                    isDark: isDark,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: TutorialStepDots(
+                      totalSteps: totalSteps,
+                      stepIndex: stepIndex,
+                      isDark: isDark,
+                    ),
                   ),
                 ),
                 const Gap(12),
@@ -168,7 +177,7 @@ class TutorialTooltipCard extends StatelessWidget {
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       textStyle: const TextStyle(
-                        fontFamily: 'GeneralSans',
+                        fontFamily: 'Inter',
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -176,7 +185,7 @@ class TutorialTooltipCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.arrow_back_rounded, size: 14),
+                        Icon(PhosphorIcons.arrowLeft, size: 14),
                         const Gap(4),
                         Text(AppLocalizations.of(context).tutorialBack),
                       ],
@@ -191,6 +200,14 @@ class TutorialTooltipCard extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.dustyTeal,
                     foregroundColor: Colors.white,
+                    // El tema da a FilledButton `minimumSize` de ancho
+                    // infinito, porque su caso de uso es el CTA a ancho
+                    // completo de las hojas. Aquí es una pastilla dentro de
+                    // un Row, y un Row mide a sus hijos no flexibles con
+                    // ancho no acotado: ese mínimo infinito hace estallar el
+                    // layout y la tarjeta entera deja de dibujarse, con lo
+                    // que el usuario se queda sin botón para avanzar.
+                    minimumSize: Size.zero,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 22, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -209,10 +226,10 @@ class TutorialTooltipCard extends StatelessWidget {
                           : AppLocalizations.of(context).tutorialNext),
                       if (!isLast) ...[
                         const Gap(4),
-                        const Icon(Icons.arrow_forward_rounded, size: 14),
+                        Icon(PhosphorIcons.arrowRight, size: 14),
                       ] else ...[
                         const Gap(4),
-                        const Icon(Icons.check_rounded, size: 14),
+                        Icon(PhosphorIcons.check, size: 14),
                       ],
                     ],
                   ),

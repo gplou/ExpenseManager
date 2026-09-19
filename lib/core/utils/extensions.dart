@@ -31,6 +31,14 @@ extension StringExtensions on String {
 
 extension DateTimeExtensions on DateTime {
   String get formattedDate => DateFormat('dd/MM/yyyy').format(this);
+
+  /// Fecha larga y localizada ("martes, 8 de septiembre"). Para cabeceras,
+  /// donde el formato numérico corto se lee como un dato y no como contexto.
+  String longDate(String locale) =>
+      DateFormat('EEEE, d MMMM', locale).format(this);
+
+  /// Nombre del mes, localizado y sin año. Eyebrows y etiquetas de periodo.
+  String monthName(String locale) => DateFormat('MMMM', locale).format(this);
   String get formattedDateTime => DateFormat('dd/MM/yyyy HH:mm').format(this);
   String get formattedTime => DateFormat('HH:mm').format(this);
 

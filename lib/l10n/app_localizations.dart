@@ -2123,6 +2123,84 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Demasiados intentos. Espera {seconds} segundos.'**
   String errorPromoTooManyAttempts(int seconds);
+
+  /// No description provided for @errorPromoInvalidCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese código no es válido.'**
+  String get errorPromoInvalidCode;
+
+  /// No description provided for @errorPromoExpiredCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese código ha caducado.'**
+  String get errorPromoExpiredCode;
+
+  /// No description provided for @errorPromoExhaustedCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Ese código ha alcanzado su límite de usos.'**
+  String get errorPromoExhaustedCode;
+
+  /// No description provided for @errorPromoAlreadyRedeemed.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya has canjeado este código.'**
+  String get errorPromoAlreadyRedeemed;
+
+  /// No description provided for @navHome.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicio'**
+  String get navHome;
+
+  /// No description provided for @navActivity.
+  ///
+  /// In es, this message translates to:
+  /// **'Actividad'**
+  String get navActivity;
+
+  /// No description provided for @navBudgets.
+  ///
+  /// In es, this message translates to:
+  /// **'Presupuestos'**
+  String get navBudgets;
+
+  /// No description provided for @navInsights.
+  ///
+  /// In es, this message translates to:
+  /// **'Análisis'**
+  String get navInsights;
+
+  /// No description provided for @spentInPeriod.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastado en {period}'**
+  String spentInPeriod(String period);
+
+  /// No description provided for @avgPerDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Media / día'**
+  String get avgPerDay;
+
+  /// No description provided for @upcomingBills.
+  ///
+  /// In es, this message translates to:
+  /// **'Próximos recibos'**
+  String get upcomingBills;
+
+  /// No description provided for @amountLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} disponible'**
+  String amountLeft(String amount);
+
+  /// No description provided for @nothingScheduled.
+  ///
+  /// In es, this message translates to:
+  /// **'Nada programado'**
+  String get nothingScheduled;
 }
 
 class _AppLocalizationsDelegate

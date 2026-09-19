@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -45,8 +46,8 @@ class TransactionTypeToggle extends StatelessWidget {
           final isIncome = type.isIncome;
           final color = isIncome ? AppColors.sageGreen : AppColors.mutedTerra;
           final iconData = isIncome
-              ? Icons.trending_up_rounded
-              : Icons.trending_down_rounded;
+              ? PhosphorIcons.trendUp
+              : PhosphorIcons.trendDown;
           return Expanded(
             child: Semantics(
               selected: isSelected,
@@ -70,7 +71,7 @@ class TransactionTypeToggle extends StatelessWidget {
                       Text(
                         type.l10nLabel(l10n),
                         style: TextStyle(
-                          fontFamily: 'GeneralSans',
+                          fontFamily: 'Inter',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: isSelected ? color : AppColors.textMuted,
@@ -131,7 +132,7 @@ class AmountDisplay extends StatelessWidget {
                     '$previous $pendingOp',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'GeneralSans',
+                      fontFamily: 'Inter',
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: accent.withValues(alpha: 0.65),
@@ -144,7 +145,7 @@ class AmountDisplay extends StatelessWidget {
                   Text(
                     '${currencySymbol(currencyCode)} ',
                     style: TextStyle(
-                      fontFamily: 'GeneralSans',
+                      fontFamily: 'Inter',
                       fontSize: 26,
                       fontWeight: FontWeight.w600,
                       color: accent.withValues(alpha: 0.55),
@@ -157,9 +158,9 @@ class AmountDisplay extends StatelessWidget {
                       child: Text(
                         hasValue ? controller.current : '0',
                         style: TextStyle(
-                          fontFamily: 'GeneralSans',
+                          fontFamily: 'Inter',
                           fontSize: 44,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: hasValue
                               ? accent
                               : accent.withValues(alpha: 0.25),
@@ -180,9 +181,9 @@ class AmountDisplay extends StatelessWidget {
                     child: Text(
                       currencyCode,
                       style: TextStyle(
-                        fontFamily: 'GeneralSans',
+                        fontFamily: 'Inter',
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: accent,
                       ),
                     ),
@@ -193,8 +194,8 @@ class AmountDisplay extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Row(
                   children: [
-                    const Icon(
-                      Icons.error_outline_rounded,
+                    Icon(
+                      PhosphorIcons.warningCircle,
                       size: 14,
                       color: AppColors.mutedTerra,
                     ),
@@ -202,7 +203,7 @@ class AmountDisplay extends StatelessWidget {
                     Text(
                       error!,
                       style: const TextStyle(
-                        fontFamily: 'GeneralSans',
+                        fontFamily: 'Inter',
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: AppColors.mutedTerra,
@@ -283,7 +284,7 @@ class DetailPill extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: active ? accent : AppColors.textMuted,
@@ -334,9 +335,9 @@ Future<DateTime?> showQuickDateSheet(
                 Text(
                   l10n.date.toUpperCase(),
                   style: const TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
                     color: AppColors.textMuted,
                   ),
@@ -411,7 +412,7 @@ class _QuickDateChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontFamily: 'GeneralSans',
+              fontFamily: 'Inter',
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: accent,
@@ -487,9 +488,9 @@ class _NoteSheetState extends State<_NoteSheet> {
               Text(
                 l10n.note.toUpperCase(),
                 style: const TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontSize: 10,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: 1.5,
                   color: AppColors.textMuted,
                 ),
@@ -542,10 +543,10 @@ Future<RecurrenceChoice?> showRecurrenceSheet(
     builder: (ctx) {
       final l10n = AppLocalizations.of(ctx);
       final options = <(RecurrenceType?, IconData, String)>[
-        (null, Icons.block_rounded, l10n.noRepeat),
-        (RecurrenceType.weekly, Icons.calendar_view_week_outlined, l10n.weekly),
-        (RecurrenceType.monthly, Icons.calendar_month_outlined, l10n.monthly),
-        (RecurrenceType.annual, Icons.event_repeat_outlined, l10n.yearly),
+        (null, PhosphorIcons.prohibit, l10n.noRepeat),
+        (RecurrenceType.weekly, PhosphorIcons.calendarDots, l10n.weekly),
+        (RecurrenceType.monthly, PhosphorIcons.calendarBlank, l10n.monthly),
+        (RecurrenceType.annual, PhosphorIcons.repeat, l10n.yearly),
       ];
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -557,9 +558,9 @@ Future<RecurrenceChoice?> showRecurrenceSheet(
                 Text(
                   l10n.recurringTransaction.toUpperCase(),
                   style: const TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
                     color: AppColors.textMuted,
                   ),
@@ -646,7 +647,7 @@ class _RecurrenceOption extends StatelessWidget {
                     Text(
                       label,
                       style: TextStyle(
-                        fontFamily: 'GeneralSans',
+                        fontFamily: 'Inter',
                         fontSize: 15,
                         fontWeight:
                             selected ? FontWeight.w600 : FontWeight.w500,
@@ -657,7 +658,7 @@ class _RecurrenceOption extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: const TextStyle(
-                          fontFamily: 'GeneralSans',
+                          fontFamily: 'Inter',
                           fontSize: 12,
                           color: AppColors.textTertiary,
                         ),
@@ -666,7 +667,7 @@ class _RecurrenceOption extends StatelessWidget {
                 ),
               ),
               if (selected)
-                Icon(Icons.check_rounded, size: 20, color: accent),
+                Icon(PhosphorIcons.check, size: 20, color: accent),
             ],
           ),
         ),
@@ -717,9 +718,9 @@ class SubcategoryPickerSheet extends ConsumerWidget {
                 Text(
                   l10n.subcategory.toUpperCase(),
                   style: const TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
                     color: AppColors.textMuted,
                   ),
@@ -773,7 +774,7 @@ class SubcategoryPickerSheet extends ConsumerWidget {
                             child: Text(
                               name,
                               style: TextStyle(
-                                fontFamily: 'GeneralSans',
+                                fontFamily: 'Inter',
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: isSelected
@@ -801,7 +802,7 @@ class SubcategoryPickerSheet extends ConsumerWidget {
                                   .withValues(alpha: 0.12),
                             ),
                             child: Icon(
-                              Icons.close_rounded,
+                              PhosphorIcons.x,
                               size: 12,
                               color: isSelected
                                   ? accentColor
@@ -840,13 +841,13 @@ class SubcategoryPickerSheet extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.add_rounded,
+                        Icon(PhosphorIcons.plus,
                             size: 14, color: AppColors.dustyTeal),
                         const SizedBox(width: AppSpacing.xs),
                         Text(
                           l10n.newSubcategory,
                           style: const TextStyle(
-                            fontFamily: 'GeneralSans',
+                            fontFamily: 'Inter',
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: AppColors.dustyTeal,

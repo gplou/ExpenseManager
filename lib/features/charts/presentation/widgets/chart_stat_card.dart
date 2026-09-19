@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
@@ -55,7 +57,7 @@ class ChartStatCard extends StatelessWidget {
                 Text(
                   eyebrow,
                   style: TextStyle(
-                    fontFamily: 'GeneralSans',
+                    fontFamily: 'Inter',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: context.appColors.textMuted,
@@ -70,9 +72,9 @@ class ChartStatCard extends StatelessWidget {
                   loading: () => Text(
                     '...',
                     style: TextStyle(
-                      fontFamily: 'GeneralSans',
+                      fontFamily: 'Inter',
                       fontSize: 26,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: context.appColors.text,
                       letterSpacing: -0.6,
                       height: 1.1,
@@ -81,7 +83,7 @@ class ChartStatCard extends StatelessWidget {
                   error: (_, __) => Text(
                     l10n.errorLoading,
                     style: TextStyle(
-                      fontFamily: 'GeneralSans',
+                      fontFamily: 'Inter',
                       fontSize: 13,
                       color: accentColor,
                     ),
@@ -89,9 +91,9 @@ class ChartStatCard extends StatelessWidget {
                   data: (total) => Text(
                     '$cSymbol${formatAmount(total, numFmt)}',
                     style: TextStyle(
-                      fontFamily: 'GeneralSans',
+                      fontFamily: 'Inter',
                       fontSize: 26,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: context.appColors.text,
                       letterSpacing: -0.6,
                       height: 1.1,
@@ -107,8 +109,8 @@ class ChartStatCard extends StatelessWidget {
                   children: [
                     Icon(
                       isIncome
-                          ? Icons.arrow_downward_rounded
-                          : Icons.arrow_upward_rounded,
+                          ? PhosphorIcons.arrowDown
+                          : PhosphorIcons.arrowUp,
                       size: 13,
                       color: accentColor,
                     ),
@@ -116,7 +118,7 @@ class ChartStatCard extends StatelessWidget {
                     Text(
                       isIncome ? l10n.typeIncome : l10n.typeExpense,
                       style: TextStyle(
-                        fontFamily: 'GeneralSans',
+                        fontFamily: 'Inter',
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: accentColor,
@@ -158,13 +160,15 @@ class ChartModeSwitch extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ChartModeIcon(
-            icon: Icons.pie_chart_rounded,
+            key: TestKeys.chartsModePie,
+            icon: PhosphorIcons.chartPie,
             isSelected: mode == ChartMode.pie,
             onTap: () => onChanged(ChartMode.pie),
           ),
           const Gap(2),
           ChartModeIcon(
-            icon: Icons.bar_chart_rounded,
+            key: TestKeys.chartsModeBar,
+            icon: PhosphorIcons.chartBar,
             isSelected: mode == ChartMode.bar,
             onTap: () => onChanged(ChartMode.bar),
           ),

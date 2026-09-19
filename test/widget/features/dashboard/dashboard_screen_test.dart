@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/features/auth/domain/user_model.dart';
 import 'package:expense_manager/features/dashboard/dashboard_screen.dart';
+import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
@@ -53,7 +54,7 @@ void main() {
     expect(find.textContaining('Alice'), findsOneWidget);
   });
 
-  testWidgets('renders the drawer menu icon and the body chrome',
+  testWidgets('renders the settings button and the body chrome',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -61,12 +62,15 @@ void main() {
     await tester.pumpWidget(_wrap(dashboardOverrides(user: _alice())));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.menu), findsOneWidget);
+    // Por key, no por icono: el glifo cambió de hamburguesa a engranaje al
+    // pasar la navegación a la barra inferior.
+    expect(find.byKey(TutorialKeys.drawerBtnKey), findsOneWidget);
     expect(find.byType(RefreshIndicator), findsOneWidget);
   });
 
-  testWidgets('PRO user sees the chat shortcut in the app bar',
-      (tester) async {
+  testWidgets(
+      'the chat shortcut stays hidden in the app bar (no-AI first release), '
+      'for both PRO and non-PRO users', (tester) async {
     await tester.binding.setSurfaceSize(const Size(500, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -74,20 +78,13 @@ void main() {
       _wrap(dashboardOverrides(user: _alice(), isPro: true)),
     );
     await tester.pumpAndSettle();
-
-    expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
-  });
-
-  testWidgets('non-PRO user does NOT see the chat shortcut', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(500, 1000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    expect(find.byKey(TutorialKeys.chatBtnKey), findsNothing);
 
     await tester.pumpWidget(
       _wrap(dashboardOverrides(user: _alice(), isPro: false)),
     );
     await tester.pumpAndSettle();
-
-    expect(find.byIcon(Icons.auto_awesome_outlined), findsNothing);
+    expect(find.byKey(TutorialKeys.chatBtnKey), findsNothing);
   });
 
   testWidgets('summary block renders income and expense values',

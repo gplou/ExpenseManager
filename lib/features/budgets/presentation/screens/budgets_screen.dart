@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/errors/failure_localizations.dart';
 import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
-import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/features/budgets/presentation/providers/budgets_provider.dart';
 import 'package:expense_manager/features/budgets/presentation/widgets/budget_form_sheet.dart';
 import 'package:expense_manager/features/budgets/presentation/widgets/budget_progress_tile.dart';
@@ -78,13 +79,12 @@ class BudgetsScreen extends ConsumerWidget {
         ref.watch(numberFormatProvider).value ?? NumberFormatStyle.dotDecimal;
 
     return Scaffold(
-      bottomNavigationBar:
-          ref.watch(isProProvider) ? null : const AdBannerFooter(),
+      // El banner y la barra inferior los aporta AppShell.
       appBar: AppBar(title: Text(l10n.budgets)),
       floatingActionButton: FloatingActionButton(
         tooltip: l10n.budgetNew,
         onPressed: () => _addBudget(context, ref),
-        child: const Icon(Icons.add_rounded),
+        child: Icon(PhosphorIcons.plus),
       ),
       body: progressAsync.when(
         skipLoadingOnReload: true,
@@ -113,7 +113,7 @@ class BudgetsScreen extends ConsumerWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        Icons.savings_outlined,
+                        PhosphorIcons.piggyBank,
                         size: 26,
                         color: cs.onSurface.withValues(alpha: 0.5),
                       ),
@@ -144,7 +144,7 @@ class BudgetsScreen extends ConsumerWidget {
               20,
               8,
               20,
-              MediaQuery.of(context).padding.bottom + 88,
+              88, // hueco para el FAB de "nuevo presupuesto"; el shell ya descuenta la barra
             ),
             itemCount: progresses.length,
             itemBuilder: (context, index) {
@@ -159,9 +159,10 @@ class BudgetsScreen extends ConsumerWidget {
                   existing: progress.budget,
                 ),
                 trailing: IconButton(
+                  key: TestKeys.budgetDeleteButton,
                   tooltip: l10n.delete,
-                  icon: const Icon(
-                    Icons.delete_outline_rounded,
+                  icon: Icon(
+                    PhosphorIcons.trash,
                     size: 20,
                     color: AppColors.mutedTerra,
                   ),

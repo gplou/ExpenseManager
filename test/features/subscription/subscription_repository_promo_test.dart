@@ -66,4 +66,33 @@ void main() {
       );
     });
   });
+
+  group('redeemPromoCode — reason (regression: UI used to show the raw '
+      'Spanish server message regardless of app locale)', () {
+    Future<void> expectReason(String serverMessage, PromoCodeErrorReason reason) {
+      stubRpcThrows(PostgrestException(message: serverMessage, code: 'P0001'));
+      return expectLater(
+        () => repo.redeemPromoCode('CODE'),
+        throwsA(isA<PromoCodeException>().having((e) => e.reason, 'reason', reason)),
+      );
+    }
+
+    test('"Código no válido" -> invalidCode',
+        () => expectReason('Código no válido', PromoCodeErrorReason.invalidCode));
+
+    test('"Código inválido" -> invalidCode',
+        () => expectReason('Código inválido', PromoCodeErrorReason.invalidCode));
+
+    test('"Código expirado" -> expiredCode',
+        () => expectReason('Código expirado', PromoCodeErrorReason.expiredCode));
+
+    test('"Código agotado" -> exhaustedCode',
+        () => expectReason('Código agotado', PromoCodeErrorReason.exhaustedCode));
+
+    test('"Ya has canjeado este código" -> alreadyRedeemed', () => expectReason(
+        'Ya has canjeado este código', PromoCodeErrorReason.alreadyRedeemed));
+
+    test('an unrecognized server message -> other (safe fallback)',
+        () => expectReason('mensaje futuro no mapeado', PromoCodeErrorReason.other));
+  });
 }

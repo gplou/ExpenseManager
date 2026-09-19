@@ -17,9 +17,9 @@ class ProBadge extends StatelessWidget {
       child: const Text(
         'PRO',
         style: TextStyle(
-          fontFamily: 'GeneralSans',
+          fontFamily: 'Inter',
           fontSize: 10,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           color: Colors.white,
           letterSpacing: 0.5,
         ),

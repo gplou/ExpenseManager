@@ -1,7 +1,7 @@
 name: expense_manager
 description: App de productividad y gestión - MVP
 publish_to: 'none'
-version: 1.0.4+50
+version: 1.0.4+55
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -55,16 +55,17 @@ dependencies:
   # UI
   flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
+  phosphoricons_flutter: ^1.0.0
 
   # Social auth
   google_sign_in: ^7.0.0
   sign_in_with_apple: ^7.0.0
   crypto: ^3.0.2
 
-  # Voz + IA
-  speech_to_text: ^7.0.0
+  # Voz (grabación → IA) / recibos (OCR local, sin IA)
+  record: ^6.2.1
   image_picker: ^1.1.2
-  image: ^4.2.0
+  google_mlkit_text_recognition: ^0.16.0
 
   # Exportación
   excel: ^4.0.6
@@ -128,3 +129,13 @@ flutter:
           weight: 600
         - asset: assets/fonts/GeneralSans-Bold.ttf
           weight: 700
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600

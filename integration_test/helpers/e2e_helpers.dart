@@ -117,9 +117,19 @@ Future<void> waitForGone(
   fail('Timed out (${timeout.inSeconds}s) waiting for $finder to disappear');
 }
 
-Finder _verticalScrollable() => find.byWidgetPredicate(
+/// Scrollables verticales **visibles**.
+///
+/// El `.hitTestable()` no es cosmético: con `StatefulShellRoute.indexedStack`
+/// las pestañas no seleccionadas siguen montadas y con `ScrollPosition` viva,
+/// pero `IndexedStack` no las pinta, así que no responden al hit-test. Sin el
+/// filtro, `.first` cogía el scrollable de una pestaña que no está en
+/// pantalla. Sirve igual para las rutas apiladas: la de debajo queda tapada
+/// por la de encima.
+Finder _verticalScrollable() => find
+    .byWidgetPredicate(
       (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
-    );
+    )
+    .hitTestable();
 
 /// Espera a que [finder] exista; si tras [waitBeforeScroll] no ha aparecido,
 /// asume que está fuera del viewport y hace scroll vertical hasta verlo.

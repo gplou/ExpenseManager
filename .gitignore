@@ -47,9 +47,15 @@ app.*.map.json
 # Secrets — never commit real values
 dart_defines.json
 dart_defines_e2e.json
+dart_defines_e2e_pro.json
 .env.sentry
 android/key.properties
 android/app/upload-keystore.jks
+
+# QA manual "conducido en vivo" (tool/qa/) — el plan y los fixtures sí van a
+# git, pero los informes de cada ejecución son artefactos efímeros (pueden
+# mostrar el email de la cuenta E2E en las capturas)
+tool/qa/results/
 
 # OAuth client secrets (downloaded from Google Cloud Console)
 /android/app/*.json
@@ -79,3 +85,4 @@ android/app/upload-keystore.jks
 !assets/images/**
 !android/app/src/main/res/**
 !ios/Runner/Assets.xcassets/**
+!tool/qa/fixtures/**

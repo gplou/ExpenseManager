@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
@@ -85,7 +86,6 @@ class TransactionTile extends ConsumerWidget {
     final avatarBg = context.appColors.raised;
     final secondaryText = context.appColors.textMuted;
     final dividerColor = context.appColors.divider;
-    final emoji = _emojiForCategory(transaction.category, isIncome);
     final customCats =
         ref.watch(customCategoriesSyncProvider)[transaction.type] ?? const [];
     TransactionCategory? customCat;
@@ -120,20 +120,18 @@ class TransactionTile extends ConsumerWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: isSelecting && isSelected
-                  ? cs.primary
-                  : avatarBg,
-              shape: BoxShape.circle,
+              color: isSelecting && isSelected ? cs.primary : avatarBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Center(
               child: isSelecting
                   ? Icon(
                       isSelected
-                          ? Icons.check_rounded
-                          : Icons.circle_outlined,
+                          ? PhosphorIcons.check
+                          : PhosphorIcons.circle,
                       color: isSelected
                           ? cs.onPrimary
                           : cs.onSurface.withValues(alpha: 0.5),
@@ -145,10 +143,15 @@ class TransactionTile extends ConsumerWidget {
                               style:
                                   const TextStyle(fontSize: AppEmojiSize.medium))
                           : Icon(customCat.icon,
-                              size: 18, color: cs.onSurface)
-                      : Text(emoji,
-                          style:
-                              const TextStyle(fontSize: AppEmojiSize.medium))),
+                              size: 20, color: cs.onSurface)
+                      : Icon(
+                          TransactionCategories.phosphorFor(
+                            transaction.category,
+                            isIncome: transaction.type.isIncome,
+                          ),
+                          size: 20,
+                          color: cs.onSurface,
+                        )),
             ),
           ),
           const Gap(14),
@@ -230,7 +233,7 @@ class TransactionTile extends ConsumerWidget {
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 24),
           color: AppColors.negativeSoft,
-          child: const Icon(Icons.delete_outline_rounded,
+          child: Icon(PhosphorIcons.trash,
               color: AppColors.negative, size: 22),
         ),
         confirmDismiss: isSelecting
@@ -287,7 +290,4 @@ class TransactionTile extends ConsumerWidget {
       ),
     );
   }
-
-  String _emojiForCategory(String category, bool isIncome) =>
-      TransactionCategories.emojiFor(category, isIncome: isIncome);
 }

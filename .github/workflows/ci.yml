@@ -53,7 +53,11 @@ jobs:
         run: flutter analyze
 
       - name: Run tests with coverage
-        run: flutter test --coverage
+        # Golden tests are excluded here: their baseline PNGs are generated on
+        # macOS and Skia/font rendering differs enough on ubuntu-latest to
+        # produce false positives. Run them locally with `flutter test --tags golden`
+        # (see test/README.md) until CI has a Linux-generated baseline.
+        run: flutter test --coverage --exclude-tags golden
 
       - name: Compute filtered coverage report
         id: coverage

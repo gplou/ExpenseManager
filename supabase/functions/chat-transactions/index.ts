@@ -1,36 +1,20 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import * as Sentry from 'npm:@sentry/deno'
+import { getCorsHeaders, jsonResponse } from '../_shared/http.ts'
+import { requireProUser } from '../_shared/auth.ts'
+import { checkRateLimit } from '../_shared/rate_limit.ts'
+import { callGemini } from '../_shared/gemini.ts'
 
 const GOOGLE_AI_KEY = Deno.env.get('GOOGLE_AI_KEY') ?? ''
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const MODEL = 'gemini-2.5-flash-lite'
 const CACHE_TTL_SECONDS = 600
-
-const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') ?? ''
 
 Sentry.init({
   dsn: Deno.env.get('SENTRY_DSN_EDGE') ?? '',
   environment: Deno.env.get('SENTRY_ENVIRONMENT') ?? 'production',
   tracesSampleRate: 0.2,
 })
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get('Origin') ?? ''
-  const allowOrigin = (ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN) ? origin : ''
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Headers': 'authorization, content-type',
-  }
-}
-
-function jsonResponse(body: Record<string, unknown>, status = 200, corsHeaders: Record<string, string> = {}) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'content-type': 'application/json' },
-  })
-}
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -211,44 +195,21 @@ serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // ── 1. Verify the user is authenticated ──────────────────────────────────
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders)
+  // ── 1. Verify the user is authenticated and PRO ──────────────────────────
+  const authed = await requireProUser(req, corsHeaders)
+  if (authed instanceof Response) return authed
+  const { supabase, user } = authed
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: authHeader } },
-  })
-
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders)
-
-  // ── 2. Verify PRO subscription ──────────────────────────────────────────
-  const { data: sub } = await supabase
-    .from('subscriptions')
-    .select('expires_at')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!sub || new Date(sub.expires_at) < new Date()) {
-    return jsonResponse({ error: 'PRO subscription required' }, 403, corsHeaders)
-  }
-
-  // ── 3. Rate limit: 20 msgs per hour ────────────────────────────────────
+  // ── 2. Rate limit: 20 msgs per hour ────────────────────────────────────
   const windowStart = new Date()
   windowStart.setMinutes(0, 0, 0)
 
-  const { data: allowed, error: rateLimitError } = await supabase.rpc('increment_rate_limit', {
-    p_user_id: user.id,
-    p_endpoint: 'chat-transactions',
-    p_window_start: windowStart.toISOString(),
-    p_limit: 20,
-  })
-
-  if (rateLimitError || allowed === false) {
+  const allowed = await checkRateLimit(supabase, user.id, 'chat-transactions', 20, windowStart)
+  if (!allowed) {
     return jsonResponse({ error: 'Rate limit exceeded. Maximum 20 messages per hour.' }, 429, corsHeaders)
   }
 
-  // ── 4. Parse request body ──────────────────────────────────────────────
+  // ── 3. Parse request body ──────────────────────────────────────────────
   let message: string
   let history: ChatMessage[]
   let locale: string
@@ -281,12 +242,12 @@ serve(async (req: Request) => {
     return jsonResponse({ error: 'Server misconfiguration: GOOGLE_AI_KEY is not set' }, 500, corsHeaders)
   }
 
-  // ── 5. Fetch user data + system prompt ────────────────────────────────
+  // ── 4. Fetch user data + system prompt ────────────────────────────────
   const todayDate = new Date().toISOString().slice(0, 10)
   const systemPrompt = buildSystemPrompt(todayDate, locale)
   const { summaryBlock, recentTxBlock } = await fetchUserData(supabase, user.id)
 
-  // ── 6. Try to use Gemini context caching ──────────────────────────────
+  // ── 5. Try to use Gemini context caching ──────────────────────────────
   const cacheName = await getOrCreateUserCache(
     supabase,
     user.id,
@@ -295,7 +256,7 @@ serve(async (req: Request) => {
     recentTxBlock,
   )
 
-  // ── 7. Build conversation turns (history + current message) ───────────
+  // ── 6. Build conversation turns (history + current message) ───────────
   const turns: Array<{ role: string; parts: Array<{ text: string }> }> = []
   for (const msg of history) {
     turns.push({
@@ -305,7 +266,7 @@ serve(async (req: Request) => {
   }
   turns.push({ role: 'user', parts: [{ text: message }] })
 
-  // ── 8. Call Gemini API ────────────────────────────────────────────────
+  // ── 7. Call Gemini API ────────────────────────────────────────────────
   const requestBody: Record<string, unknown> = {
     contents: turns,
     generationConfig: { maxOutputTokens: 800, temperature: 0.7 },
@@ -319,25 +280,7 @@ serve(async (req: Request) => {
     requestBody.systemInstruction = { parts: [{ text: inlineSystem }] }
   }
 
-  async function callGemini(body: Record<string, unknown>): Promise<Response> {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 25_000)
-    try {
-      return await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-goog-api-key': GOOGLE_AI_KEY },
-          body: JSON.stringify(body),
-          signal: controller.signal,
-        },
-      )
-    } finally {
-      clearTimeout(timeoutId)
-    }
-  }
-
-  let geminiRes = await callGemini(requestBody)
+  let geminiRes = await callGemini(MODEL, GOOGLE_AI_KEY, requestBody)
 
   // If the call failed while using a cached context, the cache may have expired in Gemini
   // even though our DB record still looks valid. Evict the stale record and retry inline.
@@ -354,7 +297,7 @@ serve(async (req: Request) => {
       generationConfig: requestBody.generationConfig,
       systemInstruction: { parts: [{ text: inlineSystem }] },
     }
-    geminiRes = await callGemini(fallbackBody)
+    geminiRes = await callGemini(MODEL, GOOGLE_AI_KEY, fallbackBody)
   }
 
   if (!geminiRes.ok) {

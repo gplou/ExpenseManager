@@ -145,14 +145,21 @@ Future<void> step(
 
 /// Navegación por ruta desde el árbol vivo: no depende de textos ni de la
 /// posición de los botones.
+/// Contexto raíz, estable sea cual sea la pila de rutas.
+///
+/// Antes se cogía `find.byType(Scaffold).last`, que deja de ser determinista
+/// en cuanto hay Scaffolds anidados (el del shell + el de la pestaña).
+/// `MaterialApp` es único, y tanto `GoRouter.of` como el navigator raíz se
+/// resuelven igual desde él.
+Element _rootContext(WidgetTester tester) =>
+    tester.element(find.byType(MaterialApp).first);
+
 void go(WidgetTester tester, String route) {
-  final ctx = tester.element(find.byType(Scaffold).last);
-  GoRouter.of(ctx).go(route);
+  GoRouter.of(_rootContext(tester)).go(route);
 }
 
 void push(WidgetTester tester, String route) {
-  final ctx = tester.element(find.byType(Scaffold).last);
-  GoRouter.of(ctx).push(route);
+  GoRouter.of(_rootContext(tester)).push(route);
 }
 
 Future<void> tap(WidgetTester tester, Finder finder) async {
@@ -162,21 +169,29 @@ Future<void> tap(WidgetTester tester, Finder finder) async {
 
 /// Cierra la ruta/sheet/diálogo superior.
 Future<void> pop(WidgetTester tester) async {
-  final ctx = tester.element(find.byType(Scaffold).last);
-  await Navigator.of(ctx, rootNavigator: true).maybePop();
+  await Navigator.of(_rootContext(tester), rootNavigator: true).maybePop();
   await settle(tester);
 }
 
-Finder verticalScrollable() => find.byWidgetPredicate(
+/// Scrollables verticales **visibles**.
+///
+/// El `.hitTestable()` no es cosmético: con `StatefulShellRoute.indexedStack`
+/// las pestañas no seleccionadas siguen montadas y con `ScrollPosition` viva,
+/// pero `IndexedStack` no las pinta, así que no responden al hit-test. Sin el
+/// filtro, la heurística de abajo podía desplazar una lista que no está en
+/// pantalla.
+Finder verticalScrollable() => find
+    .byWidgetPredicate(
       (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
-    );
+    )
+    .hitTestable();
 
 /// Desplaza la lista de la pantalla actual [dy] píxeles.
 ///
 /// Va contra la `ScrollPosition`, no con un gesto: `tester.drag` fallaba en las
 /// rutas apiladas con `push` (el finder cogía el scrollable del dashboard, que
-/// sigue vivo debajo) y la captura salía sin desplazar. Se elige la última
-/// posición con recorrido disponible, que es la de la ruta de encima.
+/// sigue vivo debajo) y la captura salía sin desplazar. Entre las visibles se
+/// elige la última con recorrido disponible, que es la de la ruta de encima.
 Future<void> scrollBy(WidgetTester tester, double dy) async {
   final scrollables = tester
       .stateList<ScrollableState>(verticalScrollable())
@@ -186,8 +201,8 @@ Future<void> scrollBy(WidgetTester tester, double dy) async {
     (s) => s.position.maxScrollExtent > 0,
     orElse: () => throw StateError('Ninguna lista con recorrido en pantalla'),
   );
-  final to = (target.position.pixels + dy)
-      .clamp(0.0, target.position.maxScrollExtent);
+  final to =
+      (target.position.pixels + dy).clamp(0.0, target.position.maxScrollExtent);
   target.position.jumpTo(to);
   await settle(tester);
 }
@@ -306,7 +321,7 @@ void main() {
     // El dashboard entra casi entero en 6,9": no hay una segunda captura
     // "recientes" como en Android, saldría igual que la 03.
     await shot(tester, '06-rango-personalizado', () async {
-      await tap(tester, find.byIcon(Icons.calendar_month_outlined));
+      await tap(tester, find.byKey(TestKeys.dashboardDateRangeButton));
     });
     await step(tester, 'cerrar selector', () async => pop(tester));
 
@@ -321,10 +336,10 @@ void main() {
       await scrollBy(tester, -480);
     });
     await shot(tester, '09-graficos-barras', () async {
-      await tap(tester, find.byIcon(Icons.bar_chart_rounded));
+      await tap(tester, find.byKey(TestKeys.chartsModeBar));
     });
     await step(tester, 'volver a tarta', () async {
-      await tap(tester, find.byIcon(Icons.pie_chart_rounded));
+      await tap(tester, find.byKey(TestKeys.chartsModePie));
     });
     await shot(tester, '10-graficos-ingresos', () async {
       await tap(tester, find.text(l10n.typeIncome));
@@ -333,13 +348,13 @@ void main() {
       await tap(tester, find.text(l10n.typeExpense));
     });
     await shot(tester, '11-graficos-anual', () async {
-      await tap(tester, find.byIcon(Icons.calendar_today_rounded));
+      await tap(tester, find.byKey(TestKeys.chartsPeriodButton));
       await tap(tester, find.text(l10n.periodYear).last);
     });
     // El periodo lo comparten dashboard y gráficos (`selectedPeriodProvider`):
     // sin restaurarlo, todo lo que viene después sale en vista anual.
     await step(tester, 'restaurar periodo mensual', () async {
-      await tap(tester, find.byIcon(Icons.calendar_today_rounded));
+      await tap(tester, find.byKey(TestKeys.chartsPeriodButton));
       await tap(tester, find.text(l10n.periodMonth).last);
     });
 
@@ -357,11 +372,11 @@ void main() {
       go(tester, AppRoutes.transactions);
     });
     await shot(tester, '15-historial-filtros', () async {
-      await tap(tester, find.byIcon(Icons.filter_list_rounded));
+      await tap(tester, find.byKey(TestKeys.transactionsFilterButton));
     });
     await step(tester, 'cerrar filtros', () async => pop(tester));
     await shot(tester, '16-historial-busqueda', () async {
-      await tap(tester, find.byIcon(Icons.search_rounded));
+      await tap(tester, find.byKey(TestKeys.transactionsSearchButton));
       await tester.enterText(find.byType(TextField).first, 'super');
       await settle(tester);
       // Sin cerrar el teclado, tapa los resultados y la captura no enseña nada.
@@ -369,7 +384,7 @@ void main() {
       await settle(tester);
     });
     await step(tester, 'salir de búsqueda', () async {
-      await tap(tester, find.byIcon(Icons.arrow_back_rounded));
+      await tap(tester, find.byKey(TestKeys.transactionsSearchBack));
     });
 
     // ── 17-18 · Alta / edición de transacción ───────────────────────────────

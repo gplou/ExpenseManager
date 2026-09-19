@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -7,6 +9,7 @@ import 'package:expense_manager/core/services/biometric_auth_service.dart';
 import 'package:expense_manager/core/services/home_widget_gateway.dart';
 import 'package:expense_manager/core/services/notification_service.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
+import 'package:expense_manager/core/services/receipt_ocr_gateway.dart';
 import 'package:expense_manager/core/services/voice_input_gateway.dart';
 import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
 import 'package:expense_manager/features/chat/data/chat_repository.dart';
@@ -46,6 +49,8 @@ class MockHomeWidgetGateway extends Mock implements HomeWidgetGateway {}
 class MockVoiceInputGateway extends Mock implements VoiceInputGateway {}
 
 class MockImageInputGateway extends Mock implements ImageInputGateway {}
+
+class MockReceiptOcrGateway extends Mock implements ReceiptOcrGateway {}
 
 class MockBiometricAuthService extends Mock implements BiometricAuthService {}
 
@@ -121,4 +126,5 @@ void registerCommonFallbacks() {
   registerFallbackValue(MockPackage());
   registerFallbackValue(<String, dynamic>{});
   registerFallbackValue(<String, String>{});
+  registerFallbackValue(Uint8List(0));
 }

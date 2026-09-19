@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -89,7 +90,7 @@ class BudgetsSection extends ConsumerWidget {
                     label: l10n.budgetsManage,
                     child: InkWell(
                       key: TestKeys.budgetsSectionLink,
-                      onTap: () => context.push(AppRoutes.budgets),
+                      onTap: () => context.go(AppRoutes.budgets),
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -105,7 +106,7 @@ class BudgetsSection extends ConsumerWidget {
                               ),
                             ),
                             const Gap(2),
-                            Icon(Icons.chevron_right_rounded,
+                            Icon(PhosphorIcons.caretRight,
                                 size: 16, color: cs.primary),
                           ],
                         ),
@@ -121,7 +122,7 @@ class BudgetsSection extends ConsumerWidget {
                 progress: p,
                 cSymbol: cSymbol,
                 numFmtStyle: numFmtStyle,
-                onTap: () => context.push(AppRoutes.budgets),
+                onTap: () => context.go(AppRoutes.budgets),
               ),
             ),
           ],
@@ -141,7 +142,7 @@ class _EmptyCta extends StatelessWidget {
     final cs = context.colors;
     return InkWell(
       key: TestKeys.budgetsSectionLink,
-      onTap: () => context.push(AppRoutes.budgets),
+      onTap: () => context.go(AppRoutes.budgets),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -152,7 +153,7 @@ class _EmptyCta extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              Icons.savings_outlined,
+              PhosphorIcons.piggyBank,
               size: 20,
               color: cs.onSurface.withValues(alpha: 0.6),
             ),
@@ -165,7 +166,7 @@ class _EmptyCta extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
+            Icon(PhosphorIcons.caretRight,
                 size: 18, color: cs.onSurface.withValues(alpha: 0.4)),
           ],
         ),

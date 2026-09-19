@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
@@ -136,6 +137,7 @@ class _CustomDateRangePickerDialogState
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -146,6 +148,7 @@ class _CustomDateRangePickerDialogState
               ? [
                   _CalendarHeader(
                     displayedMonth: _displayedMonth,
+                    locale: locale,
                     canGoPrev: _canGoPrevMonth,
                     canGoNext: _canGoNextMonth,
                     onPrev: _prevMonth,
@@ -156,7 +159,7 @@ class _CustomDateRangePickerDialogState
                     }),
                   ),
                   const SizedBox(height: 8),
-                  _WeekdayRow(),
+                  _WeekdayRow(locale: locale),
                   const SizedBox(height: 4),
                   _DayGrid(
                     displayedMonth: _displayedMonth,
@@ -186,6 +189,7 @@ class _CustomDateRangePickerDialogState
                   const SizedBox(height: 12),
                   _MonthGrid(
                     year: _monthGridYear,
+                    locale: locale,
                     selectedMonth: _displayedMonth,
                     firstDate: widget.firstDate,
                     lastDate: widget.lastDate,
@@ -212,6 +216,7 @@ class _CustomDateRangePickerDialogState
 class _CalendarHeader extends StatelessWidget {
   const _CalendarHeader({
     required this.displayedMonth,
+    required this.locale,
     required this.canGoPrev,
     required this.canGoNext,
     required this.onPrev,
@@ -220,6 +225,7 @@ class _CalendarHeader extends StatelessWidget {
   });
 
   final DateTime displayedMonth;
+  final String locale;
   final bool canGoPrev;
   final bool canGoNext;
   final VoidCallback onPrev;
@@ -229,12 +235,12 @@ class _CalendarHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = _capitalize(
-      DateFormat('MMMM yyyy', 'es').format(displayedMonth),
+      DateFormat('MMMM yyyy', locale).format(displayedMonth),
     );
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.chevron_left),
+          icon: Icon(PhosphorIcons.caretLeft),
           onPressed: canGoPrev ? onPrev : null,
         ),
         Expanded(
@@ -251,7 +257,7 @@ class _CalendarHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Icon(
-                  Icons.arrow_drop_down,
+                  PhosphorIcons.caretDown,
                   size: 20,
                   color: Theme.of(context).colorScheme.primary,
                 ),
@@ -260,7 +266,7 @@ class _CalendarHeader extends StatelessWidget {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.chevron_right),
+          icon: Icon(PhosphorIcons.caretRight),
           onPressed: canGoNext ? onNext : null,
         ),
       ],
@@ -271,9 +277,16 @@ class _CalendarHeader extends StatelessWidget {
 // ── Weekday labels ────────────────────────────────────────────────────────────
 
 class _WeekdayRow extends StatelessWidget {
+  const _WeekdayRow({required this.locale});
+
+  final String locale;
+
   @override
   Widget build(BuildContext context) {
-    const labels = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    // NARROWWEEKDAYS empieza en domingo (índice 0); la grilla de días
+    // empieza en lunes (ver `_DayGrid.offset`), así que se rota.
+    final narrow = DateFormat.EEEE(locale).dateSymbols.NARROWWEEKDAYS;
+    final labels = [1, 2, 3, 4, 5, 6, 0].map((i) => narrow[i]).toList();
     return Row(
       children: labels
           .map((d) => Expanded(
@@ -430,6 +443,14 @@ class _CalendarActions extends StatelessWidget {
         const SizedBox(width: 8),
         FilledButton(
           onPressed: canConfirm ? onConfirm : null,
+          // El tema da a FilledButton `minimumSize` de ancho infinito
+          // (pensado para los CTA a ancho completo de las hojas). Este botón
+          // vive en un Row sin Expanded, que mide a sus hijos con ancho no
+          // acotado: ese mínimo infinito hace estallar el layout y todo el
+          // diálogo se queda sin tamaño — el barrier se ve pero el contenido
+          // nunca se dibuja. Mismo bug que ya se corrigió en el tutorial
+          // (tutorial_tooltip_card.dart).
+          style: FilledButton.styleFrom(minimumSize: Size.zero),
           child: Text(AppLocalizations.of(context).apply),
         ),
       ],
@@ -459,7 +480,7 @@ class _MonthGridHeader extends StatelessWidget {
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.chevron_left),
+          icon: Icon(PhosphorIcons.caretLeft),
           onPressed: canGoPrev ? onPrev : null,
         ),
         Expanded(
@@ -473,7 +494,7 @@ class _MonthGridHeader extends StatelessWidget {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.chevron_right),
+          icon: Icon(PhosphorIcons.caretRight),
           onPressed: canGoNext ? onNext : null,
         ),
       ],
@@ -486,6 +507,7 @@ class _MonthGridHeader extends StatelessWidget {
 class _MonthGrid extends StatelessWidget {
   const _MonthGrid({
     required this.year,
+    required this.locale,
     required this.selectedMonth,
     required this.firstDate,
     required this.lastDate,
@@ -493,6 +515,7 @@ class _MonthGrid extends StatelessWidget {
   });
 
   final int year;
+  final String locale;
   final DateTime selectedMonth;
   final DateTime firstDate;
   final DateTime lastDate;
@@ -525,7 +548,7 @@ class _MonthGrid extends StatelessWidget {
                 DateTime(firstDate.year, firstDate.month));
 
         final label = _capitalize(
-          DateFormat('MMM', 'es').format(DateTime(2000, month)),
+          DateFormat('MMM', locale).format(DateTime(2000, month)),
         );
 
         return GestureDetector(

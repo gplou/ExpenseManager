@@ -1,14 +1,15 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
-import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -16,7 +17,6 @@ import 'package:expense_manager/features/transactions/domain/transaction_model.d
 import 'package:expense_manager/features/transactions/presentation/providers/custom_categories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/features/charts/presentation/providers/chart_providers.dart';
-import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/charts/presentation/widgets/chart_area.dart';
 import 'package:expense_manager/features/charts/presentation/widgets/chart_filters.dart';
 import 'package:expense_manager/features/charts/presentation/widgets/chart_stat_card.dart';
@@ -59,7 +59,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
         : period.l10nLabel(l10n);
 
     return Scaffold(
-      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
+
       appBar: AppBar(
         title: Text(l10n.charts),
       ),
@@ -91,7 +91,8 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   children: [
                     Expanded(
                       child: FilterDropdown(
-                        icon: Icons.calendar_today_rounded,
+                        key: TestKeys.chartsPeriodButton,
+                        icon: PhosphorIcons.calendar,
                         label: periodLabel,
                         accentColor: AppColors.inkBlue,
                         isActive: customRange != null,
@@ -106,7 +107,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                             ? TransactionCategories.iconFor(
                                 selectedCategory, type,
                                 extra: customCats[type] ?? [])
-                            : Icons.category_rounded,
+                            : PhosphorIcons.squaresFour,
                         label: selectedCategory != null
                             ? TransactionCategories.localizedName(
                                 selectedCategory, l10n)
@@ -234,7 +235,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                 );
               }),
               PickerOption(
-                icon: Icons.date_range_rounded,
+                icon: PhosphorIcons.calendarBlank,
                 label: currentCustomRange != null
                     ? '${currentCustomRange.start.day}/${currentCustomRange.start.month}/${currentCustomRange.start.year} – ${currentCustomRange.end.day}/${currentCustomRange.end.month}/${currentCustomRange.end.year}'
                     : l10n.customRange,
@@ -267,11 +268,11 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
   IconData _periodIcon(TransactionPeriod p) {
     switch (p) {
       case TransactionPeriod.week:
-        return Icons.view_week_rounded;
+        return PhosphorIcons.calendarDots;
       case TransactionPeriod.month:
-        return Icons.calendar_month_rounded;
+        return PhosphorIcons.calendarBlank;
       case TransactionPeriod.year:
-        return Icons.calendar_today_rounded;
+        return PhosphorIcons.calendar;
     }
   }
 
@@ -320,7 +321,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
               Text(
                 l10n.category.toUpperCase(),
                 style: TextStyle(
-                  fontFamily: 'GeneralSans',
+                  fontFamily: 'Inter',
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: context.appColors.textMuted,
@@ -333,7 +334,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                   shrinkWrap: true,
                   children: [
                     PickerOption(
-                      icon: Icons.grid_view_rounded,
+                      icon: PhosphorIcons.squaresFour,
                       label: l10n.allCategories,
                       isSelected: selectedCategory == null,
                       accentColor: accentColor,

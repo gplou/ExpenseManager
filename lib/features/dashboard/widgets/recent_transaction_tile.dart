@@ -31,7 +31,6 @@ class RecentTransactionTile extends ConsumerWidget {
     final avatarBg = context.appColors.raised;
     final secondaryText = context.appColors.textMuted;
 
-    final emoji = _emojiForCategory(transaction.category, isIncome);
     final customCats =
         ref.watch(customCategoriesSyncProvider)[transaction.type] ?? const [];
     TransactionCategory? customCat;
@@ -55,23 +54,34 @@ class RecentTransactionTile extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         child: Row(
           children: [
-            // ── Avatar ────────────────────────────────────────────────
+            // ── Chip de categoría ─────────────────────────────────────
+            //
+            // Cadena de resolución, de más específico a más genérico:
+            // emoji propio de una categoría personalizada → su IconData de
+            // Material (persistido, no se toca) → icono de línea del
+            // built-in. Cambiar el orden rompería los iconos que el usuario
+            // ya eligió.
             Container(
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: avatarBg,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Center(
                 child: customCat != null
                     ? customCat.emojiOverride != null
                         ? Text(customCat.emojiOverride!,
                             style: const TextStyle(fontSize: AppEmojiSize.medium))
-                        : Icon(customCat.icon,
-                            size: 18, color: cs.onSurface)
-                    : Text(emoji,
-                        style: const TextStyle(fontSize: AppEmojiSize.medium)),
+                        : Icon(customCat.icon, size: 20, color: cs.onSurface)
+                    : Icon(
+                        TransactionCategories.phosphorFor(
+                          transaction.category,
+                          isIncome: transaction.type.isIncome,
+                        ),
+                        size: 20,
+                        color: cs.onSurface,
+                      ),
               ),
             ),
             const Gap(14),
@@ -143,20 +153,4 @@ class RecentTransactionTile extends ConsumerWidget {
       ),
     );
   }
-
-  String _emojiForCategory(String category, bool isIncome) => switch (category) {
-        'Salario'    => '💼',
-        'Freelance'  => '💻',
-        'Inversión'  => '📈',
-        'Regalo'     => '🎁',
-        'Comida'     => '🍕',
-        'Transporte' => '🚗',
-        'Vivienda'   => '🏠',
-        'Ocio'       => '🎮',
-        'Salud'      => '💊',
-        'Educación'  => '📚',
-        'Ropa'       => '👕',
-        'Tecnología' => '⚡',
-        _            => isIncome ? '💰' : '💸',
-      };
 }

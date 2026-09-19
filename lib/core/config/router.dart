@@ -11,6 +11,7 @@ import 'package:expense_manager/features/subscription/subscription_provider.dart
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'package:expense_manager/core/services/analytics_route_observer.dart';
+import 'package:expense_manager/core/widgets/app_shell.dart';
 import 'package:expense_manager/features/auth/presentation/screens/login_screen.dart';
 import 'package:expense_manager/features/auth/presentation/screens/register_screen.dart';
 import 'package:expense_manager/features/dashboard/dashboard_screen.dart';
@@ -46,6 +47,17 @@ abstract class AppRoutes {
   static const termsOfService = '/terms-of-service';
   static const dataRecovery = '/data-recovery';
 }
+
+/// Navigator raíz. Lo necesitan las hojas y diálogos que se lanzan desde
+/// widgets montados por encima del Navigator (p. ej. la captura rápida en el
+/// `builder` de MaterialApp), que no pueden resolver `Navigator.of(context)`
+/// hacia arriba porque el Navigator les queda por debajo.
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
+final _shellHomeKey = GlobalKey<NavigatorState>(debugLabel: 'shell-home');
+final _shellActivityKey = GlobalKey<NavigatorState>(debugLabel: 'shell-activity');
+final _shellBudgetsKey = GlobalKey<NavigatorState>(debugLabel: 'shell-budgets');
+final _shellInsightsKey = GlobalKey<NavigatorState>(debugLabel: 'shell-insights');
 
 /// Notifier que escucha el stream de auth y notifica a GoRouter para
 /// que re-evalúe el redirect sin necesidad de recrear el router completo.
@@ -95,6 +107,7 @@ GoRouter router(Ref ref) {
   final authRepo = ref.read(authRepositoryProvider);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.dashboard,
     debugLogDiagnostics: kDebugMode,
     observers: [AnalyticsRouteObserver(), SentryNavigatorObserver()],
@@ -116,15 +129,55 @@ GoRouter router(Ref ref) {
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.dashboard,
-        name: 'dashboard',
-        builder: (context, state) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.transactions,
-        name: 'transactions',
-        builder: (context, state) => const TransactionsListScreen(),
+      // Las cuatro pestañas viven dentro del shell, que aporta la barra
+      // inferior y el FAB central. Todo lo demás queda como hermana de nivel
+      // raíz: así se dibuja ENCIMA de la barra, que es lo que quieres para
+      // una hoja de alta, el chat o los ajustes.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            navigatorKey: _shellHomeKey,
+            routes: [
+              GoRoute(
+                path: AppRoutes.dashboard,
+                name: 'dashboard',
+                builder: (context, state) => const DashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _shellActivityKey,
+            routes: [
+              GoRoute(
+                path: AppRoutes.transactions,
+                name: 'transactions',
+                builder: (context, state) => const TransactionsListScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _shellBudgetsKey,
+            routes: [
+              GoRoute(
+                path: AppRoutes.budgets,
+                name: 'budgets',
+                builder: (context, state) => const BudgetsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _shellInsightsKey,
+            routes: [
+              GoRoute(
+                path: AppRoutes.charts,
+                name: 'charts',
+                builder: (context, state) => const ChartsScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.addTransaction,
@@ -134,16 +187,6 @@ GoRouter router(Ref ref) {
               ? state.extra as ParsedVoiceTransaction
               : null,
         ),
-      ),
-      GoRoute(
-        path: AppRoutes.charts,
-        name: 'charts',
-        builder: (context, state) => const ChartsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.budgets,
-        name: 'budgets',
-        builder: (context, state) => const BudgetsScreen(),
       ),
       GoRoute(
         path: AppRoutes.pro,

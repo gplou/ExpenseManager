@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -15,6 +17,7 @@ void main() {
   late MockSupabaseClient supabase;
   late MockFunctionsClient functions;
   late VoiceTransactionParser parser;
+  final audioBytes = Uint8List.fromList(List.filled(100, 1));
 
   setUp(() {
     AiRateLimiter.instance.reset();
@@ -38,7 +41,7 @@ void main() {
         }),
       );
 
-      final result = await parser.parse('café cinco euros');
+      final result = await parser.parse(audioBytes);
 
       expect(result, isNotNull);
       expect(result!.amount, 12.5);
@@ -55,7 +58,7 @@ void main() {
         }),
       );
 
-      final result = await parser.parse('cobré mil quinientos del trabajo');
+      final result = await parser.parse(audioBytes);
 
       expect(result!.type, TransactionType.income);
       expect(result.amount, 1500);
@@ -70,10 +73,28 @@ void main() {
         }),
       );
 
-      final result = await parser.parse('tres euros');
+      final result = await parser.parse(audioBytes);
 
       expect(result, isNotNull);
       expect(result!.amount, 3);
+    });
+
+    test('sends the audio as base64 with the given mime type', () async {
+      stubFunctionInvoke(
+        functions,
+        response: okFunctionResponse({
+          'result': '{"amount":1,"type":"expense","category":"Otros"}',
+        }),
+      );
+
+      await parser.parse(audioBytes, mimeType: 'audio/wav');
+
+      final captured = verify(() => functions.invoke(
+            'parse-voice-transaction',
+            body: captureAny(named: 'body'),
+          )).captured.single as Map<String, dynamic>;
+      expect(captured['mime_type'], 'audio/wav');
+      expect(captured['audio_base64'], isA<String>());
     });
   });
 
@@ -86,7 +107,7 @@ void main() {
         response: functionResponseWith(status: 500, data: {'result': null}),
       );
 
-      final result = await parser.parse('algo');
+      final result = await parser.parse(audioBytes);
 
       expect(result, isNull);
     });
@@ -97,7 +118,7 @@ void main() {
         response: okFunctionResponse({'result': 'not json at all'}),
       );
 
-      final result = await parser.parse('texto');
+      final result = await parser.parse(audioBytes);
 
       expect(result, isNull);
     });
@@ -108,7 +129,26 @@ void main() {
         response: okFunctionResponse({'other': 'field'}),
       );
 
-      final result = await parser.parse('texto');
+      final result = await parser.parse(audioBytes);
+
+      expect(result, isNull);
+    });
+
+    // Regression: the on-device parser used to reject amount<=0, but the
+    // AI-based fromAiJson factory doesn't — Gemini returns amount:0 when it
+    // heard nothing transaction-like, and that must still surface as "not
+    // understood" rather than opening the form on a zero amount.
+    test('returns null when the AI reports amount 0 (nothing understood)',
+        () async {
+      stubFunctionInvoke(
+        functions,
+        response: okFunctionResponse({
+          'result':
+              '{"amount":0,"type":"expense","category":"Otros","description":""}',
+        }),
+      );
+
+      final result = await parser.parse(audioBytes);
 
       expect(result, isNull);
     });
@@ -127,12 +167,12 @@ void main() {
 
       // Drain the quota
       for (var i = 0; i < AiRateLimiter.maxPerMinute; i++) {
-        await parser.parse('call $i');
+        await parser.parse(audioBytes);
       }
 
       // Next call should be rate-limited
       expect(
-        () => parser.parse('one too many'),
+        () => parser.parse(audioBytes),
         throwsA(isA<RateLimitFailure>()),
       );
     });
@@ -144,7 +184,7 @@ void main() {
       }
 
       try {
-        await parser.parse('blocked');
+        await parser.parse(audioBytes);
       } on RateLimitFailure {
         // expected
       }

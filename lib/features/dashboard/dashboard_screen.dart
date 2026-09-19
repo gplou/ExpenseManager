@@ -2,11 +2,13 @@ import 'package:clock/clock.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/app_constants.dart';
 import 'package:expense_manager/core/providers/currency_provider.dart';
@@ -15,15 +17,14 @@ import 'package:expense_manager/core/providers/widget_action_provider.dart';
 import 'package:expense_manager/core/services/home_widget_gateway.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
-import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/budgets_section.dart';
-import 'widgets/dashboard_fab.dart';
 import 'widgets/period_selector.dart';
 import 'widgets/recent_transaction_tile.dart';
 import 'widgets/summary_section.dart';
+import 'widgets/upcoming_bills_card.dart';
 import 'package:expense_manager/features/auth/presentation/providers/auth_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/recurring_transactions_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/sync_provider.dart';
@@ -89,7 +90,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.auto_awesome_rounded,
+            Icon(PhosphorIcons.sparkle,
                 color: AppColors.dustyTeal, size: 22),
             const Gap(10),
             Expanded(child: Text(l10n.tutorialDialogTitle)),
@@ -151,17 +152,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final cSymbol = currencySymbol(ref.watch(currencyProvider).value ?? 'EUR');
     final numFmt = ref.watch(numberFormatProvider).value ??
         NumberFormatStyle.dotDecimal;
+    final localeCode = Localizations.localeOf(context).languageCode;
+
+    // Rango efectivo del filtro activo: de ahí salen el nombre del periodo
+    // del eyebrow y los días sobre los que se promedia el gasto diario.
+    final range = ref.watch(effectiveDateRangeProvider);
+    final periodLabel = customRange != null
+        ? '${customRange.start.day}/${customRange.start.month} – '
+            '${customRange.end.day}/${customRange.end.month}'
+        : (period == TransactionPeriod.month
+            ? clock.now().monthName(localeCode)
+            : period.l10nLabel(l10n).toLowerCase());
+    final daysElapsed = range.to.difference(range.from).inDays + 1;
 
     return Stack(
       children: [
       Scaffold(
+      // El drawer se queda aquí, no en AppShell: lo abre el engranaje de esta
+      // cabecera, y `Scaffold.of` resuelve al Scaffold más cercano.
       drawer: const AppDrawer(),
-      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
+      // El banner y la barra inferior los aporta AppShell. Repetirlos aquí
+      // apilaría dos banners y descontaría el hueco dos veces.
       appBar: AppBar(
         leading: Builder(
           builder: (ctx) => IconButton(
             key: TutorialKeys.drawerBtnKey,
-            icon: const Icon(Icons.menu),
+            icon: Icon(PhosphorIcons.gearSix),
             tooltip: MaterialLocalizations.of(ctx).openAppDrawerTooltip,
             onPressed: () => Scaffold.of(ctx).openDrawer(),
           ),
@@ -180,7 +196,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
             const Gap(2),
             Text(
-              clock.now().formattedDate,
+              clock.now().longDate(localeCode),
               style: context.textTheme.bodySmall?.copyWith(
                 color: cs.onSurface.withValues(alpha: 0.55),
                 letterSpacing: 0,
@@ -188,15 +204,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
           ],
         ),
-        actions: [
-          if (ref.watch(isProProvider))
-            IconButton(
-              key: TutorialKeys.chatBtnKey,
-              icon: Icon(Icons.auto_awesome_outlined, color: cs.onSurface),
-              tooltip: l10n.chatTitle,
-              onPressed: () => context.push(AppRoutes.chat),
-            ),
-        ],
       ),
       body: Stack(
         children: [
@@ -244,7 +251,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             );
                           }),
                           IconChip(
-                            icon: Icons.calendar_month_outlined,
+                            key: TestKeys.dashboardDateRangeButton,
+                            icon: PhosphorIcons.calendarBlank,
                             isActive: customRange != null,
                             onTap: () async {
                               final range = await showCustomDateRangePicker(
@@ -276,7 +284,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         summary: summary,
                         cSymbol: cSymbol,
                         numFmtStyle: numFmt,
-                        onViewCharts: () => context.push(AppRoutes.charts),
+                        periodLabel: periodLabel,
+                        daysElapsed: daysElapsed,
+                        onViewCharts: () => context.go(AppRoutes.charts),
                       ),
                     ),
                     const Gap(12),
@@ -284,6 +294,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // ── Budgets ──────────────────────────────────────────────
                     BudgetsSection(cSymbol: cSymbol, numFmtStyle: numFmt),
                     const Gap(12),
+
+                    // ── Próximos recibos ─────────────────────────────────────
+                    UpcomingBillsCard(cSymbol: cSymbol, numFmtStyle: numFmt),
 
                     // ── Recent transactions ──────────────────────────────────
                     Padding(
@@ -305,7 +318,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             label: l10n.seeAll,
                             child: InkWell(
                               key: TutorialKeys.seeAllBtnKey,
-                              onTap: () => context.push(AppRoutes.transactions),
+                              onTap: () => context.go(AppRoutes.transactions),
                               borderRadius: BorderRadius.circular(8),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -323,7 +336,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     ),
                                     const Gap(2),
                                     Icon(
-                                      Icons.arrow_forward_rounded,
+                                      PhosphorIcons.arrowRight,
                                       size: 14,
                                       color: cs.primary,
                                     ),
@@ -364,16 +377,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
                   ),
             const Gap(12),
-            SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
+            // El shell ya descuenta barra + banner del alto del body: aquí
+            // solo hace falta un respiro al final de la lista.
+            const Gap(16),
           ],
         ),
       ),
     ),
   ),
       ),
-          const Positioned.fill(
-            child: SpeedDialFab(),
-          ),
         ],
       ),
       ),
@@ -482,7 +494,11 @@ class _EmptyTransactions extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Column(
+          // Flexible acota el ancho de la columna: sin él el texto no tiene
+          // dónde partir y desborda con traducciones largas o escala de
+          // texto grande.
+          Flexible(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
@@ -493,7 +509,7 @@ class _EmptyTransactions extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.inbox_outlined,
+                  PhosphorIcons.tray,
                   size: 24,
                   color: cs.onSurface.withValues(alpha: 0.5),
                 ),
@@ -507,6 +523,7 @@ class _EmptyTransactions extends StatelessWidget {
                 ),
               ),
             ],
+          ),
           ),
         ],
       ),

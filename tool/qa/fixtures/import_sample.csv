@@ -1,0 +1,3 @@
+date,type,category,subcategory,description,amount,currency
+2026-08-21,expense,Comida,,Import QA - CSV panaderia,5.30,EUR
+2026-08-22,expense,Transporte,,Import QA - CSV autobus,1.85,EUR

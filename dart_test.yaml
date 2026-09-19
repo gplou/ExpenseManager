@@ -1,0 +1,6 @@
+tags:
+  golden:
+    description: >-
+      Pixel golden tests (test/golden/). Baselines are generated on macOS;
+      excluded from CI (see .github/workflows/ci.yml) until there's a
+      Linux-generated baseline. Run locally with `flutter test --tags golden`.

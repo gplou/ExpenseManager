@@ -126,6 +126,9 @@ class AuthNotifier extends _$AuthNotifier {
     AnalyticsService.reset();
     SentryService.clearUser();
     await ref.read(authRepositoryProvider).signOut();
+    // Nadie observa authProvider fuera de login/register: al volver del await
+    // el notifier (autoDispose) puede haberse desechado ya por falta de listeners.
+    if (!ref.mounted) return;
     state = Idle();
   }
 
@@ -136,9 +139,11 @@ class AuthNotifier extends _$AuthNotifier {
       AnalyticsService.reset();
       SentryService.clearUser();
       await ref.read(authRepositoryProvider).deleteAccount();
+      if (!ref.mounted) return true;
       state = Idle();
       return true;
     } on AppFailure catch (e) {
+      if (!ref.mounted) return false;
       state = Failure(e);
       return false;
     }

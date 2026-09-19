@@ -4,6 +4,7 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -19,6 +20,7 @@ import 'package:expense_manager/core/utils/app_logger.dart';
 
 import 'core/config/app_config.dart';
 import 'core/config/screenshot_mode.dart';
+import 'core/config/sentry_filters.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/sentry_provider_observer.dart';
@@ -26,6 +28,7 @@ import 'core/services/sentry_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/config/router.dart';
 import 'core/widgets/lock_gate.dart';
+import 'features/transactions/presentation/widgets/quick_capture_host.dart';
 import 'core/local_db/local_database.dart';
 import 'core/providers/locale_provider.dart' show localeProvider, kLocaleKey, supportedLocales;
 import 'core/providers/theme_provider.dart' show themeModeProvider, kThemeModeKey;
@@ -281,12 +284,12 @@ class _NoopSyncNotifier extends SyncNotifier {
 /// Release-only fallback for widget build/layout/paint errors. Avoids Flutter's
 /// default grey box; renders a neutral surface without needing a theme/context.
 Widget _releaseErrorWidget(FlutterErrorDetails details) {
-  return const Directionality(
+  return Directionality(
     textDirection: TextDirection.ltr,
     child: ColoredBox(
       color: AppColors.paper,
       child: Center(
-        child: Icon(Icons.error_outline, color: AppColors.graphite, size: 40),
+        child: Icon(PhosphorIcons.warningCircle, color: AppColors.graphite, size: 40),
       ),
     ),
   );
@@ -332,37 +335,7 @@ Future<void> _initSentry(PackageInfo packageInfo) async {
     // Adjunta stack trace también en eventos de mensaje (sin excepción).
     options.attachStacktrace = true;
     options.debug = AppConfig.isDevelopment;
-    // Los reportes de "OnePlus8Pro" con pantalla 288x448 / archs x86 provienen
-    // de emuladores y granjas de testing (pre-launch report de Google Play,
-    // revisores de tiendas) que falsifican el modelo. Corre tras el enriquecido
-    // nativo, así que device.simulator ya está poblado aquí.
-    options.beforeSend = (event, hint) {
-      final isSimulator = event.contexts.device?.simulator ?? false;
-      if (isSimulator) {
-        if (AppConfig.isProduction) return null; // descartar ruido en prod
-        event.tags = {...?event.tags, 'simulator': 'true'}; // visible en dev
-      }
-      // Supabase auto-refreshes the session token in the background. When the
-      // device is offline this always fails with a SocketException / host
-      // lookup error — expected behaviour, not a real bug worth alerting on.
-      final exceptions = event.exceptions ?? [];
-      final isOfflineAuthRefresh = exceptions.any((ex) {
-        final msg = ex.value ?? '';
-        return (msg.contains('Failed host lookup') ||
-                msg.contains('SocketException')) &&
-            msg.contains('auth/v1/token');
-      });
-      if (isOfflineAuthRefresh) return null;
-      // Riverpod completa el `.future` de un provider que muere en pleno load
-      // con este StateError (p. ej. logout/login desmonta
-      // allTransactionsProvider mientras carga). Es ruido de teardown sin
-      // acción posible: el awaiter o se re-construye (watch) o murió con el
-      // mismo scope.
-      final isProviderDisposedMidLoad = exceptions.any((ex) =>
-          (ex.value ?? '').contains('was disposed during loading state'));
-      if (isProviderDisposedMidLoad) return null;
-      return event;
-    };
+    options.beforeSend = filterExpectedNoise;
   });
 }
 
@@ -404,7 +377,7 @@ class _InitErrorApp extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 48),
+                Icon(PhosphorIcons.warningCircle, size: 48),
                 const SizedBox(height: 16),
                 const Text(
                   AppConfig.appName,
@@ -520,7 +493,11 @@ class _MyAppState extends ConsumerState<MyApp> {
           data: mq.copyWith(textScaler: clamped),
           // App lock: overlay opaco por encima del Navigator (cubre cualquier
           // ruta/diálogo) cuando el bloqueo biométrico está activado.
-          child: LockGate(child: child!),
+          //
+          // La captura rápida va por dentro del LockGate: debe quedar tapada
+          // por el bloqueo, pero por encima del Navigator para seguir viva al
+          // cambiar de pestaña y ser alcanzable desde las hojas modales.
+          child: LockGate(child: QuickCaptureHost(child: child!)),
         );
       },
     );

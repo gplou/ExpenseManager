@@ -2,18 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
-import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/data/export_excel_service.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transaction_search_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/core/services/analytics_service.dart';
-import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/transactions_filter_button.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/transactions_list_footer.dart';
@@ -168,25 +168,26 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final cs = context.colors;
 
     return Scaffold(
-      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
+
       appBar: AppBar(
         leading: _isSelecting
             ? IconButton(
                 tooltip: l10n.cancel,
-                icon: const Icon(Icons.close_rounded),
+                icon: Icon(PhosphorIcons.x),
                 onPressed: _exitSelectionMode,
               )
             : _isSearching
                 ? IconButton(
+                    key: TestKeys.transactionsSearchBack,
                     tooltip: l10n.cancel,
-                    icon: const Icon(Icons.arrow_back_rounded),
+                    icon: Icon(PhosphorIcons.arrowLeft),
                     onPressed: _exitSearchMode,
                   )
                 : null,
         title: _isSelecting
             ? Text(
                 l10n.selectedCount(_selectedIds.length),
-                style: const TextStyle(fontFamily: 'GeneralSans', fontWeight: FontWeight.w600),
+                style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
               )
             : _isSearching
                 ? TextField(
@@ -207,7 +208,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             transactionsAsync.whenOrNull(
               data: (_) => IconButton(
                 tooltip: l10n.delete,
-                icon: const Icon(Icons.delete_outline_rounded, color: AppColors.mutedTerra),
+                icon: Icon(PhosphorIcons.trash, color: AppColors.mutedTerra),
                 onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
               ),
             ) ?? const SizedBox.shrink()
@@ -218,7 +219,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   ? const SizedBox.shrink()
                   : IconButton(
                       tooltip: l10n.cancel,
-                      icon: const Icon(Icons.close_rounded),
+                      icon: Icon(PhosphorIcons.x),
                       onPressed: () {
                         _searchController.clear();
                         _onSearchChanged('');
@@ -228,8 +229,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           else ...[
             transactionsAsync.whenOrNull(
               data: (_) => IconButton(
+                key: TestKeys.transactionsSearchButton,
                 tooltip: l10n.search,
-                icon: const Icon(Icons.search_rounded),
+                icon: Icon(PhosphorIcons.magnifyingGlass),
                 onPressed: _enterSearchMode,
               ),
             ) ?? const SizedBox.shrink(),

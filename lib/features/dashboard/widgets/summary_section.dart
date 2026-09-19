@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -6,6 +7,7 @@ import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/fading_divider.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
@@ -59,19 +61,33 @@ class _AnimatedAmountState extends State<AnimatedAmount> {
   }
 }
 
-/// Hero summary editorial Quiet Wealth: eyebrow + número gigante + bento
-/// 2-col plano con income/gastos. Sin barra de proporción, sin botón CTA.
+/// Héroe del dashboard: cuánto se ha gastado en el periodo, en grande, y
+/// debajo tres cifras de apoyo (ingresos, media diaria, balance).
+///
+/// El gasto manda sobre el balance a propósito: es el número sobre el que se
+/// actúa. El balance sigue ahí, pero como dato de apoyo.
 class SummarySection extends StatelessWidget {
   const SummarySection({
     super.key,
     required this.summary,
     required this.cSymbol,
     required this.numFmtStyle,
+    required this.periodLabel,
+    required this.daysElapsed,
     required this.onViewCharts,
   });
   final TransactionsSummary summary;
   final String cSymbol;
   final NumberFormatStyle numFmtStyle;
+
+  /// Nombre del periodo tal y como se muestra en el eyebrow ("septiembre",
+  /// "esta semana"…). Lo resuelve el dashboard, que es quien conoce el filtro.
+  final String periodLabel;
+
+  /// Días transcurridos del periodo, para la media diaria. Siempre >= 1: el
+  /// primer día del mes el gasto medio es el gasto, no una división por cero.
+  final int daysElapsed;
+
   final VoidCallback onViewCharts;
 
   // Números tabulares (mismas anchuras de dígito) para que la columna no baile.
@@ -84,77 +100,39 @@ class SummarySection extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
     final tt = context.textTheme;
-    final balance = summary.balance;
-    final isPositive = balance >= 0;
-
-    final dividerColor = context.appColors.divider;
+    final appColors = context.appColors;
+    final dividerColor = appColors.divider;
+    final avgPerDay = summary.expense / (daysElapsed < 1 ? 1 : daysElapsed);
 
     return Container(
       key: TutorialKeys.balanceCardKey,
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: dividerColor, width: 1),
-      ),
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Eyebrow: BALANCE ──────────────────────────────────────────
+          // ── Eyebrow: GASTADO EN <PERIODO> ─────────────────────────────
           Text(
-            l10n.balance.toUpperCase(),
-            style: tt.labelMedium?.copyWith(
-              color: context.appColors.textMuted,
-            ),
+            l10n.spentInPeriod(periodLabel).toUpperCase(),
+            style: tt.labelMedium?.copyWith(color: appColors.textMuted),
           ),
-          const Gap(10),
+          const Gap(8),
 
-          // ── Número hero ───────────────────────────────────────────────
+          // ── Cifra héroe ───────────────────────────────────────────────
           AnimatedAmount(
-            value: balance,
-            formatter: (v) =>
-                '${v < 0 ? '-' : ''}$cSymbol${formatAmount(v.abs(), numFmtStyle)}',
-            style: tt.displaySmall!.copyWith(
+            value: summary.expense,
+            formatter: (v) => '$cSymbol${formatAmount(v, numFmtStyle)}',
+            style: tt.displayLarge!.copyWith(
               color: cs.onSurface,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -1.2,
               fontFeatures: _tabularFigures,
             ),
           ),
-          const Gap(6),
-
-          // ── Indicador inline ──────────────────────────────────────────
-          Row(
-            children: [
-              Icon(
-                isPositive
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded,
-                size: 14,
-                color: isPositive
-                    ? AppColors.positive
-                    : AppColors.negative,
-              ),
-              const Gap(4),
-              Text(
-                isPositive ? l10n.income : l10n.expenses,
-                style: tt.bodySmall?.copyWith(
-                  color: isPositive
-                      ? AppColors.positive
-                      : AppColors.negative,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const Gap(20),
-
-          // ── Hairline divider ──────────────────────────────────────────
-          Container(height: 1, color: dividerColor),
           const Gap(18),
 
-          // ── Bento 2-col: income / expense ─────────────────────────────
+          FadingDivider(color: dividerColor),
+          const Gap(16),
+
+          // ── Tres cifras de apoyo ──────────────────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -168,26 +146,28 @@ class SummarySection extends StatelessWidget {
                   prefix: '+',
                 ),
               ),
-              Container(
-                width: 1,
-                height: 40,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                color: dividerColor,
+              Expanded(
+                child: _SummaryCell(
+                  label: l10n.avgPerDay,
+                  amount: avgPerDay,
+                  cSymbol: cSymbol,
+                  numFmtStyle: numFmtStyle,
+                  amountColor: cs.onSurface,
+                ),
               ),
               Expanded(
                 child: _SummaryCell(
-                  label: l10n.expenses,
-                  amount: summary.expense,
+                  label: l10n.balance,
+                  amount: summary.balance,
                   cSymbol: cSymbol,
                   numFmtStyle: numFmtStyle,
-                  amountColor: AppColors.negative,
-                  prefix: '-',
+                  amountColor: cs.onSurface,
                 ),
               ),
             ],
           ),
 
-          const Gap(18),
+          const Gap(14),
 
           // ── Link a charts (discreto, no botón outlined) ───────────────
           Align(
@@ -205,12 +185,12 @@ class SummarySection extends StatelessWidget {
                       l10n.viewCharts,
                       style: tt.labelLarge?.copyWith(
                         color: cs.primary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const Gap(4),
                     Icon(
-                      Icons.arrow_forward_rounded,
+                      PhosphorIcons.arrowRight,
                       size: 14,
                       color: cs.primary,
                     ),
@@ -232,7 +212,7 @@ class _SummaryCell extends StatelessWidget {
     required this.cSymbol,
     required this.numFmtStyle,
     required this.amountColor,
-    required this.prefix,
+    this.prefix = '',
   });
 
   final String label;
@@ -240,6 +220,8 @@ class _SummaryCell extends StatelessWidget {
   final String cSymbol;
   final NumberFormatStyle numFmtStyle;
   final Color amountColor;
+  /// Signo opcional delante de la cifra ("+" en ingresos). Vacío deja que
+  /// el número muestre su propio signo.
   final String prefix;
 
   @override
@@ -260,7 +242,7 @@ class _SummaryCell extends StatelessWidget {
           value: amount,
           formatter: (v) =>
               '$prefix$cSymbol${formatAmount(v, numFmtStyle)}',
-          style: tt.titleLarge!.copyWith(
+          style: tt.titleSmall!.copyWith(
             color: amountColor,
             fontWeight: FontWeight.w600,
             fontFeatures: const [FontFeature.tabularFigures()],

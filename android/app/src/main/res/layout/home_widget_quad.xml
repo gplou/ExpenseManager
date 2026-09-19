@@ -112,14 +112,16 @@
 
         </LinearLayout>
 
-        <!-- Arriba derecha: Chat IA -->
+        <!-- Arriba derecha: Chat IA — oculto para la primera versión sin IA.
+             No se borra: HomeWidgetProvider.kt sigue cableando su click. -->
         <LinearLayout
             android:id="@+id/btn_chat"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center"
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="46dp"
@@ -157,7 +159,7 @@
         android:layout_marginRight="16dp"
         android:background="@color/widget_border" />
 
-    <!-- Fila inferior -->
+    <!-- Fila inferior: voz + foto -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"

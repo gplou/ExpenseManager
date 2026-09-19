@@ -69,7 +69,7 @@ void main() {
       await settle(tester);
 
       // ── Borrar ──────────────────────────────────────────────────────────
-      await tester.tap(find.byIcon(Icons.delete_outline_rounded));
+      await tester.tap(find.byKey(TestKeys.budgetDeleteButton));
       await settle(tester);
       await tester.tap(find.widgetWithText(TextButton, l10nEn.delete));
       await settle(tester);

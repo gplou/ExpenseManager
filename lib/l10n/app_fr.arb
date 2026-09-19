@@ -470,5 +470,34 @@
   "errorFreeTrialFailed": "Impossible d'activer l'essai gratuit. Réessaie.",
   "errorPurchaseGeneric": "Impossible de finaliser l'achat. Réessaie.",
   "errorRestoreGeneric": "Impossible de restaurer tes achats. Réessaie.",
-  "errorPromoTooManyAttempts": "Trop de tentatives. Patiente {seconds} secondes."
+  "errorPromoTooManyAttempts": "Trop de tentatives. Patiente {seconds} secondes.",
+  "errorPromoInvalidCode": "Ce code n'est pas valide.",
+  "errorPromoExpiredCode": "Ce code a expiré.",
+  "errorPromoExhaustedCode": "Ce code a atteint sa limite d'utilisation.",
+  "errorPromoAlreadyRedeemed": "Tu as déjà utilisé ce code.",
+
+  "navHome": "Accueil",
+  "@navHome": {},
+  "navActivity": "Activité",
+  "@navActivity": {},
+  "navBudgets": "Budgets",
+  "@navBudgets": {},
+  "navInsights": "Analyses",
+  "@navInsights": {}
+,
+
+  "spentInPeriod": "Dépensé en {period}",
+  "@spentInPeriod": {
+    "placeholders": { "period": { "type": "String" } }
+  },
+  "avgPerDay": "Moy. / jour",
+  "@avgPerDay": {},
+  "upcomingBills": "Prochains prélèvements",
+  "@upcomingBills": {},
+  "amountLeft": "{amount} restant",
+  "@amountLeft": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "nothingScheduled": "Rien de prévu",
+  "@nothingScheduled": {}
 }

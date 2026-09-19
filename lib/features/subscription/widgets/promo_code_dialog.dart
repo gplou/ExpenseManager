@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:expense_manager/core/utils/extensions.dart';
@@ -10,7 +11,7 @@ import 'package:expense_manager/features/subscription/subscription_repository.da
 ///
 /// Sigue el patrón de diálogos de la app: TextButton para cancelar,
 /// FilledButton para la acción primaria, y snackbar flotante de éxito
-/// (los estilos de texto vienen del theme — GeneralSans global).
+/// (los estilos de texto vienen del theme — Inter global).
 class PromoCodeDialog extends ConsumerStatefulWidget {
   const PromoCodeDialog({super.key});
 
@@ -52,10 +53,17 @@ class _PromoCodeDialogState extends ConsumerState<PromoCodeDialog> {
         });
       }
     } on PromoCodeException catch (e) {
-      // Server-driven message (invalid/expired code) — surfaced as-is.
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _error = e.message;
+          _error = switch (e.reason) {
+            PromoCodeErrorReason.invalidCode => l10n.errorPromoInvalidCode,
+            PromoCodeErrorReason.expiredCode => l10n.errorPromoExpiredCode,
+            PromoCodeErrorReason.exhaustedCode => l10n.errorPromoExhaustedCode,
+            PromoCodeErrorReason.alreadyRedeemed =>
+              l10n.errorPromoAlreadyRedeemed,
+            PromoCodeErrorReason.other => l10n.proPromoUnexpectedError,
+          };
           _loading = false;
         });
       }
@@ -86,7 +94,7 @@ class _PromoCodeDialogState extends ConsumerState<PromoCodeDialog> {
             enabled: !_loading,
             decoration: InputDecoration(
               hintText: l10n.promoCodeHint,
-              prefixIcon: const Icon(Icons.local_offer_outlined),
+              prefixIcon: Icon(PhosphorIcons.tag),
             ),
             onSubmitted: (_) => _applyCode(),
           ),

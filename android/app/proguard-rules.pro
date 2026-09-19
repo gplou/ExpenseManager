@@ -76,12 +76,17 @@
 -keep class es.antonborri.home_widget.** { *; }
 -dontwarn es.antonborri.home_widget.**
 
-# speech_to_text
--keep class com.csdcorp.speech_to_text.** { *; }
--dontwarn com.csdcorp.speech_to_text.**
-
 # Suppress R8 warnings for missing Play Store classes
 -dontwarn com.google.android.play.**
 
 # Apache Tika (transitive dep) references desktop-only JAXP APIs not present on Android
 -dontwarn javax.xml.stream.**
+
+# google_mlkit_text_recognition references every script's recognizer options
+# (Chinese/Devanagari/Japanese/Korean) from its generic initialize() call even
+# though we only use TextRecognitionScript.latin and never add those optional
+# ML Kit script dependencies — safe to suppress, they're never instantiated.
+-dontwarn com.google.mlkit.vision.text.chinese.**
+-dontwarn com.google.mlkit.vision.text.devanagari.**
+-dontwarn com.google.mlkit.vision.text.japanese.**
+-dontwarn com.google.mlkit.vision.text.korean.**

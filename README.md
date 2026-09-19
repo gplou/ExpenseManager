@@ -14,7 +14,7 @@ App móvil de gestión de gastos e ingresos personales construida con Flutter y 
 - Exportación a Excel (`.xlsx`) con `share_plus`
 
 ### IA integrada
-- **Voz**: graba un mensaje de voz → la app transcribe con `speech_to_text` y extrae importe, categoría y nota usando Claude (Anthropic API)
+- **Voz**: graba un mensaje de voz → se envía a Gemini, que transcribe y extrae importe, categoría, fecha y recurrencia en una sola llamada
 - **Foto**: sube una foto de ticket/factura → se parsea con visión para extraer los datos del gasto
 - **Chat financiero**: pantalla de chat para consultar al asistente sobre tus finanzas
 
@@ -53,7 +53,7 @@ App móvil de gestión de gastos e ingresos personales construida con Flutter y 
 | Navegación | GoRouter |
 | Modelos | Freezed + json_serializable |
 | Charts | fl_chart 0.69.x |
-| IA / Voz | Claude API (Anthropic) + speech_to_text |
+| IA / Voz | Gemini API (Google AI) + record |
 | IAP | in_app_purchase 3.x |
 | i18n | flutter_localizations + ARB + gen-l10n |
 | Persistencia local | SharedPreferences + flutter_secure_storage |
