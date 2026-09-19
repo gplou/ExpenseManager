@@ -62,6 +62,10 @@ class _CreateSubcategoryDialogState
           child: Text(l10n.cancel),
         ),
         FilledButton(
+          // El tema da a FilledButton minimumSize de ancho infinito
+          // (pensado para CTAs de hoja); en actions: de un AlertDialog
+          // eso lo empuja a ocupar todo el ancho disponible.
+          style: FilledButton.styleFrom(minimumSize: Size.zero),
           onPressed: canSave ? _save : null,
           child: Text(l10n.save),
         ),

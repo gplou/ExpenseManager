@@ -45,6 +45,13 @@ class TestKeys {
   static const transactionNotePill = ValueKey('transaction-note-pill');
   static const transactionDeleteButton = ValueKey('transaction-delete');
 
+  /// Cabecera de alta de transacción: captura por voz y por foto.
+  static const voiceCaptureButton = ValueKey('voice-capture');
+  static const photoCaptureButton = ValueKey('photo-capture');
+
   /// Borrar un presupuesto desde la lista.
   static const budgetDeleteButton = ValueKey('budget-delete');
+
+  /// Enviar mensaje en el chat financiero.
+  static const chatSendButton = ValueKey('chat-send');
 }

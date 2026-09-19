@@ -1,8 +1,11 @@
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import 'package:expense_manager/core/errors/failure_localizations.dart';
+import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/features/chat/data/chat_repository.dart';
 import 'package:expense_manager/features/chat/domain/chat_message.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 
 final chatMessagesProvider =
     StateNotifierProvider.autoDispose<ChatNotifier, List<ChatMessage>>(
@@ -24,7 +27,11 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
   final ChatRepository _repository;
   final void Function(bool) _onLoadingChanged;
 
-  Future<void> sendMessage(String text, String locale) async {
+  Future<void> sendMessage(
+    String text,
+    String locale, {
+    required AppLocalizations l10n,
+  }) async {
     final userMsg = ChatMessage(
       content: text,
       isUser: true,
@@ -46,9 +53,11 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
         timestamp: clock.now(),
       );
       state = [...state, aiMsg];
-    } catch (e) {
+    } on AppFailure catch (f) {
+      // El repositorio siempre lanza AppFailure (nunca excepciones crudas) —
+      // localizedMessage cubre el switch exhaustivo, sin fallback genérico.
       final errorMsg = ChatMessage(
-        content: 'Error: ${e.toString().replaceFirst('Exception: ', '')}',
+        content: f.localizedMessage(l10n),
         isUser: false,
         timestamp: clock.now(),
       );

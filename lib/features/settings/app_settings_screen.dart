@@ -203,7 +203,7 @@ class AppSettingsScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.radiusSheet,
       ),
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx);
@@ -258,7 +258,7 @@ class AppSettingsScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.radiusSheet,
       ),
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx);
@@ -306,7 +306,7 @@ class AppSettingsScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.radiusSheet,
       ),
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx);

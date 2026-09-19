@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
@@ -52,7 +52,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _controller.clear();
 
     final locale = Localizations.localeOf(context).languageCode;
-    await ref.read(chatMessagesProvider.notifier).sendMessage(text, locale);
+    final l10n = AppLocalizations.of(context);
+    await ref
+        .read(chatMessagesProvider.notifier)
+        .sendMessage(text, locale, l10n: l10n);
     _scrollToBottom();
   }
 
@@ -73,8 +76,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
-                color: AppColors.dustyTeal,
+              decoration: BoxDecoration(
+                color: cs.primary,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -128,12 +131,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppColors.dustyTeal.withValues(alpha: 0.12),
+                color: cs.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 PhosphorIcons.sparkle,
-                color: AppColors.dustyTeal,
+                color: cs.primary,
                 size: 32,
               ),
             ),
@@ -176,7 +179,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       label: Text(
         text,
         style: context.textTheme.bodySmall?.copyWith(
-          color: context.isDark ? AppColors.inkBlueSoft : AppColors.dustyTeal,
+          color: context.colors.primary,
         ),
       ),
       backgroundColor: context.appColors.raised,
@@ -272,8 +275,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(
-                    color: AppColors.dustyTeal,
+                  borderSide: BorderSide(
+                    color: cs.primary,
                   ),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -286,19 +289,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           const SizedBox(width: 4),
           IconButton(
+            key: TestKeys.chatSendButton,
+            tooltip: l10n.send,
             onPressed: isLoading ? null : _send,
             icon: isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.dustyTeal,
+                      color: cs.primary,
                     ),
                   )
                 : Icon(
                     PhosphorIcons.paperPlaneTilt,
-                    color: AppColors.dustyTeal,
+                    color: cs.primary,
                   ),
           ),
         ],

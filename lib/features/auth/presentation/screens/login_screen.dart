@@ -188,12 +188,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   key: TestKeys.loginSubmitButton,
                   onPressed: isLoading ? null : _handleLogin,
                   child: isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            // El ElevatedButton del tema es transparente con
+                            // borde — un spinner blanco es casi invisible.
+                            // El color del propio botón es el correcto.
+                            color: context.colors.primary,
                           ),
                         )
                       : Text(l10n.signIn),

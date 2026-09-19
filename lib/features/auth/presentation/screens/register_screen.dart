@@ -141,12 +141,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ElevatedButton(
                   onPressed: isLoading ? null : _handleRegister,
                   child: isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            // El ElevatedButton del tema es transparente con
+                            // borde — un spinner blanco es casi invisible.
+                            // El color del propio botón es el correcto.
+                            color: context.colors.primary,
                           ),
                         )
                       : Text(l10n.createAccount),

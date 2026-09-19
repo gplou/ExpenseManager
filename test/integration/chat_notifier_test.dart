@@ -1,9 +1,12 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/features/chat/data/chat_repository.dart';
 import 'package:expense_manager/features/chat/presentation/providers/chat_provider.dart';
+import 'package:expense_manager/l10n/app_localizations.dart';
 
 // ── Mock ──────────────────────────────────────────────────────────────────────
 
@@ -23,6 +26,7 @@ ProviderContainer _makeContainer(_MockChatRepository repo) {
 
 void main() {
   late _MockChatRepository mockRepo;
+  final l10n = lookupAppLocalizations(const Locale('es'));
 
   setUp(() {
     mockRepo = _MockChatRepository();
@@ -48,7 +52,7 @@ void main() {
 
       await container
           .read(chatMessagesProvider.notifier)
-          .sendMessage('Hola', 'es');
+          .sendMessage('Hola', 'es', l10n: l10n);
 
       final messages = container.read(chatMessagesProvider);
       expect(messages.first.content, 'Hola');
@@ -67,7 +71,7 @@ void main() {
 
       await container
           .read(chatMessagesProvider.notifier)
-          .sendMessage('Hola', 'es');
+          .sendMessage('Hola', 'es', l10n: l10n);
 
       final messages = container.read(chatMessagesProvider);
       expect(messages.length, 2);
@@ -88,7 +92,7 @@ void main() {
 
       await container
           .read(chatMessagesProvider.notifier)
-          .sendMessage('¿Cuánto gasté?', 'es');
+          .sendMessage('¿Cuánto gasté?', 'es', l10n: l10n);
 
       verify(() => mockRepo.sendMessage(
             message: '¿Cuánto gasté?',
@@ -97,43 +101,46 @@ void main() {
           )).called(1);
     });
 
-    test('sendMessage on error appends error message', () async {
+    test('sendMessage on AppFailure appends its localized message',
+        () async {
+      // El repositorio siempre lanza AppFailure (nunca excepciones crudas) —
+      // el notifier debe localizar el mensaje, no propagar el texto interno.
       when(() => mockRepo.sendMessage(
             message: any(named: 'message'),
             history: any(named: 'history'),
             locale: any(named: 'locale'),
-          )).thenThrow(Exception('Network failure'));
+          )).thenThrow(const NetworkFailure('Failed to communicate with AI'));
 
       final container = _makeContainer(mockRepo);
       addTearDown(container.dispose);
 
       await container
           .read(chatMessagesProvider.notifier)
-          .sendMessage('test', 'en');
+          .sendMessage('test', 'es', l10n: l10n);
 
       final messages = container.read(chatMessagesProvider);
       expect(messages.length, 2);
       expect(messages[1].isUser, isFalse);
-      expect(messages[1].content, contains('Network failure'));
+      expect(messages[1].content, l10n.errorNetwork);
     });
 
-    test('error message strips "Exception: " prefix', () async {
+    test('sendMessage on RateLimitFailure appends its own localized message',
+        () async {
       when(() => mockRepo.sendMessage(
             message: any(named: 'message'),
             history: any(named: 'history'),
             locale: any(named: 'locale'),
-          )).thenThrow(Exception('Límite alcanzado'));
+          )).thenThrow(const RateLimitFailure('Rate limit exceeded'));
 
       final container = _makeContainer(mockRepo);
       addTearDown(container.dispose);
 
       await container
           .read(chatMessagesProvider.notifier)
-          .sendMessage('test', 'en');
+          .sendMessage('test', 'es', l10n: l10n);
 
       final messages = container.read(chatMessagesProvider);
-      final errorContent = messages.last.content;
-      expect(errorContent, 'Error: Límite alcanzado');
+      expect(messages.last.content, l10n.errorRateLimit);
     });
 
     test('chatLoadingProvider is false after a completed request', () async {
@@ -152,7 +159,7 @@ void main() {
 
       await container
           .read(chatMessagesProvider.notifier)
-          .sendMessage('hello', 'en');
+          .sendMessage('hello', 'en', l10n: l10n);
 
       expect(container.read(chatLoadingProvider), isFalse);
     });
@@ -170,10 +177,10 @@ void main() {
 
       await container
           .read(chatMessagesProvider.notifier)
-          .sendMessage('Msg 1', 'en');
+          .sendMessage('Msg 1', 'en', l10n: l10n);
       await container
           .read(chatMessagesProvider.notifier)
-          .sendMessage('Msg 2', 'en');
+          .sendMessage('Msg 2', 'en', l10n: l10n);
 
       final messages = container.read(chatMessagesProvider);
       expect(messages.length, 4);

@@ -42,28 +42,41 @@ class PeriodChip extends StatelessWidget {
       weight = FontWeight.w500;
     }
 
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: borderColor, width: 1),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13,
-            fontWeight: weight,
-            color: textColor,
-            letterSpacing: 0,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        // ConstrainedBox + Center separan el área táctil (>=44px) del pill
+        // visual, que conserva su tamaño compacto.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(color: borderColor, width: 1),
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 13,
+                  fontWeight: weight,
+                  color: textColor,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -80,11 +93,16 @@ class IconChip extends StatelessWidget {
     required this.icon,
     required this.isActive,
     required this.onTap,
+    required this.semanticLabel,
   });
 
   final IconData icon;
   final bool isActive;
   final VoidCallback onTap;
+
+  /// Etiqueta para lectores de pantalla — este chip es solo icono, sin texto
+  /// visible que un Semantics pueda inferir del árbol de widgets.
+  final String semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -98,20 +116,33 @@ class IconChip extends StatelessWidget {
       iconColor = context.appColors.textMuted;
     }
 
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(100),
+    return Semantics(
+      button: true,
+      selected: isActive,
+      label: semanticLabel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        // ConstrainedBox + Center separan el área táctil (>=44px) del pill
+        // visual, que conserva su tamaño compacto.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Icon(icon, size: 18, color: iconColor),
+            ),
+          ),
         ),
-        child: Icon(icon, size: 18, color: iconColor),
       ),
     );
   }

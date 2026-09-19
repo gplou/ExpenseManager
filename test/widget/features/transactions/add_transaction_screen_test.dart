@@ -732,7 +732,18 @@ void main() {
 
     // Source picker sheet (Cámara/Galería).
     expect(find.text('Galería'), findsOneWidget);
-    await tester.tap(find.text('Galería'));
+    // runAsync: el finally de _onTapPhoto hace un tempFile.exists() real
+    // (dart:io), que no se resuelve solo bombeando el reloj falso de los
+    // tests. Sin esto, _isCapturing se queda en true y el
+    // CircularProgressIndicator del botón hace que pumpAndSettle no termine
+    // nunca (su animación en bucle siempre reprograma un frame).
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Galería'));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await tester.pump();
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await tester.pump();
+    });
     await tester.pumpAndSettle();
 
     expect(find.textContaining('17.5'), findsAtLeastNWidgets(1));
