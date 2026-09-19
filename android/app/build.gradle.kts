@@ -14,15 +14,6 @@ if (keyPropertiesFile.exists()) {
     keyProperties.load(FileInputStream(keyPropertiesFile))
 }
 
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "androidx.glance") {
-            useVersion("1.1.1")
-            because("home_widget requests glance-appwidget:1.+, which now resolves to 1.3.0-alpha01 and requires AGP 9 / compileSdk 37")
-        }
-    }
-}
-
 android {
     namespace = "com.gpm.expensemanager_app"
     compileSdk = maxOf(flutter.compileSdkVersion, 35)
@@ -33,10 +24,6 @@ android {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -71,6 +58,12 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
