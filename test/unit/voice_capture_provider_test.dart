@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:record/record.dart';
 
 import 'package:expense_manager/core/errors/failures.dart';
 import 'package:expense_manager/core/services/voice_input_gateway.dart';
@@ -164,6 +167,106 @@ void main() {
       verify(() => parser.parse(any(),
           mimeType: any(named: 'mimeType'),
           subcategories: any(named: 'subcategories'))).called(1);
+    });
+  });
+
+  group('silence auto-stop', () {
+    late StreamController<Amplitude> amplitudeCtrl;
+
+    setUp(() {
+      amplitudeCtrl = StreamController<Amplitude>.broadcast();
+      when(() => gateway.onAmplitudeChanged(any()))
+          .thenAnswer((_) => amplitudeCtrl.stream);
+    });
+
+    tearDown(() => amplitudeCtrl.close());
+
+    test('does not subscribe to amplitude when no callback is given',
+        () async {
+      await notifier().start();
+      verifyNever(() => gateway.onAmplitudeChanged(any()));
+    });
+
+    test('fires onSilenceTimeout after silenceTimeout with no loud sample',
+        () {
+      fakeAsync((async) {
+        var fired = false;
+        notifier().start(onSilenceTimeout: () => fired = true);
+        async.flushMicrotasks();
+
+        async.elapse(VoiceCaptureNotifier.silenceTimeout -
+            const Duration(milliseconds: 1));
+        expect(fired, isFalse);
+
+        async.elapse(const Duration(milliseconds: 1));
+        expect(fired, isTrue);
+      });
+    });
+
+    test('a loud sample resets the countdown', () {
+      fakeAsync((async) {
+        var fired = false;
+        notifier().start(onSilenceTimeout: () => fired = true);
+        async.flushMicrotasks();
+
+        async.elapse(const Duration(milliseconds: 1900));
+        amplitudeCtrl.add(Amplitude(current: -10, max: -10));
+        async.flushMicrotasks();
+
+        // Would have fired by now had the loud sample not reset the timer.
+        async.elapse(const Duration(milliseconds: 1900));
+        expect(fired, isFalse);
+
+        async.elapse(const Duration(milliseconds: 200));
+        expect(fired, isTrue);
+      });
+    });
+
+    test('a quiet sample (still below threshold) does not reset the countdown',
+        () {
+      fakeAsync((async) {
+        var fired = false;
+        notifier().start(onSilenceTimeout: () => fired = true);
+        async.flushMicrotasks();
+
+        amplitudeCtrl.add(Amplitude(current: -60, max: -60));
+        async.flushMicrotasks();
+
+        async.elapse(VoiceCaptureNotifier.silenceTimeout);
+        expect(fired, isTrue);
+      });
+    });
+
+    test('stopAndProcess cancels the pending silence timer', () {
+      when(() => parser.parse(any(),
+              mimeType: any(named: 'mimeType'),
+              subcategories: any(named: 'subcategories')))
+          .thenAnswer((_) async => null);
+
+      fakeAsync((async) {
+        var fired = false;
+        notifier().start(onSilenceTimeout: () => fired = true);
+        async.flushMicrotasks();
+
+        notifier().stopAndProcess();
+        async.flushMicrotasks();
+
+        async.elapse(const Duration(seconds: 5));
+        expect(fired, isFalse);
+      });
+    });
+
+    test('cancelIfRecording cancels the pending silence timer', () {
+      fakeAsync((async) {
+        var fired = false;
+        notifier().start(onSilenceTimeout: () => fired = true);
+        async.flushMicrotasks();
+
+        notifier().cancelIfRecording();
+
+        async.elapse(const Duration(seconds: 5));
+        expect(fired, isFalse);
+      });
     });
   });
 

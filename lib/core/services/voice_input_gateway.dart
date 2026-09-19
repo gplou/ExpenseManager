@@ -27,6 +27,10 @@ abstract interface class VoiceInputGateway {
 
   /// Stops and discards the current recording (e.g. on dispose).
   Future<void> cancel();
+
+  /// Stream of amplitude readings (dBFS) sampled at [interval] while
+  /// recording — used to detect sustained silence and auto-stop.
+  Stream<Amplitude> onAmplitudeChanged(Duration interval);
 }
 
 class AudioRecorderGateway implements VoiceInputGateway {
@@ -70,6 +74,10 @@ class AudioRecorderGateway implements VoiceInputGateway {
 
   @override
   Future<void> cancel() => _recorder.cancel();
+
+  @override
+  Stream<Amplitude> onAmplitudeChanged(Duration interval) =>
+      _recorder.onAmplitudeChanged(interval);
 }
 
 final voiceInputGatewayProvider = Provider<VoiceInputGateway>((ref) {

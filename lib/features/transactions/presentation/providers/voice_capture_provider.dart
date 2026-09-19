@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:record/record.dart';
 
 import 'package:expense_manager/core/services/analytics_service.dart';
 import 'package:expense_manager/core/services/voice_input_gateway.dart';
@@ -27,9 +28,25 @@ class VoiceCaptureNotifier extends Notifier<VoiceCaptureStatus> {
   /// upload) minutes of audio.
   static const maxDuration = Duration(seconds: 20);
 
+  /// How long a recording can go without any sample above
+  /// [_silenceThresholdDb] before [start]'s `onSilenceTimeout` fires — covers
+  /// both "never started talking" and "trailed off mid-sentence".
+  static const silenceTimeout = Duration(seconds: 2);
+
+  /// dBFS below which an amplitude sample counts as silence. Ambient phone-mic
+  /// room noise typically sits well below this while normal speech sits
+  /// above it, but device mic sensitivity varies — tune on real hardware if
+  /// this proves too eager/lax.
+  static const _silenceThresholdDb = -35.0;
+
+  static const _amplitudeSampleInterval = Duration(milliseconds: 200);
+
   /// A WAV header alone is 44 bytes — this just filters an accidental
   /// instant tap, not short-but-real speech.
   static const _minBytes = 4000;
+
+  StreamSubscription<Amplitude>? _amplitudeSub;
+  Timer? _silenceTimer;
 
   @override
   VoiceCaptureStatus build() => VoiceCaptureStatus.idle;
@@ -39,7 +56,13 @@ class VoiceCaptureNotifier extends Notifier<VoiceCaptureStatus> {
   /// Starts recording. Returns `false` (no-op) when a capture is already in
   /// progress, the mic permission is denied, or the recorder itself fails
   /// to start — callers should treat that the same as "unavailable".
-  Future<bool> start() async {
+  ///
+  /// When [onSilenceTimeout] is given, it's called once — from a caller
+  /// perspective, exactly like the [maxDuration] timer the caller already
+  /// owns — after [silenceTimeout] passes without any sample above
+  /// [_silenceThresholdDb]. It's the caller's job to react (typically by
+  /// calling [stopAndProcess]), same as with the max-duration timer.
+  Future<bool> start({void Function()? onSilenceTimeout}) async {
     if (state != VoiceCaptureStatus.idle) return false;
     // Set eagerly (before any await) so a second, near-simultaneous call
     // sees a non-idle state immediately instead of racing this one.
@@ -56,8 +79,36 @@ class VoiceCaptureNotifier extends Notifier<VoiceCaptureStatus> {
       return false;
     }
 
+    if (onSilenceTimeout != null) _startSilenceMonitoring(onSilenceTimeout);
+
     AnalyticsService.track(AnalyticsService.voiceUsed);
     return true;
+  }
+
+  void _startSilenceMonitoring(void Function() onSilenceTimeout) {
+    _resetSilenceTimer(onSilenceTimeout);
+    _amplitudeSub = _gateway
+        .onAmplitudeChanged(_amplitudeSampleInterval)
+        .listen((amplitude) {
+      if (amplitude.current > _silenceThresholdDb) {
+        _resetSilenceTimer(onSilenceTimeout);
+      }
+    });
+  }
+
+  void _resetSilenceTimer(void Function() onSilenceTimeout) {
+    _silenceTimer?.cancel();
+    _silenceTimer = Timer(silenceTimeout, () {
+      _stopSilenceMonitoring();
+      onSilenceTimeout();
+    });
+  }
+
+  void _stopSilenceMonitoring() {
+    _amplitudeSub?.cancel();
+    _amplitudeSub = null;
+    _silenceTimer?.cancel();
+    _silenceTimer = null;
   }
 
   /// Stops the current recording and parses it. Returns `null` when nothing
@@ -69,6 +120,7 @@ class VoiceCaptureNotifier extends Notifier<VoiceCaptureStatus> {
     List<Map<String, String>> subcategories = const [],
   }) async {
     if (state != VoiceCaptureStatus.recording) return null;
+    _stopSilenceMonitoring();
     // Flip immediately so a concurrent call (double-tap racing the timer)
     // sees "processing" and no-ops instead of stopping/parsing twice.
     state = VoiceCaptureStatus.processing;
@@ -102,6 +154,7 @@ class VoiceCaptureNotifier extends Notifier<VoiceCaptureStatus> {
   /// running (a capture already handed off to `processing` is left alone).
   void cancelIfRecording() {
     if (state != VoiceCaptureStatus.recording) return;
+    _stopSilenceMonitoring();
     _gateway.cancel();
     state = VoiceCaptureStatus.idle;
   }

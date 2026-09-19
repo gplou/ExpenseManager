@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/core/providers/currency_provider.dart';
@@ -54,6 +55,10 @@ class _FakeVoiceGateway extends Fake implements VoiceInputGateway {
 
   @override
   Future<void> cancel() async {}
+
+  @override
+  Stream<Amplitude> onAmplitudeChanged(Duration interval) =>
+      const Stream.empty();
 }
 
 class _FakeImageGateway extends Fake implements ImageInputGateway {}
@@ -99,6 +104,10 @@ class _AutoVoiceGateway extends Fake implements VoiceInputGateway {
 
   @override
   Future<void> cancel() async {}
+
+  @override
+  Stream<Amplitude> onAmplitudeChanged(Duration interval) =>
+      const Stream.empty();
 }
 
 /// hasPermission() succeeds, but start() throws — the recording backend can
@@ -147,6 +156,10 @@ class _TooShortRecordingVoiceGateway extends Fake implements VoiceInputGateway {
 
   @override
   Future<void> cancel() async {}
+
+  @override
+  Stream<Amplitude> onAmplitudeChanged(Duration interval) =>
+      const Stream.empty();
 }
 
 /// Immediately "picks" a fake file — drives the in-screen camera button

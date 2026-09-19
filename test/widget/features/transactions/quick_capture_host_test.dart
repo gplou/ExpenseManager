@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/core/config/router.dart';
@@ -102,6 +103,10 @@ class _TooShortRecordingVoiceGateway extends Fake implements VoiceInputGateway {
 
   @override
   Future<void> cancel() async {}
+
+  @override
+  Stream<Amplitude> onAmplitudeChanged(Duration interval) =>
+      const Stream.empty();
 }
 
 class _FakeImageGateway implements ImageInputGateway {
@@ -136,6 +141,10 @@ class _StaysRecordingVoiceGateway extends Fake implements VoiceInputGateway {
 
   @override
   Future<void> cancel() async {}
+
+  @override
+  Stream<Amplitude> onAmplitudeChanged(Duration interval) =>
+      const Stream.empty();
 }
 
 class _TrackingImageGateway implements ImageInputGateway {

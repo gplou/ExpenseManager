@@ -180,7 +180,11 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
   }
 
   Future<void> _startVoice() async {
-    final started = await _voiceCapture.start();
+    final started = await _voiceCapture.start(
+      onSilenceTimeout: () {
+        if (_voiceState == VoiceInputState.listening) _stopAndProcessVoice();
+      },
+    );
     if (!mounted) return;
     if (!started) {
       _showSnack((l10n) => l10n.micUnavailable);

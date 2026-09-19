@@ -205,7 +205,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (!_requirePro()) return;
 
     final l10n = AppLocalizations.of(context);
-    final started = await _voiceCapture.start();
+    final started = await _voiceCapture.start(
+      onSilenceTimeout: () {
+        if (_isListening) _stopAndProcessVoice();
+      },
+    );
     if (!mounted) return;
     if (!started) {
       context.showSnackbar(l10n.micUnavailable, isError: true);
