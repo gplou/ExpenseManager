@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'transaction_model.dart';
@@ -9,6 +9,7 @@ part of 'transaction_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -39,47 +40,55 @@ mixin _$TransactionModel {
 
   @override
   bool operator ==(Object other) {
+    final _this = this as TransactionModel;
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is TransactionModel &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.userId, userId) || other.userId == userId) &&
-            (identical(other.amount, amount) || other.amount == amount) &&
-            (identical(other.type, type) || other.type == type) &&
-            (identical(other.category, category) ||
-                other.category == category) &&
-            (identical(other.subcategory, subcategory) ||
-                other.subcategory == subcategory) &&
-            (identical(other.description, description) ||
-                other.description == description) &&
-            (identical(other.date, date) || other.date == date) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt) &&
-            (identical(other.recurringTransactionId, recurringTransactionId) ||
-                other.recurringTransactionId == recurringTransactionId) &&
-            (identical(other.currency, currency) ||
-                other.currency == currency));
+            (identical(other.id, _this.id) || other.id == _this.id) &&
+            (identical(other.userId, _this.userId) ||
+                other.userId == _this.userId) &&
+            (identical(other.amount, _this.amount) ||
+                other.amount == _this.amount) &&
+            (identical(other.type, _this.type) || other.type == _this.type) &&
+            (identical(other.category, _this.category) ||
+                other.category == _this.category) &&
+            (identical(other.subcategory, _this.subcategory) ||
+                other.subcategory == _this.subcategory) &&
+            (identical(other.description, _this.description) ||
+                other.description == _this.description) &&
+            (identical(other.date, _this.date) || other.date == _this.date) &&
+            (identical(other.createdAt, _this.createdAt) ||
+                other.createdAt == _this.createdAt) &&
+            (identical(other.recurringTransactionId,
+                    _this.recurringTransactionId) ||
+                other.recurringTransactionId == _this.recurringTransactionId) &&
+            (identical(other.currency, _this.currency) ||
+                other.currency == _this.currency));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      userId,
-      amount,
-      type,
-      category,
-      subcategory,
-      description,
-      date,
-      createdAt,
-      recurringTransactionId,
-      currency);
+  int get hashCode {
+    final _this = this as TransactionModel;
+    return Object.hash(
+        runtimeType,
+        _this.id,
+        _this.userId,
+        _this.amount,
+        _this.type,
+        _this.category,
+        _this.subcategory,
+        _this.description,
+        _this.date,
+        _this.createdAt,
+        _this.recurringTransactionId,
+        _this.currency);
+  }
 
   @override
   String toString() {
-    return 'TransactionModel(id: $id, userId: $userId, amount: $amount, type: $type, category: $category, subcategory: $subcategory, description: $description, date: $date, createdAt: $createdAt, recurringTransactionId: $recurringTransactionId, currency: $currency)';
+    final _this = this as TransactionModel;
+    return 'TransactionModel(id: ${_this.id}, userId: ${_this.userId}, amount: ${_this.amount}, type: ${_this.type}, category: ${_this.category}, subcategory: ${_this.subcategory}, description: ${_this.description}, date: ${_this.date}, createdAt: ${_this.createdAt}, recurringTransactionId: ${_this.recurringTransactionId}, currency: ${_this.currency})';
   }
 }
 
@@ -128,7 +137,7 @@ class _$TransactionModelCopyWithImpl<$Res>
     Object? recurringTransactionId = freezed,
     Object? currency = null,
   }) {
-    return _then(_self.copyWith(
+    return _then(TransactionModel(
       id: null == id
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -486,19 +495,21 @@ class _TransactionModel implements TransactionModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      userId,
-      amount,
-      type,
-      category,
-      subcategory,
-      description,
-      date,
-      createdAt,
-      recurringTransactionId,
-      currency);
+  int get hashCode {
+    return Object.hash(
+        runtimeType,
+        id,
+        userId,
+        amount,
+        type,
+        category,
+        subcategory,
+        description,
+        date,
+        createdAt,
+        recurringTransactionId,
+        currency);
+  }
 
   @override
   String toString() {

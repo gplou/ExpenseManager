@@ -12,7 +12,7 @@ part of 'auth_provider.dart';
 /// Escucha cambios en tiempo real (login, logout, token refresh).
 
 @ProviderFor(authState)
-const authStateProvider = AuthStateProvider._();
+final authStateProvider = AuthStateProvider._();
 
 /// Estado del stream de autenticación.
 /// Escucha cambios en tiempo real (login, logout, token refresh).
@@ -22,7 +22,7 @@ final class AuthStateProvider extends $FunctionalProvider<
     with $FutureModifier<UserModel?>, $StreamProvider<UserModel?> {
   /// Estado del stream de autenticación.
   /// Escucha cambios en tiempo real (login, logout, token refresh).
-  const AuthStateProvider._()
+  AuthStateProvider._()
       : super(
           from: null,
           argument: null,
@@ -54,7 +54,7 @@ String _$authStateHash() => r'4c480f6fcb624566b9e45dc082bd14daa667c5b8';
 /// (login, logout, token refresh, restauración de sesión).
 
 @ProviderFor(currentUser)
-const currentUserProvider = CurrentUserProvider._();
+final currentUserProvider = CurrentUserProvider._();
 
 /// Usuario actual (sincrónico, puede ser null).
 /// Escucha [authStateProvider] para reconstruirse en cada cambio de auth
@@ -66,7 +66,7 @@ final class CurrentUserProvider
   /// Usuario actual (sincrónico, puede ser null).
   /// Escucha [authStateProvider] para reconstruirse en cada cambio de auth
   /// (login, logout, token refresh, restauración de sesión).
-  const CurrentUserProvider._()
+  CurrentUserProvider._()
       : super(
           from: null,
           argument: null,
@@ -105,7 +105,7 @@ String _$currentUserHash() => r'99d2d942ccf291bf7a1afeddf1251659e99bf6d2';
 /// Los usuarios de Google/Apple tienen provider distinto a 'email'.
 
 @ProviderFor(isEmailPasswordUser)
-const isEmailPasswordUserProvider = IsEmailPasswordUserProvider._();
+final isEmailPasswordUserProvider = IsEmailPasswordUserProvider._();
 
 /// Devuelve true si el usuario inició sesión con email y contraseña.
 /// Los usuarios de Google/Apple tienen provider distinto a 'email'.
@@ -114,7 +114,7 @@ final class IsEmailPasswordUserProvider
     extends $FunctionalProvider<bool, bool, bool> with $Provider<bool> {
   /// Devuelve true si el usuario inició sesión con email y contraseña.
   /// Los usuarios de Google/Apple tienen provider distinto a 'email'.
-  const IsEmailPasswordUserProvider._()
+  IsEmailPasswordUserProvider._()
       : super(
           from: null,
           argument: null,
@@ -151,11 +151,11 @@ String _$isEmailPasswordUserHash() =>
     r'28bbf8ae3bde1439a48321358b76138fe7ffa5c5';
 
 @ProviderFor(AuthNotifier)
-const authProvider = AuthNotifierProvider._();
+final authProvider = AuthNotifierProvider._();
 
 final class AuthNotifierProvider
     extends $NotifierProvider<AuthNotifier, AuthAction> {
-  const AuthNotifierProvider._()
+  AuthNotifierProvider._()
       : super(
           from: null,
           argument: null,
@@ -188,11 +188,10 @@ abstract class _$AuthNotifier extends $Notifier<AuthAction> {
   AuthAction build();
   @$mustCallSuper
   @override
-  void runBuild() {
-    final created = build();
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AuthAction, AuthAction>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AuthAction, AuthAction>, AuthAction, Object?, Object?>;
-    element.handleValue(ref, created);
+    return element.handleCreate(ref, build);
   }
 }
