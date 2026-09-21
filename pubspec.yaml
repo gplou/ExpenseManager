@@ -35,7 +35,7 @@ dependencies:
   path: ^1.9.0
 
   # Bloqueo biométrico (app lock)
-  local_auth: ^2.3.0
+  local_auth: ^3.0.2
 
   # Ads
   google_mobile_ads: ^9.1.0

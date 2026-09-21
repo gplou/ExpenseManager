@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -17,7 +16,7 @@ class BiometricAuthService {
   Future<bool> isSupported() async {
     try {
       return await _auth.isDeviceSupported();
-    } on PlatformException catch (e) {
+    } on LocalAuthException catch (e) {
       AppLogger.log('[BiometricAuth] isSupported error: ${e.code}');
       return false;
     }
@@ -30,12 +29,10 @@ class BiometricAuthService {
     try {
       return await _auth.authenticate(
         localizedReason: localizedReason,
-        options: const AuthenticationOptions(
-          biometricOnly: false,
-          stickyAuth: true,
-        ),
+        biometricOnly: false,
+        persistAcrossBackgrounding: true,
       );
-    } on PlatformException catch (e) {
+    } on LocalAuthException catch (e) {
       AppLogger.log('[BiometricAuth] authenticate error: ${e.code}');
       return false;
     }
