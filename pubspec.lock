@@ -289,6 +289,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  cupertino_ui:
+    dependency: transitive
+    description:
+      name: cupertino_ui
+      sha256: c6747018d37d32feeeb858a1d7043831cb541460ebe1a890a995cdb8df8ea5a5
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   custom_lint_core:
     dependency: transitive
     description:
@@ -577,10 +585,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_timezone
-      sha256: "13b2109ad75651faced4831bf262e32559e44aa549426eab8a597610d385d934"
+      sha256: "869677426fde92dbe170fb7d2d4929f2a8343c2f5f62f08b0bb64f908630b073"
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.1"
+    version: "5.1.0"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -659,18 +667,18 @@ packages:
     dependency: transitive
     description:
       name: google_mlkit_commons
-      sha256: c7fc384bdb66c3b83e24e3a41818e61d7a378d900f65f5e775344fbca95a0917
+      sha256: "621e94de22fd0f1e902e593b892746d80ab7542b39c2552aa091d904eb82fc6f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.0"
+    version: "0.13.0"
   google_mlkit_text_recognition:
     dependency: "direct main"
     description:
       name: google_mlkit_text_recognition
-      sha256: "8324fdc2628ebeb63568ad06437b984b716d938d87e4ce63ab24dfd3eeebf08a"
+      sha256: e13685af5093c8be009a3555909b72a80e10cfe8f97752bcbdf99fa0ccbda810
       url: "https://pub.dev"
     source: hosted
-    version: "0.16.0"
+    version: "0.17.1"
   google_mobile_ads:
     dependency: "direct main"
     description:
@@ -747,10 +755,10 @@ packages:
     dependency: "direct main"
     description:
       name: home_widget
-      sha256: b8d377e6a5aacc65193170addf252cce7868fa621b740cdd7b517a233871c185
+      sha256: "1dbfdfbb3b47de24639adfba352050d85d66af112b9cc3ec5bf7627a7813abcb"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.4"
+    version: "0.10.0"
   hooks:
     dependency: transitive
     description:
@@ -1004,6 +1012,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  material_ui:
+    dependency: transitive
+    description:
+      name: material_ui
+      sha256: "6d056d60ce745335fcf1c726a4fc46a481a62229f202b65dbc2db5edbbabc7e2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
   meta:
     dependency: transitive
     description:
@@ -1280,50 +1296,50 @@ packages:
     dependency: "direct main"
     description:
       name: record
-      sha256: "10911465138fafacef459a780564e883e01bd48eabf87ab20543684884492870"
+      sha256: "82539d1372e23cf51375fdfcba084f39912bcbf9a953b75d56596691f8f11c0f"
       url: "https://pub.dev"
     source: hosted
-    version: "6.2.1"
+    version: "7.1.1"
   record_android:
     dependency: transitive
     description:
       name: record_android
-      sha256: eb1732e42d0d2a1895b8db86e4fc917287e6d8491b6ed59918aea8bed6c69de4
+      sha256: f5080279259c4ad769590f1c165762eaa4e414178adc2e2fab137103228e07ac
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.2"
+    version: "2.2.0"
   record_ios:
     dependency: transitive
     description:
       name: record_ios
-      sha256: c051fb48edd7a0e265daafb9108730dc827c27b551728a3fdfb3ef69efd89c73
+      sha256: "21d189f49a598af4697dac4cc9e48389ac0a1fb3e916622b5504a58d9b96313e"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.1"
+    version: "2.1.1"
   record_linux:
     dependency: transitive
     description:
       name: record_linux
-      sha256: "31181787bf7eccb0e298835836b69b3cd0a903863b75d70e937de3dec71cd8f3"
+      sha256: b7484fdaf1f6d291543b9cf615e78096662b02df68d7a4728b13f352bde58d27
       url: "https://pub.dev"
     source: hosted
-    version: "1.3.1"
+    version: "2.1.1"
   record_macos:
     dependency: transitive
     description:
       name: record_macos
-      sha256: cfe1b61435e27db418bf513dc36820d10c9f7eb1843786c2c9a52e07e2f4f627
+      sha256: ced7495abf3d683e8a7dbe8fc96df8ea5722837a26f922b7cb7c5de11661bb46
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.2"
+    version: "2.1.1"
   record_platform_interface:
     dependency: transitive
     description:
       name: record_platform_interface
-      sha256: "8e56cbe06c6984137fb86132ff03459f29938d927496d9b2d0962e2d6345d488"
+      sha256: d94b37cadb8fe203e64b0e9893271c0b71b34f2550ee7fb0c6105d650e00c1f5
       url: "https://pub.dev"
     source: hosted
-    version: "1.6.0"
+    version: "2.1.0"
   record_use:
     dependency: transitive
     description:
@@ -1336,18 +1352,18 @@ packages:
     dependency: transitive
     description:
       name: record_web
-      sha256: "7e9846981c1f2d111d86f0ae3309071f5bba8b624d1c977316706f08fc31d16d"
+      sha256: "7f6950be87abacb05cf77eb6ca200b60f2c2a6af5d50236b5f4baf53f92e755e"
       url: "https://pub.dev"
     source: hosted
-    version: "1.3.0"
+    version: "2.1.3"
   record_windows:
     dependency: transitive
     description:
       name: record_windows
-      sha256: "223258060a1d25c62bae18282c16783f28581ec19401d17e56b5205b9f039d78"
+      sha256: "8195489a47b5e8246985d6213ff65aae1b14e32a0ca45dc5f680e8d503296e1b"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.7"
+    version: "2.3.0"
   riverpod:
     dependency: transitive
     description:
@@ -1504,18 +1520,18 @@ packages:
     dependency: "direct main"
     description:
       name: shimmer
-      sha256: "5f88c883a22e9f9f299e5ba0e4f7e6054857224976a5d9f839d4ebdc94a14ac9"
+      sha256: "61ef3b8de6bdb9f16db1bb78d502cb991a12b5223fd2c0b9114d41e782227b55"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "4.0.0"
   sign_in_with_apple:
     dependency: "direct main"
     description:
       name: sign_in_with_apple
-      sha256: "8bd875c8e8748272749eb6d25b896f768e7e9d60988446d543fe85a37a2392b8"
+      sha256: "6d205ad2b30f95b231812d61f19b4a8df836f16ba9cde28735b3ac8ece9113f7"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.1"
+    version: "8.2.0"
   sign_in_with_apple_platform_interface:
     dependency: transitive
     description:

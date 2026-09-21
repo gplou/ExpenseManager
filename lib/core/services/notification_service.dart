@@ -25,8 +25,8 @@ class NotificationService {
     if (_initialized) return;
     tz_data.initializeTimeZones();
     try {
-      final timezoneName = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timezoneName));
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
     } catch (e) {
       // tz.local queda en UTC: hora desplazada pero sin crash.
       AppLogger.log('[Notifications] timezone init failed: $e');
