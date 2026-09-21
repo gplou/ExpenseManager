@@ -1056,10 +1056,10 @@ packages:
     dependency: "direct dev"
     description:
       name: mock_supabase_http_client
-      sha256: "43b9681e43aa5bec7c801722f1b5e58b1a4b1448d346f29a47af0eb05abf4599"
+      sha256: b1b226c5c31af8e48cc70ea52a7ce01e0834e6c8f7d84ce2235d7c1005d91b7a
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3+2"
+    version: "0.1.0"
   mockito:
     dependency: transitive
     description:
@@ -1256,10 +1256,10 @@ packages:
     dependency: "direct main"
     description:
       name: posthog_flutter
-      sha256: "981d0ceeae4c525db471050ee378b59966f0e915ef739bf6002b049c4f3e21c4"
+      sha256: "9505a286c5120738f75c0ebfd3338593281ca96fe2605c0bb1351e2fcca0b6ff"
       url: "https://pub.dev"
     source: hosted
-    version: "5.44.3"
+    version: "5.44.4"
   process:
     dependency: transitive
     description:
