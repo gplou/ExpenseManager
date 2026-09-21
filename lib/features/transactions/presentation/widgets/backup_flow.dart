@@ -90,17 +90,16 @@ Future<void> runBackupExportFlow(BuildContext context, WidgetRef ref) async {
 Future<void> runBackupImportFlow(BuildContext context, WidgetRef ref) async {
   final l10n = AppLocalizations.of(context);
 
-  final picked = await FilePicker.platform.pickFiles(
+  final picked = await FilePicker.pickFile(
     type: FileType.custom,
     allowedExtensions: ['json', 'csv'],
-    withData: true,
   );
-  final bytes = picked?.files.single.bytes;
-  if (bytes == null || !context.mounted) return;
+  if (picked == null || !context.mounted) return;
 
   final BackupParseResult parsed;
   final List<TransactionModel> toImport;
   try {
+    final bytes = await picked.readAsBytes();
     parsed = BackupService.parse(utf8.decode(bytes));
     final existing = await ref
         .read(transactionsRepositoryProvider)
