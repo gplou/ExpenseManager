@@ -32,7 +32,7 @@ class NotificationService {
       AppLogger.log('[Notifications] timezone init failed: $e');
     }
     await _plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         // Permisos iOS: se piden explícitamente en requestPermissions(), no
         // en el arranque.
@@ -83,11 +83,11 @@ class NotificationService {
     if (!when.isAfter(clock.now())) return;
     await _ensureInitialized();
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(when, tz.local),
-      NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(when, tz.local),
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'recurring_reminders',
           channelName,
