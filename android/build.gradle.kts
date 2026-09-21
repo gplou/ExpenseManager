@@ -28,15 +28,26 @@ subprojects {
             }
         }
     }
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-            languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
-            apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
-        }
-    }
+    // Solo las dependencias (no "app", que ya está bien configurado y además
+    // Gradle no permite registrar afterEvaluate en él aquí: el
+    // evaluationDependsOn(":app") de arriba lo evalúa eager, así que para
+    // cuando subprojects{} llega a "app" ya está evaluado y afterEvaluate
+    // lanzaria "Cannot run Project.afterEvaluate(Action) when the project is
+    // already evaluated").
     if (project.name != "app") {
         afterEvaluate {
+            // Algunos plugins (p.ej. posthog_flutter) fijan su propio
+            // kotlinOptions.jvmTarget de forma sincrona en su build.gradle: un
+            // configureEach sin envolver aqui pierde esa carrera y gana el
+            // target (mas antiguo) del plugin, causando "Inconsistent JVM
+            // Target Compatibility" contra el compileOptions de Java de abajo.
+            tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+                    languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+                    apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+                }
+            }
             extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
                 compileOptions {
                     sourceCompatibility = JavaVersion.VERSION_17

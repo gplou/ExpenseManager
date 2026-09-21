@@ -82,7 +82,7 @@ dependencies:
   flutter_timezone: ^5.1.0
 
   # Widgets de pantalla de inicio
-  home_widget: ^0.10.0
+  home_widget: ^0.9.4
 
   # Utilidades
   intl: ^0.20.2
