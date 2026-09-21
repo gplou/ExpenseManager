@@ -32,6 +32,10 @@ class BackupService {
   static const backupFormatVersion = 1;
   static const _appMarker = 'ExpenseManager';
 
+  /// Delimitador fijado explícitamente (sin autodetección): es nuestro propio
+  /// formato de coma, no un CSV arbitrario de terceros.
+  static final _csvCodec = Csv(fieldDelimiter: ',', autoDetect: false);
+
   /// Cabecera del CSV propio. El import valida contra esta cabecera.
   static const csvHeader = [
     'date',
@@ -87,7 +91,7 @@ class BackupService {
           t.currency,
         ],
     ];
-    return const ListToCsvConverter().convert(rows);
+    return _csvCodec.encode(rows);
   }
 
   // ── Export (archivo + share sheet) ─────────────────────────────────────────
@@ -161,10 +165,7 @@ class BackupService {
   }
 
   static BackupParseResult _parseCsv(String content) {
-    final rows = const CsvToListConverter(
-      shouldParseNumbers: false,
-      eol: '\n',
-    ).convert(content.replaceAll('\r\n', '\n'));
+    final rows = _csvCodec.decode(content.replaceAll('\r\n', '\n'));
     if (rows.isEmpty ||
         rows.first.map((c) => c.toString().trim()).join(',') !=
             csvHeader.join(',')) {
