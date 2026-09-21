@@ -141,7 +141,7 @@ Future<void> main() async {
     // _InitErrorApp ("no se pudo iniciar, reábrela").
     await Supabase.initialize(
       url: AppConfig.supabaseUrl,
-      anonKey: AppConfig.supabaseAnonKey,
+      publishableKey: AppConfig.supabaseAnonKey,
     ).timeout(const Duration(seconds: 15));
     AppLogger.log('[main] 5 - supabase ok');
 
