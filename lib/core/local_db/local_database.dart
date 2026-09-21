@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -11,6 +12,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 
 import 'package:expense_manager/core/security/secure_storage.dart';
+import 'package:expense_manager/core/services/sentry_service.dart';
 
 /// Singleton lazy-open SQLite database, encrypted with SQLCipher.
 ///
@@ -95,14 +97,35 @@ class LocalDatabase {
       // between writing the key and completing the migration cannot leave the
       // DB in an ambiguous state.
       if (await File(path).exists()) {
-        try {
-          await _migrateToEncrypted(path, key);
-        } catch (_) {
-          // Clean up any partial .enc file so the next launch can retry from
-          // a clean state instead of hitting open_failed on a corrupt file.
-          final encFile = File('$path.enc');
-          if (await encFile.exists()) await encFile.delete();
-          rethrow;
+        if (await isPlaintextSqlite(path)) {
+          try {
+            await _migrateToEncrypted(path, key);
+          } catch (_) {
+            // Clean up any partial .enc file so the next launch can retry from
+            // a clean state instead of hitting open_failed on a corrupt file.
+            final encFile = File('$path.enc');
+            if (await encFile.exists()) await encFile.delete();
+            rethrow;
+          }
+        } else {
+          // The file is already SQLCipher-encrypted but we couldn't read its
+          // key from secure storage (e.g. an install from before
+          // flutter_secure_storage v10 that never reopened the app to run the
+          // v10 migration, and is now hitting algorithms v11 removed).
+          // _migrateToEncrypted assumes a plaintext source and would just
+          // fail the same way every launch — instead of a silent forever
+          // retry loop (this Future is `.ignore()`d at startup), quarantine
+          // the unreadable file (kept, not deleted, in case of manual
+          // recovery) and start fresh so the app becomes usable again.
+          final quarantinePath =
+              '$path.locked-${clock.now().millisecondsSinceEpoch}';
+          await File(path).rename(quarantinePath);
+          unawaited(SentryService.captureException(
+            StateError(
+              'LocalDatabase: existing encrypted DB had an unreadable key; '
+              'quarantined to $quarantinePath',
+            ),
+          ));
         }
       }
       await SecureStorageService.instance.write(_keyStorageKey, key);
@@ -181,6 +204,22 @@ class LocalDatabase {
       List.generate(32, (_) => random.nextInt(256)),
     );
     return base64Url.encode(bytes);
+  }
+
+  /// Checks the SQLite magic header (`"SQLite format 3\0"`, the first 16
+  /// bytes of any plaintext file) to tell a genuine plaintext DB apart from
+  /// one that's already SQLCipher-encrypted (whose header is unreadable
+  /// ciphertext). `latin1` never throws on arbitrary byte values, unlike
+  /// `utf8`, which random ciphertext bytes could violate.
+  @visibleForTesting
+  static Future<bool> isPlaintextSqlite(String path) async {
+    final raf = await File(path).open();
+    try {
+      final header = await raf.read(16);
+      return latin1.decode(header) == 'SQLite format 3\u0000';
+    } finally {
+      await raf.close();
+    }
   }
 
   /// Converts an existing plaintext SQLite file to SQLCipher-encrypted format
