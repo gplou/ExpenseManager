@@ -20,7 +20,7 @@ dependencies:
   riverpod_annotation: ^3.0.0
 
   # Navegación
-  go_router: ^17.0.0
+  go_router: ^18.0.1
 
   # Modelos
   freezed_annotation: ^3.0.0
