@@ -11,12 +11,17 @@ import 'package:expense_manager/features/auth/domain/user_model.dart';
 import 'package:expense_manager/features/dashboard/dashboard_screen.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
+import '../helpers/clock_helper.dart';
 import '../helpers/dashboard_overrides.dart';
 
 /// Golden coverage for the Nocturne restyle. Baselines were generated on
 /// macOS with the bundled Inter font — see test/README.md for why these are
 /// excluded from the default `flutter test` run in CI.
 void main() {
+  // The header renders today's date and month name, so pin the clock or the
+  // baseline stops matching the day after it was generated.
+  final fixedNow = DateTime(2026, 9, 15);
+
   UserModel user() => UserModel(
         id: 'golden-user',
         email: 'golden@example.com',
@@ -47,19 +52,27 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> expectGolden(
+    WidgetTester tester,
+    ThemeData theme,
+    String goldenPath,
+  ) {
+    return withFixedClockAsync(fixedNow, () async {
+      await pumpDashboard(tester, theme);
+      await expectLater(
+        find.byType(DashboardScreen),
+        matchesGoldenFile(goldenPath),
+      );
+    });
+  }
+
   testWidgets('Dashboard — light', (tester) async {
-    await pumpDashboard(tester, AppTheme.lightTheme);
-    await expectLater(
-      find.byType(DashboardScreen),
-      matchesGoldenFile('goldens/dashboard_light.png'),
-    );
+    await expectGolden(
+        tester, AppTheme.lightTheme, 'goldens/dashboard_light.png');
   });
 
   testWidgets('Dashboard — dark', (tester) async {
-    await pumpDashboard(tester, AppTheme.darkTheme);
-    await expectLater(
-      find.byType(DashboardScreen),
-      matchesGoldenFile('goldens/dashboard_dark.png'),
-    );
+    await expectGolden(
+        tester, AppTheme.darkTheme, 'goldens/dashboard_dark.png');
   });
 }
