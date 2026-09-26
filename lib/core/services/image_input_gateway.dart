@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:expense_manager/core/services/external_activity_guard.dart';
 
 /// Thin abstraction over `package:image_picker` so the camera/gallery
 /// flow can be tested without the platform plugin.
@@ -23,11 +24,13 @@ class ImagePickerGateway implements ImageInputGateway {
     double? maxHeight,
     int? imageQuality,
   }) {
-    return _picker.pickImage(
-      source: source,
-      maxWidth: maxWidth,
-      maxHeight: maxHeight,
-      imageQuality: imageQuality,
+    return ExternalActivityGuard.run(
+      () => _picker.pickImage(
+        source: source,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        imageQuality: imageQuality,
+      ),
     );
   }
 }

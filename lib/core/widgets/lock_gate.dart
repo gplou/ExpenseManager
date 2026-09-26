@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import 'package:gap/gap.dart';
 
 import 'package:expense_manager/core/providers/app_lock_provider.dart';
 import 'package:expense_manager/core/services/biometric_auth_service.dart';
+import 'package:expense_manager/core/services/external_activity_guard.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
@@ -14,7 +16,8 @@ import 'package:expense_manager/l10n/app_localizations.dart';
 /// `MaterialApp.router` (por encima del Navigator) para cubrir cualquier ruta
 /// o diálogo sin desmontar el árbol — el estado del router sobrevive al
 /// bloqueo. Bloquea al arrancar y al volver de background si el app lock está
-/// activado ([appLockProvider]).
+/// activado ([appLockProvider]), salvo cuando el background lo causa una
+/// pantalla externa abierta por la propia app ([ExternalActivityGuard]).
 class LockGate extends ConsumerStatefulWidget {
   const LockGate({super.key, required this.child});
 
@@ -31,6 +34,10 @@ class _LockGateState extends ConsumerState<LockGate>
   // del sistema cubre la activity en Android); este flag evita re-bloquear o
   // re-lanzar el prompt por esos eventos de ciclo de vida.
   bool _authInProgress = false;
+  // Momento de una pausa causada por una pantalla externa abierta a propósito
+  // (ver [ExternalActivityGuard]): no bloquea salvo que la vuelta tarde más
+  // de [ExternalActivityGuard.maxDuration].
+  DateTime? _externalPauseAt;
 
   @override
   void initState() {
@@ -61,11 +68,24 @@ class _LockGateState extends ConsumerState<LockGate>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      final externalPauseAt = _externalPauseAt;
+      _externalPauseAt = null;
+      if (externalPauseAt != null &&
+          !_locked &&
+          clock.now().difference(externalPauseAt) >
+              ExternalActivityGuard.maxDuration) {
+        setState(() => _locked = true);
+      }
       if (_locked && !_authInProgress) _authenticate();
     } else if (state == AppLifecycleState.paused) {
       if (_authInProgress || _locked) return;
       final enabled = ref.read(appLockProvider).value ?? false;
-      if (enabled) setState(() => _locked = true);
+      if (!enabled) return;
+      if (ExternalActivityGuard.isActive) {
+        _externalPauseAt ??= clock.now();
+        return;
+      }
+      setState(() => _locked = true);
     }
   }
 

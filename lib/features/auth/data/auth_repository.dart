@@ -16,6 +16,7 @@ import 'package:expense_manager/core/network/supabase_client.dart';
 import 'package:expense_manager/features/auth/domain/auth_repository_contract.dart';
 import 'package:expense_manager/features/auth/domain/user_model.dart';
 import 'package:expense_manager/core/utils/app_logger.dart';
+import 'package:expense_manager/core/services/external_activity_guard.dart';
 
 class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
   final SupabaseClient _client;
@@ -125,8 +126,10 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
         serverClientId: AppConfig.googleWebClientId,
       );
       await GoogleSignIn.instance.signOut();
-      final googleUser = await GoogleSignIn.instance.authenticate(
-        scopeHint: const ['email', 'profile'],
+      final googleUser = await ExternalActivityGuard.run(
+        () => GoogleSignIn.instance.authenticate(
+          scopeHint: const ['email', 'profile'],
+        ),
       );
       final idToken = googleUser.authentication.idToken;
       if (idToken == null) {
@@ -187,12 +190,14 @@ class AuthRepository implements AuthRepositoryContract, SocialAuthContract {
       final rawNonce = _generateNonce();
       final hashedNonce = _sha256ofString(rawNonce);
 
-      final credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-        nonce: hashedNonce,
+      final credential = await ExternalActivityGuard.run(
+        () => SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+          nonce: hashedNonce,
+        ),
       );
       final idToken = credential.identityToken;
       if (idToken == null) {

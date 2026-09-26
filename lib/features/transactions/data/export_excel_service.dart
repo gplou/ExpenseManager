@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/core/services/external_activity_guard.dart';
 
 class ExportExcelService {
   static Future<void> exportTransactions(
@@ -90,12 +91,14 @@ class ExportExcelService {
     final filePath = '${dir.path}/$fileName';
     await File(filePath).writeAsBytes(Uint8List.fromList(bytes));
 
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [
-          XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
-        ],
-        subject: fileName,
+    await ExternalActivityGuard.run(
+      () => SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+          ],
+          subject: fileName,
+        ),
       ),
     );
   }

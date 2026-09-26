@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:expense_manager/features/transactions/domain/recurring_transaction_model.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
+import 'package:expense_manager/core/services/external_activity_guard.dart';
 
 /// Resultado de parsear un archivo de backup: transacciones válidas
 /// (con id/userId vacíos — los estampa el repositorio al insertar) y el
@@ -120,10 +121,12 @@ class BackupService {
     final dir = await getTemporaryDirectory();
     final filePath = '${dir.path}/$fileName';
     await File(filePath).writeAsString(content);
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(filePath, mimeType: mimeType)],
-        subject: fileName,
+    await ExternalActivityGuard.run(
+      () => SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(filePath, mimeType: mimeType)],
+          subject: fileName,
+        ),
       ),
     );
   }

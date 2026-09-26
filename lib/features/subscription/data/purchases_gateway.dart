@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:expense_manager/core/services/external_activity_guard.dart';
 
 /// Thin abstraction over RevenueCat's `Purchases.*` static API so the
 /// subscription stack can be tested without the native SDK.
@@ -33,7 +34,9 @@ class RevenueCatPurchasesGateway implements PurchasesGateway {
 
   @override
   Future<CustomerInfo> purchasePackage(Package package) async {
-    final result = await Purchases.purchase(PurchaseParams.package(package));
+    final result = await ExternalActivityGuard.run(
+      () => Purchases.purchase(PurchaseParams.package(package)),
+    );
     return result.customerInfo;
   }
 

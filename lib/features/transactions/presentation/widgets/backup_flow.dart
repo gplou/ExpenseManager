@@ -16,6 +16,7 @@ import 'package:expense_manager/features/transactions/data/transactions_reposito
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:expense_manager/core/services/external_activity_guard.dart';
 
 /// Rango "todas las transacciones" para export y dedup de import.
 final _allTimeFrom = DateTime(2000);
@@ -90,9 +91,11 @@ Future<void> runBackupExportFlow(BuildContext context, WidgetRef ref) async {
 Future<void> runBackupImportFlow(BuildContext context, WidgetRef ref) async {
   final l10n = AppLocalizations.of(context);
 
-  final picked = await FilePicker.pickFile(
-    type: FileType.custom,
-    allowedExtensions: ['json', 'csv'],
+  final picked = await ExternalActivityGuard.run(
+    () => FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: ['json', 'csv'],
+    ),
   );
   if (picked == null || !context.mounted) return;
 
