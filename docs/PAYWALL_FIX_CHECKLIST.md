@@ -14,9 +14,9 @@
 | Paso | Estado |
 |---|---|
 | Cliente Flutter deja de llamar `apply_rc_entitlement` | ✅ Hecho (este PR) |
-| Secret del webhook corregido en Supabase | ⏳ Pendiente |
-| Webhook probado con compra sandbox | ⏳ Pendiente |
-| Migración SQL de revocación aplicada | ⏳ Pendiente |
+| Secret del webhook corregido en Supabase | ✅ Hecho (el webhook escribe filas `play_store`, verificado 2026-10-03) |
+| Webhook probado con compra sandbox | ✅ Hecho (fila `play_store` actualizada 2026-09-19) |
+| Migración SQL de revocación aplicada | ✅ Hecho (`anon`/`authenticated` sin EXECUTE, verificado 2026-10-03) |
 
 ---
 
