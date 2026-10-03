@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -5,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/core/providers/app_lock_provider.dart';
 import 'package:expense_manager/core/services/biometric_auth_service.dart';
+import 'package:expense_manager/core/services/external_activity_guard.dart';
 import 'package:expense_manager/core/widgets/lock_gate.dart';
 
 import '../../../helpers/mocks.dart';
@@ -110,5 +114,64 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Desbloquear'), findsNothing);
     expect(find.text('contenido sensible'), findsOneWidget);
+  });
+
+  group('external activity (file picker, camera, share…)', () {
+    final pausedAt = DateTime(2026, 9, 26, 12);
+
+    Future<void> pauseDuringExternalActivity(
+      WidgetTester tester, {
+      required DateTime resumeAt,
+    }) async {
+      final picker = Completer<void>();
+      final pick = ExternalActivityGuard.run(() => picker.future);
+
+      withClock(Clock.fixed(pausedAt), () {
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      });
+      withClock(Clock.fixed(resumeAt), () {
+        tester.binding
+            .handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      });
+      picker.complete();
+      await pick;
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('does not re-lock when the app comes back in time',
+        (tester) async {
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => true);
+      await pumpGate(tester, lockEnabled: true);
+      await tester.pumpAndSettle();
+
+      await pauseDuringExternalActivity(
+        tester,
+        resumeAt: pausedAt.add(const Duration(minutes: 1)),
+      );
+
+      expect(find.text('Desbloquear'), findsNothing);
+      expect(find.text('contenido sensible'), findsOneWidget);
+      // Solo el prompt del arranque.
+      verify(() => biometrics.authenticate(any())).called(1);
+    });
+
+    testWidgets('re-locks when the app comes back after maxDuration',
+        (tester) async {
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => true);
+      await pumpGate(tester, lockEnabled: true);
+      await tester.pumpAndSettle();
+
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => false);
+      await pauseDuringExternalActivity(
+        tester,
+        resumeAt: pausedAt
+            .add(ExternalActivityGuard.maxDuration)
+            .add(const Duration(seconds: 1)),
+      );
+
+      expect(find.text('Desbloquear'), findsOneWidget);
+      // launch + resume.
+      verify(() => biometrics.authenticate(any())).called(2);
+    });
   });
 }

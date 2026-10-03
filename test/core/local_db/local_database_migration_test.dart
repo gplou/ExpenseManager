@@ -92,6 +92,53 @@ void main() {
     });
   });
 
+  // ── isPlaintextSqlite ────────────────────────────────────────────────────
+  //
+  // Guards the flutter_secure_storage v10→v11 edge case: an install from
+  // before v10 that never reopened the app to run v10's algorithm migration
+  // now has a key secure storage can't decrypt. _open() must tell that apart
+  // from a genuine plaintext legacy DB before attempting sqlcipher_export,
+  // or it corrupts/loses the already-encrypted file for nothing.
+
+  group('isPlaintextSqlite', () {
+    late Directory tmpDir;
+
+    setUp(() async {
+      tmpDir = await Directory.systemTemp.createTemp('em_header_test');
+    });
+
+    tearDown(() async {
+      if (await tmpDir.exists()) await tmpDir.delete(recursive: true);
+    });
+
+    test('true for a genuine plaintext sqlite file', () async {
+      final path = p.join(tmpDir.path, 'plain.db');
+      final db = await databaseFactoryFfi.openDatabase(path);
+      // SQLite only flushes its header once something is actually written —
+      // an untouched just-opened file can still be 0 bytes.
+      await LocalDatabase.createSchema(db);
+      await db.close();
+
+      expect(await LocalDatabase.isPlaintextSqlite(path), isTrue);
+    });
+
+    test('false for a file that is not a sqlite database at all', () async {
+      final path = p.join(tmpDir.path, 'not_sqlite.db');
+      // Stand-in for SQLCipher ciphertext: bytes that don't spell out the
+      // plaintext magic header.
+      await File(path).writeAsBytes(List.filled(32, 0x42));
+
+      expect(await LocalDatabase.isPlaintextSqlite(path), isFalse);
+    });
+
+    test('false for a file shorter than the magic header', () async {
+      final path = p.join(tmpDir.path, 'short.db');
+      await File(path).writeAsBytes([0x53, 0x51, 0x4c]);
+
+      expect(await LocalDatabase.isPlaintextSqlite(path), isFalse);
+    });
+  });
+
   // ── applyUpgrades — v1 → v3 ──────────────────────────────────────────────
 
   group('applyUpgrades v1 → v3', () {

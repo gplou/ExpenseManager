@@ -25,14 +25,14 @@ class NotificationService {
     if (_initialized) return;
     tz_data.initializeTimeZones();
     try {
-      final timezoneName = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timezoneName));
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
     } catch (e) {
       // tz.local queda en UTC: hora desplazada pero sin crash.
       AppLogger.log('[Notifications] timezone init failed: $e');
     }
     await _plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         // Permisos iOS: se piden explícitamente en requestPermissions(), no
         // en el arranque.
@@ -83,11 +83,11 @@ class NotificationService {
     if (!when.isAfter(clock.now())) return;
     await _ensureInitialized();
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(when, tz.local),
-      NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(when, tz.local),
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'recurring_reminders',
           channelName,

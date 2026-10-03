@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'budget_model.dart';
@@ -9,6 +9,7 @@ part of 'budget_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -34,29 +35,37 @@ mixin _$BudgetModel {
 
   @override
   bool operator ==(Object other) {
+    final _this = this as BudgetModel;
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is BudgetModel &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.userId, userId) || other.userId == userId) &&
-            (identical(other.category, category) ||
-                other.category == category) &&
-            (identical(other.amount, amount) || other.amount == amount) &&
-            (identical(other.period, period) || other.period == period) &&
-            (identical(other.currency, currency) ||
-                other.currency == currency) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+            (identical(other.id, _this.id) || other.id == _this.id) &&
+            (identical(other.userId, _this.userId) ||
+                other.userId == _this.userId) &&
+            (identical(other.category, _this.category) ||
+                other.category == _this.category) &&
+            (identical(other.amount, _this.amount) ||
+                other.amount == _this.amount) &&
+            (identical(other.period, _this.period) ||
+                other.period == _this.period) &&
+            (identical(other.currency, _this.currency) ||
+                other.currency == _this.currency) &&
+            (identical(other.createdAt, _this.createdAt) ||
+                other.createdAt == _this.createdAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, userId, category, amount, period, currency, createdAt);
+  int get hashCode {
+    final _this = this as BudgetModel;
+    return Object.hash(runtimeType, _this.id, _this.userId, _this.category,
+        _this.amount, _this.period, _this.currency, _this.createdAt);
+  }
 
   @override
   String toString() {
-    return 'BudgetModel(id: $id, userId: $userId, category: $category, amount: $amount, period: $period, currency: $currency, createdAt: $createdAt)';
+    final _this = this as BudgetModel;
+    return 'BudgetModel(id: ${_this.id}, userId: ${_this.userId}, category: ${_this.category}, amount: ${_this.amount}, period: ${_this.period}, currency: ${_this.currency}, createdAt: ${_this.createdAt})';
   }
 }
 
@@ -96,7 +105,7 @@ class _$BudgetModelCopyWithImpl<$Res> implements $BudgetModelCopyWith<$Res> {
     Object? currency = null,
     Object? createdAt = null,
   }) {
-    return _then(_self.copyWith(
+    return _then(BudgetModel(
       id: null == id
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -360,8 +369,10 @@ class _BudgetModel implements BudgetModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, userId, category, amount, period, currency, createdAt);
+  int get hashCode {
+    return Object.hash(
+        runtimeType, id, userId, category, amount, period, currency, createdAt);
+  }
 
   @override
   String toString() {

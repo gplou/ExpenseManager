@@ -10,12 +10,12 @@ part of 'router.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(router)
-const routerProvider = RouterProvider._();
+final routerProvider = RouterProvider._();
 
 final class RouterProvider
     extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
     with $Provider<GoRouter> {
-  const RouterProvider._()
+  RouterProvider._()
       : super(
           from: null,
           argument: null,
@@ -48,4 +48,4 @@ final class RouterProvider
   }
 }
 
-String _$routerHash() => r'14e8830329fed4d9233a052019b108fe8a285a15';
+String _$routerHash() => r'd3ef114ef3ccbb89b93108ac3158582d96e2de4c';
