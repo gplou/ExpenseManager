@@ -9,3 +9,4 @@ export 'fade_slide_in.dart';
 export 'highlight_pulse.dart';
 export 'motion_tokens.dart';
 export 'pressable_scale.dart';
+export 'route_cover_scope.dart';

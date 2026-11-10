@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'route_cover_scope.dart';
+
 /// Texto numérico que interpola entre el valor anterior y el nuevo cuando
 /// cambia. Útil para balance / income / expense después de guardar una
 /// transacción — el cambio se siente "vivo" en lugar de saltar.
@@ -45,11 +47,17 @@ class _AnimatedAmountState extends State<AnimatedAmount> {
   /// Se incrementa en cada cambio real de valor; reinicia el "pop".
   int _changeCount = 0;
 
+  /// Hay un conteo (o "pop") que aún no se ha empezado a mostrar porque la
+  /// ruta estaba tapada — p. ej. el total del dashboard cambia al guardar,
+  /// con la hoja de "nueva transacción" todavía encima.
+  late bool _pendingReveal = widget.countUpOnMount;
+
   @override
   void didUpdateWidget(AnimatedAmount oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
       _previous = oldWidget.value;
+      _pendingReveal = true;
       if (oldWidget.pulseScope == widget.pulseScope) _changeCount++;
     }
   }
@@ -57,9 +65,17 @@ class _AnimatedAmountState extends State<AnimatedAmount> {
   @override
   Widget build(BuildContext context) {
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    // Siempre se consulta, para reconstruirse en cuanto se destape.
+    final covered = RouteCoverScope.isCovered(context);
     if (disableAnimations || _previous == widget.value) {
       return Text(widget.formatter(widget.value), style: widget.style);
     }
+    // Tapada: se queda en el valor anterior y el conteo arranca al
+    // destaparse, que es cuando el usuario puede verlo.
+    if (_pendingReveal && covered) {
+      return Text(widget.formatter(_previous), style: widget.style);
+    }
+    _pendingReveal = false;
     final counter = TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: _previous, end: widget.value),
       duration: widget.duration,

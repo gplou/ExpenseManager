@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'motion_tokens.dart';
+import 'route_cover_scope.dart';
 
 /// Destello puntual sobre un elemento para señalar "esto acaba de cambiar":
 /// un pequeño "pop" de escala y un halo de [color] que se desvanece.
@@ -41,21 +42,21 @@ class _HighlightPulseState extends State<HighlightPulse>
 
   late final AnimationController _ctrl = AnimationController(vsync: this);
   late Animation<double> _t = const AlwaysStoppedAnimation(0);
-  bool _pendingMountPlay = false;
+  /// Destello pedido (al montar o por cambio de [trigger]) que aún no se ha
+  /// reproducido porque la ruta estaba tapada; se lanza al destaparse.
+  bool _pendingPlay = false;
 
   @override
   void initState() {
     super.initState();
-    _pendingMountPlay = widget.playOnMount;
+    _pendingPlay = widget.playOnMount;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_pendingMountPlay) {
-      _pendingMountPlay = false;
-      _play();
-    }
+    // También se llama al destaparse la ruta (dependencia de RouteCoverScope).
+    if (_pendingPlay) _play();
   }
 
   @override
@@ -65,7 +66,13 @@ class _HighlightPulseState extends State<HighlightPulse>
   }
 
   void _play() {
+    _pendingPlay = false;
     if (MotionTokens.reduced(context)) return;
+    // Debajo de una hoja nadie lo vería: se guarda para cuando se destape.
+    if (RouteCoverScope.isCovered(context)) {
+      _pendingPlay = true;
+      return;
+    }
     final delay = _step * widget.delayIndex.clamp(0, 6);
     final total = delay + MotionTokens.highlight;
     _ctrl.duration = total;
@@ -84,6 +91,9 @@ class _HighlightPulseState extends State<HighlightPulse>
 
   @override
   Widget build(BuildContext context) {
+    // Registra la dependencia aunque no haya destello pendiente, para que
+    // didChangeDependencies se dispare al destaparse la ruta.
+    RouteCoverScope.isCovered(context);
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (context, child) {

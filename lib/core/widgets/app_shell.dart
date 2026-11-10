@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:expense_manager/core/services/analytics_service.dart';
 import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/core/widgets/app_bottom_nav.dart';
+import 'package:expense_manager/core/widgets/motion/route_cover_scope.dart';
 import 'package:expense_manager/features/dashboard/widgets/app_drawer.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 
@@ -41,7 +42,10 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       drawer: const AppDrawer(),
-      body: navigationShell,
+      // Las pestañas viven en navegadores anidados y no ven las hojas que se
+      // abren en el raíz; este scope se lo cuenta para que sus animaciones
+      // de "acaba de cambiar" esperen a que la hoja se cierre.
+      body: RouteCoverScope(child: navigationShell),
       // Banner encima de la barra, ambos dentro del slot de
       // `bottomNavigationBar`: así el Scaffold descuenta su alto del body y
       // las pantallas no tienen que reservar hueco a mano.
