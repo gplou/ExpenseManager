@@ -794,6 +794,10 @@
   "@spentInPeriod": {
     "placeholders": { "period": { "type": "String" } }
   },
+  "spentThisWeek": "Gastado esta semana",
+  "@spentThisWeek": {},
+  "spentThisYear": "Gastado este año",
+  "@spentThisYear": {},
   "avgPerDay": "Media / día",
   "@avgPerDay": {},
   "upcomingBills": "Próximos recibos",

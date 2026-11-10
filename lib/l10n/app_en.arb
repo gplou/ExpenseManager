@@ -454,6 +454,10 @@
   "@spentInPeriod": {
     "placeholders": { "period": { "type": "String" } }
   },
+  "spentThisWeek": "Spent this week",
+  "@spentThisWeek": {},
+  "spentThisYear": "Spent this year",
+  "@spentThisYear": {},
   "avgPerDay": "Avg / day",
   "@avgPerDay": {},
   "upcomingBills": "Upcoming bills",

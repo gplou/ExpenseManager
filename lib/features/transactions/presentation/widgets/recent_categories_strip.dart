@@ -57,7 +57,12 @@ final quickCategoriesProvider = FutureProvider.autoDispose
 /// Tira horizontal de categorías para selección con 1 tap, con un chip final
 /// "Más" que abre el picker completo. La categoría seleccionada siempre es
 /// visible (se antepone si no estaba en la lista).
-class QuickCategoryStrip extends ConsumerWidget {
+///
+/// El orden se fija con la primera lista que llega y se mantiene mientras la
+/// tira esté montada: al guardar se invalida `allTransactionsProvider` y el
+/// recuento por frecuencia cambia, pero si los chips se reordenaran se vería
+/// durante el ✓ verde, justo antes de que se cierre la hoja.
+class QuickCategoryStrip extends ConsumerStatefulWidget {
   const QuickCategoryStrip({
     super.key,
     required this.type,
@@ -76,15 +81,51 @@ class QuickCategoryStrip extends ConsumerWidget {
   final Color accentLight;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QuickCategoryStrip> createState() => _QuickCategoryStripState();
+}
+
+class _QuickCategoryStripState extends ConsumerState<QuickCategoryStrip> {
+  /// Primer orden mostrado por tipo (cambiar gasto/ingreso cambia de lista).
+  final Map<TransactionType, List<String>> _shownOrder = {};
+
+  /// Chips a mostrar: [fresh] (o la lista ya mostrada mientras recarga) en el
+  /// orden ya mostrado. Lo que sigue estando conserva su sitio, lo que
+  /// desaparece (p. ej. una categoría borrada) se quita y lo nuevo va al
+  /// final. La seleccionada siempre es visible: si no estaba, se antepone.
+  List<String> _visibleNames(
+    TransactionType type,
+    List<String>? fresh,
+    String? selected,
+  ) {
+    final shown = _shownOrder[type];
+    // Aún sin datos: no se fija nada, para que el primer orden sea el real.
+    if (fresh == null && shown == null) {
+      return [if (selected != null) selected];
+    }
+    final base = fresh ?? shown!;
+    final names = shown == null
+        ? [...base]
+        : [
+            ...shown.where((n) => base.contains(n) || n == selected),
+            ...base.where((n) => !shown.contains(n)),
+          ];
+    if (selected != null && !names.contains(selected)) {
+      names.insert(0, selected);
+    }
+    return _shownOrder[type] = names;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final type = widget.type;
+    final selected = widget.selected;
+    final accentColor = widget.accentColor;
+    final accentLight = widget.accentLight;
     final l10n = AppLocalizations.of(context);
     final asyncQuick = ref.watch(quickCategoriesProvider(type));
     final customCats = ref.watch(customCategoriesSyncProvider)[type] ?? [];
 
-    final names = [...asyncQuick.value ?? const <String>[]];
-    if (selected != null && !names.contains(selected)) {
-      names.insert(0, selected!);
-    }
+    final names = _visibleNames(type, asyncQuick.value, selected);
 
     return SizedBox(
       height: 48,
@@ -105,7 +146,7 @@ class QuickCategoryStrip extends ConsumerWidget {
               accentLight: accentLight,
               onTap: () {
                 HapticFeedback.selectionClick();
-                onMore();
+                widget.onMore();
               },
             );
           }
@@ -120,7 +161,7 @@ class QuickCategoryStrip extends ConsumerWidget {
             accentLight: accentLight,
             onTap: () {
               HapticFeedback.selectionClick();
-              onSelect(name);
+              widget.onSelect(name);
             },
           );
         },

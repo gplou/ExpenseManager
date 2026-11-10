@@ -141,6 +141,34 @@ void main() {
       expect(find.text('Gasolina'), findsOneWidget);
     });
 
+    testWidgets(
+        'keeps the shown order when the frequency ranking changes '
+        '(e.g. right after saving, before the sheet closes)', (tester) async {
+      var ranking = ['Comida', 'Transporte', 'Ocio'];
+      await tester.pumpWidget(_wrap(
+        _stripFor(TransactionType.expense, selected: 'Ocio'),
+        overrides: [
+          quickCategoriesProvider(TransactionType.expense)
+              .overrideWith((_) async => ranking),
+        ],
+      ));
+      await tester.pumpAndSettle();
+      double x(String label) => tester.getTopLeft(find.text(label)).dx;
+      expect(x('Comida'), lessThan(x('Transporte')));
+      expect(x('Transporte'), lessThan(x('Ocio')));
+
+      // Guardar en Ocio lo sube al primer puesto del recuento y se recarga.
+      ranking = ['Ocio', 'Comida', 'Transporte', 'Salud'];
+      ProviderScope.containerOf(tester.element(find.byType(QuickCategoryStrip)))
+          .invalidate(quickCategoriesProvider(TransactionType.expense));
+      await tester.pumpAndSettle();
+
+      expect(x('Comida'), lessThan(x('Transporte')));
+      expect(x('Transporte'), lessThan(x('Ocio')));
+      // Lo nuevo entra al final, sin mover a los demás.
+      expect(x('Ocio'), lessThan(x('Salud')));
+    });
+
     testWidgets('renders income chips when type is income', (tester) async {
       await tester.pumpWidget(_wrap(
         _stripFor(TransactionType.income),

@@ -251,7 +251,7 @@ void main() {
     test('activating trial grants PRO with free_trial source', () {
       final now = DateTime.now();
       final expiresAt = DateTime(now.year, now.month, now.day)
-          .add(const Duration(days: 14));
+          .add(const Duration(days: kFreeTrialDays));
       final state = SubscriptionState(
         expiresAt: expiresAt,
         source: 'free_trial',
@@ -263,17 +263,18 @@ void main() {
       expect(state.canStartTrial, isFalse);
     });
 
-    test('trial expires at midnight of day+4 (3 full calendar days)', () {
+    test('trial expires at midnight, kFreeTrialDays calendar days after today',
+        () {
       final now = DateTime.now();
       final expiresAt = DateTime(now.year, now.month, now.day)
-          .add(const Duration(days: 14));
+          .add(const Duration(days: kFreeTrialDays));
       // Verify it's exactly midnight (00:00:00)
       expect(expiresAt.hour, 0);
       expect(expiresAt.minute, 0);
       expect(expiresAt.second, 0);
-      // Verify it's 4 calendar days from start of today
+      // Verify it's kFreeTrialDays calendar days from start of today
       final startOfToday = DateTime(now.year, now.month, now.day);
-      expect(expiresAt.difference(startOfToday).inDays, 4);
+      expect(expiresAt.difference(startOfToday).inDays, kFreeTrialDays);
     });
 
     test('after trial expires, user is no longer PRO but trial is still used', () {

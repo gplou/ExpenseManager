@@ -166,6 +166,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         : (period == TransactionPeriod.month
             ? clock.now().monthName(localeCode)
             : period.l10nLabel(l10n).toLowerCase());
+    // "Gastado en noviembre" sí, "Gastado en semana" no: semana y año llevan
+    // su propia frase.
+    final eyebrow = customRange != null
+        ? null
+        : switch (period) {
+            TransactionPeriod.week => l10n.spentThisWeek,
+            TransactionPeriod.year => l10n.spentThisYear,
+            TransactionPeriod.month => null,
+          };
     final daysElapsed = range.to.difference(range.from).inDays + 1;
 
     return Stack(
@@ -289,6 +298,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         cSymbol: cSymbol,
                         numFmtStyle: numFmt,
                         periodLabel: periodLabel,
+                        eyebrow: eyebrow,
                         daysElapsed: daysElapsed,
                         onViewCharts: () => context.go(AppRoutes.charts),
                       ),

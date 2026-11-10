@@ -112,9 +112,13 @@ class AmountDisplay extends StatelessWidget {
 
   /// Texto del importe mientras cuenta: mismos decimales que tendrá el valor
   /// final y el mismo separador que usa el teclado.
-  static String _rolling(double v, String finalText) {
+  @visibleForTesting
+  static String rollingText(double v, String finalText) {
     final sep = finalText.contains(',') ? ',' : '.';
-    final decimals = finalText.contains(RegExp(r'[.,]')) ? 2 : 0;
+    // Tantos decimales como el texto final ("17.5" → 1): con 2 fijos el
+    // contador pasaba por "6.00" y al acabar saltaba a "17.5".
+    final sepIndex = finalText.lastIndexOf(RegExp(r'[.,]'));
+    final decimals = sepIndex < 0 ? 0 : finalText.length - sepIndex - 1;
     return v.toStringAsFixed(decimals).replaceAll('.', sep);
   }
 
@@ -197,7 +201,7 @@ class AmountDisplay extends StatelessWidget {
                           duration: const Duration(milliseconds: 500),
                           curve: Curves.easeOutCubic,
                           builder: (context, t, _) => Text(
-                            t < 1 ? _rolling(target * t, text) : text,
+                            t < 1 ? rollingText(target * t, text) : text,
                             style: style,
                           ),
                         );

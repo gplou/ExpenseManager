@@ -27,6 +27,7 @@ class SummarySection extends StatelessWidget {
     required this.cSymbol,
     required this.numFmtStyle,
     required this.periodLabel,
+    this.eyebrow,
     required this.daysElapsed,
     required this.onViewCharts,
   });
@@ -37,6 +38,11 @@ class SummarySection extends StatelessWidget {
   /// Nombre del periodo tal y como se muestra en el eyebrow ("septiembre",
   /// "esta semana"…). Lo resuelve el dashboard, que es quien conoce el filtro.
   final String periodLabel;
+
+  /// Texto completo del eyebrow cuando "Gastado en …" no encaja
+  /// ("Gastado esta semana", no "Gastado en semana"). Si es null se usa
+  /// `spentInPeriod(periodLabel)`.
+  final String? eyebrow;
 
   /// Días transcurridos del periodo, para la media diaria. Siempre >= 1: el
   /// primer día del mes el gasto medio es el gasto, no una división por cero.
@@ -67,7 +73,7 @@ class SummarySection extends StatelessWidget {
         children: [
           // ── Eyebrow: GASTADO EN <PERIODO> ─────────────────────────────
           Text(
-            l10n.spentInPeriod(periodLabel).toUpperCase(),
+            (eyebrow ?? l10n.spentInPeriod(periodLabel)).toUpperCase(),
             style: tt.labelMedium?.copyWith(color: appColors.textMuted),
           ),
           const Gap(8),

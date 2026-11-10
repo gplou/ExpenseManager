@@ -1161,6 +1161,12 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get spentThisWeek => 'Diese Woche ausgegeben';
+
+  @override
+  String get spentThisYear => 'Dieses Jahr ausgegeben';
+
+  @override
   String get avgPerDay => 'Ø / Tag';
 
   @override

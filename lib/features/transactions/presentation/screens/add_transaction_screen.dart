@@ -49,6 +49,10 @@ Future<void> showAddTransactionSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
+    // Siempre en el navegador raíz: abierta desde una pestaña (p. ej. editar
+    // desde la lista) caería en el navegador anidado de la rama y la barra
+    // inferior del shell quedaría pintada por encima de la hoja.
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,

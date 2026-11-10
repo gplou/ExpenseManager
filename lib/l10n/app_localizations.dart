@@ -2178,6 +2178,18 @@ abstract class AppLocalizations {
   /// **'Gastado en {period}'**
   String spentInPeriod(String period);
 
+  /// No description provided for @spentThisWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastado esta semana'**
+  String get spentThisWeek;
+
+  /// No description provided for @spentThisYear.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastado este año'**
+  String get spentThisYear;
+
   /// No description provided for @avgPerDay.
   ///
   /// In es, this message translates to:

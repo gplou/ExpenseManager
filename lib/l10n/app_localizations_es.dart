@@ -1149,6 +1149,12 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get spentThisWeek => 'Gastado esta semana';
+
+  @override
+  String get spentThisYear => 'Gastado este año';
+
+  @override
   String get avgPerDay => 'Media / día';
 
   @override
