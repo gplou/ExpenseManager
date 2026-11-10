@@ -457,10 +457,14 @@
   "@proPromoUnexpectedError": {},
   "proSourceFreeTrial": "Prueba gratuita",
   "@proSourceFreeTrial": {},
-  "proFreeTrialButton": "Prueba gratis 3 días",
-  "@proFreeTrialButton": {},
-  "proFreeTrialActivated": "¡Prueba activada! Disfruta de PRO durante 3 días.",
-  "@proFreeTrialActivated": {},
+  "proFreeTrialButton": "Prueba gratis {days} días",
+  "@proFreeTrialButton": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "proFreeTrialActivated": "¡Prueba activada! Disfruta de PRO durante {days} días.",
+  "@proFreeTrialActivated": {
+    "placeholders": { "days": { "type": "int" } }
+  },
   "proFreeTrialSubtitle": "Prueba todas las funciones premium sin compromiso",
   "@proFreeTrialSubtitle": {},
   "proCloudSync": "Sincronización en la nube",

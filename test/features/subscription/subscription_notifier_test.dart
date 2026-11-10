@@ -256,7 +256,7 @@ void main() {
         () async {
       final now = DateTime.now();
       final expiresAt = DateTime(now.year, now.month, now.day)
-          .add(const Duration(days: 4));
+          .add(const Duration(days: 14));
 
       when(() => mockRepo.startFreeTrial())
           .thenAnswer((_) async => expiresAt);

@@ -1293,14 +1293,14 @@ abstract class AppLocalizations {
   /// No description provided for @proFreeTrialButton.
   ///
   /// In es, this message translates to:
-  /// **'Prueba gratis 3 días'**
-  String get proFreeTrialButton;
+  /// **'Prueba gratis {days} días'**
+  String proFreeTrialButton(int days);
 
   /// No description provided for @proFreeTrialActivated.
   ///
   /// In es, this message translates to:
-  /// **'¡Prueba activada! Disfruta de PRO durante 3 días.'**
-  String get proFreeTrialActivated;
+  /// **'¡Prueba activada! Disfruta de PRO durante {days} días.'**
+  String proFreeTrialActivated(int days);
 
   /// No description provided for @proFreeTrialSubtitle.
   ///

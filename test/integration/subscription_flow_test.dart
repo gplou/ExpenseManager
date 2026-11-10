@@ -251,7 +251,7 @@ void main() {
     test('activating trial grants PRO with free_trial source', () {
       final now = DateTime.now();
       final expiresAt = DateTime(now.year, now.month, now.day)
-          .add(const Duration(days: 4));
+          .add(const Duration(days: 14));
       final state = SubscriptionState(
         expiresAt: expiresAt,
         source: 'free_trial',
@@ -266,7 +266,7 @@ void main() {
     test('trial expires at midnight of day+4 (3 full calendar days)', () {
       final now = DateTime.now();
       final expiresAt = DateTime(now.year, now.month, now.day)
-          .add(const Duration(days: 4));
+          .add(const Duration(days: 14));
       // Verify it's exactly midnight (00:00:00)
       expect(expiresAt.hour, 0);
       expect(expiresAt.minute, 0);

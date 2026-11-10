@@ -646,11 +646,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get proSourceFreeTrial => 'Prueba gratuita';
 
   @override
-  String get proFreeTrialButton => 'Prueba gratis 3 días';
+  String proFreeTrialButton(int days) {
+    return 'Prueba gratis $days días';
+  }
 
   @override
-  String get proFreeTrialActivated =>
-      '¡Prueba activada! Disfruta de PRO durante 3 días.';
+  String proFreeTrialActivated(int days) {
+    return '¡Prueba activada! Disfruta de PRO durante $days días.';
+  }
 
   @override
   String get proFreeTrialSubtitle =>

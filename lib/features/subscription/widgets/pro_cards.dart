@@ -9,6 +9,7 @@ import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/core/widgets/neo_card.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/subscription/subscription_repository.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
 
 class ProHeader extends StatelessWidget {
@@ -210,7 +211,7 @@ class FreeTrialCard extends ConsumerWidget {
           ),
           const Gap(12),
           Text(
-            l10n.proFreeTrialButton,
+            l10n.proFreeTrialButton(kFreeTrialDays),
             style: context.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: AppColors.dustyTeal,
@@ -228,7 +229,7 @@ class FreeTrialCard extends ConsumerWidget {
           ),
           const Gap(16),
           NeoBrutalButton(
-            label: l10n.proFreeTrialButton,
+            label: l10n.proFreeTrialButton(kFreeTrialDays),
             isLoading: sub.isLoading,
             onTap: sub.isLoading
                 ? null
@@ -236,10 +237,16 @@ class FreeTrialCard extends ConsumerWidget {
                     await ref
                         .read(subscriptionProvider.notifier)
                         .startFreeTrial();
-                    if (context.mounted) {
+                    // Only confirm on success — on failure the notifier sets
+                    // `error` and the screen shows the error message instead.
+                    final activated =
+                        ref.read(subscriptionProvider).value?.isPro ?? false;
+                    if (context.mounted && activated) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(l10n.proFreeTrialActivated),
+                          content: Text(
+                            l10n.proFreeTrialActivated(kFreeTrialDays),
+                          ),
                           backgroundColor: AppColors.sageGreen,
                         ),
                       );

@@ -13,8 +13,9 @@ import 'domain/subscription_repository_contract.dart';
 /// RevenueCat entitlement identifier — must match the RC dashboard.
 const kRCEntitlementId = 'pro';
 
-/// Duration of the one-time free trial in days.
-const kFreeTrialDays = 4;
+/// Duration of the one-time free trial in days. Must match `v_trial_days` in
+/// the `start_free_trial()` RPC (supabase/migrations/20261110000001_free_trial_14_days.sql).
+const kFreeTrialDays = 14;
 
 /// Nominal subscription period in days (used for fallback expiry and bonus calculation).
 const kSubscriptionDays = 30;
