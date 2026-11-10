@@ -1,10 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:expense_manager/core/theme/app_elevation.dart';
-import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/motion/motion.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/quick_capture_host.dart';
 import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
@@ -111,7 +113,31 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(selected ? activeIcon : icon, size: 22, color: color),
+              // Al activarse, el icono da un pequeño salto (1.0 → 1.18 → 1.0)
+              // y el color se funde en lugar de cambiar de golpe.
+              PressableScale(
+                pressedScale: 0.85,
+                child: TweenAnimationBuilder<double>(
+                  key: ValueKey(selected),
+                  tween: Tween(begin: selected ? 0 : 1, end: 1),
+                  duration: MotionTokens.reduced(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 360),
+                  builder: (context, t, child) => Transform.scale(
+                    scale: 1 + 0.18 * math.sin(math.pi * t),
+                    child: child,
+                  ),
+                  child: TweenAnimationBuilder<Color?>(
+                    tween: ColorTween(end: color),
+                    duration: const Duration(milliseconds: 200),
+                    builder: (context, c, _) => Icon(
+                      selected ? activeIcon : icon,
+                      size: 22,
+                      color: c,
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 label,
@@ -161,25 +187,39 @@ class _FabSlot extends StatelessWidget {
             key: TutorialKeys.fabKey,
             width: AppBottomNav._fabSize,
             height: AppBottomNav._fabSize,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  capture?.openAddSheet();
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accent.withValues(alpha: 0.14),
-                    border: Border.all(color: accent, width: 1.5),
-                    boxShadow: AppElevation.tinted(accent, opacity: 0.22),
-                  ),
-                  child: Icon(
-                    PhosphorIcons.plus,
-                    color: accent,
-                    size: 26,
+            child: PressableScale(
+              pressedScale: 0.88,
+              // El halo va fuera del Material: su clip circular (necesario
+              // para que la onda del InkWell no se salga) recortaría la sombra.
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: AppElevation.tinted(accent, opacity: 0.22),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    splashColor: accent.withValues(alpha: 0.28),
+                    highlightColor: accent.withValues(alpha: 0.12),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      capture?.openAddSheet();
+                    },
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accent.withValues(alpha: 0.14),
+                        border: Border.all(color: accent, width: 1.5),
+                      ),
+                      child: Icon(
+                        PhosphorIcons.plus,
+                        color: accent,
+                        size: 26,
+                      ),
+                    ),
                   ),
                 ),
               ),

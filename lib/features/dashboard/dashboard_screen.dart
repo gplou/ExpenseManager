@@ -20,6 +20,7 @@ import 'package:expense_manager/core/services/home_widget_gateway.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/core/widgets/custom_date_range_picker.dart';
+import 'package:expense_manager/core/widgets/motion/motion.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/budgets_section.dart';
@@ -365,15 +366,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         final dividerColor = context.appColors.divider;
                         return Column(
                           children: [
-                            for (int i = 0; i < transactions.length; i++) ...[
-                              if (i > 0)
-                                Container(
-                                  height: 1,
-                                  color: dividerColor,
+                            // Keyed por id: al volver de guardar, solo la
+                            // transacción nueva hace la entrada; las que ya
+                            // estaban conservan su estado y no re-animan.
+                            for (int i = 0; i < transactions.length; i++)
+                              FadeSlideIn(
+                                key: ValueKey(transactions[i].id),
+                                index: i,
+                                child: Column(
+                                  children: [
+                                    if (i > 0)
+                                      Container(
+                                        height: 1,
+                                        color: dividerColor,
+                                      ),
+                                    RecentTransactionTile(
+                                        transaction: transactions[i]),
+                                  ],
                                 ),
-                              RecentTransactionTile(
-                                  transaction: transactions[i]),
-                            ],
+                              ),
                           ],
                         );
                       },

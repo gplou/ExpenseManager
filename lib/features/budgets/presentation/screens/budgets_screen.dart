@@ -3,6 +3,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import 'package:expense_manager/core/widgets/motion/motion.dart';
 import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/errors/failure_localizations.dart';
 import 'package:expense_manager/core/errors/failures.dart';
@@ -149,25 +150,29 @@ class BudgetsScreen extends ConsumerWidget {
             itemCount: progresses.length,
             itemBuilder: (context, index) {
               final progress = progresses[index];
-              return BudgetProgressTile(
-                progress: progress,
-                cSymbol: cSymbol,
-                numFmtStyle: numFmtStyle,
-                onTap: () => showBudgetFormSheet(
-                  context,
-                  ref,
-                  existing: progress.budget,
-                ),
-                trailing: IconButton(
-                  key: TestKeys.budgetDeleteButton,
-                  tooltip: l10n.delete,
-                  icon: Icon(
-                    PhosphorIcons.trash,
-                    size: 20,
-                    color: AppColors.mutedTerra,
+              return FadeSlideIn(
+                key: ValueKey(progress.budget.id),
+                index: index,
+                child: BudgetProgressTile(
+                  progress: progress,
+                  cSymbol: cSymbol,
+                  numFmtStyle: numFmtStyle,
+                  onTap: () => showBudgetFormSheet(
+                    context,
+                    ref,
+                    existing: progress.budget,
                   ),
-                  onPressed: () =>
-                      _confirmDelete(context, ref, progress.budget.id),
+                  trailing: IconButton(
+                    key: TestKeys.budgetDeleteButton,
+                    tooltip: l10n.delete,
+                    icon: Icon(
+                      PhosphorIcons.trash,
+                      size: 20,
+                      color: AppColors.mutedTerra,
+                    ),
+                    onPressed: () =>
+                        _confirmDelete(context, ref, progress.budget.id),
+                  ),
                 ),
               );
             },

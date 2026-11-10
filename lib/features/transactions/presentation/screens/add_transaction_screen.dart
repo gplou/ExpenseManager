@@ -21,6 +21,7 @@ import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
+import 'package:expense_manager/core/widgets/motion/motion.dart';
 import 'package:expense_manager/core/widgets/numeric_keypad.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
@@ -34,6 +35,7 @@ import 'package:expense_manager/features/transactions/presentation/providers/sub
 import 'package:expense_manager/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/voice_capture_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/add_transaction_widgets.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/capture_status_panel.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/category_picker_sheet.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/recent_categories_strip.dart';
 
@@ -83,7 +85,8 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
       _AddTransactionScreenState();
 }
 
-class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
+class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen>
+    with SingleTickerProviderStateMixin {
   late TransactionType _type;
   late final AmountKeypadController _keypadController;
   late final ImageInputGateway _imageGateway;
@@ -102,6 +105,19 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   /// null = no repetir. Un valor activo marca la transacción como recurrente.
   RecurrenceType? _recurrenceType;
   String? _amountError;
+
+  /// Se incrementa cada vez que una captura de voz/foto rellena el
+  /// formulario: el importe cuenta desde 0 y los campos rellenados destellan
+  /// uno detrás de otro (ver [HighlightPulse]).
+  int _aiFillTick = 0;
+
+  /// true tras guardar con éxito: la tecla de guardar vira a verde con un ✓
+  /// durante [_successCtrl] antes de cerrar la hoja.
+  bool _saved = false;
+  late final AnimationController _successCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
 
   bool get _isEditing => widget.transaction != null;
 
@@ -131,6 +147,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         'annual' => RecurrenceType.annual,
         _ => RecurrenceType.monthly,
       };
+    }
+    if (v != null) {
+      // Datos que llegan ya parseados (captura desde el widget de inicio): se
+      // reproduce el mismo "relleno por IA" que con el micro de la pantalla.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _aiFillTick++);
+      });
     }
     if (v?.subcategory != null && v?.category != null) {
       WidgetsBinding.instance
@@ -169,6 +192,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               _ => RecurrenceType.monthly,
             }
           : null;
+      _aiFillTick++;
     });
     if (v.subcategory != null) _ensureSubcategoryExists(v);
   }
@@ -237,8 +261,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final l10n = AppLocalizations.of(context);
     try {
       final subcats = ref.read(allSubcategoriesProvider).value ?? const [];
-      final parsed =
-          await _voiceCapture.stopAndProcess(subcategories: subcats);
+      final parsed = await _voiceCapture.stopAndProcess(subcategories: subcats);
       if (!mounted) return;
       if (parsed == null) {
         context.showSnackbar(l10n.voiceInterpretError, isError: true);
@@ -339,6 +362,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   @override
   void dispose() {
     _keypadController.dispose();
+    _successCtrl.dispose();
     _voiceMaxDurationTimer?.cancel();
     // Only cancels if this screen's own recording is still active — a
     // no-op if a different voice entry point owns the current capture.
@@ -474,7 +498,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           );
       if (mounted) {
         HapticFeedback.heavyImpact().ignore();
-        Navigator.of(context).pop();
+        // Confirmación visual breve antes de cerrar: la tecla de guardar se
+        // vuelve verde con un ✓. Se espera a una animación (no a un Timer)
+        // para que el cierre vaya ligado a frames y no deje timers colgando.
+        if (!MediaQuery.disableAnimationsOf(context)) {
+          setState(() => _saved = true);
+          await _successCtrl.forward();
+        }
+        if (mounted) Navigator.of(context).pop();
       }
     } catch (e, st) {
       developer.log(
@@ -563,8 +594,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             IconButton(
               key: TestKeys.photoCaptureButton,
               tooltip: l10n.labelPhoto,
-              onPressed:
-                  (_isListening || _isCapturing) ? null : _onTapPhoto,
+              onPressed: (_isListening || _isCapturing) ? null : _onTapPhoto,
               icon: _captureKind == _CaptureKind.photo
                   ? const SizedBox(
                       width: 20,
@@ -608,12 +638,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 },
               ),
               const SizedBox(height: AppSpacing.sm),
-              AmountDisplay(
-                controller: _keypadController,
-                accent: _accentColor,
-                currencyCode: currencyCode,
-                error: _amountError,
-              ),
+              _buildAmountOrCaptureStatus(currencyCode),
               const SizedBox(height: AppSpacing.sm),
               QuickCategoryStrip(
                 type: _type,
@@ -638,6 +663,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   accent: _accentColor,
                   submitLabel: saveLabel,
                   canSubmit: !_isSaving,
+                  submitSucceeded: _saved,
                   onSubmit: _save,
                   fillVertical: true,
                 ),
@@ -646,6 +672,58 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Mientras dura una captura de voz/foto, la tarjeta del importe deja sitio
+  /// al panel de estado (onda del micro / procesando); al terminar vuelve con
+  /// el importe contando desde 0 y un destello de acento.
+  Widget _buildAmountOrCaptureStatus(String currencyCode) {
+    final phase = _isListening
+        ? CaptureStatusPhase.listening
+        : switch (_captureKind) {
+            _CaptureKind.voice => CaptureStatusPhase.processingVoice,
+            _CaptureKind.photo => CaptureStatusPhase.processingImage,
+            null => null,
+          };
+    final reduced = MediaQuery.disableAnimationsOf(context);
+
+    return AnimatedSwitcher(
+      duration: reduced ? Duration.zero : const Duration(milliseconds: 260),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: Tween(begin: 0.96, end: 1.0).animate(animation),
+          child: child,
+        ),
+      ),
+      layoutBuilder: (current, previous) => Stack(
+        alignment: Alignment.topCenter,
+        children: [...previous, if (current != null) current],
+      ),
+      child: phase != null
+          ? CaptureStatusPanel(
+              key: const ValueKey('capture-status'),
+              phase: phase,
+              level: _voiceCapture.inputLevel,
+              onTap: _isListening ? _stopAndProcessVoice : null,
+            )
+          : HighlightPulse(
+              key: const ValueKey('amount'),
+              trigger: _aiFillTick,
+              color: _accentColor,
+              scale: 1.02,
+              borderRadius: AppRadius.radiusLg,
+              child: AmountDisplay(
+                controller: _keypadController,
+                accent: _accentColor,
+                currencyCode: currencyCode,
+                error: _amountError,
+                rollTrigger: _aiFillTick,
+              ),
+            ),
     );
   }
 
@@ -665,48 +743,68 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.zero,
         children: [
-          DetailPill(
-            icon: PhosphorIcons.calendar,
-            label: dateLabel,
-            active: !isToday,
-            accent: _accentColor,
-            accentLight: _accentLight,
-            semanticLabel: '${l10n.date}: $dateLabel',
-            onTap: _pickDate,
+          HighlightPulse(
+            trigger: _aiFillTick,
+            delayIndex: 1,
+            color: _accentColor,
+            child: DetailPill(
+              icon: PhosphorIcons.calendar,
+              label: dateLabel,
+              active: !isToday,
+              accent: _accentColor,
+              accentLight: _accentLight,
+              semanticLabel: '${l10n.date}: $dateLabel',
+              onTap: _pickDate,
+            ),
           ),
           if (_selectedCategory != null) ...[
             const SizedBox(width: AppSpacing.sm),
-            DetailPill(
-              icon: PhosphorIcons.tag,
-              label: _selectedSubcategory ?? l10n.subcategory,
-              active: _selectedSubcategory != null,
-              accent: _accentColor,
-              accentLight: _accentLight,
-              semanticLabel:
-                  '${l10n.subcategory}: ${_selectedSubcategory ?? ""}',
-              onTap: _openSubcategoryPicker,
+            HighlightPulse(
+              trigger: _aiFillTick,
+              delayIndex: 2,
+              color: _accentColor,
+              child: DetailPill(
+                icon: PhosphorIcons.tag,
+                label: _selectedSubcategory ?? l10n.subcategory,
+                active: _selectedSubcategory != null,
+                accent: _accentColor,
+                accentLight: _accentLight,
+                semanticLabel:
+                    '${l10n.subcategory}: ${_selectedSubcategory ?? ""}',
+                onTap: _openSubcategoryPicker,
+              ),
             ),
           ],
           const SizedBox(width: AppSpacing.sm),
-          DetailPill(
-            key: TestKeys.transactionNotePill,
-            icon: PhosphorIcons.notePencil,
-            label: _note.trim().isEmpty ? l10n.note : _note.trim(),
-            active: _note.trim().isNotEmpty,
-            accent: _accentColor,
-            accentLight: _accentLight,
-            semanticLabel: '${l10n.note}: ${_note.trim()}',
-            onTap: _editNote,
+          HighlightPulse(
+            trigger: _aiFillTick,
+            delayIndex: 3,
+            color: _accentColor,
+            child: DetailPill(
+              key: TestKeys.transactionNotePill,
+              icon: PhosphorIcons.notePencil,
+              label: _note.trim().isEmpty ? l10n.note : _note.trim(),
+              active: _note.trim().isNotEmpty,
+              accent: _accentColor,
+              accentLight: _accentLight,
+              semanticLabel: '${l10n.note}: ${_note.trim()}',
+              onTap: _editNote,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          DetailPill(
-            icon: PhosphorIcons.repeat,
-            label: recurrenceLabel,
-            active: _recurrenceType != null,
-            accent: _accentColor,
-            accentLight: _accentLight,
-            semanticLabel: '${l10n.recurringTransaction}: $recurrenceLabel',
-            onTap: _pickRecurrence,
+          HighlightPulse(
+            trigger: _aiFillTick,
+            delayIndex: 4,
+            color: _accentColor,
+            child: DetailPill(
+              icon: PhosphorIcons.repeat,
+              label: recurrenceLabel,
+              active: _recurrenceType != null,
+              accent: _accentColor,
+              accentLight: _accentLight,
+              semanticLabel: '${l10n.recurringTransaction}: $recurrenceLabel',
+              onTap: _pickRecurrence,
+            ),
           ),
         ],
       ),

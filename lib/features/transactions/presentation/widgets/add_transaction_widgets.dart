@@ -98,12 +98,25 @@ class AmountDisplay extends StatelessWidget {
     required this.accent,
     required this.currencyCode,
     required this.error,
+    this.rollTrigger = 0,
   });
 
   final AmountKeypadController controller;
   final Color accent;
   final String currencyCode;
   final String? error;
+
+  /// Cada cambio (> 0) hace que el importe cuente desde 0 hasta el valor
+  /// actual, como cuando la IA rellena el formulario tras una captura.
+  final int rollTrigger;
+
+  /// Texto del importe mientras cuenta: mismos decimales que tendrá el valor
+  /// final y el mismo separador que usa el teclado.
+  static String _rolling(double v, String finalText) {
+    final sep = finalText.contains(',') ? ',' : '.';
+    final decimals = finalText.contains(RegExp(r'[.,]')) ? 2 : 0;
+    return v.toStringAsFixed(decimals).replaceAll('.', sep);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,9 +168,9 @@ class AmountDisplay extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        hasValue ? controller.current : '0',
-                        style: TextStyle(
+                      child: Builder(builder: (context) {
+                        final text = hasValue ? controller.current : '0';
+                        final style = TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 44,
                           fontWeight: FontWeight.w600,
@@ -165,8 +178,30 @@ class AmountDisplay extends StatelessWidget {
                               ? accent
                               : accent.withValues(alpha: 0.25),
                           letterSpacing: -1,
-                        ),
-                      ),
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        );
+                        final target = double.tryParse(
+                          controller.current.replaceAll(',', '.'),
+                        );
+                        if (rollTrigger == 0 ||
+                            target == null ||
+                            MediaQuery.disableAnimationsOf(context)) {
+                          return Text(text, style: style);
+                        }
+                        // Se anima un t de 0 a 1 (no el importe): si el
+                        // usuario teclea después, el final del tween no cambia
+                        // y no vuelve a contar — se muestra el texto tecleado.
+                        return TweenAnimationBuilder<double>(
+                          key: ValueKey(rollTrigger),
+                          tween: Tween(begin: 0, end: 1),
+                          duration: const Duration(milliseconds: 750),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, t, _) => Text(
+                            t < 1 ? _rolling(target * t, text) : text,
+                            style: style,
+                          ),
+                        );
+                      }),
                     ),
                   ),
                   Container(

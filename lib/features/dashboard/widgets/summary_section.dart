@@ -8,58 +8,12 @@ import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/core/widgets/fading_divider.dart';
+import 'package:expense_manager/core/widgets/motion/motion.dart';
+
+export 'package:expense_manager/core/widgets/motion/animated_amount.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transactions_repository_contract.dart';
 import 'package:expense_manager/features/tutorial/tutorial_keys.dart';
-
-/// Texto numérico que interpola entre el valor anterior y el nuevo cuando
-/// cambia. Útil para balance / income / expense después de guardar una
-/// transacción — el cambio se siente "vivo" en lugar de saltar.
-class AnimatedAmount extends StatefulWidget {
-  const AnimatedAmount({
-    super.key,
-    required this.value,
-    required this.formatter,
-    required this.style,
-    this.duration = const Duration(milliseconds: 600),
-    this.curve = Curves.easeOutCubic,
-  });
-
-  final double value;
-  final String Function(double v) formatter;
-  final TextStyle style;
-  final Duration duration;
-  final Curve curve;
-
-  @override
-  State<AnimatedAmount> createState() => _AnimatedAmountState();
-}
-
-class _AnimatedAmountState extends State<AnimatedAmount> {
-  late double _previous = widget.value;
-
-  @override
-  void didUpdateWidget(AnimatedAmount oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value) {
-      _previous = oldWidget.value;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final disableAnimations = MediaQuery.disableAnimationsOf(context);
-    if (disableAnimations || _previous == widget.value) {
-      return Text(widget.formatter(widget.value), style: widget.style);
-    }
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: _previous, end: widget.value),
-      duration: widget.duration,
-      curve: widget.curve,
-      builder: (context, v, _) => Text(widget.formatter(v), style: widget.style),
-    );
-  }
-}
 
 /// Héroe del dashboard: cuánto se ha gastado en el periodo, en grande, y
 /// debajo tres cifras de apoyo (ingresos, media diaria, balance).
@@ -121,6 +75,9 @@ class SummarySection extends StatelessWidget {
           // ── Cifra héroe ───────────────────────────────────────────────
           AnimatedAmount(
             value: summary.expense,
+            countUpOnMount: true,
+            pulseOnChange: true,
+            duration: MotionTokens.countUp,
             formatter: (v) => '$cSymbol${formatAmount(v, numFmtStyle)}',
             style: tt.displayLarge!.copyWith(
               color: cs.onSurface,
@@ -220,6 +177,7 @@ class _SummaryCell extends StatelessWidget {
   final String cSymbol;
   final NumberFormatStyle numFmtStyle;
   final Color amountColor;
+
   /// Signo opcional delante de la cifra ("+" en ingresos). Vacío deja que
   /// el número muestre su propio signo.
   final String prefix;
@@ -240,8 +198,10 @@ class _SummaryCell extends StatelessWidget {
         const Gap(6),
         AnimatedAmount(
           value: amount,
-          formatter: (v) =>
-              '$prefix$cSymbol${formatAmount(v, numFmtStyle)}',
+          countUpOnMount: true,
+          pulseOnChange: true,
+          duration: MotionTokens.countUp,
+          formatter: (v) => '$prefix$cSymbol${formatAmount(v, numFmtStyle)}',
           style: tt.titleSmall!.copyWith(
             color: amountColor,
             fontWeight: FontWeight.w600,

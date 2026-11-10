@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 
@@ -48,6 +49,21 @@ class VoiceCaptureNotifier extends Notifier<VoiceCaptureStatus> {
   StreamSubscription<Amplitude>? _amplitudeSub;
   Timer? _silenceTimer;
 
+  // Sin dispose a propósito: el notifier vive lo que la app y un
+  // ValueNotifier sin listeners no retiene nada.
+  final ValueNotifier<double> _inputLevel = ValueNotifier<double>(0);
+
+  /// Nivel de entrada del micrófono normalizado a 0..1, actualizado con cada
+  /// muestra de amplitud mientras se graba (solo cuando se pasa
+  /// `onSilenceTimeout` a [start], que es lo que suscribe a la amplitud).
+  /// Alimenta la onda de audio de la UI; vuelve a 0 al parar.
+  ValueListenable<double> get inputLevel => _inputLevel;
+
+  /// dBFS → 0..1. Por debajo de -50 dBFS es ruido de fondo (0); a partir de
+  /// -5 dBFS, voz alta (1).
+  static double normalizeLevel(double dbfs) =>
+      ((dbfs + 50) / 45).clamp(0.0, 1.0);
+
   @override
   VoiceCaptureStatus build() => VoiceCaptureStatus.idle;
 
@@ -90,6 +106,7 @@ class VoiceCaptureNotifier extends Notifier<VoiceCaptureStatus> {
     _amplitudeSub = _gateway
         .onAmplitudeChanged(_amplitudeSampleInterval)
         .listen((amplitude) {
+      _inputLevel.value = normalizeLevel(amplitude.current);
       if (amplitude.current > _silenceThresholdDb) {
         _resetSilenceTimer(onSilenceTimeout);
       }
@@ -107,6 +124,7 @@ class VoiceCaptureNotifier extends Notifier<VoiceCaptureStatus> {
   void _stopSilenceMonitoring() {
     _amplitudeSub?.cancel();
     _amplitudeSub = null;
+    _inputLevel.value = 0;
     _silenceTimer?.cancel();
     _silenceTimer = null;
   }

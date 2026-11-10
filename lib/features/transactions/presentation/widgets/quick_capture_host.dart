@@ -15,7 +15,7 @@ import 'package:expense_manager/core/providers/widget_action_provider.dart';
 import 'package:expense_manager/core/services/analytics_service.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
 import 'package:expense_manager/core/services/sentry_service.dart';
-import 'package:expense_manager/core/theme/app_colors.dart';
+import 'package:expense_manager/core/widgets/motion/motion.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
 import 'package:expense_manager/features/transactions/data/image_transaction_parser.dart';
@@ -23,6 +23,7 @@ import 'package:expense_manager/features/transactions/domain/parsed_voice_transa
 import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/providers/voice_capture_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:expense_manager/features/transactions/presentation/widgets/capture_status_panel.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 
 enum VoiceInputState { idle, listening, processing, cameraProcessing }
@@ -315,53 +316,92 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
     }
   }
 
+  /// Overlay de captura: tarjeta de estado (onda en vivo / procesando) y,
+  /// mientras escucha, el botón rojo de parar con un halo que respira con el
+  /// nivel de voz. Entra y sale con un fundido + desplazamiento corto.
   Widget _buildOverlay(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    if (_voiceState == VoiceInputState.processing ||
-        _voiceState == VoiceInputState.cameraProcessing) {
-      final label = _voiceState == VoiceInputState.cameraProcessing
-          ? l10n.imageProcessing
-          : l10n.voiceProcessing;
-      return Semantics(
-        label: label,
-        liveRegion: true,
-        excludeSemantics: true,
-        child: Container(
-          width: _overlaySize,
-          height: _overlaySize,
-          decoration: const BoxDecoration(
-            color: AppColors.dustyTeal,
-            shape: BoxShape.circle,
-          ),
-          child: const Center(
-            child: SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: Colors.white,
+    final listening = _voiceState == VoiceInputState.listening;
+    final phase = switch (_voiceState) {
+      VoiceInputState.cameraProcessing => CaptureStatusPhase.processingImage,
+      VoiceInputState.processing => CaptureStatusPhase.processingVoice,
+      _ => CaptureStatusPhase.listening,
+    };
+
+    return FadeSlideIn(
+      offset: 24,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x40000000),
+                    blurRadius: 24,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: CaptureStatusPanel(
+                phase: phase,
+                level: _voiceCapture.inputLevel,
+                onTap: listening ? _stopAndProcessVoice : null,
               ),
             ),
           ),
-        ),
-      );
-    }
-    return Semantics(
-      button: true,
-      label: l10n.voiceListening,
-      child: GestureDetector(
-        onTap: _stopAndProcessVoice,
-        child: Container(
-          width: _overlaySize,
-          height: _overlaySize,
-          decoration: const BoxDecoration(
-            // Rojo de grabación: convención universal de UI (recording),
-            // intencionadamente distinto del coral AppColors.negative ('gasto').
-            color: Colors.red,
-            shape: BoxShape.circle,
+          const SizedBox(height: 20),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            transitionBuilder: (child, anim) => ScaleTransition(
+              scale: anim,
+              child: FadeTransition(opacity: anim, child: child),
+            ),
+            child: listening
+                ? Semantics(
+                    key: const ValueKey('stop'),
+                    button: true,
+                    label: l10n.voiceListening,
+                    child: PressableScale(
+                      child: GestureDetector(
+                        onTap: _stopAndProcessVoice,
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: _voiceCapture.inputLevel,
+                          builder: (context, level, child) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            width: _overlaySize,
+                            height: _overlaySize,
+                            decoration: BoxDecoration(
+                              color: CaptureStatusPanel.recordingRed,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: CaptureStatusPanel.recordingRed
+                                      .withValues(alpha: 0.18 + 0.22 * level),
+                                  spreadRadius: 4 + 14 * level,
+                                ),
+                              ],
+                            ),
+                            child: child,
+                          ),
+                          child: Icon(
+                            PhosphorIcons.stop,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox(
+                    key: ValueKey('none'),
+                    height: _overlaySize,
+                  ),
           ),
-          child: Icon(PhosphorIcons.stop, color: Colors.white, size: 28),
-        ),
+        ],
       ),
     );
   }
@@ -387,8 +427,8 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
           if (_voiceState != VoiceInputState.idle)
             Positioned(
               bottom: MediaQuery.paddingOf(context).bottom + 96,
-              left: 0,
-              right: 0,
+              left: 24,
+              right: 24,
               child: Center(child: _buildOverlay(context)),
             ),
         ],

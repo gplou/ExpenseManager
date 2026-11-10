@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:expense_manager/core/config/router.dart';
 import 'package:expense_manager/core/constants/test_keys.dart';
 import 'package:expense_manager/core/providers/number_format_provider.dart';
+import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/motion/motion.dart';
 import 'package:expense_manager/features/budgets/presentation/providers/budgets_provider.dart';
 import 'package:expense_manager/features/budgets/presentation/widgets/budget_progress_tile.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
@@ -42,13 +44,57 @@ class BudgetsSection extends ConsumerWidget {
         progress.budget.category,
         l10n,
       );
-      context.showSnackbar(
-        threshold >= 100
+      _showBudgetAlert(
+        context,
+        message: threshold >= 100
             ? l10n.budgetLimitReached(category)
             : l10n.budgetNearLimit(category),
-        isError: threshold >= 100,
+        isLimit: threshold >= 100,
       );
     });
+  }
+
+  /// Aviso de umbral: tarjeta flotante con el icono de alerta en el color del
+  /// tramo (ámbar al 80%, rojo al 100%), a juego con la barra que acaba de
+  /// destellar en [BudgetProgressTile].
+  static void _showBudgetAlert(
+    BuildContext context, {
+    required String message,
+    required bool isLimit,
+  }) {
+    final accent = isLimit ? AppColors.negative : AppColors.warning;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        elevation: 0,
+        backgroundColor: context.appColors.raised,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: accent.withValues(alpha: 0.55)),
+        ),
+        content: Row(
+          children: [
+            Icon(
+              isLimit ? PhosphorIcons.warningOctagon : PhosphorIcons.warning,
+              color: accent,
+              size: 20,
+            ),
+            const Gap(10),
+            Expanded(
+              child: Text(
+                message,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colors.onSurface,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -117,14 +163,17 @@ class BudgetsSection extends ConsumerWidget {
               ),
             ),
             const Gap(4),
-            ...progresses.map(
-              (p) => BudgetProgressTile(
-                progress: p,
-                cSymbol: cSymbol,
-                numFmtStyle: numFmtStyle,
-                onTap: () => context.go(AppRoutes.budgets),
+            for (final (i, p) in progresses.indexed)
+              FadeSlideIn(
+                key: ValueKey(p.budget.id),
+                index: i,
+                child: BudgetProgressTile(
+                  progress: p,
+                  cSymbol: cSymbol,
+                  numFmtStyle: numFmtStyle,
+                  onTap: () => context.go(AppRoutes.budgets),
+                ),
               ),
-            ),
           ],
         );
       },

@@ -182,6 +182,7 @@ class NumericKeypad extends StatelessWidget {
     this.decimalSeparator,
     this.submitLabel,
     this.canSubmit = true,
+    this.submitSucceeded = false,
     this.fillVertical = false,
   });
 
@@ -193,6 +194,10 @@ class NumericKeypad extends StatelessWidget {
   final String? decimalSeparator;
   final String? submitLabel;
   final bool canSubmit;
+
+  /// Confirmación de guardado: la tecla de enviar vira a verde y su ✓ hace un
+  /// pequeño "pop". La pantalla lo activa justo antes de cerrarse.
+  final bool submitSucceeded;
 
   /// When true, the keypad expands rows/keys to fill all available vertical
   /// space. Use inside an `Expanded` so the parent provides bounded height.
@@ -214,8 +219,7 @@ class NumericKeypad extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           child: Column(
-            mainAxisSize:
-                fillVertical ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize: fillVertical ? MainAxisSize.max : MainAxisSize.min,
             children: [
               // Fila 1: 7 8 9 ⌫
               _row([
@@ -264,7 +268,8 @@ class NumericKeypad extends StatelessWidget {
         children: children
             .map((c) => Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
                     child: c,
                   ),
                 ))
@@ -326,10 +331,10 @@ class NumericKeypad extends StatelessWidget {
     return _KeypadKey(
       key: TestKeys.keypadSubmit,
       label: submitLabel ?? 'OK',
-      icon: PhosphorIcons.check,
+      icon: submitSucceeded ? PhosphorIcons.checkCircle : PhosphorIcons.check,
       filled: true,
       fill: fillVertical,
-      backgroundColor: accent,
+      backgroundColor: submitSucceeded ? AppColors.positive : accent,
       foreground: AppColors.pureWhite,
       enabled: canSubmit,
       onTap: () {
@@ -395,9 +400,12 @@ class _KeypadKeyState extends State<_KeypadKey> {
       enabled: widget.enabled,
       label: widget.semanticLabel ?? widget.label,
       child: GestureDetector(
-        onTapDown: widget.enabled ? (_) => setState(() => _pressed = true) : null,
-        onTapCancel: widget.enabled ? () => setState(() => _pressed = false) : null,
-        onTapUp: widget.enabled ? (_) => setState(() => _pressed = false) : null,
+        onTapDown:
+            widget.enabled ? (_) => setState(() => _pressed = true) : null,
+        onTapCancel:
+            widget.enabled ? () => setState(() => _pressed = false) : null,
+        onTapUp:
+            widget.enabled ? (_) => setState(() => _pressed = false) : null,
         onTap: widget.enabled
             ? () {
                 HapticFeedback.lightImpact();
@@ -410,30 +418,52 @@ class _KeypadKeyState extends State<_KeypadKey> {
                 widget.onLongPress!();
               }
             : null,
-        child: AnimatedContainer(
-          duration: reduceMotion
-              ? Duration.zero
-              : const Duration(milliseconds: 140),
+        child: AnimatedScale(
+          scale: _pressed && !reduceMotion ? 0.94 : 1,
+          duration: const Duration(milliseconds: 120),
           curve: Curves.easeOutCubic,
-          height: widget.fill ? double.infinity : 56,
-          decoration: BoxDecoration(
-            color: _pressed ? bg.withValues(alpha: 0.75) : bg,
-            borderRadius: AppRadius.radiusLg,
-          ),
-          alignment: Alignment.center,
-          child: widget.icon != null
-              ? Icon(widget.icon, color: fg, size: 22)
-              : Text(
-                  widget.label!,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 18,
-                    fontWeight:
-                        widget.filled ? FontWeight.w600 : FontWeight.w500,
-                    letterSpacing: -0.3,
-                    color: widget.enabled ? fg : fg.withValues(alpha: 0.4),
+          child: AnimatedContainer(
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            height: widget.fill ? double.infinity : 56,
+            decoration: BoxDecoration(
+              color: _pressed ? bg.withValues(alpha: 0.75) : bg,
+              borderRadius: AppRadius.radiusLg,
+            ),
+            alignment: Alignment.center,
+            child: widget.icon != null
+                ? AnimatedSwitcher(
+                    duration: reduceMotion
+                        ? Duration.zero
+                        : const Duration(milliseconds: 260),
+                    transitionBuilder: (child, anim) => ScaleTransition(
+                      scale: CurvedAnimation(
+                        parent: anim,
+                        curve: Curves.easeOutBack,
+                      ),
+                      child: FadeTransition(opacity: anim, child: child),
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      key: ValueKey(widget.icon),
+                      color: fg,
+                      size: 22,
+                    ),
+                  )
+                : Text(
+                    widget.label!,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 18,
+                      fontWeight:
+                          widget.filled ? FontWeight.w600 : FontWeight.w500,
+                      letterSpacing: -0.3,
+                      color: widget.enabled ? fg : fg.withValues(alpha: 0.4),
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );

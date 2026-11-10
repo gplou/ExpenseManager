@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -6,6 +8,7 @@ import 'package:expense_manager/core/providers/number_format_provider.dart';
 import 'package:expense_manager/core/theme/app_colors.dart';
 import 'package:expense_manager/core/theme/app_spacing.dart';
 import 'package:expense_manager/core/utils/extensions.dart';
+import 'package:expense_manager/core/widgets/motion/motion.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_categories.dart';
 import 'package:expense_manager/features/transactions/domain/transaction_model.dart';
@@ -15,9 +18,8 @@ import 'package:expense_manager/features/transactions/domain/transaction_model.d
 // Paleta curada Quiet Wealth — todos los colores con saturación moderada para
 // convivir en charts sin chillar. Misma escala que se usa en el resto del UI.
 
-List<Color> generateChartColors(int count) =>
-    List.generate(count,
-        (i) => AppColors.categoryScale[i % AppColors.categoryScale.length]);
+List<Color> generateChartColors(int count) => List.generate(
+    count, (i) => AppColors.categoryScale[i % AppColors.categoryScale.length]);
 
 // ── Pie chart ────────────────────────────────────────────────────────────────
 
@@ -56,99 +58,115 @@ class ChartPieSection extends StatelessWidget {
         : 'TOTAL';
     final centerColor = hasTouch ? colors[touchedIndex!] : mutedColor;
 
-    return SizedBox(
-      height: 260,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          PieChart(
-            PieChartData(
-              pieTouchData: PieTouchData(
-                touchCallback: (event, response) {
-                  if (!event.isInterestedForInteractions ||
-                      response == null ||
-                      response.touchedSection == null) {
-                    onTouch(null);
-                    return;
-                  }
-                  onTouch(response.touchedSection!.touchedSectionIndex);
-                },
+    // Entrada: el anillo se "dibuja" en sentido horario desde las 12 (máscara
+    // de barrido) mientras el total cuenta desde 0. Solo al montar: después,
+    // los cambios de datos los anima el propio PieChart.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: MotionTokens.reduced(context) ? 1 : 0, end: 1),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeOutCubic,
+      builder: (context, reveal, _) => SizedBox(
+        height: 260,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (rect) => SweepGradient(
+                transform: const GradientRotation(-math.pi / 2),
+                stops: [reveal, reveal],
+                colors: const [Colors.white, Colors.transparent],
+              ).createShader(rect),
+              child: PieChart(
+                PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (event, response) {
+                      if (!event.isInterestedForInteractions ||
+                          response == null ||
+                          response.touchedSection == null) {
+                        onTouch(null);
+                        return;
+                      }
+                      onTouch(response.touchedSection!.touchedSectionIndex);
+                    },
+                  ),
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 78,
+                  startDegreeOffset: -90,
+                  sections: List.generate(entries.length, (i) {
+                    final isTouched = touchedIndex == i;
+                    return PieChartSectionData(
+                      color: colors[i],
+                      value: entries[i].value,
+                      title: '',
+                      radius: isTouched ? 46 : 38,
+                      borderSide: isTouched
+                          ? BorderSide(color: paperColor, width: 2)
+                          : BorderSide.none,
+                    );
+                  }),
+                ),
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
               ),
-              sectionsSpace: 2,
-              centerSpaceRadius: 78,
-              startDegreeOffset: -90,
-              sections: List.generate(entries.length, (i) {
-                final isTouched = touchedIndex == i;
-                return PieChartSectionData(
-                  color: colors[i],
-                  value: entries[i].value,
-                  title: '',
-                  radius: isTouched ? 46 : 38,
-                  borderSide: isTouched
-                      ? BorderSide(color: paperColor, width: 2)
-                      : BorderSide.none,
-                );
-              }),
             ),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCubic,
-          ),
-          // Centro: etiqueta + valor (refinado)
-          IgnorePointer(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              child: Column(
-                key: ValueKey('center-$hasTouch-${touchedIndex ?? -1}'),
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    centerLabel,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: centerColor,
-                      letterSpacing: 1.4,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  const Gap(6),
-                  Text(
-                    '$cSymbol${formatAmount(centerValue, numFmtStyle)}',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: inkColor,
-                      letterSpacing: -0.6,
-                      height: 1.0,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  if (hasTouch) ...[
-                    const Gap(4),
-                    SizedBox(
-                      width: 110,
-                      child: Text(
-                        entries[touchedIndex!].key,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: mutedColor,
-                          letterSpacing: -0.1,
-                        ),
+            // Centro: etiqueta + valor (refinado)
+            IgnorePointer(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: Column(
+                  key: ValueKey('center-$hasTouch-${touchedIndex ?? -1}'),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      centerLabel,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: centerColor,
+                        letterSpacing: 1.4,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
+                    const Gap(6),
+                    Text(
+                      '$cSymbol${formatAmount(hasTouch ? centerValue : centerValue * reveal, numFmtStyle)}',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: inkColor,
+                        letterSpacing: -0.6,
+                        height: 1.0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (hasTouch) ...[
+                      const Gap(4),
+                      SizedBox(
+                        width: 110,
+                        child: Text(
+                          entries[touchedIndex!].key,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: mutedColor,
+                            letterSpacing: -0.1,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -480,8 +498,7 @@ class ChartLegend extends StatelessWidget {
                                     ),
                                   ),
                                   AnimatedContainer(
-                                    duration:
-                                        const Duration(milliseconds: 400),
+                                    duration: const Duration(milliseconds: 400),
                                     curve: Curves.easeOutCubic,
                                     height: 2,
                                     width: constraints.maxWidth * pct,
