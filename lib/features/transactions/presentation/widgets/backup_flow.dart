@@ -103,6 +103,11 @@ Future<void> runBackupImportFlow(BuildContext context, WidgetRef ref) async {
   final List<TransactionModel> toImport;
   try {
     final bytes = await picked.readAsBytes();
+    // Entrada no confiable: un archivo enorme agotaría la memoria al
+    // decodificarlo y parsearlo entero.
+    if (bytes.length > BackupService.maxImportBytes) {
+      throw const FormatException('Backup file too large');
+    }
     parsed = BackupService.parse(utf8.decode(bytes));
     final existing = await ref
         .read(transactionsRepositoryProvider)

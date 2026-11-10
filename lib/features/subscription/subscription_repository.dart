@@ -96,6 +96,19 @@ class SubscriptionRepository implements SubscriptionRepositoryContract {
         params: {'p_code': code.toUpperCase().trim()},
       ) as Map<String, dynamic>;
 
+      // El RPC señala los fallos de validación con HTTP 400 + JSON de error
+      // (no con RAISE, para que el intento fallido quede contado en el rate
+      // limit), lo que normalmente llega como PostgrestException. Si por lo
+      // que sea llegase como respuesta 2xx, no debe tomarse por un canje
+      // correcto: un cuerpo sin `type` y con `message` es un error.
+      final errorMessage = result['message'];
+      if (result['type'] == null && errorMessage is String) {
+        throw PromoCodeException(
+          errorMessage,
+          reason: _mapPromoErrorReason(errorMessage),
+        );
+      }
+
       return PromoResult(
         type: (result['type'] as String?) ?? 'subscription',
         durationDays: (result['duration_days'] as int?) ?? 30,

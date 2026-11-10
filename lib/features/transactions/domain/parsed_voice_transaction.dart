@@ -28,8 +28,9 @@ class ParsedVoiceTransaction {
         : TransactionType.expense;
     final amount = _numOrZero(json['amount']);
     final category = _clampCategory(_stringOrNull(json['category']), type);
-    final desc = _stringOrNull(json['description']);
-    final subcategory = _stringOrNull(json['subcategory']);
+    final desc = _clip(_stringOrNull(json['description']), _maxDescription);
+    final subcategory =
+        _clip(_stringOrNull(json['subcategory']), _maxSubcategory);
     final isNewSubcategory = json['is_new_subcategory'] == true;
     final dateStr = _stringOrNull(json['date']);
     final date = (dateStr != null && dateStr.isNotEmpty)
@@ -60,6 +61,15 @@ class ParsedVoiceTransaction {
   }
 
   static String? _stringOrNull(Object? value) => value is String ? value : null;
+
+  // The prompt asks for ≤50 / ≤30 chars, but the model output is untrusted
+  // (the audio itself can carry instructions): never let it push arbitrarily
+  // long text into the form and, from there, into the database.
+  static const _maxDescription = 200;
+  static const _maxSubcategory = 50;
+
+  static String? _clip(String? value, int max) =>
+      value == null || value.length <= max ? value : value.substring(0, max);
 
   /// Falls back to "Otros" when [name] is one of the *other* type's
   /// built-in categories (e.g. the income-only "Regalo" returned for an

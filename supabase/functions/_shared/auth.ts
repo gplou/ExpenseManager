@@ -3,6 +3,22 @@ import { jsonResponse } from './http.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+
+let serviceClient: SupabaseClient | null = null
+
+/// Service-role client (bypasses RLS) for server-owned tables that clients
+/// must not be able to read or write (e.g. `chat_user_context_cache`).
+/// Returns null when the key isn't available so callers can degrade instead
+/// of crashing. NEVER use it for a query whose filter comes from the request
+/// body — always scope by the `user.id` resolved in [requireUser].
+export function getServiceClient(): SupabaseClient | null {
+  if (!SUPABASE_SERVICE_ROLE_KEY) return null
+  serviceClient ??= createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+  return serviceClient
+}
 
 export interface AuthedUser {
   supabase: SupabaseClient

@@ -99,6 +99,35 @@ void main() {
       expect(result.invalidCount, 1);
     });
 
+    test('rejects JSON items with non-positive amount or oversized text', () {
+      final content = jsonEncode({
+        'app': 'ExpenseManager',
+        'version': 1,
+        'transactions': [
+          for (final override in <Map<String, dynamic>>[
+            {},
+            {'amount': -5},
+            {'amount': 0},
+            {'description': 'x' * 1001},
+            {'category': '   '},
+          ])
+            {
+              'id': 'a',
+              'userId': 'u',
+              'amount': 10,
+              'type': 'expense',
+              'category': 'Comida',
+              'date': '2026-03-15T00:00:00.000',
+              'createdAt': '2026-03-15T00:00:00.000',
+              ...override,
+            },
+        ],
+      });
+      final result = BackupService.parse(content);
+      expect(result.valid, hasLength(1));
+      expect(result.invalidCount, 4);
+    });
+
     test('rejects JSON from another app', () {
       expect(
         () => BackupService.parse('{"app":"OtraApp","transactions":[]}'),
@@ -154,6 +183,55 @@ void main() {
       );
       expect(result.valid, hasLength(1));
       expect(result.invalidCount, 3);
+    });
+
+    test('neutralizes spreadsheet formulas on export and restores on import',
+        () {
+      const payloads = [
+        '=HYPERLINK("http://evil.example","x")',
+        '+1+1',
+        '-2+3',
+        '@SUM(A1)',
+        "'=ya-escapado",
+      ];
+      final csv = BackupService.buildCsv([
+        for (final (i, p) in payloads.indexed)
+          _tx(id: 't$i', description: p, subcategory: p, amount: 10.0 + i),
+      ]);
+
+      // Ninguna celda del archivo empieza por un carácter de fórmula.
+      for (final line in csv.split('\n').skip(1)) {
+        for (final cell in line.split(',')) {
+          final raw = cell.startsWith('"') ? cell.substring(1) : cell;
+          expect(raw, isNot(matches(r'^[=+\-@]')), reason: line);
+        }
+      }
+
+      // Round-trip exacto.
+      final result = withClock(
+        Clock.fixed(DateTime(2026, 6, 12)),
+        () => BackupService.parse(csv),
+      );
+      expect(result.invalidCount, 0);
+      expect(result.valid.map((t) => t.description).toList(), payloads);
+      expect(result.valid.map((t) => t.subcategory).toList(), payloads);
+    });
+
+    test('rejects rows with out-of-range amount or oversized text', () {
+      final csv = [
+        BackupService.csvHeader.join(','),
+        '2026-03-15,expense,Comida,,,10.00,EUR',
+        '2026-03-15,expense,Comida,,,99999999999.00,EUR',
+        '2026-03-15,expense,Comida,,${'x' * 1001},10.00,EUR',
+        '2026-03-15,expense,${'c' * 101},,,10.00,EUR',
+        '2026-03-15,expense,Comida,,,10.00,${'E' * 11}',
+      ].join('\n');
+      final result = withClock(
+        Clock.fixed(DateTime(2026, 6, 12)),
+        () => BackupService.parse(csv),
+      );
+      expect(result.valid, hasLength(1));
+      expect(result.invalidCount, 4);
     });
 
     test('rejects a CSV with a foreign header', () {

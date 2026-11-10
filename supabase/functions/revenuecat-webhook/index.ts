@@ -55,6 +55,14 @@ function timingSafeEqual(a: string, b: string): boolean {
   return mismatch === 0
 }
 
+// supabase-js reports DB failures in `error` instead of throwing. Rethrow so
+// the handler answers 5xx and RevenueCat retries — except for a foreign-key
+// violation (23503): the app_user_id no longer exists in auth.users (account
+// deleted), which no retry can fix.
+function throwIfRetryable(error: { code?: string } | null): void {
+  if (error && error.code !== '23503') throw error
+}
+
 serve(async (req: Request) => {
   try {
   if (req.method !== 'POST') {
@@ -109,11 +117,11 @@ serve(async (req: Request) => {
       case 'NON_RENEWING_PURCHASE':
       case 'UNCANCELLATION':
       case 'PRODUCT_CHANGE': {
-        if (!expiresAtMs) {
+        if (typeof expiresAtMs !== 'number' || !Number.isFinite(expiresAtMs) || expiresAtMs <= 0) {
           return new Response('missing expiration_at_ms', { status: 400 })
         }
         const expiresAt = new Date(expiresAtMs).toISOString()
-        await supabase.from('subscriptions').upsert(
+        const { error } = await supabase.from('subscriptions').upsert(
           {
             user_id: userId,
             expires_at: expiresAt,
@@ -123,34 +131,42 @@ serve(async (req: Request) => {
           },
           { onConflict: 'user_id' },
         )
+        throwIfRetryable(error)
         break
       }
 
       case 'CANCELLATION': {
         // User cancelled — they keep access until expiration_at_ms. Just flag.
-        await supabase
+        const { error } = await supabase
           .from('subscriptions')
           .update({ cancelled: true })
           .eq('user_id', userId)
+        throwIfRetryable(error)
         break
       }
 
       case 'EXPIRATION': {
         // Sub fully ended. Set expires_at to event timestamp so isPro flips false.
-        const ts = new Date(eventTimestampMs ?? Date.now()).toISOString()
-        await supabase
+        const ts = new Date(
+          typeof eventTimestampMs === 'number' && Number.isFinite(eventTimestampMs)
+            ? eventTimestampMs
+            : Date.now(),
+        ).toISOString()
+        const { error } = await supabase
           .from('subscriptions')
           .update({ expires_at: ts, cancelled: true })
           .eq('user_id', userId)
+        throwIfRetryable(error)
         break
       }
 
       case 'BILLING_ISSUE': {
         // Don't revoke access yet — RC keeps retrying. Just mark cancelled.
-        await supabase
+        const { error } = await supabase
           .from('subscriptions')
           .update({ cancelled: true })
           .eq('user_id', userId)
+        throwIfRetryable(error)
         break
       }
 
@@ -165,9 +181,12 @@ serve(async (req: Request) => {
         // Unknown / test events: acknowledge with 200 so RC doesn't retry.
         break
     }
-  } catch (_e) {
-    // Returning 5xx makes RC retry. Only do so for transient errors — for now
-    // any DB error is treated as transient.
+  } catch (e) {
+    // supabase-js reports DB failures in `error` instead of throwing, so each
+    // branch rethrows it: without that a failed write was acknowledged with
+    // 200 and the entitlement change (grant OR revocation) was silently lost.
+    // Returning 5xx makes RC retry.
+    Sentry.captureException(e)
     return new Response('db error', { status: 500 })
   }
 

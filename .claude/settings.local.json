@@ -159,7 +159,6 @@
       "Bash(openssl rand *)",
       "Bash(python3 -c \"import json;print\\(json.load\\(open\\('/Users/guillermo/Workspace/ExpenseManager/dart_defines.json'\\)\\)['SUPABASE_URL']\\)\")",
       "Bash(python3 -c \"import json;print\\(json.load\\(open\\('/Users/guillermo/Workspace/ExpenseManager/dart_defines.json'\\)\\)['SUPABASE_ANON_KEY']\\)\")",
-      "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST __CMDSUB_OUTPUT__/auth/v1/token?grant_type=password -H 'apikey: __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"email\":\"guillermop98+e2e@gmail.com\",\"password\":\"R0LZOoxVMRHZzZi93z4wcu9a\"}')",
       "Bash(~/Library/Android/sdk/emulator/emulator -list-avds)",
       "Bash(~/Library/Android/sdk/emulator/emulator -avd Pixel_10 -no-snapshot-save -no-boot-anim -netdelay none -netspeed full)",
       "Bash(~/Library/Android/sdk/platform-tools/adb wait-for-device *)",

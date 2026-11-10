@@ -2,13 +2,26 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import * as Sentry from 'npm:@sentry/deno'
 import { getCorsHeaders, jsonResponse } from '../_shared/http.ts'
-import { requireProUser } from '../_shared/auth.ts'
+import { getServiceClient, requireProUser } from '../_shared/auth.ts'
 import { checkRateLimit } from '../_shared/rate_limit.ts'
 import { callGemini } from '../_shared/gemini.ts'
 
 const GOOGLE_AI_KEY = Deno.env.get('GOOGLE_AI_KEY') ?? ''
 const MODEL = 'gemini-2.5-flash-lite'
 const CACHE_TTL_SECONDS = 600
+// Shape of the resource name Gemini returns for a cachedContents entry. The
+// name is interpolated into Gemini API URLs sent with GOOGLE_AI_KEY, so
+// anything that doesn't match is treated as absent — never trusted as a path.
+const CACHE_NAME_RE = /^cachedContents\/[A-Za-z0-9_-]{1,128}$/
+
+function deleteGeminiCache(cacheName: string): void {
+  if (!CACHE_NAME_RE.test(cacheName)) return
+  // Fire-and-forget: free the Gemini cache so we don't keep paying for storage.
+  fetch(`https://generativelanguage.googleapis.com/v1beta/${cacheName}`, {
+    method: 'DELETE',
+    headers: { 'x-goog-api-key': GOOGLE_AI_KEY },
+  }).catch(() => {})
+}
 
 Sentry.init({
   dsn: Deno.env.get('SENTRY_DSN_EDGE') ?? '',
@@ -117,8 +130,12 @@ Previous month (${prevMonthStart} to ${prevMonthEnd}):
 /// Returns a Gemini cachedContents name if a fresh cache exists or was created.
 /// Returns null if caching is not viable (e.g., content below Gemini's min token
 /// threshold). Caller must fall back to inline systemInstruction in that case.
+///
+/// [admin] MUST be the service-role client: `chat_user_context_cache` is not
+/// client-accessible, so a user can't plant a `cache_name` pointing at another
+/// user's cached context or at an arbitrary Gemini resource.
 async function getOrCreateUserCache(
-  supabase: SupabaseClient,
+  admin: SupabaseClient,
   userId: string,
   systemPrompt: string,
   summaryBlock: string,
@@ -126,11 +143,14 @@ async function getOrCreateUserCache(
 ): Promise<string | null> {
   const signature = await sha1Hex(`${systemPrompt}\n${summaryBlock}\n${recentTxBlock}`)
 
-  const { data: existing } = await supabase
+  const { data: row } = await admin
     .from('chat_user_context_cache')
     .select('cache_name, signature, expires_at')
     .eq('user_id', userId)
     .maybeSingle()
+  const existing = row && typeof row.cache_name === 'string' && CACHE_NAME_RE.test(row.cache_name)
+    ? row
+    : null
 
   const now = new Date()
   // Use a 60-second safety buffer so we don't hand a nearly-expired cache to Gemini.
@@ -139,13 +159,7 @@ async function getOrCreateUserCache(
     return existing.cache_name as string
   }
 
-  if (existing) {
-    // Fire-and-forget: free the stale Gemini cache so we don't keep paying for storage.
-    fetch(`https://generativelanguage.googleapis.com/v1beta/${existing.cache_name}`, {
-      method: 'DELETE',
-      headers: { 'x-goog-api-key': GOOGLE_AI_KEY },
-    }).catch(() => {})
-  }
+  if (existing) deleteGeminiCache(existing.cache_name as string)
 
   const dataMessage = `User financial data:\n${summaryBlock}\n\nRecent transactions (last 20):\n${recentTxBlock}`
 
@@ -170,11 +184,11 @@ async function getOrCreateUserCache(
 
   const cacheData = await createRes.json()
   const cacheName = cacheData?.name as string | undefined
-  if (!cacheName) return null
+  if (!cacheName || !CACHE_NAME_RE.test(cacheName)) return null
 
   const expiresAt = new Date(Date.now() + CACHE_TTL_SECONDS * 1000).toISOString()
 
-  await supabase
+  await admin
     .from('chat_user_context_cache')
     .upsert({
       user_id: userId,
@@ -248,13 +262,12 @@ serve(async (req: Request) => {
   const { summaryBlock, recentTxBlock } = await fetchUserData(supabase, user.id)
 
   // ── 5. Try to use Gemini context caching ──────────────────────────────
-  const cacheName = await getOrCreateUserCache(
-    supabase,
-    user.id,
-    systemPrompt,
-    summaryBlock,
-    recentTxBlock,
-  )
+  // The cache table is service-role only; without the key we just skip
+  // caching and send the context inline.
+  const admin = getServiceClient()
+  const cacheName = admin
+    ? await getOrCreateUserCache(admin, user.id, systemPrompt, summaryBlock, recentTxBlock)
+    : null
 
   // ── 6. Build conversation turns (history + current message) ───────────
   const turns: Array<{ role: string; parts: Array<{ text: string }> }> = []
@@ -284,12 +297,9 @@ serve(async (req: Request) => {
 
   // If the call failed while using a cached context, the cache may have expired in Gemini
   // even though our DB record still looks valid. Evict the stale record and retry inline.
-  if (!geminiRes.ok && cacheName) {
-    await supabase.from('chat_user_context_cache').delete().eq('user_id', user.id)
-    fetch(`https://generativelanguage.googleapis.com/v1beta/${cacheName}`, {
-      method: 'DELETE',
-      headers: { 'x-goog-api-key': GOOGLE_AI_KEY },
-    }).catch(() => {})
+  if (!geminiRes.ok && cacheName && admin) {
+    await admin.from('chat_user_context_cache').delete().eq('user_id', user.id)
+    deleteGeminiCache(cacheName)
 
     const inlineSystem = `${systemPrompt}\n\nUser financial data:\n${summaryBlock}\n\nRecent transactions (last 20):\n${recentTxBlock}`
     const fallbackBody: Record<string, unknown> = {

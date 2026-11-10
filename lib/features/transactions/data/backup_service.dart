@@ -48,6 +48,36 @@ class BackupService {
     'currency',
   ];
 
+  // ── Límites de import ──────────────────────────────────────────────────────
+  // Un archivo de backup es entrada NO confiable (puede venir de un tercero o
+  // estar manipulado). Estos topes coinciden con los CHECK de Supabase
+  // (migración 20261110000002): una fila que los supere haría fallar la
+  // subida a la nube de un usuario PRO.
+
+  /// Tamaño máximo de archivo aceptado por el import.
+  static const maxImportBytes = 10 * 1024 * 1024;
+  static const maxCategoryLength = 100;
+  static const maxDescriptionLength = 1000;
+  static const maxCurrencyLength = 10;
+
+  /// numeric(12,2) en Postgres.
+  static const maxAmount = 9999999999.99;
+
+  // ── CSV / formula injection ────────────────────────────────────────────────
+  // Excel, LibreOffice y Google Sheets evalúan como fórmula cualquier celda
+  // que empiece por = + - @ (o tab / retorno de carro). Una descripción como
+  // `=HYPERLINK(...)` —dictada por voz, importada de un backup ajeno— se
+  // ejecutaría al abrir el CSV exportado. Se neutraliza anteponiendo un
+  // apóstrofo, que el import retira para que el round-trip siga siendo exacto.
+  static final _formulaLead = RegExp(r"^'*[=+\-@\t\r]");
+  static final _escapedFormulaLead = RegExp(r"^'+[=+\-@\t\r]");
+
+  static String _csvSafe(String value) =>
+      _formulaLead.hasMatch(value) ? "'$value" : value;
+
+  static String _csvRestore(String value) =>
+      _escapedFormulaLead.hasMatch(value) ? value.substring(1) : value;
+
   // ── Export (builders puros) ────────────────────────────────────────────────
 
   static Map<String, dynamic> buildBackupJson(
@@ -85,9 +115,9 @@ class BackupService {
         [
           DateFormat('yyyy-MM-dd').format(t.date),
           t.type.name,
-          t.category,
-          t.subcategory ?? '',
-          t.description ?? '',
+          _csvSafe(t.category),
+          _csvSafe(t.subcategory ?? ''),
+          _csvSafe(t.description ?? ''),
           t.amount.toStringAsFixed(2),
           t.currency,
         ],
@@ -119,6 +149,7 @@ class BackupService {
     final fileName =
         'ExpenseManager_${DateFormat('yyyyMMdd').format(clock.now())}.$extension';
     final dir = await getTemporaryDirectory();
+    await _deleteStaleExports(dir);
     final filePath = '${dir.path}/$fileName';
     await File(filePath).writeAsString(content);
     await ExternalActivityGuard.run(
@@ -129,6 +160,24 @@ class BackupService {
         ),
       ),
     );
+  }
+
+  static final _exportFileName = RegExp(r'^ExpenseManager_\d{8}\.(json|csv)$');
+
+  /// Los exports son copias en claro de todos los movimientos (la BD local va
+  /// cifrada con SQLCipher). No se pueden borrar al volver de la hoja de
+  /// compartir —la app destino puede seguir leyéndolos—, así que se purgan
+  /// los de exportaciones anteriores antes de escribir uno nuevo.
+  static Future<void> _deleteStaleExports(Directory dir) async {
+    try {
+      await for (final entity in dir.list()) {
+        if (entity is! File) continue;
+        final name = entity.uri.pathSegments.last;
+        if (_exportFileName.hasMatch(name)) await entity.delete();
+      }
+    } catch (_) {
+      // Mejor esfuerzo: no bloquear el export por no poder limpiar.
+    }
   }
 
   // ── Import (parser puro) ───────────────────────────────────────────────────
@@ -159,6 +208,10 @@ class BackupService {
     for (final item in decoded['transactions'] as List) {
       try {
         final t = TransactionModel.fromJson(item as Map<String, dynamic>);
+        if (!_isImportable(t)) {
+          invalid++;
+          continue;
+        }
         valid.add(_sanitize(t));
       } catch (_) {
         invalid++;
@@ -196,24 +249,36 @@ class BackupService {
     final type = TransactionType.values
         .where((t) => t.name == cells[1])
         .firstOrNull;
-    final category = cells[2].trim();
-    if (date == null || amount == null || amount <= 0 || type == null ||
-        category.isEmpty) {
-      return null;
-    }
-    return TransactionModel(
+    final category = _csvRestore(cells[2]).trim();
+    if (date == null || amount == null || type == null) return null;
+    final subcategory = _csvRestore(cells[3]);
+    final description = _csvRestore(cells[4]);
+    final t = TransactionModel(
       id: '',
       userId: '',
       amount: amount,
       type: type,
       category: category,
-      subcategory: cells[3].isEmpty ? null : cells[3],
-      description: cells[4].isEmpty ? null : cells[4],
+      subcategory: subcategory.isEmpty ? null : subcategory,
+      description: description.isEmpty ? null : description,
       date: date,
       createdAt: clock.now(),
       currency: cells[6].isEmpty ? 'EUR' : cells[6],
     );
+    return _isImportable(t) ? t : null;
   }
+
+  /// Rechaza filas que la app nunca habría generado: importe no positivo, no
+  /// finito o fuera de rango, categoría vacía y textos desproporcionados.
+  static bool _isImportable(TransactionModel t) =>
+      t.amount.isFinite &&
+      t.amount > 0 &&
+      t.amount <= maxAmount &&
+      t.category.trim().isNotEmpty &&
+      t.category.length <= maxCategoryLength &&
+      (t.subcategory?.length ?? 0) <= maxCategoryLength &&
+      (t.description?.length ?? 0) <= maxDescriptionLength &&
+      t.currency.length <= maxCurrencyLength;
 
   /// id/userId vacíos: el repositorio asigna ids nuevos al insertar, evitando
   /// colisiones de PK al re-importar (el local hace REPLACE silencioso).
