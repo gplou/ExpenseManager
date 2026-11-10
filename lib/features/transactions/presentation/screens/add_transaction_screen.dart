@@ -689,7 +689,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen>
     final reduced = MediaQuery.disableAnimationsOf(context);
 
     return AnimatedSwitcher(
-      duration: reduced ? Duration.zero : const Duration(milliseconds: 260),
+      duration: reduced ? Duration.zero : const Duration(milliseconds: 200),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (child, animation) => FadeTransition(

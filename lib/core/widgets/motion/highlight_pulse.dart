@@ -37,7 +37,7 @@ class HighlightPulse extends StatefulWidget {
 
 class _HighlightPulseState extends State<HighlightPulse>
     with SingleTickerProviderStateMixin {
-  static const _step = Duration(milliseconds: 90);
+  static const _step = Duration(milliseconds: 70);
 
   late final AnimationController _ctrl = AnimationController(vsync: this);
   late Animation<double> _t = const AlwaysStoppedAnimation(0);

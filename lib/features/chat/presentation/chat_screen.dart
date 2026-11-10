@@ -7,6 +7,7 @@ import 'package:expense_manager/core/utils/extensions.dart';
 import 'package:expense_manager/core/widgets/ad_banner_footer.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
+import 'package:expense_manager/features/chat/domain/chat_message.dart';
 import 'providers/chat_provider.dart';
 import 'widgets/chat_bubble.dart';
 
@@ -21,6 +22,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
+
+  /// Respuestas del asistente que ya se han revelado (o empezado a revelar).
+  /// La lista recicla sus filas al hacer scroll: sin esto, una respuesta
+  /// volvería a "escribirse" cada vez que reaparece en pantalla.
+  final Set<ChatMessage> _revealed = {};
 
   @override
   void dispose() {
@@ -69,7 +75,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (messages.isNotEmpty) _scrollToBottom();
 
     return Scaffold(
-      bottomNavigationBar: ref.watch(isProProvider) ? null : const AdBannerFooter(),
+      bottomNavigationBar:
+          ref.watch(isProProvider) ? null : const AdBannerFooter(),
       appBar: AppBar(
         title: Row(
           children: [
@@ -108,7 +115,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       if (index == messages.length && isLoading) {
                         return _buildTypingIndicator();
                       }
-                      return ChatBubble(message: messages[index]);
+                      final message = messages[index];
+                      // Solo la última respuesta del asistente, y solo la
+                      // primera vez que se pinta.
+                      final animate = !message.isUser &&
+                          index == messages.length - 1 &&
+                          _revealed.add(message);
+                      return ChatBubble(message: message, animate: animate);
                     },
                   ),
           ),

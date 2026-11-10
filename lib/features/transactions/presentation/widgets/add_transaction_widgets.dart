@@ -194,7 +194,7 @@ class AmountDisplay extends StatelessWidget {
                         return TweenAnimationBuilder<double>(
                           key: ValueKey(rollTrigger),
                           tween: Tween(begin: 0, end: 1),
-                          duration: const Duration(milliseconds: 750),
+                          duration: const Duration(milliseconds: 500),
                           curve: Curves.easeOutCubic,
                           builder: (context, t, _) => Text(
                             t < 1 ? _rolling(target * t, text) : text,

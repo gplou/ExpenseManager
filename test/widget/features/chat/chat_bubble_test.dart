@@ -57,4 +57,70 @@ void main() {
       expect(find.text('u'), findsOneWidget);
     });
   });
+
+  group('RevealText', () {
+    String visiblePart(WidgetTester tester) {
+      final text = tester.widget<Text>(
+        find.descendant(of: find.byType(RevealText), matching: find.byType(Text)),
+      );
+      if (text.textSpan == null) return text.data!;
+      return (text.textSpan! as TextSpan).children!.first.toPlainText();
+    }
+
+    testWidgets('revela palabra a palabra y termina mostrando todo',
+        (tester) async {
+      const content = 'Este mes tu mayor gasto es Vivienda';
+      await pumpWithProviders(
+        tester,
+        ChatBubble(
+          message: msg(content: content, isUser: false),
+          animate: true,
+        ),
+      );
+      expect(visiblePart(tester), isNot(content));
+
+      await tester.pump(RevealText.durationFor(content) ~/ 2);
+      final partial = visiblePart(tester);
+      expect(partial, isNotEmpty);
+      expect(content.startsWith(partial), isTrue);
+      expect(partial.length, lessThan(content.length));
+
+      await tester.pumpAndSettle();
+      expect(visiblePart(tester), content);
+      // El texto completo es localizable durante y después de la animación.
+      expect(find.text(content), findsOneWidget);
+    });
+
+    testWidgets('un toque muestra el mensaje entero al instante',
+        (tester) async {
+      const content = 'Respuesta bastante larga para que tarde en revelarse';
+      await pumpWithProviders(
+        tester,
+        ChatBubble(
+          message: msg(content: content, isUser: false),
+          animate: true,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.byType(RevealText));
+      await tester.pump();
+      expect(visiblePart(tester), content);
+    });
+
+    testWidgets('sin animate se muestra entero desde el primer frame',
+        (tester) async {
+      await pumpWithProviders(
+        tester,
+        ChatBubble(message: msg(content: 'hola qué tal', isUser: false)),
+      );
+      expect(visiblePart(tester), 'hola qué tal');
+    });
+
+    test('la duración escala con la longitud y tiene tope', () {
+      expect(RevealText.durationFor('hola'),
+          const Duration(milliseconds: 350));
+      expect(RevealText.durationFor('a' * 1000),
+          const Duration(milliseconds: 1600));
+    });
+  });
 }

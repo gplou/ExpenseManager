@@ -113,7 +113,7 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Al activarse, el icono da un pequeño salto (1.0 → 1.18 → 1.0)
+              // Al activarse, el icono da un pequeño salto (1.0 → 1.12 → 1.0)
               // y el color se funde en lugar de cambiar de golpe.
               PressableScale(
                 pressedScale: 0.85,
@@ -122,9 +122,9 @@ class _NavItem extends StatelessWidget {
                   tween: Tween(begin: selected ? 0 : 1, end: 1),
                   duration: MotionTokens.reduced(context)
                       ? Duration.zero
-                      : const Duration(milliseconds: 360),
+                      : const Duration(milliseconds: 280),
                   builder: (context, t, child) => Transform.scale(
-                    scale: 1 + 0.18 * math.sin(math.pi * t),
+                    scale: 1 + 0.12 * math.sin(math.pi * t),
                     child: child,
                   ),
                   child: TweenAnimationBuilder<Color?>(

@@ -19,6 +19,7 @@ class AnimatedAmount extends StatefulWidget {
     this.curve = Curves.easeOutCubic,
     this.countUpOnMount = false,
     this.pulseOnChange = false,
+    this.pulseScope,
   });
 
   final double value;
@@ -28,6 +29,11 @@ class AnimatedAmount extends StatefulWidget {
   final Curve curve;
   final bool countUpOnMount;
   final bool pulseOnChange;
+
+  /// Contexto del dato (p. ej. el periodo mostrado). Si cambia junto con el
+  /// valor, la cifra cuenta hasta el nuevo valor pero sin "pop": cambiar de
+  /// Semana a Mes no es "se ha sumado algo", es otro dato.
+  final Object? pulseScope;
 
   @override
   State<AnimatedAmount> createState() => _AnimatedAmountState();
@@ -44,7 +50,7 @@ class _AnimatedAmountState extends State<AnimatedAmount> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
       _previous = oldWidget.value;
-      _changeCount++;
+      if (oldWidget.pulseScope == widget.pulseScope) _changeCount++;
     }
   }
 
@@ -68,8 +74,9 @@ class _AnimatedAmountState extends State<AnimatedAmount> {
       tween: Tween(begin: 0, end: 1),
       duration: widget.duration,
       builder: (context, t, child) => Transform.scale(
-        // Sube a 1.05 en el primer tercio y vuelve a 1.0.
-        scale: 1 + 0.05 * (t < 0.33 ? t / 0.33 : (1 - t) / 0.67),
+        // Sube a 1.03 en el primer tercio y vuelve a 1.0: se nota sin
+        // descolocar la cifra.
+        scale: 1 + 0.03 * (t < 0.33 ? t / 0.33 : (1 - t) / 0.67),
         alignment: Alignment.centerLeft,
         child: child,
       ),

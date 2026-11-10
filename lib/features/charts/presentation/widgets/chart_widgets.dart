@@ -63,7 +63,7 @@ class ChartPieSection extends StatelessWidget {
     // los cambios de datos los anima el propio PieChart.
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: MotionTokens.reduced(context) ? 1 : 0, end: 1),
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 700),
       curve: Curves.easeOutCubic,
       builder: (context, reveal, _) => SizedBox(
         height: 260,

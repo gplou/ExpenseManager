@@ -15,7 +15,7 @@ class FadeSlideIn extends StatefulWidget {
     this.offset = 12,
     this.duration = MotionTokens.entrance,
     this.stagger = MotionTokens.stagger,
-    this.maxStaggeredItems = 8,
+    this.maxStaggeredItems = 6,
   });
 
   final Widget child;

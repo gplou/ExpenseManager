@@ -11,21 +11,23 @@ abstract final class MotionTokens {
   /// Rebote al soltar.
   static const Duration release = Duration(milliseconds: 280);
 
-  /// Contadores numéricos (totales, importes).
-  static const Duration countUp = Duration(milliseconds: 900);
+  /// Contadores numéricos (totales, importes). Lo bastante largo para que se
+  /// lea el movimiento, lo bastante corto para no hacer esperar al dato.
+  static const Duration countUp = Duration(milliseconds: 650);
 
   /// Relleno de barras de progreso.
-  static const Duration fill = Duration(milliseconds: 750);
+  static const Duration fill = Duration(milliseconds: 600);
 
-  /// Entrada de elementos (fade + slide).
-  static const Duration entrance = Duration(milliseconds: 420);
+  /// Entrada de elementos (fade + slide). Corta: el contenido tiene que estar
+  /// disponible casi de inmediato, la animación solo suaviza su llegada.
+  static const Duration entrance = Duration(milliseconds: 300);
 
   /// Retardo entre elementos de una entrada escalonada.
-  static const Duration stagger = Duration(milliseconds: 60);
+  static const Duration stagger = Duration(milliseconds: 40);
 
   /// Destello de "esto acaba de cambiar" (umbral de presupuesto, campo
   /// rellenado por IA…).
-  static const Duration highlight = Duration(milliseconds: 900);
+  static const Duration highlight = Duration(milliseconds: 700);
 
   static const Curve emphasized = Curves.easeOutCubic;
   static const Curve spring = Curves.easeOutBack;

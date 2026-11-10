@@ -77,6 +77,7 @@ class SummarySection extends StatelessWidget {
             value: summary.expense,
             countUpOnMount: true,
             pulseOnChange: true,
+            pulseScope: periodLabel,
             duration: MotionTokens.countUp,
             formatter: (v) => '$cSymbol${formatAmount(v, numFmtStyle)}',
             style: tt.displayLarge!.copyWith(
@@ -99,6 +100,7 @@ class SummarySection extends StatelessWidget {
                   amount: summary.income,
                   cSymbol: cSymbol,
                   numFmtStyle: numFmtStyle,
+                  pulseScope: periodLabel,
                   amountColor: AppColors.positive,
                   prefix: '+',
                 ),
@@ -109,6 +111,7 @@ class SummarySection extends StatelessWidget {
                   amount: avgPerDay,
                   cSymbol: cSymbol,
                   numFmtStyle: numFmtStyle,
+                  pulseScope: periodLabel,
                   amountColor: cs.onSurface,
                 ),
               ),
@@ -118,6 +121,7 @@ class SummarySection extends StatelessWidget {
                   amount: summary.balance,
                   cSymbol: cSymbol,
                   numFmtStyle: numFmtStyle,
+                  pulseScope: periodLabel,
                   amountColor: cs.onSurface,
                 ),
               ),
@@ -169,8 +173,11 @@ class _SummaryCell extends StatelessWidget {
     required this.cSymbol,
     required this.numFmtStyle,
     required this.amountColor,
+    required this.pulseScope,
     this.prefix = '',
   });
+
+  final Object pulseScope;
 
   final String label;
   final double amount;
@@ -200,6 +207,7 @@ class _SummaryCell extends StatelessWidget {
           value: amount,
           countUpOnMount: true,
           pulseOnChange: true,
+          pulseScope: pulseScope,
           duration: MotionTokens.countUp,
           formatter: (v) => '$prefix$cSymbol${formatAmount(v, numFmtStyle)}',
           style: tt.titleSmall!.copyWith(
