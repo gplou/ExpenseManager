@@ -171,6 +171,10 @@ The Android 2×2 widget (`QuadWidgetProvider.kt` + `home_widget_quad.xml`) shows
 
 `LockGate` (`lib/core/widgets/lock_gate.dart`) is mounted in `MaterialApp.router`'s `builder` (above the Navigator) and shows an opaque overlay on launch and on resume when the lock is enabled (`appLockProvider`, SharedPreferences). Biometric/device-credential prompts go through `BiometricAuthService` (`lib/core/services/biometric_auth_service.dart`) — never call `local_auth` directly (the service is what tests override). Android requires `FlutterFragmentActivity` (already set in `MainActivity.kt`) — don't revert it to `FlutterActivity`.
 
+### Branding (icono / splash / tienda)
+
+Las fuentes del icono viven en `assets/branding/` (SVG maestro + PNG; **no** se empaquetan en la app — solo `assets/images/` está en `pubspec.yaml`). `flutter_launcher_icons.yaml` y `flutter_native_splash.yaml` apuntan ahí; tras cambiar un PNG, regenerar con `dart run flutter_launcher_icons` y `dart run flutter_native_splash:create`. El foreground/monochrome adaptativo va dimensionado para el `inset` del 16% que aplica el generador. Material de Play Store (icono 512, gráfico de cabecera 1024×500 por idioma) en `metadata/android/<locale>/images/`.
+
 ### Tutorial
 
 `lib/features/tutorial/` contains an in-app tutorial overlay system (`TutorialOverlay`, `TutorialNotifier`, `TutorialStep`). Tutorial state is driven by `tutorial_notifier.dart` and keyed by `tutorial_keys.dart`.
