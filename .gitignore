@@ -87,3 +87,8 @@ tool/qa/results/
 !android/app/src/main/res/**
 !ios/Runner/Assets.xcassets/**
 !tool/qa/fixtures/**
+
+# Estado local de herramientas — nunca al repositorio (público):
+# permisos locales de Claude Code y metadatos del proyecto enlazado de Supabase CLI
+.claude/settings.local.json
+supabase/.temp/

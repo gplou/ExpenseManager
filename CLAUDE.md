@@ -125,6 +125,7 @@ Hardened in `supabase/migrations/20261110000002_security_hardening.sql` — keep
 - **`increment_rate_limit` only accepts whitelisted endpoints** and minute-aligned windows within the last hour — a new rate-limited endpoint must be added to the list inside the function.
 - **RPCs that consume a rate-limit bucket must not `RAISE` on user-caused failures**: the exception rolls back the counter. `redeem_promo_code` returns the error JSON with `set_config('response.status', '400', true)` instead, which PostgREST commits and the client still receives as a `PostgrestException`.
 - User text columns have length CHECKs (description ≤ 1000, category/subcategory/name ≤ 100, currency ≤ 10) and `amount > 0`. `BackupService` enforces the same caps on import; keep them in sync.
+- Per-user row caps (`supabase/migrations/20261110000003_row_quotas.sql`): statement-level `enforce_user_row_quota` triggers on the user data tables (50 000 transactions, 1 000 recurring, 500 budgets, 2 000 subcategories, 500 custom categories). Abuse brake, not a product limit — a new user-writable table should get one too.
 - Edge functions deployed in the project must exist in `supabase/functions/` — anything else is unreviewed attack surface and should be deleted from the project.
 
 ### Motion (micro-animations)
