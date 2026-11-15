@@ -84,6 +84,7 @@ tool/qa/results/
 
 # Excepciones: assets que la app necesita para compilar
 !assets/images/**
+!assets/branding/**
 !android/app/src/main/res/**
 !ios/Runner/Assets.xcassets/**
 !tool/qa/fixtures/**

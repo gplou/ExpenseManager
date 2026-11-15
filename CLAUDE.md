@@ -174,7 +174,7 @@ The Android 2×2 widget (`QuadWidgetProvider.kt` + `home_widget_quad.xml`) shows
 
 ### Branding (icono / splash / tienda)
 
-Las fuentes del icono viven en `assets/branding/` (SVG maestro + PNG; **no** se empaquetan en la app — solo `assets/images/` está en `pubspec.yaml`). `flutter_launcher_icons.yaml` y `flutter_native_splash.yaml` apuntan ahí; tras cambiar un PNG, regenerar con `dart run flutter_launcher_icons` y `dart run flutter_native_splash:create`. El foreground/monochrome adaptativo va dimensionado para el `inset` del 16% que aplica el generador. Material de Play Store (icono 512, gráfico de cabecera 1024×500 por idioma) en `metadata/android/<locale>/images/`.
+Las fuentes del icono viven en `assets/branding/` (SVG maestro + PNG; **no** se empaquetan en la app — solo `assets/images/` está en `pubspec.yaml`). `flutter_launcher_icons.yaml` y `flutter_native_splash.yaml` apuntan ahí; tras cambiar un PNG, regenerar con `dart run flutter_launcher_icons` y `dart run flutter_native_splash:create`. El foreground/monochrome adaptativo va dimensionado para el `inset` del 16% que aplica el generador. El material de Play Store (icono 512, gráfico de cabecera 1024×500) **no** está en el repo: `.gitignore` excluye las imágenes salvo las que la app necesita; se genera a partir de `app_icon.png`/`splash.svg` y se guarda solo en local.
 
 ### Tutorial
 
