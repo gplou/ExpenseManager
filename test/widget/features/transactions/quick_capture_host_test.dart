@@ -12,6 +12,10 @@ import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_manager/core/config/router.dart';
+import 'package:expense_manager/core/providers/app_lock_provider.dart';
+import 'package:expense_manager/core/providers/widget_action_provider.dart';
+import 'package:expense_manager/core/services/biometric_auth_service.dart';
+import 'package:expense_manager/core/widgets/lock_gate.dart';
 import 'package:expense_manager/core/providers/locale_provider.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
 import 'package:expense_manager/core/services/voice_input_gateway.dart';
@@ -24,6 +28,9 @@ import 'package:expense_manager/features/transactions/domain/parsed_voice_transa
 import 'package:expense_manager/features/transactions/presentation/providers/subcategories_provider.dart';
 import 'package:expense_manager/features/transactions/presentation/widgets/quick_capture_host.dart';
 import 'package:expense_manager/l10n/app_localizations.dart';
+import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/mocks.dart';
 
 // ── Fakes ─────────────────────────────────────────────────────────────────────
 
@@ -147,6 +154,23 @@ class _StaysRecordingVoiceGateway extends Fake implements VoiceInputGateway {
       const Stream.empty();
 }
 
+/// Como [_StaysRecordingVoiceGateway], pero cuenta las llamadas a start().
+class _CountingVoiceGateway extends _StaysRecordingVoiceGateway {
+  int starts = 0;
+  int cancels = 0;
+
+  @override
+  Future<void> start() async => starts++;
+
+  @override
+  Future<void> cancel() async => cancels++;
+}
+
+class _FakeAppLock extends AppLockNotifier {
+  @override
+  Future<bool> build() async => true;
+}
+
 class _TrackingImageGateway implements ImageInputGateway {
   bool pickCalled = false;
 
@@ -169,6 +193,7 @@ Widget _wrap({
   required Widget child,
   ImageTransactionParser? imageParser,
   List<Override> extraOverrides = const [],
+  bool withLockGate = false,
 }) {
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -189,7 +214,10 @@ Widget _wrap({
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('es'),
       routerConfig: router,
-      builder: (context, inner) => QuickCaptureHost(child: inner!),
+      // Igual que en main.dart: la captura rápida va por dentro del LockGate.
+      builder: (context, inner) => withLockGate
+          ? LockGate(child: QuickCaptureHost(child: inner!))
+          : QuickCaptureHost(child: inner!),
     ),
   );
 }
@@ -212,7 +240,8 @@ void main() {
         reason: 'la barra inferior y las hojas dependen de alcanzarlo');
   });
 
-  testWidgets('un fallo del parser de imagen muestra un mensaje localizado '
+  testWidgets(
+      'un fallo del parser de imagen muestra un mensaje localizado '
       'genérico, nunca el runtimeType', (tester) async {
     final tmp = File(
         '${Directory.systemTemp.path}/qc_${DateTime.now().microsecondsSinceEpoch}.jpg');
@@ -221,7 +250,8 @@ void main() {
     late QuickCapture capture;
     await tester.pumpWidget(_wrap(
       extraOverrides: [
-        imageInputGatewayProvider.overrideWithValue(_FakeImageGateway(tmp.path)),
+        imageInputGatewayProvider
+            .overrideWithValue(_FakeImageGateway(tmp.path)),
         allSubcategoriesProvider.overrideWith((ref) async => const []),
       ],
       child: Builder(builder: (ctx) {
@@ -346,7 +376,8 @@ void main() {
     final imageGateway = _TrackingImageGateway();
     await tester.pumpWidget(_wrap(
       extraOverrides: [
-        voiceInputGatewayProvider.overrideWithValue(_StaysRecordingVoiceGateway()),
+        voiceInputGatewayProvider
+            .overrideWithValue(_StaysRecordingVoiceGateway()),
         imageInputGatewayProvider.overrideWithValue(imageGateway),
         allSubcategoriesProvider.overrideWith((ref) async => const []),
       ],
@@ -374,5 +405,70 @@ void main() {
     expect(find.text('Galería'), findsNothing);
     // The voice recording is untouched — still showing as active.
     expect(find.byIcon(PhosphorIcons.stop), findsOneWidget);
+  });
+
+  group('con el app lock activo', () {
+    late MockBiometricAuthService biometrics;
+    late _CountingVoiceGateway gateway;
+
+    setUp(() {
+      biometrics = MockBiometricAuthService();
+      gateway = _CountingVoiceGateway();
+    });
+
+    Future<ProviderContainer> pumpLocked(WidgetTester tester) async {
+      await tester.pumpWidget(_wrap(
+        withLockGate: true,
+        extraOverrides: [
+          appLockProvider.overrideWith(_FakeAppLock.new),
+          biometricAuthServiceProvider.overrideWithValue(biometrics),
+          voiceInputGatewayProvider.overrideWithValue(gateway),
+          allSubcategoriesProvider.overrideWith((ref) async => const []),
+        ],
+        child: const SizedBox.shrink(),
+      ));
+      await tester.pumpAndSettle();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MaterialApp)),
+      );
+      await container.read(subscriptionProvider.future);
+      await tester.pump();
+      return container;
+    }
+
+    testWidgets(
+        'una acción del widget no abre el micrófono hasta desbloquear '
+        '(el deep link puede venir de cualquier app)', (tester) async {
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => false);
+      final container = await pumpLocked(tester);
+      expect(find.text('Desbloquear'), findsOneWidget);
+
+      container.read(pendingWidgetActionProvider.notifier).state = 'voice';
+      await tester.pumpAndSettle();
+      expect(gateway.starts, 0);
+
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => true);
+      await tester.tap(find.text('Desbloquear'));
+      await tester.pumpAndSettle();
+      expect(gateway.starts, 1);
+    });
+
+    testWidgets('bloquear la app descarta una grabación en curso',
+        (tester) async {
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => true);
+      final container = await pumpLocked(tester);
+      expect(find.text('Desbloquear'), findsNothing);
+
+      container.read(pendingWidgetActionProvider.notifier).state = 'voice';
+      await tester.pumpAndSettle();
+      expect(gateway.starts, 1);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      expect(gateway.cancels, 1);
+
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => false);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+    });
   });
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +21,23 @@ class _FakeAppLock extends AppLockNotifier {
 
   @override
   Future<bool> build() async => _enabled;
+}
+
+/// Busca [label] en el árbol de semántica que reciben los servicios de
+/// accesibilidad (no en la config de cada RenderObject, que no refleja
+/// ExcludeSemantics).
+bool semanticsTreeHasLabel(WidgetTester tester, String label) {
+  final root = tester
+      .binding.renderViews.first.owner!.semanticsOwner!.rootSemanticsNode!;
+  var found = false;
+  bool visit(SemanticsNode node) {
+    if (node.label.contains(label)) found = true;
+    if (!found) node.visitChildren(visit);
+    return !found;
+  }
+
+  visit(root);
+  return found;
 }
 
 void main() {
@@ -114,6 +132,57 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Desbloquear'), findsNothing);
     expect(find.text('contenido sensible'), findsOneWidget);
+  });
+
+  group('content behind the overlay', () {
+    testWidgets('is excluded from semantics while locked', (tester) async {
+      final semantics = tester.ensureSemantics();
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => false);
+
+      await pumpGate(tester, lockEnabled: true);
+      await tester.pumpAndSettle();
+
+      // TalkBack/VoiceOver no deben poder leer los datos tapados.
+      expect(semanticsTreeHasLabel(tester, 'contenido sensible'), isFalse);
+      expect(semanticsTreeHasLabel(tester, 'Desbloquear'), isTrue);
+
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => true);
+      await tester.tap(find.text('Desbloquear'));
+      await tester.pumpAndSettle();
+
+      expect(semanticsTreeHasLabel(tester, 'contenido sensible'), isTrue);
+      semantics.dispose();
+    });
+
+    testWidgets('waitUntilUnlocked completes only after a successful unlock',
+        (tester) async {
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => false);
+      await pumpGate(tester, lockEnabled: true);
+      await tester.pumpAndSettle();
+
+      var unlocked = false;
+      final ctx = tester.element(find.text('contenido sensible'));
+      unawaited(LockGate.waitUntilUnlocked(ctx).then((_) => unlocked = true));
+      await tester.pumpAndSettle();
+      expect(unlocked, isFalse);
+
+      when(() => biometrics.authenticate(any())).thenAnswer((_) async => true);
+      await tester.tap(find.text('Desbloquear'));
+      await tester.pumpAndSettle();
+      expect(unlocked, isTrue);
+    });
+
+    testWidgets('waitUntilUnlocked completes at once with the lock disabled',
+        (tester) async {
+      await pumpGate(tester, lockEnabled: false);
+      await tester.pumpAndSettle();
+
+      var unlocked = false;
+      final ctx = tester.element(find.text('contenido sensible'));
+      unawaited(LockGate.waitUntilUnlocked(ctx).then((_) => unlocked = true));
+      await tester.pump();
+      expect(unlocked, isTrue);
+    });
   });
 
   group('external activity (file picker, camera, share…)', () {

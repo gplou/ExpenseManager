@@ -89,7 +89,12 @@ class AppConfig {
         googleWebClientId: googleWebClientId,
         admobAndroidBannerUnitId: admobAndroidBannerUnitId,
         admobIosBannerUnitId: admobIosBannerUnitId,
+        isIos: defaultTargetPlatform == TargetPlatform.iOS,
       );
+
+  /// Prefijo de las API keys del Test Store de RevenueCat: con ellas las
+  /// "compras" son simuladas y gratuitas.
+  static const String _revenueCatTestKeyPrefix = 'test_';
 
   /// Lógica de [validate] extraída con los valores como parámetros para poder
   /// testearla (los `String.fromEnvironment` no se pueden variar en tests).
@@ -103,6 +108,7 @@ class AppConfig {
     required String googleWebClientId,
     required String admobAndroidBannerUnitId,
     required String admobIosBannerUnitId,
+    bool isIos = false,
   }) {
     if (supabaseUrl.isEmpty) {
       throw StateError(
@@ -131,6 +137,16 @@ class AppConfig {
         throw StateError(
           'Build de producción sin claves de RevenueCat. '
           'Define REVENUECAT_ANDROID_KEY / REVENUECAT_IOS_KEY.',
+        );
+      }
+      // Solo la clave de la plataforma del build: la de la otra plataforma
+      // ni se usa ni llega al binario (Dart AOT pliega Platform.isIOS).
+      final platformKey = isIos ? revenueCatIosKey : revenueCatAndroidKey;
+      if (platformKey.startsWith(_revenueCatTestKeyPrefix)) {
+        throw StateError(
+          'Build de producción con la API key del Test Store de RevenueCat '
+          '(${isIos ? 'REVENUECAT_IOS_KEY' : 'REVENUECAT_ANDROID_KEY'}): '
+          'las compras serían simuladas. Usa la clave pública de la tienda.',
         );
       }
       if (googleWebClientId.isEmpty) {

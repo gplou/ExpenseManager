@@ -27,6 +27,7 @@ void main() {
       String googleWebClientId = 'google-client-id',
       String admobAndroidBannerUnitId = 'ca-app-pub-real/android',
       String admobIosBannerUnitId = 'ca-app-pub-real/ios',
+      bool isIos = false,
     }) =>
         AppConfig.validateValues(
           isProd: isProd,
@@ -37,6 +38,7 @@ void main() {
           googleWebClientId: googleWebClientId,
           admobAndroidBannerUnitId: admobAndroidBannerUnitId,
           admobIosBannerUnitId: admobIosBannerUnitId,
+          isIos: isIos,
         );
 
     test('passes with complete production config', () {
@@ -73,6 +75,33 @@ void main() {
     test('production: throws with empty RevenueCat keys', () {
       expect(() => callValidate(revenueCatAndroidKey: ''), throwsStateError);
       expect(() => callValidate(revenueCatIosKey: ''), throwsStateError);
+    });
+
+    test(
+        'production: throws with a RevenueCat Test Store key for the '
+        'build platform', () {
+      expect(() => callValidate(revenueCatAndroidKey: 'test_abc'),
+          throwsStateError);
+      expect(
+        () => callValidate(isIos: true, revenueCatIosKey: 'test_abc'),
+        throwsStateError,
+      );
+    });
+
+    test('production: the other platform\'s Test Store key is tolerated', () {
+      // La clave de la otra plataforma no llega al binario (AOT la elimina).
+      expect(() => callValidate(revenueCatIosKey: 'test_abc'), returnsNormally);
+      expect(
+        () => callValidate(isIos: true, revenueCatAndroidKey: 'test_abc'),
+        returnsNormally,
+      );
+    });
+
+    test('development: a Test Store key is allowed', () {
+      expect(
+        () => callValidate(isProd: false, revenueCatAndroidKey: 'test_abc'),
+        returnsNormally,
+      );
     });
 
     test('production: throws with empty googleWebClientId', () {

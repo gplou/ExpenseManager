@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,18 +19,60 @@ import 'package:expense_manager/l10n/app_localizations.dart';
 /// bloqueo. Bloquea al arrancar y al volver de background si el app lock está
 /// activado ([appLockProvider]), salvo cuando el background lo causa una
 /// pantalla externa abierta por la propia app ([ExternalActivityGuard]).
+///
+/// Mientras está bloqueado, el contenido de debajo sigue montado pero queda
+/// fuera del árbol de semántica, del foco y de los punteros: el overlay opaco
+/// solo lo oculta a la vista, y sin esto TalkBack/VoiceOver (o cualquier
+/// servicio de accesibilidad) seguiría leyendo los importes, y un teclado
+/// abierto seguiría escribiendo en el campo enfocado de detrás.
 class LockGate extends ConsumerStatefulWidget {
   const LockGate({super.key, required this.child});
 
   final Widget child;
 
+  /// `true` mientras la app está bloqueada o aún no se sabe si debe estarlo
+  /// (arranque, antes de leer la preferencia). `null` fuera de un [LockGate].
+  ///
+  /// Lo usa la captura rápida para no abrir el micrófono/cámara ni hojas con
+  /// datos por un deep link del widget antes de que el usuario se autentique.
+  static ValueListenable<bool>? maybeCoverOf(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<_LockScope>()?.covered;
+
+  /// Completa en cuanto la app está desbloqueada (inmediatamente si ya lo
+  /// está o si no hay [LockGate] por encima).
+  static Future<void> waitUntilUnlocked(BuildContext context) {
+    final covered = maybeCoverOf(context);
+    if (covered == null || !covered.value) return Future.value();
+    final completer = Completer<void>();
+    void listener() {
+      if (covered.value) return;
+      covered.removeListener(listener);
+      completer.complete();
+    }
+
+    covered.addListener(listener);
+    return completer.future;
+  }
+
   @override
   ConsumerState<LockGate> createState() => _LockGateState();
+}
+
+class _LockScope extends InheritedWidget {
+  const _LockScope({required this.covered, required super.child});
+
+  final ValueListenable<bool> covered;
+
+  // La instancia del notifier no cambia nunca: quien la necesite escucha.
+  @override
+  bool updateShouldNotify(_LockScope oldWidget) => false;
 }
 
 class _LockGateState extends ConsumerState<LockGate>
     with WidgetsBindingObserver {
   bool _locked = false;
+  // `_locked` o "aún no se ha leído la preferencia" (ver [LockGate.maybeCoverOf]).
+  final ValueNotifier<bool> _covered = ValueNotifier(true);
   // El prompt biométrico provoca pausas/resumes de la propia app (el diálogo
   // del sistema cubre la activity en Android); este flag evita re-bloquear o
   // re-lanzar el prompt por esos eventos de ciclo de vida.
@@ -49,7 +92,13 @@ class _LockGateState extends ConsumerState<LockGate>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _covered.dispose();
     super.dispose();
+  }
+
+  void _setLocked(bool locked) {
+    setState(() => _locked = locked);
+    _covered.value = locked;
   }
 
   Future<void> _lockOnLaunch() async {
@@ -60,8 +109,12 @@ class _LockGateState extends ConsumerState<LockGate>
       // Prefs ilegibles: no dejar al usuario fuera de la app.
       enabled = false;
     }
-    if (!enabled || !mounted) return;
-    setState(() => _locked = true);
+    if (!mounted) return;
+    if (!enabled) {
+      _covered.value = false;
+      return;
+    }
+    _setLocked(true);
     unawaited(_authenticate());
   }
 
@@ -74,7 +127,7 @@ class _LockGateState extends ConsumerState<LockGate>
           !_locked &&
           clock.now().difference(externalPauseAt) >
               ExternalActivityGuard.maxDuration) {
-        setState(() => _locked = true);
+        _setLocked(true);
       }
       if (_locked && !_authInProgress) _authenticate();
     } else if (state == AppLifecycleState.paused) {
@@ -85,7 +138,7 @@ class _LockGateState extends ConsumerState<LockGate>
         _externalPauseAt ??= clock.now();
         return;
       }
-      setState(() => _locked = true);
+      _setLocked(true);
     }
   }
 
@@ -97,7 +150,7 @@ class _LockGateState extends ConsumerState<LockGate>
       final ok = await ref
           .read(biometricAuthServiceProvider)
           .authenticate(l10n.appLockUnlockReason);
-      if (ok && mounted) setState(() => _locked = false);
+      if (ok && mounted) _setLocked(false);
     } finally {
       _authInProgress = false;
     }
@@ -105,61 +158,76 @@ class _LockGateState extends ConsumerState<LockGate>
 
   @override
   Widget build(BuildContext context) {
-    if (!_locked) return widget.child;
+    // Estructura estable (bloqueado o no): el subárbol del child no se
+    // desmonta al bloquear. `passthrough` le da las mismas constraints que
+    // tendría sin el Stack.
+    return _LockScope(
+      covered: _covered,
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          ExcludeFocus(
+            excluding: _locked,
+            child: ExcludeSemantics(
+              excluding: _locked,
+              child: IgnorePointer(ignoring: _locked, child: widget.child),
+            ),
+          ),
+          if (_locked) _buildOverlay(context),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildOverlay(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cs = context.colors;
-    return Stack(
-      children: [
-        widget.child,
-        Positioned.fill(
-          // Material opaco: oculta los datos financieros también en la
-          // miniatura del app switcher.
-          child: Material(
-            color: cs.surface,
-            child: SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: context.appColors.raised,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          PhosphorIcons.lock,
-                          size: 28,
-                          color: cs.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      const Gap(20),
-                      Text(
-                        l10n.appLock,
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.titleMedium?.copyWith(
-                          color: cs.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Gap(24),
-                      FilledButton.icon(
-                        onPressed: _authenticate,
-                        icon: Icon(PhosphorIcons.fingerprint, size: 20),
-                        label: Text(l10n.unlock),
-                      ),
-                    ],
+    return Positioned.fill(
+      // Material opaco: oculta los datos financieros también en la
+      // miniatura del app switcher.
+      child: Material(
+        color: cs.surface,
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: context.appColors.raised,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      PhosphorIcons.lock,
+                      size: 28,
+                      color: cs.onSurface.withValues(alpha: 0.6),
+                    ),
                   ),
-                ),
+                  const Gap(20),
+                  Text(
+                    l10n.appLock,
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.titleMedium?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Gap(24),
+                  FilledButton.icon(
+                    onPressed: _authenticate,
+                    icon: Icon(PhosphorIcons.fingerprint, size: 20),
+                    label: Text(l10n.unlock),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

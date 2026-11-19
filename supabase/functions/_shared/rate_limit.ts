@@ -1,4 +1,4 @@
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0'
 
 /// Checks and atomically increments a sliding rate-limit bucket via the
 /// `increment_rate_limit` RPC. Returns `true` if the call is allowed.

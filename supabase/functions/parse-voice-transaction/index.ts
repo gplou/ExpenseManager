@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import * as Sentry from 'npm:@sentry/deno'
+import * as Sentry from 'npm:@sentry/deno@11.10.0'
 import { getCorsHeaders, jsonResponse } from '../_shared/http.ts'
 import { requireProUser } from '../_shared/auth.ts'
 import { checkRateLimit } from '../_shared/rate_limit.ts'

@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import * as Sentry from 'npm:@sentry/deno'
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0'
+import * as Sentry from 'npm:@sentry/deno@11.10.0'
 import { getCorsHeaders, jsonResponse } from '../_shared/http.ts'
 import { getServiceClient, requireProUser } from '../_shared/auth.ts'
 import { checkRateLimit } from '../_shared/rate_limit.ts'

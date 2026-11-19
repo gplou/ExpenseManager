@@ -13,12 +13,19 @@
 // clients per the 20260526000002 migration.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import * as Sentry from 'npm:@sentry/deno'
+import { createClient } from 'npm:@supabase/supabase-js@2.119.0'
+import * as Sentry from 'npm:@sentry/deno@11.10.0'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const WEBHOOK_SECRET = Deno.env.get('REVENUECAT_WEBHOOK_SECRET') ?? ''
+// Las compras de sandbox (TestFlight, license testers de Play) y del Test
+// Store de RevenueCat son gratis: si concedieran PRO real, cualquiera con un
+// build de pruebas —o con la API key `test_…` del Test Store, que va dentro
+// de esos builds— se daría PRO (y coste de IA) sin pagar. Solo se aceptan
+// eventos de PRODUCTION salvo que se active explícitamente para pruebas:
+//   supabase secrets set REVENUECAT_ALLOW_SANDBOX=true
+const ALLOW_SANDBOX = Deno.env.get('REVENUECAT_ALLOW_SANDBOX') === 'true'
 
 Sentry.init({
   dsn: Deno.env.get('SENTRY_DSN_EDGE') ?? '',
@@ -109,6 +116,14 @@ serve(async (req: Request) => {
   const store: string | undefined = event.store
   const txId: string | undefined = event.transaction_id ?? event.original_transaction_id
   const source = mapStoreToSource(store)
+
+  if (!ALLOW_SANDBOX && (event.environment !== 'PRODUCTION' || store === 'TEST_STORE')) {
+    // 200 para que RC no reintente: no es un fallo, es un evento que no aplica.
+    return new Response(JSON.stringify({ ok: true, ignored: 'non_production' }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    })
+  }
 
   try {
     switch (eventType) {

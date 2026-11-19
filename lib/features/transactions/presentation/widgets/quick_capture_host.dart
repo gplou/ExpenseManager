@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +16,7 @@ import 'package:expense_manager/core/providers/widget_action_provider.dart';
 import 'package:expense_manager/core/services/analytics_service.dart';
 import 'package:expense_manager/core/services/image_input_gateway.dart';
 import 'package:expense_manager/core/services/sentry_service.dart';
+import 'package:expense_manager/core/widgets/lock_gate.dart';
 import 'package:expense_manager/core/widgets/motion/motion.dart';
 import 'package:expense_manager/features/subscription/subscription_provider.dart';
 import 'package:expense_manager/features/subscription/subscription_state.dart';
@@ -79,6 +81,7 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
 
   static const double _overlaySize = 64;
   Timer? _voiceMaxDurationTimer;
+  ValueListenable<bool>? _lockCover;
 
   @override
   void initState() {
@@ -100,7 +103,29 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final cover = LockGate.maybeCoverOf(context);
+    if (!identical(cover, _lockCover)) {
+      _lockCover?.removeListener(_onLockCoverChanged);
+      _lockCover = cover?..addListener(_onLockCoverChanged);
+    }
+  }
+
+  /// La app se bloquea (paso a segundo plano) con una grabación de este host
+  /// en curso: se descarta en vez de seguir grabando tras la pantalla de
+  /// bloqueo y abrir la hoja con el resultado debajo de ella.
+  void _onLockCoverChanged() {
+    if (_lockCover?.value != true) return;
+    if (_voiceState != VoiceInputState.listening) return;
+    _voiceMaxDurationTimer?.cancel();
+    _voiceCapture.cancelIfRecording();
+    setState(() => _voiceState = VoiceInputState.idle);
+  }
+
+  @override
   void dispose() {
+    _lockCover?.removeListener(_onLockCoverChanged);
     _voiceMaxDurationTimer?.cancel();
     // Only cancels if this host's own recording is still active — a no-op
     // if a different voice entry point (e.g. the in-sheet mic) owns the
@@ -145,6 +170,11 @@ class _QuickCaptureHostState extends ConsumerState<QuickCaptureHost> {
   }
 
   Future<void> _handleWidgetAction(String action) async {
+    // Con el app lock activo, nada de micrófono, cámara ni hojas con datos
+    // hasta que el usuario se autentique: el deep link puede venir de
+    // cualquier app (la activity es exported), no solo de nuestro widget.
+    await LockGate.waitUntilUnlocked(context);
+    if (!mounted) return;
     // Espera a que la suscripción termine de cargar antes de aplicar el gate
     // PRO (en arranque en frío desde el widget, isPro sería siempre false).
     if (ref.read(subscriptionProvider).isLoading) {
