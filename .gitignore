@@ -93,3 +93,5 @@ tool/qa/results/
 # permisos locales de Claude Code y metadatos del proyecto enlazado de Supabase CLI
 .claude/settings.local.json
 supabase/.temp/
+# Widget Preview related
+.widget_preview/
